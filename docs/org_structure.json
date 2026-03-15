@@ -1,0 +1,71 @@
+{
+  "instansi": "Pengadilan Agama Penajam",
+  "pimpinan": [
+    { "role": "Ketua", "nama": "FATTAHURRIDLO AL GHANY, S.H.I., M.S.I.", "nip": "198505092009041006", "gol": "IV/a", "tmt": "13 Mei 2024" },
+    { "role": "Wakil Ketua", "nama": "NAHDIYANTI, S.H.I., M.H.", "nip": "198410092007042001", "gol": "IV/a", "tmt": "28 November 2022" }
+  ],
+  "yudisial": [
+    { "role": "Hakim Tingkat Pertama", "nama": "NUR RIZKA FANI, S.H.", "nip": "199702232022032013", "gol": "III/a", "tmt": "11 Juni 2025" },
+    { "role": "Hakim Tingkat Pertama", "nama": "VIDYA NURCHALIZA, S.H.", "nip": "199704162022032013", "gol": "III/a", "tmt": "11 Juni 2025" }
+  ],
+  "panitera": {
+    "panitera": { "nama": "MUHAMMAD HAMDI, S.H., M.Hum.", "nip": "197503141996031002", "gol": "IV/a", "tmt": "11 Juni 2024", "jabatan": "Panitera Tingkat Pertama Klas II" },
+    "panitera_pengganti": [
+      { "nama": "RAINI MAULIDINA, S.H.", "nip": "199408302020122007", "gol": "III/b", "tmt": "17 Juni 2025", "jabatan": "Panitera Pengganti" },
+      { "nama": "MUHAMMAD MIFTAHUDIN, S.H.", "nip": "199705312020121004", "gol": "III/b", "tmt": "17 Juni 2025", "jabatan": "Panitera Pengganti" }
+    ],
+    "panitera_muda": {
+      "Permohonan": {
+        "kepala": { "nama": "NUZULA YUSTISIA, S.H.I.", "nip": "198506052009042006", "gol": "III/d", "tmt": "21 Juli 2025", "jabatan": "Panitera Muda Permohonan" },
+        "anggota": [
+          { "nama": "YULINDA, A.Md.Kom.", "nip": "199211132020122011", "gol": "II/d", "tmt": "02 Oktober 2023", "jabatan": "Klerek - Pengelola Penanganan Perkara" }
+        ]
+      },
+      "Gugatan": {
+        "kepala": { "nama": "FARIDAH FITRIYANI, S.H.I.", "nip": "198108022009122002", "gol": "III/d", "tmt": "10 Oktober 2024", "jabatan": "Panitera Muda Gugatan" },
+        "anggota": [
+          { "nama": "MUHAMMAD ILHAM, S.H., M.Kn.", "nip": "199702012022031004", "gol": "III/b", "tmt": "02 Oktober 2023", "jabatan": "Klerek - Analis Perkara Peradilan" },
+          { "nama": "RAINA PUTRI NASUHA, S.H.", "nip": "199712262025062010", "gol": "III/a", "tmt": "01 Juni 2025", "jabatan": "Klerek - Analis Perkara Peradilan" },
+          { "nama": "IRWAN SYAH SETIAWAN, A.md", "nip": "199010082022031004", "gol": "II/c", "tmt": "02 Oktober 2023", "jabatan": "Klerek - Pengelola Penanganan Perkara" },
+          { "nama": "JAKFAR, A.Md.A.B.", "nip": "199709082025061006", "gol": "II/c", "tmt": "01 Juni 2025", "jabatan": "Klerek - Dokumentalis Hukum" }
+        ]
+      },
+      "Hukum": {
+        "kepala": null,
+        "anggota": [
+          { "nama": "QURROTU AINI, S.H.", "nip": "200106132024052001", "gol": "III/a", "tmt": "02 Mei 2025", "jabatan": "Klerek - Analis Perkara Peradilan" },
+          { "nama": "CUCU KHOFIFAH, S.H.", "nip": "200009242025062019", "gol": "III/a", "tmt": "01 Juni 2025", "jabatan": "Klerek - Analis Perkara Peradilan" },
+          { "nama": "NURAVITA PRAMESTI, A.Md.", "nip": "199604102025062008", "gol": "II/c", "tmt": "23 Juni 2025", "jabatan": "Klerek - Dokumentalis Hukum" },
+          { "nama": "NOVAYANTI, S.H.", "nip": "199711202025212035", "gol": "IX", "tmt": "01 September 2025", "jabatan": "Operator - Penata Layanan Operasional" }
+        ]
+      }
+    }
+  },
+  "sekretariat": {
+    "sekretaris": { "nama": "INDRA YANITA YULIANA, S.E., M.Si.", "nip": "198301042006042003", "gol": "IV/a", "tmt": "07 Agustus 2019", "jabatan": "Sekretaris Tingkat Pertama Klas II" },
+    "subbagian": {
+      "Perencanaan, Teknologi Informasi, dan Pelaporan": {
+        "kepala": { "nama": "AWALUDDIN NUR, S.H.I.", "nip": "198411192011011012", "gol": "III/d", "tmt": "28 Agustus 2025", "jabatan": "Kepala Subbagian" },
+        "anggota": [
+          { "nama": "MUHARDIANSYAH, S.Kom.", "nip": "199107132020121003", "gol": "III/a", "tmt": "01 Agustus 2022", "jabatan": "Pranata Komputer Ahli Pertama" },
+          { "nama": "DAMAI AZIZU, S.Kom.", "nip": "198510102025211065", "gol": "IX", "tmt": "01 September 2025", "jabatan": "Operator - Penata Layanan Operasional" }
+        ]
+      },
+      "Umum dan Keuangan": {
+        "kepala": { "nama": "MUHAMMAD ZAIM NOOR, S.H.", "nip": "198802022008051001", "gol": "III/c", "tmt": "28 Agustus 2025", "jabatan": "Kepala Subbagian" },
+        "anggota": [
+          { "nama": "NUR MUFLIHAH PUTRI WIJANARKO, S.T.", "nip": "199710252025062012", "gol": "III/a", "tmt": "01 Juni 2025", "jabatan": "Teknisi Sarana dan Prasarana" },
+          { "nama": "ASHAR, S.H.", "nip": "199406072025211039", "gol": "IX", "tmt": "01 September 2025", "jabatan": "Operator - Penata Layanan Operasional" },
+          { "nama": "AMIN NUR", "nip": "198204262025211027", "gol": "V", "tmt": "01 September 2025", "jabatan": "Operator Layanan Operasional" },
+          { "nama": "ADI IRAWAN", "nip": "198210062025211034", "gol": "I", "tmt": "01 September 2025", "jabatan": "Pengelola Umum Operasional" }
+        ]
+      },
+      "Kepegawaian, Organisasi, dan Tata Laksana": {
+        "kepala": null,
+        "anggota": [
+          { "nama": "NAJWA HIJRIANA, S.E.", "nip": "199605112025212037", "gol": "IX", "tmt": "01 September 2025", "jabatan": "Operator - Penata Layanan Operasional" }
+        ]
+      }
+    }
+  }
+}
