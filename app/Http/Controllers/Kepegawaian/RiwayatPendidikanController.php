@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Http\Controllers\Kepegawaian;
+
+use App\Enums\JenjangPendidikan;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Kepegawaian\StoreRiwayatPendidikanRequest;
+use App\Http\Requests\Kepegawaian\UpdateRiwayatPendidikanRequest;
+use App\Models\Pegawai;
+use App\Models\RiwayatPendidikan;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class RiwayatPendidikanController extends Controller implements HasMiddleware
+{
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth'),
+            new Middleware('verified'),
+            new Middleware('role:admin,operator'),
+        ];
+    }
+
+    public function index(Pegawai $pegawai): Response
+    {
+        $pegawai->load([
+            'riwayatPendidikan' => fn ($query) => $query
+                ->orderByDesc('tahun_lulus')
+                ->orderByDesc('tanggal_ijazah')
+                ->orderByDesc('created_at'),
+        ]);
+
+        return Inertia::render('kepegawaian/pegawai/riwayat-pendidikan', [
+            'pegawai' => $pegawai->only(['id', 'nip', 'nama_lengkap', 'pendidikan_terakhir']),
+            'storeUrl' => route('kepegawaian.pegawai.riwayat-pendidikan.store', $pegawai),
+            'riwayatPendidikan' => $pegawai->riwayatPendidikan
+                ->map(fn (RiwayatPendidikan $riwayatPendidikan) => [
+                    'id' => $riwayatPendidikan->id,
+                    'jenjang' => $riwayatPendidikan->jenjang->value,
+                    'jenjang_label' => $riwayatPendidikan->jenjang->label(),
+                    'nama_sekolah' => $riwayatPendidikan->nama_sekolah,
+                    'jurusan' => $riwayatPendidikan->jurusan,
+                    'tahun_lulus' => $riwayatPendidikan->tahun_lulus,
+                    'no_ijazah' => $riwayatPendidikan->no_ijazah,
+                    'tanggal_ijazah' => $riwayatPendidikan->tanggal_ijazah?->format('Y-m-d'),
+                    'keterangan' => $riwayatPendidikan->keterangan,
+                    'update_url' => route('kepegawaian.pegawai.riwayat-pendidikan.update', [
+                        'pegawai' => $pegawai,
+                        'riwayat_pendidikan' => $riwayatPendidikan,
+                    ]),
+                    'delete_url' => route('kepegawaian.pegawai.riwayat-pendidikan.destroy', [
+                        'pegawai' => $pegawai,
+                        'riwayat_pendidikan' => $riwayatPendidikan,
+                    ]),
+                ])
+                ->values(),
+            'jenjangOptions' => collect(JenjangPendidikan::cases())
+                ->map(fn (JenjangPendidikan $jenjang) => [
+                    'value' => $jenjang->value,
+                    'label' => $jenjang->label(),
+                ])
+                ->values(),
+        ]);
+    }
+
+    public function store(StoreRiwayatPendidikanRequest $request, Pegawai $pegawai): RedirectResponse
+    {
+        $pegawai->riwayatPendidikan()->create($request->validated());
+
+        return to_route('kepegawaian.pegawai.riwayat-pendidikan.index', $pegawai);
+    }
+
+    public function update(UpdateRiwayatPendidikanRequest $request, Pegawai $pegawai, RiwayatPendidikan $riwayatPendidikan): RedirectResponse
+    {
+        abort_unless($riwayatPendidikan->pegawai_id === $pegawai->id, 404);
+
+        $riwayatPendidikan->update($request->validated());
+
+        return to_route('kepegawaian.pegawai.riwayat-pendidikan.index', $pegawai);
+    }
+
+    public function destroy(Pegawai $pegawai, RiwayatPendidikan $riwayatPendidikan): RedirectResponse
+    {
+        abort_unless($riwayatPendidikan->pegawai_id === $pegawai->id, 404);
+
+        $riwayatPendidikan->delete();
+
+        return to_route('kepegawaian.pegawai.riwayat-pendidikan.index', $pegawai);
+    }
+}

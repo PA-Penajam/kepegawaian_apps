@@ -12,31 +12,56 @@ class RefUnitKerjaSeeder extends Seeder
      */
     public function run(): void
     {
-        $parents = [];
+        $units = [];
 
+        // Level 1: Satker (Pengadilan)
+        $units['SATKER_PA_PENAJAM'] = RefUnitKerja::query()->updateOrCreate(
+            ['kode' => 'SATKER_PA_PENAJAM'],
+            ['kode' => 'SATKER_PA_PENAJAM', 'nama' => 'Pengadilan Agama Penajam', 'parent_id' => null, 'urutan' => 1],
+        );
+
+        // Level 1: Jabatan Struktural sebagai Unit Kerja
         foreach ([
-            ['kode' => 'KEPANITERAAN', 'nama' => 'Kepaniteraan', 'parent_id' => null, 'urutan' => 1],
-            ['kode' => 'KESEKRETARIATAN', 'nama' => 'Kesekretariatan', 'parent_id' => null, 'urutan' => 2],
+            ['kode' => 'PANITERA', 'nama' => 'Panitera', 'urutan' => 2],
+            ['kode' => 'SEKRETARIS', 'nama' => 'Sekretaris', 'urutan' => 3],
         ] as $unitKerja) {
-            $parents[$unitKerja['kode']] = RefUnitKerja::query()->updateOrCreate(
+            $units[$unitKerja['kode']] = RefUnitKerja::query()->updateOrCreate(
                 ['kode' => $unitKerja['kode']],
-                $unitKerja,
+                array_merge($unitKerja, ['parent_id' => null]),
             );
         }
 
+        // Level 2: Di bawah Panitera
         foreach ([
-            ['kode' => 'KEPANITERAAN_PERMOHONAN', 'nama' => 'Kepaniteraan Permohonan', 'parent_kode' => 'KEPANITERAAN', 'urutan' => 1],
-            ['kode' => 'KEPANITERAAN_GUGATAN', 'nama' => 'Kepaniteraan Gugatan', 'parent_kode' => 'KEPANITERAAN', 'urutan' => 2],
-            ['kode' => 'KEPANITERAAN_HUKUM', 'nama' => 'Kepaniteraan Hukum', 'parent_kode' => 'KEPANITERAAN', 'urutan' => 3],
-            ['kode' => 'SUBBAG_KEPEGAWAIAN', 'nama' => 'Subbag Kepegawaian Org Tatalaksana', 'parent_kode' => 'KESEKRETARIATAN', 'urutan' => 1],
-            ['kode' => 'SUBBAG_PERENCANAAN', 'nama' => 'Subbag Perencanaan TI Pelaporan', 'parent_kode' => 'KESEKRETARIATAN', 'urutan' => 2],
-            ['kode' => 'SUBBAG_UMUM', 'nama' => 'Subbag Umum Keuangan', 'parent_kode' => 'KESEKRETARIATAN', 'urutan' => 3],
+            ['kode' => 'PANMUD_PERMOHONAN', 'nama' => 'Panitera Muda Permohonan', 'parent_kode' => 'PANITERA', 'urutan' => 1],
+            ['kode' => 'PANMUD_GUGATAN', 'nama' => 'Panitera Muda Gugatan', 'parent_kode' => 'PANITERA', 'urutan' => 2],
+            ['kode' => 'PANMUD_HUKUM', 'nama' => 'Panitera Muda Hukum', 'parent_kode' => 'PANITERA', 'urutan' => 3],
         ] as $unitKerja) {
-            $parent = $parents[$unitKerja['parent_kode']];
+            $parent = $units[$unitKerja['parent_kode']];
+
+            $units[$unitKerja['kode']] = RefUnitKerja::query()->updateOrCreate(
+                ['kode' => $unitKerja['kode']],
+                [
+                    'kode' => $unitKerja['kode'],
+                    'nama' => $unitKerja['nama'],
+                    'parent_id' => $parent->id,
+                    'urutan' => $unitKerja['urutan'],
+                ],
+            );
+        }
+
+        // Level 2: Di bawah Sekretaris
+        foreach ([
+            ['kode' => 'SUBBAG_KEPEGAWAIAN', 'nama' => 'Subbag Kepegawaian, Organisasi, dan Tata Laksana', 'parent_kode' => 'SEKRETARIS', 'urutan' => 1],
+            ['kode' => 'SUBBAG_PERENCANAAN', 'nama' => 'Subbag Perencanaan, TI, dan Pelaporan', 'parent_kode' => 'SEKRETARIS', 'urutan' => 2],
+            ['kode' => 'SUBBAG_UMUM', 'nama' => 'Subbag Umum dan Keuangan', 'parent_kode' => 'SEKRETARIS', 'urutan' => 3],
+        ] as $unitKerja) {
+            $parent = $units[$unitKerja['parent_kode']];
 
             RefUnitKerja::query()->updateOrCreate(
                 ['kode' => $unitKerja['kode']],
                 [
+                    'kode' => $unitKerja['kode'],
                     'nama' => $unitKerja['nama'],
                     'parent_id' => $parent->id,
                     'urutan' => $unitKerja['urutan'],

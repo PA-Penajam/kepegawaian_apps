@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Pegawai;
+use App\Policies\PegawaiPolicy;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -23,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Pegawai::class, PegawaiPolicy::class);
+
         $this->configureDefaults();
     }
 
@@ -32,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        // Mengkonfigurasi format serialisasi tanggal ke 'Y-m-d'
+        Date::serializeUsing(fn (CarbonInterface $date) => $date->format('Y-m-d'));
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),

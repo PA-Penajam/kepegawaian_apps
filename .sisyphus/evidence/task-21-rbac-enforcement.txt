@@ -1,0 +1,100 @@
++ php artisan test --compact --filter=SelfServiceAccess
+
+  .......
+
+  Tests:    7 passed (72 assertions)
+  Duration: 0.47s
+
++ php artisan test --compact
+
+  ............................................................................
+  ............................................................................
+  ................................................................
+
+  Tests:    216 passed (1152 assertions)
+  Duration: 3.92s
+
++ npm run build
+npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of npm.
+
+> build
+> vite build
+
+vite v7.3.1 building client environment for production...
+[plugin @laravel/vite-plugin-wayfinder] Types generated for actions, routes, form variants
+transforming...
+✓ 2880 modules transformed.
+rendering chunks...
+computing gzip size...
+public/build/manifest.json                             25.60 kB │ gzip:   2.56 kB
+public/build/assets/app-TWNOTnK1.css                  103.62 kB │ gzip:  16.95 kB
+public/build/assets/check-Cml3U_8F.js                   0.13 kB │ gzip:   0.15 kB
+public/build/assets/loader-circle-BNumxrlt.js           0.15 kB │ gzip:   0.16 kB
+public/build/assets/briefcase-DYvVxKWs.js               0.23 kB │ gzip:   0.21 kB
+public/build/assets/index-CsqR_Tmd.js                   0.23 kB │ gzip:   0.17 kB
+public/build/assets/circle-alert-9SIXfMd9.js            0.26 kB │ gzip:   0.19 kB
+public/build/assets/eye-WhFLcgHI.js                     0.26 kB │ gzip:   0.20 kB
+public/build/assets/index-B5W82n74.js                   0.37 kB │ gzip:   0.22 kB
+public/build/assets/input-error-C8x3cEMk.js             0.39 kB │ gzip:   0.30 kB
+public/build/assets/spinner-B935eRyg.js                 0.42 kB │ gzip:   0.31 kB
+public/build/assets/kepegawaian-DnMPhkwG.js             0.55 kB │ gzip:   0.35 kB
+public/build/assets/text-link-DRjA0SJg.js               0.56 kB │ gzip:   0.38 kB
+public/build/assets/heading-B3Lf8vAd.js                 0.60 kB │ gzip:   0.41 kB
+public/build/assets/label-B3nMOqlC.js                   0.80 kB │ gzip:   0.52 kB
+public/build/assets/input-Lydr7PJ6.js                   1.00 kB │ gzip:   0.57 kB
+public/build/assets/verify-email-UPWhyrD1.js            1.39 kB │ gzip:   0.77 kB
+public/build/assets/badge-hBU8xvrm.js                   1.48 kB │ gzip:   0.75 kB
+public/build/assets/index-CL0xlWMs.js                   1.50 kB │ gzip:   0.51 kB
+public/build/assets/confirm-password-Bgwo2X53.js        1.52 kB │ gzip:   0.77 kB
+public/build/assets/password-input-DIJdcDYB.js          1.66 kB │ gzip:   0.94 kB
+public/build/assets/unlinked-BS9WGVEF.js                1.75 kB │ gzip:   0.85 kB
+public/build/assets/auth-layout-ajrzfOMN.js             1.82 kB │ gzip:   0.85 kB
+public/build/assets/keluarga-rqhDZ4Ww.js                1.85 kB │ gzip:   0.83 kB
+public/build/assets/penghargaan-3lvALvH7.js             1.88 kB │ gzip:   0.83 kB
+public/build/assets/card-G0sUQ63H.js                    1.96 kB │ gzip:   0.45 kB
+public/build/assets/hukuman-disiplin-CDUD-cJR.js        2.01 kB │ gzip:   0.85 kB
+public/build/assets/riwayat-diklat-DLN2Cpfg.js          2.04 kB │ gzip:   0.85 kB
+public/build/assets/forgot-password-BFCIVJLa.js         2.04 kB │ gzip:   0.97 kB
+public/build/assets/index-C9rYp0ex.js                   2.14 kB │ gzip:   1.02 kB
+public/build/assets/table-Bxf44LYf.js                   2.25 kB │ gzip:   0.59 kB
+public/build/assets/dokumen-pegawai-BFvRaGXe.js         2.35 kB │ gzip:   1.08 kB
+public/build/assets/reset-password-Jw46UWVh.js          2.39 kB │ gzip:   1.01 kB
+public/build/assets/index-D0D8dW-c.js                   2.76 kB │ gzip:   0.71 kB
+public/build/assets/appearance-t9Wa8aNo.js              2.76 kB │ gzip:   1.34 kB
+public/build/assets/register-DUxQ_0oP.js                2.85 kB │ gzip:   1.13 kB
+public/build/assets/two-factor-challenge-C5J0-9mV.js    2.88 kB │ gzip:   1.36 kB
+public/build/assets/index-BDqSilVs.js                   2.91 kB │ gzip:   0.92 kB
+public/build/assets/login-LwwyOdoE.js                   3.04 kB │ gzip:   1.36 kB
+public/build/assets/layout-CGxsOW-8.js                  3.52 kB │ gzip:   1.50 kB
+public/build/assets/detail-Du5_lvaW.js                  3.72 kB │ gzip:   1.61 kB
+public/build/assets/dialog-CBbCHBlz.js                  3.96 kB │ gzip:   1.17 kB
+public/build/assets/textarea-D4a4_aWu.js                4.49 kB │ gzip:   2.08 kB
+public/build/assets/show-BQClX4Vf.js                    4.65 kB │ gzip:   1.98 kB
+public/build/assets/index-Eq61VvlS.js                   5.68 kB │ gzip:   2.27 kB
+public/build/assets/app-logo-icon-ltZPIZq3.js           5.96 kB │ gzip:   2.70 kB
+public/build/assets/checkbox-jCr-h3QV.js                6.97 kB │ gzip:   2.98 kB
+public/build/assets/index-vzKGNZAj.js                   7.05 kB │ gzip:   2.51 kB
+public/build/assets/profile-C2INw8c0.js                 7.19 kB │ gzip:   2.51 kB
+public/build/assets/create-DQRlKHUW.js                 10.05 kB │ gzip:   2.60 kB
+public/build/assets/index-BPy2_AHx.js                  10.07 kB │ gzip:   3.15 kB
+public/build/assets/edit-CgpxMAnm.js                   11.67 kB │ gzip:   3.31 kB
+public/build/assets/riwayat-pangkat-CaOm1QTA.js        12.68 kB │ gzip:   4.13 kB
+public/build/assets/transition-ByotfOGw.js             14.34 kB │ gzip:   5.72 kB
+public/build/assets/riwayat-jabatan-CzCsjApe.js        14.47 kB │ gzip:   4.53 kB
+public/build/assets/riwayat-pendidikan-BR2rTzcM.js     15.72 kB │ gzip:   5.17 kB
+public/build/assets/dashboard-BXRZ7w8B.js              17.19 kB │ gzip:   5.59 kB
+public/build/assets/use-two-factor-auth-krn1isDO.js    17.24 kB │ gzip:   6.14 kB
+public/build/assets/security-D1JAkLLJ.js               19.80 kB │ gzip:   6.93 kB
+public/build/assets/select-C99C0yaR.js                 26.43 kB │ gzip:   9.26 kB
+public/build/assets/pegawai-detail-tabs-cJqGw500.js    28.98 kB │ gzip:   8.16 kB
+public/build/assets/index-5jEYKrva.js                  45.45 kB │ gzip:   9.20 kB
+public/build/assets/welcome-C7FIJUI6.js                50.15 kB │ gzip:   9.56 kB
+public/build/assets/app-layout-BBUCIUa4.js            100.96 kB │ gzip:  26.68 kB
+public/build/assets/app-CYIMUNqp.js                   477.69 kB │ gzip: 154.79 kB
+✓ built in 6.42s
++ vendor/bin/pint --dirty --format agent
+{"result":"pass"}+ php artisan route:list
++ grep self-service
+  GET|HEAD        self-service self-service.index › Kepegawaian\SelfServiceCo…
+  GET|HEAD        self-service/detail self-service.detail › Kepegawaian\SelfS…
+  GET|HEAD        self-service/unlinked self-service.unlinked › Kepegawaian\S…

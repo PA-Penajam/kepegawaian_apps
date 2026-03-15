@@ -9,11 +9,11 @@ describe('HubunganKeluarga Enum', function () {
 
     it('memiliki value yang benar', function () {
         $values = array_column(HubunganKeluarga::cases(), 'value');
-        expect($values)->toContain('suami');
-        expect($values)->toContain('istri');
-        expect($values)->toContain('anak');
-        expect($values)->toContain('ayah_kandung');
-        expect($values)->toContain('ibu_kandung');
+        expect($values)->toContain('Suami');
+        expect($values)->toContain('Istri');
+        expect($values)->toContain('Anak');
+        expect($values)->toContain('AyahKandung');
+        expect($values)->toContain('IbuKandung');
     });
 
     it('memiliki label yang benar untuk setiap kasus', function () {
@@ -25,6 +25,6 @@ describe('HubunganKeluarga Enum', function () {
     });
 
     it('dapat mengakses value', function () {
-        expect(HubunganKeluarga::Suami->value)->toBe('suami');
+        expect(HubunganKeluarga::Suami->value)->toBe('Suami');
     });
 });

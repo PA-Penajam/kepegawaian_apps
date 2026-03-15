@@ -1,0 +1,63 @@
+npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of npm.
+
+> build
+> vite build
+
+vite v7.3.1 building client environment for production...
+[plugin @laravel/vite-plugin-wayfinder] Types generated for actions, routes, form variants
+transforming...
+✓ 2852 modules transformed.
+rendering chunks...
+computing gzip size...
+public/build/manifest.json                             17.32 kB │ gzip:   1.84 kB
+public/build/assets/app-Beq8pjng.css                   99.19 kB │ gzip:  16.17 kB
+public/build/assets/check-B167-Ztm.js                   0.13 kB │ gzip:   0.15 kB
+public/build/assets/loader-circle-Y0AlyAsn.js           0.15 kB │ gzip:   0.16 kB
+public/build/assets/index-B5W82n74.js                   0.37 kB │ gzip:   0.22 kB
+public/build/assets/input-error-BAWRRana.js             0.39 kB │ gzip:   0.30 kB
+public/build/assets/spinner-DH93DZfw.js                 0.42 kB │ gzip:   0.31 kB
+public/build/assets/text-link-BROxkKtu.js               0.56 kB │ gzip:   0.38 kB
+public/build/assets/heading-C1u7xr-4.js                 0.60 kB │ gzip:   0.41 kB
+public/build/assets/label-EUIzyfNd.js                   0.80 kB │ gzip:   0.51 kB
+public/build/assets/input-CGPmEK8K.js                   1.00 kB │ gzip:   0.57 kB
+public/build/assets/create-DYO90-ka.js                  1.34 kB │ gzip:   0.70 kB
+public/build/assets/verify-email-ClDOadDC.js            1.39 kB │ gzip:   0.77 kB
+public/build/assets/confirm-password-BMxjmHYE.js        1.49 kB │ gzip:   0.76 kB
+public/build/assets/index-CL0xlWMs.js                   1.50 kB │ gzip:   0.51 kB
+public/build/assets/edit-C8E8OXI3.js                    1.65 kB │ gzip:   0.86 kB
+public/build/assets/card-DNrwvFON.js                    1.65 kB │ gzip:   0.43 kB
+public/build/assets/auth-layout-De0rJOSX.js             1.82 kB │ gzip:   0.85 kB
+public/build/assets/password-input-DA0GqoNo.js          1.83 kB │ gzip:   1.00 kB
+public/build/assets/riwayat-diklat-CBCUD3KA.js          2.04 kB │ gzip:   0.85 kB
+public/build/assets/forgot-password-yUoRFXGb.js         2.04 kB │ gzip:   0.98 kB
+public/build/assets/index-MSik1Kuv.js                   2.14 kB │ gzip:   1.02 kB
+public/build/assets/table-BnKhEC1z.js                   2.25 kB │ gzip:   0.59 kB
+public/build/assets/reset-password-DwPflgAF.js          2.36 kB │ gzip:   1.00 kB
+public/build/assets/dashboard-DywOSIJB.js               2.55 kB │ gzip:   0.92 kB
+public/build/assets/index-D0D8dW-c.js                   2.76 kB │ gzip:   0.71 kB
+public/build/assets/appearance-DYRVdcMk.js              2.76 kB │ gzip:   1.34 kB
+public/build/assets/show-Cd9msc8y.js                    2.80 kB │ gzip:   1.37 kB
+public/build/assets/register-B-mlhY_4.js                2.82 kB │ gzip:   1.12 kB
+public/build/assets/two-factor-challenge-_-XzkfKN.js    2.88 kB │ gzip:   1.36 kB
+public/build/assets/index-BDqSilVs.js                   2.91 kB │ gzip:   0.92 kB
+public/build/assets/login-lJNXDRcD.js                   2.98 kB │ gzip:   1.34 kB
+public/build/assets/layout-DUt9yJAk.js                  3.52 kB │ gzip:   1.50 kB
+public/build/assets/dialog-Bi_hN6n2.js                  3.95 kB │ gzip:   1.16 kB
+public/build/assets/index-C56nj5Qq.js                   4.27 kB │ gzip:   1.39 kB
+public/build/assets/app-logo-icon-DO_o9pnH.js           5.95 kB │ gzip:   2.70 kB
+public/build/assets/checkbox-BTMtr3SP.js                7.10 kB │ gzip:   3.01 kB
+public/build/assets/profile-usbiba6z.js                 7.16 kB │ gzip:   2.49 kB
+public/build/assets/riwayat-pangkat-br-jIThB.js        12.65 kB │ gzip:   4.12 kB
+public/build/assets/transition-CVX8BvPF.js             14.34 kB │ gzip:   5.72 kB
+public/build/assets/riwayat-pendidikan-Cs3XFWAm.js     15.72 kB │ gzip:   5.17 kB
+public/build/assets/riwayat-jabatan-WUl3B8YA.js        15.81 kB │ gzip:   5.02 kB
+public/build/assets/use-two-factor-auth-BDt94BK7.js    17.24 kB │ gzip:   6.14 kB
+public/build/assets/security-fIP2FQqU.js               19.92 kB │ gzip:   6.96 kB
+public/build/assets/welcome-D9OpxRoZ.js                50.15 kB │ gzip:   9.56 kB
+public/build/assets/app-layout-BcSBOR3_.js             98.64 kB │ gzip:  26.14 kB
+public/build/assets/app-BGGoDPvf.js                   475.84 kB │ gzip: 154.18 kB
+✓ built in 5.16s
+  GET|HEAD        kepegawaian/pegawai/{pegawai}/riwayat-pangkat kepegawaian.p…
+  POST            kepegawaian/pegawai/{pegawai}/riwayat-pangkat kepegawaian.p…
+  PUT|PATCH       kepegawaian/pegawai/{pegawai}/riwayat-pangkat/{riwayat_pangkat} kepegawaian.pegawai.riwayat-pangkat.update › Kepegawaian\RiwayatPangkatController@u…
+  DELETE          kepegawaian/pegawai/{pegawai}/riwayat-pangkat/{riwayat_pangkat} kepegawaian.pegawai.riwayat-pangkat.destroy › Kepegawaian\RiwayatPangkatController@de…

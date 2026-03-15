@@ -4,11 +4,11 @@ namespace App\Enums;
 
 enum HubunganKeluarga: string
 {
-    case Suami = 'suami';
-    case Istri = 'istri';
-    case Anak = 'anak';
-    case AyahKandung = 'ayah_kandung';
-    case IbuKandung = 'ibu_kandung';
+    case Suami = 'Suami';
+    case Istri = 'Istri';
+    case Anak = 'Anak';
+    case AyahKandung = 'AyahKandung';
+    case IbuKandung = 'IbuKandung';
 
     public function label(): string
     {

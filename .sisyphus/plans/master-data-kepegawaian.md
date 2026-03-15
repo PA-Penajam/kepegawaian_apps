@@ -244,7 +244,7 @@ Max Concurrent: 9 (Wave 4)
 > EVERY task MUST have: Recommended Agent Profile + Parallelization info + QA Scenarios.
 > TDD: Write failing test FIRST → minimal implementation → refactor → commit.
 
-- [ ]   1. PHP Enums & TypeScript Types untuk Kepegawaian
+- [x]   1. PHP Enums & TypeScript Types untuk Kepegawaian
 
     **What to do**:
     - Buat PHP Enums: `StatusPegawai` (Aktif, MutasiKeluar, Pensiun, Meninggal, Diberhentikan), `JenisKelamin` (LakiLaki, Perempuan), `StatusPerkawinan` (BelumKawin, Kawin, CeraiHidup, CeraiMati), `Agama` (Islam, Kristen, Katolik, Hindu, Buddha, Konghucu), `JenisJabatan` (Struktural, Fungsional, FungsionalUmum/Pelaksana), `GolonganDarah` (A, B, AB, O), `StatusKepegawaian` (PNS, PPPK, Honorer), `HubunganKeluarga` (Suami, Istri, Anak, AyahKandung, IbuKandung), `JenjangPendidikan` (SD, SMP, SMA, D1, D2, D3, D4, S1, S2, S3)
@@ -333,7 +333,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `app/Enums/*.php`, `resources/js/types/kepegawaian.ts`, `tests/Unit/Enums/*.php`
     - Pre-commit: `php artisan test --compact --filter=Enum`
 
-- [ ]   2. Reference Table Migrations, Models, Factories, dan Seeders
+- [x]   2. Reference Table Migrations, Models, Factories, dan Seeders
 
     **What to do**:
     - Buat migration + model + factory + seeder untuk:
@@ -431,7 +431,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `app/Models/Ref*.php`, `database/migrations/*ref*`, `database/seeders/*`, `database/factories/Ref*`, `tests/Feature/Models/Ref*`
     - Pre-commit: `php artisan test --compact --filter=Ref`
 
-- [ ]   4. Sidebar Navigation Restructure untuk Menu Kepegawaian
+- [x]   4. Sidebar Navigation Restructure untuk Menu Kepegawaian
 
     **What to do**:
     - **PERTAMA**: Install shadcn/ui components yang belum ada tapi dibutuhkan di tasks selanjutnya:
@@ -539,7 +539,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `resources/js/components/app-sidebar*`, `resources/js/components/nav-main*`, `resources/js/types/navigation.ts`
     - Pre-commit: `npm run build`
 
-- [ ]   3. RBAC — Role Enum, Middleware, dan User Model Update
+- [x]   3. RBAC — Role Enum, Middleware, dan User Model Update
 
         **What to do**:
     - Buat `App\Enums\Role` enum: Admin, Operator, Viewer (string-backed)
@@ -638,7 +638,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `app/Enums/Role.php`, `app/Http/Middleware/EnsureRole.php`, `app/Models/User.php`, `bootstrap/app.php`, `database/migrations/*add_role*`, `database/factories/UserFactory.php`, `tests/Feature/Auth/RoleMiddlewareTest.php`
     - Pre-commit: `php artisan test --compact --filter=Role && php artisan test --compact --filter=Auth`
 
-- [ ]   5. Pegawai Model, Migration, Factory, dan Seeder
+- [x]   5. Pegawai Model, Migration, Factory, dan Seeder
 
     **What to do**:
     - Buat migration `create_pegawai_table` dengan kolom:
@@ -793,7 +793,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `app/Models/Pegawai.php`, `database/migrations/*pegawai*`, `database/factories/PegawaiFactory.php`, `database/seeders/PegawaiSeeder.php`, `tests/Feature/Models/PegawaiTest.php`
     - Pre-commit: `php artisan test --compact --filter=Pegawai`
 
-- [ ]   6. Pegawai Controller, Form Requests, Policy, dan Routes
+- [x]   6. Pegawai Controller, Form Requests, Policy, dan Routes
 
     **What to do**:
     - Buat `PegawaiController` (resource controller) dengan methods: index, create, store, show, edit, update, destroy
@@ -892,7 +892,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `app/Http/Controllers/Kepegawaian/PegawaiController.php`, `app/Http/Requests/Kepegawaian/*`, `app/Policies/PegawaiPolicy.php`, `routes/web.php`, `tests/Feature/Kepegawaian/PegawaiControllerTest.php`
     - Pre-commit: `php artisan test --compact --filter=PegawaiController`
 
-- [ ]   7. Pegawai List Page (React + Inertia)
+- [x]   7. Pegawai List Page (React + Inertia)
 
     **What to do**:
     - Buat halaman list pegawai: `resources/js/pages/kepegawaian/pegawai/index.tsx`
@@ -989,7 +989,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `resources/js/pages/kepegawaian/pegawai/index.tsx`, `resources/js/types/kepegawaian.ts` (update)
     - Pre-commit: `npm run build`
 
-- [ ]   8. Riwayat Pangkat — Model, Migration, CRUD (Backend + Sub-page UI)
+- [x]   8. Riwayat Pangkat — Model, Migration, CRUD (Backend + Sub-page UI)
 
     **What to do**:
     - Buat migration `create_riwayat_pangkat_table`:
@@ -1084,7 +1084,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `app/Models/RiwayatPangkat.php`, `app/Http/Controllers/Kepegawaian/RiwayatPangkatController.php`, `database/migrations/*riwayat_pangkat*`, `resources/js/pages/kepegawaian/pegawai/riwayat-pangkat.tsx`
     - Pre-commit: `php artisan test --compact --filter=RiwayatPangkat`
 
-- [ ]   9. Riwayat Jabatan — Model, Migration, CRUD (Backend + Sub-page UI)
+- [x]   9. Riwayat Jabatan — Model, Migration, CRUD (Backend + Sub-page UI)
 
     **What to do**:
     - Buat migration `create_riwayat_jabatan_table`:
@@ -1154,7 +1154,7 @@ Max Concurrent: 9 (Wave 4)
     - Message: `feat(kepegawaian): add riwayat jabatan with active sync logic`
     - Pre-commit: `php artisan test --compact --filter=RiwayatJabatan`
 
-- [ ]   10. Riwayat Pendidikan — Model, Migration, CRUD (Backend + Sub-page UI)
+- [x]   10. Riwayat Pendidikan — Model, Migration, CRUD (Backend + Sub-page UI)
 
     **What to do**:
     - Buat migration `create_riwayat_pendidikan_table`:
@@ -1217,7 +1217,7 @@ Max Concurrent: 9 (Wave 4)
     **Commit**: YES (groups with T8-T9, T11-T15)
     - Pre-commit: `php artisan test --compact --filter=RiwayatPendidikan`
 
-- [ ]   11. Riwayat Diklat — Model, Migration, CRUD (Backend + Sub-page UI)
+- [x]   11. Riwayat Diklat — Model, Migration, CRUD (Backend + Sub-page UI)
 
     **What to do**:
     - Buat migration `create_riwayat_diklat_table`:
@@ -1271,7 +1271,7 @@ Max Concurrent: 9 (Wave 4)
     **Commit**: YES (groups with T8-T10, T12-T15)
     - Pre-commit: `php artisan test --compact --filter=RiwayatDiklat`
 
-- [ ]   12. Data Keluarga — Model, Migration, CRUD (Backend + Sub-page UI)
+- [x]   12. Data Keluarga — Model, Migration, CRUD (Backend + Sub-page UI)
 
     **What to do**:
     - Buat migration `create_keluarga_table`:
@@ -1328,7 +1328,7 @@ Max Concurrent: 9 (Wave 4)
     **Commit**: YES (groups with T8-T11, T13-T15)
     - Pre-commit: `php artisan test --compact --filter=Keluarga`
 
-- [ ]   13. Penghargaan — Model, Migration, CRUD (Backend + Sub-page UI)
+- [x]   13. Penghargaan — Model, Migration, CRUD (Backend + Sub-page UI)
 
     **What to do**:
     - Buat migration `create_penghargaan_table`:
@@ -1382,7 +1382,7 @@ Max Concurrent: 9 (Wave 4)
     **Commit**: YES (groups with others in Wave 3)
     - Pre-commit: `php artisan test --compact --filter=Penghargaan`
 
-- [ ]   14. Hukuman Disiplin — Model, Migration, CRUD (Backend + Sub-page UI)
+- [x]   14. Hukuman Disiplin — Model, Migration, CRUD (Backend + Sub-page UI)
 
     **What to do**:
     - Buat migration `create_hukuman_disiplin_table`:
@@ -1441,7 +1441,7 @@ Max Concurrent: 9 (Wave 4)
     **Commit**: YES (groups with others in Wave 3)
     - Pre-commit: `php artisan test --compact --filter=HukumanDisiplin`
 
-- [ ]   15. Dokumen Pegawai — Model, Migration, CRUD (Backend + Sub-page UI)
+- [x]   15. Dokumen Pegawai — Model, Migration, CRUD (Backend + Sub-page UI)
 
     **What to do**:
     - Buat migration `create_dokumen_pegawai_table`:
@@ -1501,7 +1501,7 @@ Max Concurrent: 9 (Wave 4)
     **Commit**: YES (groups with others in Wave 3)
     - Pre-commit: `php artisan test --compact --filter=DokumenPegawai`
 
-- [ ]   16. Monitoring KGB — Service, Controller, dan Page
+- [x]   16. Monitoring KGB — Service, Controller, dan Page
 
     **What to do**:
     - Buat `KgbMonitoringService` di `app/Services/`:
@@ -1607,7 +1607,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `app/Services/KgbMonitoringService.php`, `app/Http/Controllers/Monitoring/MonitoringKgbController.php`, `resources/js/pages/kepegawaian/monitoring/kgb/index.tsx`, `routes/web.php`, `tests/Feature/Monitoring/KgbMonitoringTest.php`
     - Pre-commit: `php artisan test --compact --filter=KgbMonitoring`
 
-- [ ]   17. Monitoring Kenaikan Pangkat — Service, Controller, dan Page
+- [x]   17. Monitoring Kenaikan Pangkat — Service, Controller, dan Page
 
     **What to do**:
     - Buat `KenaikanPangkatMonitoringService` di `app/Services/`:
@@ -1687,7 +1687,7 @@ Max Concurrent: 9 (Wave 4)
     - Message: `feat(monitoring): add kenaikan pangkat tracking with periode filtering`
     - Pre-commit: `php artisan test --compact --filter=KenaikanPangkatMonitoring`
 
-- [ ]   18. Dashboard Statistik Kepegawaian
+- [x]   18. Dashboard Statistik Kepegawaian
 
     **What to do**:
     - Update `DashboardController` (atau buat baru) untuk menyediakan data statistik:
@@ -1767,7 +1767,7 @@ Max Concurrent: 9 (Wave 4)
     - Message: `feat(dashboard): add kepegawaian statistics with distribution visuals`
     - Pre-commit: `php artisan test --compact --filter=Dashboard`
 
-- [ ]   19. Pegawai Show/Detail Page (Tabs untuk Semua Riwayat)
+- [x]   19. Pegawai Show/Detail Page (Tabs untuk Semua Riwayat)
 
     **What to do**:
     - Buat halaman detail pegawai: `resources/js/pages/kepegawaian/pegawai/show.tsx`
@@ -1834,7 +1834,7 @@ Max Concurrent: 9 (Wave 4)
     - Message: `feat(kepegawaian): add pegawai detail page with tabbed riwayat views`
     - Pre-commit: `npm run build`
 
-- [ ]   20. Pegawai Create & Edit Pages — Multi-Step Form
+- [x]   20. Pegawai Create & Edit Pages — Multi-Step Form
 
     **What to do**:
     - Buat page `resources/js/pages/kepegawaian/pegawai/create.tsx`:
@@ -1970,7 +1970,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `resources/js/pages/kepegawaian/pegawai/create.tsx`, `resources/js/pages/kepegawaian/pegawai/edit.tsx`, `resources/js/components/kepegawaian/multi-step-form.tsx`, `resources/js/components/kepegawaian/enum-select.tsx`, `app/Http/Requests/Kepegawaian/StorePegawaiRequest.php`, `app/Http/Requests/Kepegawaian/UpdatePegawaiRequest.php`, `tests/Feature/Kepegawaian/PegawaiCreateTest.php`, `tests/Feature/Kepegawaian/PegawaiUpdateTest.php`
     - Pre-commit: `php artisan test --compact --filter=Pegawai`
 
-- [ ]   21. Self-Service — Pegawai View Own Data
+- [x]   21. Self-Service — Pegawai View Own Data
 
     **What to do**:
     - Buat middleware `EnsurePegawaiLinked` di `app/Http/Middleware/`:
@@ -2087,7 +2087,7 @@ Max Concurrent: 9 (Wave 4)
     - Files: `app/Http/Middleware/EnsurePegawaiLinked.php`, `app/Http/Controllers/Kepegawaian/SelfServiceController.php`, `resources/js/pages/self-service/index.tsx`, `resources/js/pages/self-service/detail.tsx`, `bootstrap/app.php`, `routes/web.php`, `resources/js/components/app-sidebar.tsx`, `tests/Feature/SelfService/SelfServiceAccessTest.php`
     - Pre-commit: `php artisan test --compact --filter=SelfService`
 
-- [ ]   22. Search, Filter, Sort Across All List Pages
+- [x]   22. Search, Filter, Sort Across All List Pages
 
     **What to do**:
     - Buat trait `Filterable` di `app/Traits/Filterable.php`:

@@ -14,11 +14,11 @@ describe('RefUnitKerja', function () {
         expect($parent->children->first()?->is($child))->toBeTrue();
     });
 
-    it('menyediakan dua unit kerja level atas melalui seeder', function () {
+    it('menyediakan tiga unit kerja level atas melalui seeder', function () {
         (new RefUnitKerjaSeeder)->run();
 
-        expect(RefUnitKerja::query()->whereNull('parent_id')->count())->toBe(2);
-        expect(RefUnitKerja::query()->whereNotNull('parent_id')->count())->toBeGreaterThanOrEqual(3);
+        expect(RefUnitKerja::query()->whereNull('parent_id')->count())->toBe(3);
+        expect(RefUnitKerja::query()->whereNotNull('parent_id')->count())->toBeGreaterThanOrEqual(6);
     });
 
     it('mendukung soft delete', function () {

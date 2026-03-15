@@ -52,6 +52,13 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function viewer(): static
+    {
+        return $this->state(fn () => [
+            'role' => Role::Viewer->value,
+        ]);
+    }
+
     /**
      * Indicate that the model's email address should be unverified.
      */

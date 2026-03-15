@@ -89,18 +89,18 @@ export const StatusKepegawaianLabels: Record<StatusKepegawaian, string> = {
 
 // Hubungan Keluarga
 export type HubunganKeluarga =
-    | 'suami'
-    | 'istri'
-    | 'anak'
-    | 'ayah_kandung'
-    | 'ibu_kandung';
+    | 'Suami'
+    | 'Istri'
+    | 'Anak'
+    | 'AyahKandung'
+    | 'IbuKandung';
 
 export const HubunganKeluargaLabels: Record<HubunganKeluarga, string> = {
-    suami: 'Suami',
-    istri: 'Istri',
-    anak: 'Anak',
-    ayah_kandung: 'Ayah Kandung',
-    ibu_kandung: 'Ibu Kandung',
+    Suami: 'Suami',
+    Istri: 'Istri',
+    Anak: 'Anak',
+    AyahKandung: 'Ayah Kandung',
+    IbuKandung: 'Ibu Kandung',
 };
 
 // Jenjang Pendidikan
@@ -127,4 +127,122 @@ export const JenjangPendidikanLabels: Record<JenjangPendidikan, string> = {
     s1: 'S1',
     s2: 'S2',
     s3: 'S3',
+};
+
+// Pagination
+export type PaginationLink = {
+    url: string | null;
+    label: string;
+    active: boolean;
+};
+
+export type PaginatedData<T> = {
+    current_page: number;
+    data: T[];
+    first_page_url: string;
+    from: number | null;
+    last_page: number;
+    last_page_url: string;
+    links: PaginationLink[];
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number | null;
+    total: number;
+};
+
+export type PegawaiListSortBy = 'nip' | 'nama' | 'pangkat';
+
+export type PegawaiListFilters = {
+    search: string | null;
+    golongan: string | null;
+    unit_kerja: string | null;
+    status_pegawai: StatusPegawai | null;
+    sort_by: PegawaiListSortBy | null;
+    sort_dir: 'asc' | 'desc' | null;
+};
+
+export type PegawaiGolonganOption = {
+    id: string;
+    kode: string;
+    nama: string;
+};
+
+export type PegawaiUnitKerjaOption = {
+    id: string;
+    nama: string;
+};
+
+export type PegawaiListFilterOptions = {
+    golongan: PegawaiGolonganOption[];
+    unitKerja: PegawaiUnitKerjaOption[];
+    statusPegawai: StatusPegawai[];
+};
+
+// Models
+export type RefPangkat = {
+    id: string;
+    kode: string;
+    nama: string;
+    golongan: string;
+    ruang: string;
+};
+
+export type RefJabatan = {
+    id: string;
+    nama: string;
+    jenis: JenisJabatan;
+    kelas: number | null;
+    nilai_jabatan: number | null;
+    indeks_jabatan: number | null;
+};
+
+export type RefUnitKerja = {
+    id: string;
+    nama: string;
+    kode: string | null;
+    parent_id: string | null;
+    level: number;
+};
+
+export type Pegawai = {
+    id: string;
+    nip: string | null;
+    nip_lama: string | null;
+    nama_lengkap: string;
+    tempat_lahir: string;
+    tanggal_lahir: string;
+    jenis_kelamin: JenisKelamin;
+    agama: Agama;
+    status_perkawinan: StatusPerkawinan;
+    golongan_darah: GolonganDarah | null;
+    alamat: string | null;
+    no_telepon: string | null;
+    email: string | null;
+    status_kepegawaian: StatusKepegawaian;
+    status_pegawai: StatusPegawai;
+    tmt_cpns: string | null;
+    tmt_pns: string | null;
+    pendidikan_terakhir: string | null;
+    tanggal_masuk: string | null;
+    tanggal_pensiun_bup: string | null;
+    ref_pangkat_id: string | null;
+    ref_jabatan_id: string | null;
+    ref_unit_kerja_id: string | null;
+    no_karpeg: string | null;
+    no_karis_karsu: string | null;
+    npwp: string | null;
+    no_bpjs_kesehatan: string | null;
+    no_bpjs_ketenagakerjaan: string | null;
+    no_taspen: string | null;
+    foto: string | null;
+    keterangan: string | null;
+    created_at: string;
+    updated_at: string;
+
+    // Relations
+    pangkat?: Pick<RefPangkat, 'id' | 'kode' | 'nama'> | null;
+    jabatan?: Pick<RefJabatan, 'id' | 'nama'> | null;
+    unit_kerja?: Pick<RefUnitKerja, 'id' | 'nama'> | null;
 };

@@ -30,6 +30,11 @@ class RefPangkatSeeder extends Seeder
             ['kode' => 'IV/c', 'nama' => 'Pembina Utama Muda', 'golongan' => 'IV', 'ruang' => 'c', 'tingkat' => 'Pembina', 'urutan' => 15],
             ['kode' => 'IV/d', 'nama' => 'Pembina Utama Madya', 'golongan' => 'IV', 'ruang' => 'd', 'tingkat' => 'Pembina', 'urutan' => 16],
             ['kode' => 'IV/e', 'nama' => 'Pembina Utama', 'golongan' => 'IV', 'ruang' => 'e', 'tingkat' => 'Pembina', 'urutan' => 17],
+
+            // PPPK (Pegawai Pemerintah dengan Perjanjian Kerja)
+            ['kode' => 'IX', 'nama' => 'PPPK Jenjang 9', 'golongan' => 'IX', 'ruang' => '-', 'tingkat' => 'PPPK', 'urutan' => 18],
+            ['kode' => 'V', 'nama' => 'PPPK Jenjang 5', 'golongan' => 'V', 'ruang' => '-', 'tingkat' => 'PPPK', 'urutan' => 19],
+            ['kode' => 'I', 'nama' => 'PPPK Jenjang 1', 'golongan' => 'I', 'ruang' => '-', 'tingkat' => 'PPPK', 'urutan' => 20],
         ];
 
         foreach ($pangkats as $pangkat) {

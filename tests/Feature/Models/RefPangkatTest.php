@@ -4,10 +4,10 @@ use App\Models\RefPangkat;
 use Database\Seeders\RefPangkatSeeder;
 
 describe('RefPangkat', function () {
-    it('menyediakan 17 data pangkat standar melalui seeder', function () {
+    it('menyediakan 20 data pangkat (17 PNS + 3 PPPK) melalui seeder', function () {
         (new RefPangkatSeeder)->run();
 
-        expect(RefPangkat::count())->toBe(17);
+        expect(RefPangkat::count())->toBe(20);
         expect(
             RefPangkat::query()
                 ->where('golongan', 'III')

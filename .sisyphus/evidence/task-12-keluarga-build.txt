@@ -1,0 +1,61 @@
+
+> build
+> vite build
+
+vite v7.3.1 building client environment for production...
+[plugin @laravel/vite-plugin-wayfinder] Types generated for actions, routes, form variants
+transforming...
+✓ 2853 modules transformed.
+rendering chunks...
+computing gzip size...
+public/build/manifest.json                             17.84 kB │ gzip:   1.88 kB
+public/build/assets/app-Beq8pjng.css                   99.19 kB │ gzip:  16.17 kB
+public/build/assets/check-CY4ZDLGc.js                   0.13 kB │ gzip:   0.15 kB
+public/build/assets/loader-circle-el3rbk1P.js           0.15 kB │ gzip:   0.16 kB
+public/build/assets/index-B5W82n74.js                   0.37 kB │ gzip:   0.22 kB
+public/build/assets/input-error-DH3O7l46.js             0.39 kB │ gzip:   0.30 kB
+public/build/assets/spinner-B5TQNZMi.js                 0.42 kB │ gzip:   0.31 kB
+public/build/assets/text-link-E0XRVI6F.js               0.56 kB │ gzip:   0.38 kB
+public/build/assets/heading-BXH83Gfk.js                 0.60 kB │ gzip:   0.41 kB
+public/build/assets/label-Bk8ky5vN.js                   0.80 kB │ gzip:   0.52 kB
+public/build/assets/input-Dy7auVJ8.js                   1.00 kB │ gzip:   0.57 kB
+public/build/assets/create-DQWKVzea.js                  1.34 kB │ gzip:   0.70 kB
+public/build/assets/verify-email-DNRe2D4o.js            1.39 kB │ gzip:   0.77 kB
+public/build/assets/confirm-password-BgOQpUcO.js        1.49 kB │ gzip:   0.76 kB
+public/build/assets/index-CL0xlWMs.js                   1.50 kB │ gzip:   0.51 kB
+public/build/assets/edit-uEkbjBHr.js                    1.65 kB │ gzip:   0.86 kB
+public/build/assets/card-CCI6v6bK.js                    1.65 kB │ gzip:   0.43 kB
+public/build/assets/auth-layout-DAV17A7-.js             1.82 kB │ gzip:   0.85 kB
+public/build/assets/password-input-CrD6vtlC.js          1.83 kB │ gzip:   1.00 kB
+public/build/assets/keluarga-CBgTeFvd.js                1.85 kB │ gzip:   0.83 kB
+public/build/assets/riwayat-diklat-BpJeo5qA.js          2.04 kB │ gzip:   0.85 kB
+public/build/assets/forgot-password-B8Z4DHY9.js         2.04 kB │ gzip:   0.97 kB
+public/build/assets/index-nb8NHXcu.js                   2.14 kB │ gzip:   1.02 kB
+public/build/assets/table-O0Ma7170.js                   2.25 kB │ gzip:   0.60 kB
+public/build/assets/reset-password-lwmCvicW.js          2.36 kB │ gzip:   0.99 kB
+public/build/assets/dashboard-DyR5voF9.js               2.55 kB │ gzip:   0.92 kB
+public/build/assets/index-D0D8dW-c.js                   2.76 kB │ gzip:   0.71 kB
+public/build/assets/appearance-vu4IgI5j.js              2.76 kB │ gzip:   1.34 kB
+public/build/assets/show-B3p7kAq5.js                    2.80 kB │ gzip:   1.37 kB
+public/build/assets/register-BTCYYzbk.js                2.82 kB │ gzip:   1.12 kB
+public/build/assets/two-factor-challenge-C6m8vUTe.js    2.88 kB │ gzip:   1.36 kB
+public/build/assets/index-BDqSilVs.js                   2.91 kB │ gzip:   0.92 kB
+public/build/assets/login-NV03KQ3h.js                   2.98 kB │ gzip:   1.34 kB
+public/build/assets/layout-CwqOIej7.js                  3.52 kB │ gzip:   1.50 kB
+public/build/assets/dialog-C0zrAyiN.js                  3.95 kB │ gzip:   1.16 kB
+public/build/assets/index-pFJCM97W.js                   4.27 kB │ gzip:   1.39 kB
+public/build/assets/app-logo-icon-CMWzbd-e.js           5.95 kB │ gzip:   2.70 kB
+public/build/assets/checkbox-D-0R3FLc.js                7.10 kB │ gzip:   3.01 kB
+public/build/assets/profile-Cuza8Ozs.js                 7.16 kB │ gzip:   2.49 kB
+public/build/assets/riwayat-pangkat-DgmvnfVx.js        12.65 kB │ gzip:   4.12 kB
+public/build/assets/transition-VjBUdv-2.js             14.34 kB │ gzip:   5.72 kB
+public/build/assets/riwayat-pendidikan-C-e43kCL.js     15.72 kB │ gzip:   5.17 kB
+public/build/assets/riwayat-jabatan-BrpAd-Uy.js        15.79 kB │ gzip:   5.01 kB
+public/build/assets/use-two-factor-auth-DXh8lEK8.js    17.24 kB │ gzip:   6.14 kB
+public/build/assets/security-CAHr0OO6.js               19.92 kB │ gzip:   6.96 kB
+public/build/assets/welcome-Bolu1gyD.js                50.15 kB │ gzip:   9.55 kB
+public/build/assets/app-layout-Du_2MHas.js             98.64 kB │ gzip:  26.14 kB
+public/build/assets/app-CZ6HemSU.js                   475.99 kB │ gzip: 154.23 kB
+✓ built in 4.99s
+
+BUILD OK

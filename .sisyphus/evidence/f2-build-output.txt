@@ -1,0 +1,81 @@
+=== F2 Code Quality Review ===
+Date: 2026-03-15 05:50:36
+Command: npm run build
+---
+npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of npm.
+
+> build
+> vite build
+
+vite v7.3.1 building client environment for production...
+[plugin @laravel/vite-plugin-wayfinder] Types generated for actions, routes, form variants
+transforming...
+✓ 2880 modules transformed.
+rendering chunks...
+computing gzip size...
+public/build/manifest.json                             25.60 kB │ gzip:   2.54 kB
+public/build/assets/app-TWNOTnK1.css                  103.62 kB │ gzip:  16.95 kB
+public/build/assets/check-CMfO-SHZ.js                   0.13 kB │ gzip:   0.14 kB
+public/build/assets/loader-circle-Biuq2hQx.js           0.15 kB │ gzip:   0.16 kB
+public/build/assets/briefcase-CkltST_H.js               0.23 kB │ gzip:   0.20 kB
+public/build/assets/index-BigP8AJZ.js                   0.23 kB │ gzip:   0.17 kB
+public/build/assets/circle-alert-B6Iq0doc.js            0.26 kB │ gzip:   0.19 kB
+public/build/assets/eye-BmR9SUqj.js                     0.26 kB │ gzip:   0.20 kB
+public/build/assets/index-B5W82n74.js                   0.37 kB │ gzip:   0.22 kB
+public/build/assets/input-error-E6lQnEfw.js             0.39 kB │ gzip:   0.30 kB
+public/build/assets/spinner-BscZv7hY.js                 0.42 kB │ gzip:   0.31 kB
+public/build/assets/kepegawaian-DnMPhkwG.js             0.55 kB │ gzip:   0.35 kB
+public/build/assets/text-link-BeyKlrlS.js               0.56 kB │ gzip:   0.38 kB
+public/build/assets/heading-nG9aae56.js                 0.60 kB │ gzip:   0.41 kB
+public/build/assets/label-BVgKUkYN.js                   0.80 kB │ gzip:   0.51 kB
+public/build/assets/input-BuzGFdUF.js                   1.00 kB │ gzip:   0.57 kB
+public/build/assets/verify-email-BzSnb-PE.js            1.39 kB │ gzip:   0.77 kB
+public/build/assets/badge-Cr1ptrdC.js                   1.48 kB │ gzip:   0.75 kB
+public/build/assets/index-CL0xlWMs.js                   1.50 kB │ gzip:   0.51 kB
+public/build/assets/confirm-password-DZPL-ozW.js        1.52 kB │ gzip:   0.78 kB
+public/build/assets/password-input-BnOPp3P3.js          1.66 kB │ gzip:   0.94 kB
+public/build/assets/unlinked-J0rPlizt.js                1.75 kB │ gzip:   0.84 kB
+public/build/assets/auth-layout-D5PMith6.js             1.82 kB │ gzip:   0.85 kB
+public/build/assets/keluarga-BCekDji6.js                1.85 kB │ gzip:   0.83 kB
+public/build/assets/penghargaan-B1I4BRw4.js             1.88 kB │ gzip:   0.83 kB
+public/build/assets/card-B0clTU3b.js                    1.96 kB │ gzip:   0.45 kB
+public/build/assets/hukuman-disiplin-CvfiVh0U.js        2.01 kB │ gzip:   0.85 kB
+public/build/assets/riwayat-diklat-CNk5cE37.js          2.04 kB │ gzip:   0.85 kB
+public/build/assets/forgot-password-7-NSz2iq.js         2.04 kB │ gzip:   0.97 kB
+public/build/assets/index-C8zlj_GP.js                   2.14 kB │ gzip:   1.02 kB
+public/build/assets/table-By8M62Mi.js                   2.25 kB │ gzip:   0.59 kB
+public/build/assets/dokumen-pegawai-BNd3_sSH.js         2.35 kB │ gzip:   1.08 kB
+public/build/assets/reset-password-B_9k6Ml-.js          2.39 kB │ gzip:   1.01 kB
+public/build/assets/index-D0D8dW-c.js                   2.76 kB │ gzip:   0.71 kB
+public/build/assets/appearance-DUYSr5yP.js              2.76 kB │ gzip:   1.34 kB
+public/build/assets/register-Di-3-0FW.js                2.85 kB │ gzip:   1.13 kB
+public/build/assets/two-factor-challenge-yMIJ7GEC.js    2.88 kB │ gzip:   1.36 kB
+public/build/assets/index-BDqSilVs.js                   2.91 kB │ gzip:   0.92 kB
+public/build/assets/login-C90lFyUn.js                   3.04 kB │ gzip:   1.36 kB
+public/build/assets/layout-DOFpm2I6.js                  3.52 kB │ gzip:   1.50 kB
+public/build/assets/detail-xRHENdTi.js                  3.72 kB │ gzip:   1.61 kB
+public/build/assets/dialog-72xRLy15.js                  3.96 kB │ gzip:   1.17 kB
+public/build/assets/textarea-D1FAfjgu.js                4.49 kB │ gzip:   2.08 kB
+public/build/assets/show-Dt-7ZIgz.js                    4.65 kB │ gzip:   1.98 kB
+public/build/assets/index-p9dL7ajU.js                   5.68 kB │ gzip:   2.27 kB
+public/build/assets/app-logo-icon-CCgfKMfe.js           5.96 kB │ gzip:   2.70 kB
+public/build/assets/checkbox-D-lt6CYR.js                6.97 kB │ gzip:   2.98 kB
+public/build/assets/index-DAaHqO4u.js                   7.05 kB │ gzip:   2.51 kB
+public/build/assets/profile-BfotNzHV.js                 7.19 kB │ gzip:   2.50 kB
+public/build/assets/create-B-5KQduA.js                 10.05 kB │ gzip:   2.60 kB
+public/build/assets/index-CWbyRtl7.js                  10.20 kB │ gzip:   3.21 kB
+public/build/assets/edit-KEQlwkkE.js                   11.67 kB │ gzip:   3.30 kB
+public/build/assets/riwayat-pangkat-Bzons-OW.js        12.68 kB │ gzip:   4.13 kB
+public/build/assets/transition-K0QjvHkx.js             14.34 kB │ gzip:   5.72 kB
+public/build/assets/riwayat-jabatan-DznASKqK.js        14.47 kB │ gzip:   4.52 kB
+public/build/assets/riwayat-pendidikan-C2iQErE1.js     15.72 kB │ gzip:   5.17 kB
+public/build/assets/dashboard-5ry1UoKB.js              16.99 kB │ gzip:   5.53 kB
+public/build/assets/use-two-factor-auth-B5HrFKbj.js    17.24 kB │ gzip:   6.14 kB
+public/build/assets/security-DVpXeDU7.js               19.80 kB │ gzip:   6.93 kB
+public/build/assets/select-1qYBddQj.js                 26.43 kB │ gzip:   9.25 kB
+public/build/assets/pegawai-detail-tabs-oAfSxqZF.js    28.98 kB │ gzip:   8.16 kB
+public/build/assets/index-CKfT71OA.js                  45.45 kB │ gzip:   9.19 kB
+public/build/assets/welcome-CB9Sdq9X.js                50.15 kB │ gzip:   9.55 kB
+public/build/assets/app-layout-ByW0jeFm.js            101.03 kB │ gzip:  26.72 kB
+public/build/assets/app-CLiVxauO.js                   477.69 kB │ gzip: 154.77 kB
+✓ built in 6.38s
