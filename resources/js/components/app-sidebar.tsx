@@ -1,5 +1,12 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    BookOpen,
+    Calendar,
+    FolderGit2,
+    LayoutGrid,
+    TrendingUp,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -21,6 +28,27 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+];
+
+const kepegawaianNavItems: NavItem[] = [
+    {
+        title: 'Data Pegawai',
+        href: '/kepegawaian/pegawai',
+        icon: Users,
+    },
+];
+
+const monitoringNavItems: NavItem[] = [
+    {
+        title: 'KGB',
+        href: '/kepegawaian/monitoring/kgb',
+        icon: Calendar,
+    },
+    {
+        title: 'Kenaikan Pangkat',
+        href: '/kepegawaian/monitoring/kenaikan-pangkat',
+        icon: TrendingUp,
     },
 ];
 
@@ -54,6 +82,8 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                <NavMain items={kepegawaianNavItems} title="Kepegawaian" />
+                <NavMain items={monitoringNavItems} title="Monitoring" />
             </SidebarContent>
 
             <SidebarFooter>
