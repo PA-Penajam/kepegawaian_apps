@@ -21,6 +21,11 @@ class UpdatePegawaiRequest extends StorePegawaiRequest
     {
         $pegawai = $this->route('pegawai');
 
-        return $this->pegawaiRules($pegawai instanceof Pegawai ? $pegawai : null);
+        return array_merge(
+            $this->pegawaiRules($pegawai instanceof Pegawai ? $pegawai : null),
+            [
+                'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            ],
+        );
     }
 }

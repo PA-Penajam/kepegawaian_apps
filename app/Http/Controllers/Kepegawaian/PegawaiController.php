@@ -200,7 +200,11 @@ class PegawaiController extends Controller
     {
         Gate::authorize('update', $pegawai);
 
-        $pegawai->update($request->validated());
+        $pegawai->update($request->safe()->except(['password', 'password_confirmation']));
+
+        if ($request->filled('password')) {
+            $pegawai->update(['password' => bcrypt($request->validated('password'))]);
+        }
 
         return to_route('kepegawaian.pegawai.show', $pegawai);
     }
