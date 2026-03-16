@@ -13,47 +13,33 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
-class Pegawai extends Model
+class Pegawai extends Authenticatable
 {
-    use Filterable, HasFactory, HasUlids, SoftDeletes;
+    use Filterable, HasFactory, HasUlids, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     protected $table = 'pegawai';
 
     protected $fillable = [
-        'nip',
-        'nip_lama',
-        'nama_lengkap',
-        'tempat_lahir',
-        'tanggal_lahir',
-        'jenis_kelamin',
-        'agama',
-        'status_perkawinan',
-        'golongan_darah',
-        'alamat',
-        'no_telepon',
-        'email',
-        'status_kepegawaian',
-        'status_pegawai',
-        'tmt_cpns',
-        'tmt_pns',
-        'pendidikan_terakhir',
-        'tanggal_masuk',
-        'tanggal_pensiun_bup',
-        'ref_pangkat_id',
-        'ref_jabatan_id',
-        'ref_unit_kerja_id',
-        'no_karpeg',
-        'no_karis_karsu',
-        'npwp',
-        'no_bpjs_kesehatan',
-        'no_bpjs_ketenagakerjaan',
-        'no_taspen',
-        'foto',
-        'keterangan',
+        'nip', 'nip_lama', 'nama_lengkap', 'tempat_lahir', 'tanggal_lahir',
+        'jenis_kelamin', 'agama', 'status_perkawinan', 'golongan_darah',
+        'alamat', 'no_telepon', 'email', 'status_kepegawaian', 'status_pegawai',
+        'tmt_cpns', 'tmt_pns', 'pendidikan_terakhir', 'tanggal_masuk',
+        'tanggal_pensiun_bup', 'ref_pangkat_id', 'ref_jabatan_id', 'ref_unit_kerja_id',
+        'no_karpeg', 'no_karis_karsu', 'npwp', 'no_bpjs_kesehatan',
+        'no_bpjs_ketenagakerjaan', 'no_taspen', 'foto', 'keterangan',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password', 'remember_token',
+        'two_factor_secret', 'two_factor_recovery_codes',
     ];
 
     protected function casts(): array
@@ -71,8 +57,13 @@ class Pegawai extends Model
             'tanggal_masuk' => 'date',
             'tanggal_pensiun_bup' => 'date',
             'deleted_at' => 'datetime',
+            'password' => 'hashed',
+            'two_factor_confirmed_at' => 'datetime',
+            'email_verified_at' => 'datetime',
         ];
     }
+
+    // === Relasi referensi ===
 
     public function pangkat(): BelongsTo
     {
@@ -89,10 +80,15 @@ class Pegawai extends Model
         return $this->belongsTo(RefUnitKerja::class, 'ref_unit_kerja_id');
     }
 
-    public function user(): HasOne
+    // === Relasi RBAC (many-to-many) ===
+
+    public function roles(): BelongsToMany
     {
-        return $this->hasOne(User::class, 'pegawai_id');
+        return $this->belongsToMany(RefRole::class, 'pegawai_role', 'pegawai_id', 'ref_role_id')
+            ->withPivot('created_at');
     }
+
+    // === Relasi riwayat ===
 
     public function riwayatJabatan(): HasMany
     {
@@ -134,6 +130,46 @@ class Pegawai extends Model
         return $this->hasMany(HukumanDisiplin::class, 'pegawai_id');
     }
 
+    // === Permission methods (multi-role aware) ===
+
+    public function hasPermission(string $permission): bool
+    {
+        return $this->roles()->whereHas('permissions', function (Builder $q) use ($permission) {
+            $q->where('nama', $permission);
+        })->exists();
+    }
+
+    public function hasAnyPermission(string ...$permissions): bool
+    {
+        return $this->roles()->whereHas('permissions', function (Builder $q) use ($permissions) {
+            $q->whereIn('nama', $permissions);
+        })->exists();
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->roles()->where('nama', 'Admin')->exists();
+    }
+
+    public function isOperator(): bool
+    {
+        return $this->roles()->where('nama', 'Operator')->exists();
+    }
+
+    public function isViewer(): bool
+    {
+        return $this->roles()->where('nama', 'Viewer')->exists();
+    }
+
+    // === Notifikasi ===
+
+    public function routeNotificationForMail(): ?string
+    {
+        return $this->email;
+    }
+
+    // === Scopes ===
+
     public function scopeAktif(Builder $query): Builder
     {
         return $query->where('status_pegawai', StatusPegawai::Aktif->value);
@@ -152,6 +188,8 @@ class Pegawai extends Model
                 ->orWhere('golongan', $golongan);
         });
     }
+
+    // === Accessors ===
 
     public function getNamaPangkatLengkapAttribute(): string
     {

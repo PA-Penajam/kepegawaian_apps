@@ -25,6 +25,12 @@ class RefRole extends Model
         ];
     }
 
+    public function pegawai(): BelongsToMany
+    {
+        return $this->belongsToMany(Pegawai::class, 'pegawai_role', 'ref_role_id', 'pegawai_id')
+            ->withPivot('created_at');
+    }
+
     public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(RefPermission::class, 'ref_role_permission', 'ref_role_id', 'ref_permission_id');

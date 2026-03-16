@@ -11,19 +11,18 @@ use App\Enums\StatusPerkawinan;
 use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefPangkat;
+use App\Models\RefRole;
 use App\Models\RefUnitKerja;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * @extends Factory<Pegawai>
  */
 class PegawaiFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected static ?string $password = null;
+
     public function definition(): array
     {
         $fakerId = fake('id_ID');
@@ -56,7 +55,8 @@ class PegawaiFactory extends Factory
             'golongan_darah' => $fakerId->optional()->randomElement(GolonganDarah::cases())?->value,
             'alamat' => $fakerId->address(),
             'no_telepon' => $fakerId->optional()->numerify('08##########'),
-            'email' => $fakerId->boolean(70) ? $fakerId->unique()->safeEmail() : null,
+            'email' => $fakerId->unique()->safeEmail(),
+            'email_verified_at' => now(),
             'status_kepegawaian' => StatusKepegawaian::PNS->value,
             'status_pegawai' => StatusPegawai::Aktif->value,
             'tmt_cpns' => $tmtCpns->format('Y-m-d'),
@@ -75,6 +75,53 @@ class PegawaiFactory extends Factory
             'no_taspen' => $fakerId->optional()->numerify('##########'),
             'foto' => $fakerId->optional()->randomElement(['pegawai/default-1.jpg', 'pegawai/default-2.jpg']),
             'keterangan' => $fakerId->optional()->sentence(),
+            'password' => static::$password ??= Hash::make('password'),
         ];
+    }
+
+    public function admin(): static
+    {
+        return $this->afterCreating(function (Pegawai $pegawai) {
+            $role = RefRole::query()->where('nama', 'Admin')->first();
+            if ($role) {
+                $pegawai->roles()->syncWithoutDetaching([$role->id]);
+            }
+        });
+    }
+
+    public function operator(): static
+    {
+        return $this->afterCreating(function (Pegawai $pegawai) {
+            $role = RefRole::query()->where('nama', 'Operator')->first();
+            if ($role) {
+                $pegawai->roles()->syncWithoutDetaching([$role->id]);
+            }
+        });
+    }
+
+    public function viewer(): static
+    {
+        return $this->afterCreating(function (Pegawai $pegawai) {
+            $role = RefRole::query()->where('nama', 'Viewer')->first();
+            if ($role) {
+                $pegawai->roles()->syncWithoutDetaching([$role->id]);
+            }
+        });
+    }
+
+    public function unverified(): static
+    {
+        return $this->state(fn () => [
+            'email_verified_at' => null,
+        ]);
+    }
+
+    public function withTwoFactor(): static
+    {
+        return $this->state(fn () => [
+            'two_factor_secret' => encrypt('secret'),
+            'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
+            'two_factor_confirmed_at' => now(),
+        ]);
     }
 }
