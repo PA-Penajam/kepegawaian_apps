@@ -28,20 +28,27 @@ class DatabaseSeeder extends Seeder
         $adminRole = RefRole::query()->where('nama', 'Admin')->first();
         $operatorRole = RefRole::query()->where('nama', 'Operator')->first();
 
-        // Buat pegawai admin
-        $admin = Pegawai::query()->updateOrCreate([
-            'nip' => '199001012020011001',
-        ], [
-            'nama_lengkap' => 'Administrator',
-            'tempat_lahir' => 'Penajam',
-            'tanggal_lahir' => '1990-01-01',
-            'jenis_kelamin' => 'Laki-Laki',
-            'agama' => 'Islam',
-            'status_perkawinan' => 'Kawin',
-            'status_kepegawaian' => 'PNS',
-            'status_pegawai' => 'Aktif',
-            'tanggal_masuk' => '2020-01-01',
-            'email' => 'admin@pa-penajam.go.id',
+        // Assign admin ke pranata komputer (NIP: 199107132020121003)
+        $admin = Pegawai::query()->where('nip', '199107132020121003')->first();
+
+        if (! $admin) {
+            $admin = Pegawai::query()->updateOrCreate([
+                'nip' => '199107132020121003',
+            ], [
+                'nama_lengkap' => 'Pranata Komputer',
+                'tempat_lahir' => 'Penajam',
+                'tanggal_lahir' => '1991-07-13',
+                'jenis_kelamin' => 'Laki-Laki',
+                'agama' => 'Islam',
+                'status_perkawinan' => 'Kawin',
+                'status_kepegawaian' => 'PNS',
+                'status_pegawai' => 'Aktif',
+                'tanggal_masuk' => '2020-12-01',
+                'email' => 'admin@pa-penajam.go.id',
+            ]);
+        }
+
+        $admin->update([
             'email_verified_at' => now(),
             'password' => bcrypt('admin123'),
         ]);
