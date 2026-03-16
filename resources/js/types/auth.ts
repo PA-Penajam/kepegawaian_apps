@@ -1,11 +1,13 @@
 export type User = {
-    id: number;
-    name: string;
-    email: string;
-    role: 'admin' | 'operator' | 'viewer';
-    avatar?: string;
+    id: string;
+    nama_lengkap: string;
+    nip: string;
+    email: string | null;
+    foto: string | null;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
+    roles: string[];
+    permissions: string[];
     created_at: string;
     updated_at: string;
     [key: string]: unknown;

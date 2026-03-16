@@ -28,7 +28,11 @@ import type { Auth, NavItem } from '@/types';
 
 export function AppSidebar() {
     const { auth } = usePage<{ auth: Auth }>().props;
-    const isViewer = auth.user.role === 'viewer';
+    const permissions = auth.user.permissions ?? [];
+
+    const hasPermission = (perm: string) => permissions.includes(perm);
+    const hasAnyPermission = (...perms: string[]) =>
+        perms.some((p) => permissions.includes(p));
 
     const mainNavItems: NavItem[] = [
         {
@@ -48,19 +52,18 @@ export function AppSidebar() {
         },
     ];
 
-    const kepegawaianNavItems: NavItem[] = isViewer
-        ? []
-        : [
+    const kepegawaianNavItems: NavItem[] = hasPermission('pegawai.view')
+        ? [
               {
                   title: 'Data Pegawai',
                   href: '/kepegawaian/pegawai',
                   icon: Users,
               },
-          ];
+          ]
+        : [];
 
-    const monitoringNavItems: NavItem[] = isViewer
-        ? []
-        : [
+    const monitoringNavItems: NavItem[] = hasPermission('monitoring.view')
+        ? [
               {
                   title: 'KGB',
                   href: '/kepegawaian/monitoring/kgb',
@@ -71,11 +74,14 @@ export function AppSidebar() {
                   href: '/kepegawaian/monitoring/kenaikan-pangkat',
                   icon: TrendingUp,
               },
-          ];
+          ]
+        : [];
 
-    const referensiNavItems: NavItem[] = isViewer
-        ? []
-        : [
+    const referensiNavItems: NavItem[] = hasAnyPermission(
+        'referensi.view',
+        'rbac.manage',
+    )
+        ? [
               {
                   title: 'Jenis Dokumen',
                   href: '/referensi/jenis-dokumen',
@@ -96,7 +102,8 @@ export function AppSidebar() {
                   href: '/referensi/roles',
                   icon: Shield,
               },
-          ];
+          ]
+        : [];
 
     return (
         <Sidebar collapsible="icon" variant="inset">

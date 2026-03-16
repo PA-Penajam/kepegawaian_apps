@@ -15,7 +15,7 @@ use App\Http\Controllers\Referensi\RefJenisDokumenController;
 use App\Http\Controllers\Referensi\RefRoleController;
 use App\Http\Controllers\Referensi\RefStatusKepegawaianController;
 use App\Http\Controllers\Referensi\RefStatusPegawaiController;
-use App\Http\Controllers\UserController;
+
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -52,7 +52,6 @@ Route::middleware(['auth', 'verified', 'permission:pegawai.view,referensi.view,m
         ->names('referensi.roles')
         ->except(['show']);
 
-    Route::resource('pengguna', UserController::class)->except(['show']);
 });
 
 Route::middleware(['auth', 'verified', 'permission:pegawai.view,pegawai.create,pegawai.update,pegawai.delete'])

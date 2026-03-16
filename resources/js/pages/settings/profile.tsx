@@ -58,7 +58,7 @@ export default function Profile({
                                     <Input
                                         id="name"
                                         className="mt-1 block w-full"
-                                        defaultValue={auth.user.name}
+                                        defaultValue={auth.user.nama_lengkap}
                                         name="name"
                                         required
                                         autoComplete="name"
