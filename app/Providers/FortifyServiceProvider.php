@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\Pegawai;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -40,6 +42,17 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+
+        // Login via NIP + password (Pegawai sebagai user)
+        Fortify::authenticateUsing(function (Request $request) {
+            $pegawai = Pegawai::where('nip', $request->nip)->first();
+
+            if ($pegawai && $pegawai->password && Hash::check($request->password, $pegawai->password)) {
+                return $pegawai;
+            }
+
+            return null;
+        });
     }
 
     /**
