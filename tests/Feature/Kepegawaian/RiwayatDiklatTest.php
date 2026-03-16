@@ -3,7 +3,6 @@
 use App\Models\Pegawai;
 use App\Models\RefJenisDiklat;
 use App\Models\RiwayatDiklat;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -52,7 +51,7 @@ test('guests are redirected to the login page for riwayat diklat routes', functi
 
 test('viewers are forbidden from accessing the riwayat diklat page', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     actingAs($user);
 
@@ -62,7 +61,7 @@ test('viewers are forbidden from accessing the riwayat diklat page', function ()
 
 test('admins can view all riwayat diklat for a pegawai', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
 
     RiwayatDiklat::factory()->count(2)->create([
         'pegawai_id' => $pegawai->id,
@@ -81,7 +80,7 @@ test('admins can view all riwayat diklat for a pegawai', function () {
 
 test('operators can store riwayat diklat and it belongs to the selected pegawai', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $jenisDiklat = RefJenisDiklat::factory()->create();
     $payload = makeRiwayatDiklatPayload([
         'ref_jenis_diklat_id' => $jenisDiklat->id,
@@ -106,7 +105,7 @@ test('operators can store riwayat diklat and it belongs to the selected pegawai'
 
 test('tanggal selesai must be after or equal to tanggal mulai', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
 
     actingAs($user);
     from(riwayatDiklatIndexUrl($pegawai))
@@ -120,7 +119,7 @@ test('tanggal selesai must be after or equal to tanggal mulai', function () {
 
 test('operators can update riwayat diklat', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $riwayatDiklat = RiwayatDiklat::factory()->create([
         'pegawai_id' => $pegawai->id,
     ]);
@@ -143,7 +142,7 @@ test('operators can update riwayat diklat', function () {
 
 test('operators can soft delete riwayat diklat', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $riwayatDiklat = RiwayatDiklat::factory()->create([
         'pegawai_id' => $pegawai->id,
     ]);

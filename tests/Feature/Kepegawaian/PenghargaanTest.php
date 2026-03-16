@@ -2,7 +2,6 @@
 
 use App\Models\Pegawai;
 use App\Models\Penghargaan;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -64,7 +63,7 @@ test('penghargaan dapat di-soft-delete', function () {
 });
 
 test('admin dapat mengakses halaman penghargaan', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = Pegawai::factory()->admin()->create();
     $pegawai = Pegawai::factory()->create();
     Penghargaan::factory()->count(2)->create([
         'pegawai_id' => $pegawai->id,
@@ -82,7 +81,7 @@ test('admin dapat mengakses halaman penghargaan', function () {
 });
 
 test('viewer tidak dapat mengakses penghargaan', function () {
-    $viewer = User::factory()->create();
+    $viewer = Pegawai::factory()->create();
     $pegawai = Pegawai::factory()->create();
 
     actingAs($viewer);
@@ -92,7 +91,7 @@ test('viewer tidak dapat mengakses penghargaan', function () {
 });
 
 test('operator dapat menyimpan penghargaan baru', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
 
     actingAs($operator);
@@ -108,7 +107,7 @@ test('operator dapat menyimpan penghargaan baru', function () {
 });
 
 test('operator dapat memperbarui penghargaan', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $penghargaan = Penghargaan::factory()->create([
         'pegawai_id' => $pegawai->id,
@@ -130,7 +129,7 @@ test('operator dapat memperbarui penghargaan', function () {
 });
 
 test('operator dapat menghapus penghargaan secara soft delete', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $penghargaan = Penghargaan::factory()->create([
         'pegawai_id' => $pegawai->id,
@@ -147,7 +146,7 @@ test('operator dapat menghapus penghargaan secara soft delete', function () {
 });
 
 test('validasi gagal jika nama penghargaan kosong', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
 
     actingAs($operator);

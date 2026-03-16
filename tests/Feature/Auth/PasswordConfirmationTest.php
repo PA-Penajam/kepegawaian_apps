@@ -1,10 +1,10 @@
 <?php
 
-use App\Models\User;
+use App\Models\Pegawai;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('confirm password screen can be rendered', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     $response = $this->actingAs($user)->get(route('password.confirm'));
 

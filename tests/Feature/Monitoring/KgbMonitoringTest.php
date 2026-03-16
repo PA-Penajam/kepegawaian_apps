@@ -3,7 +3,6 @@
 use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
 use App\Models\RiwayatPangkat;
-use App\Models\User;
 use App\Services\KgbMonitoringService;
 use Carbon\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -95,7 +94,7 @@ test('service melewati pegawai tanpa riwayat pangkat aktif dan status pegawai ya
 test('controller index menampilkan inertia monitoring kgb', function () {
     Carbon::setTestNow('2026-01-01');
 
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     createPegawaiWithAktifPangkat('2026-01-31', [
         'nama_lengkap' => 'Operator Monitor',
     ]);

@@ -4,7 +4,6 @@ use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
 use App\Models\RefPangkat;
 use App\Models\RiwayatPangkat;
-use App\Models\User;
 use App\Services\KenaikanPangkatMonitoringService;
 use Carbon\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -104,7 +103,7 @@ test('it filters monitoring list by april promotion period', function () {
 });
 
 test('monitoring index returns inertia response', function () {
-    $user = User::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
     createPegawaiDenganPangkatAktif('2022-04-01');
 
     actingAs($user);

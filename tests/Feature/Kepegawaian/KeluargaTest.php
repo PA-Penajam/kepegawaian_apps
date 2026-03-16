@@ -4,7 +4,6 @@ use App\Enums\HubunganKeluarga;
 use App\Enums\JenisKelamin;
 use App\Models\Keluarga;
 use App\Models\Pegawai;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -74,7 +73,7 @@ test('data keluarga dapat di-soft-delete', function () {
 });
 
 test('admin dapat mengakses halaman keluarga', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = Pegawai::factory()->admin()->create();
     $pegawai = Pegawai::factory()->create();
     Keluarga::factory()->count(2)->create([
         'pegawai_id' => $pegawai->id,
@@ -92,7 +91,7 @@ test('admin dapat mengakses halaman keluarga', function () {
 });
 
 test('viewer tidak dapat mengakses keluarga', function () {
-    $viewer = User::factory()->create();
+    $viewer = Pegawai::factory()->create();
     $pegawai = Pegawai::factory()->create();
 
     actingAs($viewer);
@@ -102,7 +101,7 @@ test('viewer tidak dapat mengakses keluarga', function () {
 });
 
 test('operator dapat menyimpan data keluarga baru', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
 
     actingAs($operator);
@@ -115,7 +114,7 @@ test('operator dapat menyimpan data keluarga baru', function () {
 });
 
 test('operator dapat memperbarui data keluarga', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $keluarga = Keluarga::factory()->create([
         'pegawai_id' => $pegawai->id,
@@ -140,7 +139,7 @@ test('operator dapat memperbarui data keluarga', function () {
 });
 
 test('operator dapat menghapus data keluarga secara soft delete', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $keluarga = Keluarga::factory()->create([
         'pegawai_id' => $pegawai->id,
@@ -157,7 +156,7 @@ test('operator dapat menghapus data keluarga secara soft delete', function () {
 });
 
 test('validasi gagal jika hubungan tidak valid', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
 
     actingAs($operator);

@@ -2,7 +2,6 @@
 
 use App\Models\Pegawai;
 use App\Models\RiwayatPangkat;
-use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\RefJabatanSeeder;
 use Database\Seeders\RefPangkatSeeder;
@@ -25,7 +24,7 @@ afterEach(function (): void {
 it('linked_user_can_access_self_service_index', function (): void {
     Carbon::setTestNow('2026-01-01');
 
-    $pegawai = Pegawai::factory()->create();
+    $pegawai = Pegawai::factory()->viewer()->create();
     RiwayatPangkat::factory()->create([
         'pegawai_id' => $pegawai->id,
         'ref_pangkat_id' => $pegawai->ref_pangkat_id,
@@ -34,9 +33,8 @@ it('linked_user_can_access_self_service_index', function (): void {
         'masa_kerja_tahun' => 2,
         'masa_kerja_bulan' => 0,
     ]);
-    $user = User::factory()->viewer()->create(['pegawai_id' => $pegawai->id]);
 
-    actingAs($user)
+    actingAs($pegawai)
         ->get(route('self-service.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -51,10 +49,9 @@ it('linked_user_can_access_self_service_index', function (): void {
 });
 
 it('linked_user_can_access_self_service_detail', function (): void {
-    $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->viewer()->create(['pegawai_id' => $pegawai->id]);
+    $pegawai = Pegawai::factory()->viewer()->create();
 
-    actingAs($user)
+    actingAs($pegawai)
         ->get(route('self-service.detail'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -63,38 +60,18 @@ it('linked_user_can_access_self_service_detail', function (): void {
         );
 });
 
-it('unlinked_user_redirected_from_self_service', function (): void {
-    $user = User::factory()->viewer()->create(['pegawai_id' => null]);
-
-    actingAs($user)
-        ->get(route('self-service.index'))
-        ->assertRedirect(route('self-service.unlinked'));
-});
-
-it('unlinked_user_can_access_unlinked_page', function (): void {
-    $user = User::factory()->viewer()->create(['pegawai_id' => null]);
-
-    actingAs($user)
-        ->get(route('self-service.unlinked'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('self-service/unlinked'),
-        );
-});
-
 it('viewer_cannot_access_kepegawaian_routes', function (): void {
-    $user = User::factory()->viewer()->create(['pegawai_id' => null]);
+    $pegawai = Pegawai::factory()->viewer()->create();
 
-    actingAs($user)
+    actingAs($pegawai)
         ->get(route('kepegawaian.pegawai.index'))
         ->assertForbidden();
 });
 
 it('admin_can_still_access_self_service', function (): void {
-    $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->admin()->create(['pegawai_id' => $pegawai->id]);
+    $pegawai = Pegawai::factory()->admin()->create();
 
-    actingAs($user)
+    actingAs($pegawai)
         ->get(route('self-service.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -104,11 +81,10 @@ it('admin_can_still_access_self_service', function (): void {
 });
 
 it('self_service_shows_own_pegawai_data_not_others', function (): void {
-    $myPegawai = Pegawai::factory()->create(['nama_lengkap' => 'Pegawai Saya']);
-    Pegawai::factory()->create(['nama_lengkap' => 'Pegawai Lain']);
-    $user = User::factory()->viewer()->create(['pegawai_id' => $myPegawai->id]);
+    $myPegawai = Pegawai::factory()->viewer()->create(['nama_lengkap' => 'Pegawai Saya']);
+    Pegawai::factory()->viewer()->create(['nama_lengkap' => 'Pegawai Lain']);
 
-    actingAs($user)
+    actingAs($myPegawai)
         ->get(route('self-service.index'))
         ->assertInertia(fn ($page) => $page
             ->component('self-service/index')

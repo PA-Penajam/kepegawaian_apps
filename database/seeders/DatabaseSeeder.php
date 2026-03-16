@@ -2,14 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Pegawai;
+use App\Models\RefRole;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
         $this->call([
@@ -27,26 +25,53 @@ class DatabaseSeeder extends Seeder
             PegawaiSeeder::class,
         ]);
 
-        // Create admin user
-        User::query()->updateOrCreate([
+        $adminRole = RefRole::query()->where('nama', 'Admin')->first();
+        $operatorRole = RefRole::query()->where('nama', 'Operator')->first();
+
+        // Buat pegawai admin
+        $admin = Pegawai::query()->updateOrCreate([
+            'nip' => '199001012020011001',
+        ], [
+            'nama_lengkap' => 'Administrator',
+            'tempat_lahir' => 'Penajam',
+            'tanggal_lahir' => '1990-01-01',
+            'jenis_kelamin' => 'Laki-Laki',
+            'agama' => 'Islam',
+            'status_perkawinan' => 'Kawin',
+            'status_kepegawaian' => 'PNS',
+            'status_pegawai' => 'Aktif',
+            'tanggal_masuk' => '2020-01-01',
             'email' => 'admin@pa-penajam.go.id',
-        ], [
-            'name' => 'Administrator',
+            'email_verified_at' => now(),
             'password' => bcrypt('admin123'),
-            'email_verified_at' => now(),
-            'role' => 'admin',
         ]);
 
-        // Create operator user
-        User::query()->updateOrCreate([
-            'email' => 'operator@pa-penajam.go.id',
+        if ($adminRole) {
+            $admin->roles()->syncWithoutDetaching([$adminRole->id]);
+        }
+
+        // Buat pegawai operator
+        $operator = Pegawai::query()->updateOrCreate([
+            'nip' => '199201012021011001',
         ], [
-            'name' => 'Operator',
-            'password' => bcrypt('operator123'),
+            'nama_lengkap' => 'Operator',
+            'tempat_lahir' => 'Penajam',
+            'tanggal_lahir' => '1992-01-01',
+            'jenis_kelamin' => 'Perempuan',
+            'agama' => 'Islam',
+            'status_perkawinan' => 'Kawin',
+            'status_kepegawaian' => 'PNS',
+            'status_pegawai' => 'Aktif',
+            'tanggal_masuk' => '2021-01-01',
+            'email' => 'operator@pa-penajam.go.id',
             'email_verified_at' => now(),
-            'role' => 'operator',
+            'password' => bcrypt('operator123'),
         ]);
 
-        $this->command->info('Created admin and operator users.');
+        if ($operatorRole) {
+            $operator->roles()->syncWithoutDetaching([$operatorRole->id]);
+        }
+
+        $this->command->info('Pegawai admin dan operator berhasil dibuat.');
     }
 }

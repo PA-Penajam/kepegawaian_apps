@@ -3,7 +3,6 @@
 use App\Models\HukumanDisiplin;
 use App\Models\Pegawai;
 use App\Models\RefJenisHukumanDisiplin;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -27,8 +26,8 @@ function makeHukumanDisiplinPayload(?RefJenisHukumanDisiplin $jenis = null, arra
 }
 
 dataset('hukuman-disiplin-allowed-users', [
-    'admin' => [fn () => User::factory()->admin()->create()],
-    'operator' => [fn () => User::factory()->operator()->create()],
+    'admin' => [fn () => Pegawai::factory()->admin()->create()],
+    'operator' => [fn () => Pegawai::factory()->operator()->create()],
 ]);
 
 test('dapat membuat hukuman disiplin untuk pegawai', function () {
@@ -138,7 +137,7 @@ test('admin dan operator dapat mengakses halaman hukuman disiplin', function (Cl
 })->with('hukuman-disiplin-allowed-users');
 
 test('viewer tidak dapat mengakses hukuman disiplin', function () {
-    $viewer = User::factory()->create();
+    $viewer = Pegawai::factory()->create();
     $pegawai = Pegawai::factory()->create();
 
     actingAs($viewer);
@@ -148,7 +147,7 @@ test('viewer tidak dapat mengakses hukuman disiplin', function () {
 });
 
 test('operator dapat menyimpan hukuman disiplin baru', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $jenis = RefJenisHukumanDisiplin::factory()->create();
 
@@ -169,7 +168,7 @@ test('operator dapat menyimpan hukuman disiplin baru', function () {
 });
 
 test('operator dapat memperbarui hukuman disiplin', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $jenis = RefJenisHukumanDisiplin::factory()->create();
     $hukumanDisiplin = HukumanDisiplin::factory()->create([
@@ -197,7 +196,7 @@ test('operator dapat memperbarui hukuman disiplin', function () {
 });
 
 test('operator dapat menghapus hukuman disiplin secara soft delete', function () {
-    $operator = User::factory()->operator()->create();
+    $operator = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $hukumanDisiplin = HukumanDisiplin::factory()->create([
         'pegawai_id' => $pegawai->id,

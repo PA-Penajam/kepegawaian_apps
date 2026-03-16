@@ -2,7 +2,6 @@
 
 use App\Models\DokumenPegawai;
 use App\Models\Pegawai;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -35,7 +34,7 @@ function makeDokumenPegawaiPayload(array $overrides = []): array
 
 test('viewers are forbidden from accessing the dokumen pegawai page', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     actingAs($user);
 
@@ -45,7 +44,7 @@ test('viewers are forbidden from accessing the dokumen pegawai page', function (
 
 test('admins can view all dokumen pegawai for a pegawai', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
 
     DokumenPegawai::factory()->count(2)->create([
         'pegawai_id' => $pegawai->id,
@@ -64,7 +63,7 @@ test('admins can view all dokumen pegawai for a pegawai', function () {
 
 test('operators can store dokumen pegawai and tanggal dokumen is cast to date', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $payload = makeDokumenPegawaiPayload();
 
     actingAs($user);
@@ -84,7 +83,7 @@ test('operators can store dokumen pegawai and tanggal dokumen is cast to date', 
 
 test('operators can update and soft delete dokumen pegawai', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $dokumenPegawai = DokumenPegawai::factory()->create([
         'pegawai_id' => $pegawai->id,
     ]);
@@ -114,7 +113,7 @@ test('operators can update and soft delete dokumen pegawai', function () {
 
 test('jenis dokumen is required when storing dokumen pegawai', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
 
     actingAs($user);
 

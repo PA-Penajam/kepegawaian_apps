@@ -5,7 +5,6 @@ use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -13,7 +12,7 @@ use function Pest\Laravel\get;
 
 function signInAsPegawaiAdmin(): void
 {
-    actingAs(User::factory()->admin()->create());
+    actingAs(Pegawai::factory()->admin()->create());
 }
 
 function createPegawaiFilterReferences(): array

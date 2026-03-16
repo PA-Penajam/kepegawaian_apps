@@ -1,7 +1,6 @@
 <?php
 
-use App\Enums\Role;
-use App\Models\User;
+use App\Models\Pegawai;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\actingAs;
@@ -19,7 +18,7 @@ test('guests are redirected to the login page for role protected routes', functi
 });
 
 test('viewers cannot access admin only routes', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     actingAs($user);
 
@@ -29,7 +28,7 @@ test('viewers cannot access admin only routes', function () {
 });
 
 test('admins can access admin only routes', function () {
-    $user = User::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
 
     actingAs($user);
 
@@ -39,7 +38,7 @@ test('admins can access admin only routes', function () {
 });
 
 test('operators can access admin or operator routes', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
 
     actingAs($user);
 
@@ -48,10 +47,10 @@ test('operators can access admin or operator routes', function () {
     $response->assertOk();
 });
 
-test('user role helpers match the assigned role', function () {
-    $admin = User::factory()->make(['role' => Role::Admin->value]);
-    $operator = User::factory()->make(['role' => Role::Operator->value]);
-    $viewer = User::factory()->make(['role' => Role::Viewer->value]);
+test('pegawai role helpers match the assigned role', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    $operator = Pegawai::factory()->operator()->create();
+    $viewer = Pegawai::factory()->viewer()->create();
 
     expect($admin->isAdmin())->toBeTrue()
         ->and($admin->isOperator())->toBeFalse()

@@ -8,8 +8,8 @@ use App\Enums\StatusPerkawinan;
 use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefPangkat;
+use App\Models\RefRole;
 use App\Models\RefUnitKerja;
-use App\Models\User;
 
 describe('Pegawai', function () {
     it('can create a pegawai with all required fields', function () {
@@ -85,14 +85,17 @@ describe('Pegawai', function () {
         expect($pegawai->unitKerja->is($unitKerja))->toBeTrue();
     });
 
-    it('has one user via pegawai_id', function () {
+    it('has roles many-to-many relationship', function () {
         $pegawai = Pegawai::factory()->create();
-        $user = User::factory()->create([
-            'pegawai_id' => $pegawai->id,
-        ]);
+        $role = RefRole::query()->firstOrCreate(
+            ['nama' => 'Admin'],
+            ['deskripsi' => 'Administrator'],
+        );
 
-        expect($pegawai->user)->not->toBeNull();
-        expect($pegawai->user->is($user))->toBeTrue();
+        $pegawai->roles()->sync([$role->id]);
+
+        expect($pegawai->roles)->not->toBeEmpty();
+        expect($pegawai->roles->first()->is($role))->toBeTrue();
     });
 
     it('scope aktif returns only active pegawai', function () {

@@ -4,7 +4,6 @@ use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefUnitKerja;
 use App\Models\RiwayatJabatan;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -38,7 +37,7 @@ function makeRiwayatJabatanPayload(array $overrides = []): array
 }
 
 test('operator can create an active riwayat jabatan and sync pegawai jabatan and unit kerja', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $payload = makeRiwayatJabatanPayload();
 
@@ -59,7 +58,7 @@ test('operator can create an active riwayat jabatan and sync pegawai jabatan and
 });
 
 test('creating a second active riwayat jabatan deactivates the previous active riwayat', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
 
     $firstPayload = makeRiwayatJabatanPayload([
@@ -95,7 +94,7 @@ test('creating a second active riwayat jabatan deactivates the previous active r
 });
 
 test('operator can update riwayat jabatan to active and sync pegawai data', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $currentActive = RiwayatJabatan::factory()->create([
         'pegawai_id' => $pegawai->id,
@@ -127,7 +126,7 @@ test('operator can update riwayat jabatan to active and sync pegawai data', func
 });
 
 test('operator can soft delete a riwayat jabatan', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $riwayatJabatan = RiwayatJabatan::factory()->create([
         'pegawai_id' => $pegawai->id,
@@ -146,7 +145,7 @@ test('operator can soft delete a riwayat jabatan', function () {
 });
 
 test('admin can view the riwayat jabatan index page', function () {
-    $user = User::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
     $pegawai = Pegawai::factory()->create();
     RiwayatJabatan::factory()->count(2)->create([
         'pegawai_id' => $pegawai->id,
@@ -166,7 +165,7 @@ test('admin can view the riwayat jabatan index page', function () {
 });
 
 test('viewer is forbidden from accessing the riwayat jabatan index page', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $pegawai = Pegawai::factory()->create();
 
     actingAs($user);

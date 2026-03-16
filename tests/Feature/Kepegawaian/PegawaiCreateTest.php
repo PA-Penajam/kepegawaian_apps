@@ -4,7 +4,6 @@ use App\Enums\Agama;
 use App\Enums\GolonganDarah;
 use App\Enums\JenisKelamin;
 use App\Enums\JenjangPendidikan;
-use App\Enums\Role;
 use App\Enums\StatusKepegawaian;
 use App\Enums\StatusPegawai;
 use App\Enums\StatusPerkawinan;
@@ -12,13 +11,12 @@ use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create(['role' => Role::Admin]);
+    $this->user = Pegawai::factory()->admin()->create();
 });
 
 it('can render the create page', function () {
@@ -103,7 +101,7 @@ it('rejects invalid enum values', function () {
 });
 
 it('blocks unauthorized users', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     $this->actingAs($user)
         ->get(route('kepegawaian.pegawai.create'))

@@ -2,7 +2,6 @@
 
 use App\Models\Pegawai;
 use App\Models\RefPangkat;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -64,12 +63,12 @@ function insertRiwayatPangkat(Pegawai $pegawai, RefPangkat $pangkat, array $over
 }
 
 dataset('riwayat-pangkat-allowed-users', [
-    'admin' => [fn () => User::factory()->admin()->create()],
-    'operator' => [fn () => User::factory()->operator()->create()],
+    'admin' => [fn () => Pegawai::factory()->admin()->create()],
+    'operator' => [fn () => Pegawai::factory()->operator()->create()],
 ]);
 
 test('create riwayat pangkat with inactive status keeps pegawai pangkat unchanged', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $currentPangkat = RefPangkat::factory()->create();
     $nextPangkat = RefPangkat::factory()->create();
     $pegawai = Pegawai::factory()->create([
@@ -96,7 +95,7 @@ test('create riwayat pangkat with inactive status keeps pegawai pangkat unchange
 });
 
 test('create active riwayat pangkat updates pegawai pangkat', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $currentPangkat = RefPangkat::factory()->create();
     $nextPangkat = RefPangkat::factory()->create();
     $pegawai = Pegawai::factory()->create([
@@ -123,7 +122,7 @@ test('create active riwayat pangkat updates pegawai pangkat', function () {
 });
 
 test('create second active riwayat pangkat deactivates previous active record', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $firstPangkat = RefPangkat::factory()->create();
     $secondPangkat = RefPangkat::factory()->create();
     $pegawai = Pegawai::factory()->create([
@@ -153,7 +152,7 @@ test('create second active riwayat pangkat deactivates previous active record', 
 });
 
 test('operators can update riwayat pangkat and sync active status', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $firstPangkat = RefPangkat::factory()->create();
     $secondPangkat = RefPangkat::factory()->create();
     $pegawai = Pegawai::factory()->create([
@@ -192,7 +191,7 @@ test('operators can update riwayat pangkat and sync active status', function () 
 });
 
 test('soft delete keeps riwayat pangkat record as trashed', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $pangkat = RefPangkat::factory()->create();
     $pegawai = Pegawai::factory()->create();
     $riwayatId = insertRiwayatPangkat($pegawai, $pangkat);
@@ -233,7 +232,7 @@ test('index returns success for admin and operator', function (Closure $makeUser
 })->with('riwayat-pangkat-allowed-users');
 
 test('store creates riwayat pangkat record and returns redirect response', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
     $pangkat = RefPangkat::factory()->create();
 
@@ -254,7 +253,7 @@ test('store creates riwayat pangkat record and returns redirect response', funct
 
 test('viewer role is forbidden from riwayat pangkat page', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     actingAs($user);
 

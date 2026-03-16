@@ -4,7 +4,6 @@ use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -40,7 +39,7 @@ test('guests are redirected to the login page', function () {
 });
 
 test('viewers are forbidden from accessing the pegawai index page', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     actingAs($user);
 
@@ -49,7 +48,7 @@ test('viewers are forbidden from accessing the pegawai index page', function () 
 });
 
 test('admins can view a paginated pegawai index with eager loaded relationships', function () {
-    $user = User::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
     $references = createPegawaiReferences();
 
     Pegawai::factory()->count(16)->create([
@@ -74,7 +73,7 @@ test('admins can view a paginated pegawai index with eager loaded relationships'
 });
 
 test('admins can filter pegawai index by jabatan and receive jabatan options', function () {
-    $user = User::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
     $pangkat = RefPangkat::factory()->create();
     $unitKerja = RefUnitKerja::factory()->create();
     $analisJabatan = RefJabatan::factory()->create([
@@ -115,7 +114,7 @@ test('admins can filter pegawai index by jabatan and receive jabatan options', f
 });
 
 test('admins can sort pegawai index by jabatan name', function () {
-    $user = User::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
     $pangkat = RefPangkat::factory()->create();
     $unitKerja = RefUnitKerja::factory()->create();
     $analisJabatan = RefJabatan::factory()->create([
@@ -179,7 +178,7 @@ test('admins can sort pegawai index by jabatan name', function () {
 });
 
 test('operators can store a pegawai and are redirected to the detail page', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $payload = makePegawaiPayload();
 
     actingAs($user);
@@ -197,7 +196,7 @@ test('operators can store a pegawai and are redirected to the detail page', func
 });
 
 test('operators must provide valid pegawai data when storing a pegawai', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $payload = makePegawaiPayload([
         'nip' => '123',
         'jenis_kelamin' => 'invalid',
@@ -225,16 +224,12 @@ test('operators must provide valid pegawai data when storing a pegawai', functio
 });
 
 test('admins can view a pegawai detail page with loaded relationships', function () {
-    $user = User::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
     $references = createPegawaiReferences();
     $pegawai = Pegawai::factory()->create([
         'ref_pangkat_id' => $references['pangkat']->id,
         'ref_jabatan_id' => $references['jabatan']->id,
         'ref_unit_kerja_id' => $references['unitKerja']->id,
-    ]);
-
-    User::factory()->create([
-        'pegawai_id' => $pegawai->id,
     ]);
 
     actingAs($user);
@@ -246,13 +241,12 @@ test('admins can view a pegawai detail page with loaded relationships', function
             ->where('pegawai.id', $pegawai->id)
             ->has('pegawai.pangkat')
             ->has('pegawai.jabatan')
-            ->has('pegawai.unit_kerja')
-            ->has('pegawai.user'),
+            ->has('pegawai.unit_kerja'),
         );
 });
 
 test('operators can update a pegawai while keeping the same nip', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $references = createPegawaiReferences();
     $pegawai = Pegawai::factory()->create([
         'ref_pangkat_id' => $references['pangkat']->id,
@@ -280,7 +274,7 @@ test('operators can update a pegawai while keeping the same nip', function () {
 });
 
 test('operators can soft delete a pegawai', function () {
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $pegawai = Pegawai::factory()->create();
 
     actingAs($user);

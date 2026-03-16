@@ -3,7 +3,6 @@
 use App\Enums\JenjangPendidikan;
 use App\Models\Pegawai;
 use App\Models\RiwayatPendidikan;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -48,7 +47,7 @@ test('guests are redirected to the login page for riwayat pendidikan routes', fu
 
 test('viewers are forbidden from accessing the riwayat pendidikan page', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     actingAs($user);
 
@@ -58,7 +57,7 @@ test('viewers are forbidden from accessing the riwayat pendidikan page', functio
 
 test('admins can view all riwayat pendidikan for a pegawai', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
 
     RiwayatPendidikan::factory()->count(2)->create([
         'pegawai_id' => $pegawai->id,
@@ -78,7 +77,7 @@ test('admins can view all riwayat pendidikan for a pegawai', function () {
 
 test('operators can store riwayat pendidikan and jenjang is cast to enum', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $payload = makeRiwayatPendidikanPayload();
 
     actingAs($user);
@@ -100,7 +99,7 @@ test('operators can store riwayat pendidikan and jenjang is cast to enum', funct
 
 test('operators can update and soft delete riwayat pendidikan', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
     $riwayatPendidikan = RiwayatPendidikan::factory()->create([
         'pegawai_id' => $pegawai->id,
     ]);
@@ -131,7 +130,7 @@ test('operators can update and soft delete riwayat pendidikan', function () {
 
 test('nama sekolah is required and jenjang must be a valid enum value', function () {
     $pegawai = Pegawai::factory()->create();
-    $user = User::factory()->operator()->create();
+    $user = Pegawai::factory()->operator()->create();
 
     actingAs($user);
 

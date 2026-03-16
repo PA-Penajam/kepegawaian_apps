@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\Pegawai;
 use Inertia\Testing\AssertableInertia;
 
 test('guests are redirected to the login page', function () {
@@ -9,7 +9,7 @@ test('guests are redirected to the login page', function () {
 });
 
 test('authenticated users can visit the dashboard', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
@@ -17,7 +17,7 @@ test('authenticated users can visit the dashboard', function () {
 });
 
 test('dashboard returns required statistics', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
