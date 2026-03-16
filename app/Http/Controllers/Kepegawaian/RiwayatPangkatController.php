@@ -8,15 +8,17 @@ use App\Http\Requests\Kepegawaian\UpdateRiwayatPangkatRequest;
 use App\Models\Pegawai;
 use App\Models\RefPangkat;
 use App\Models\RiwayatPangkat;
+use App\Services\RiwayatPangkatService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RiwayatPangkatController extends Controller implements HasMiddleware
 {
+    public function __construct(private readonly RiwayatPangkatService $riwayatPangkatService) {}
+
     public static function middleware(): array
     {
         return [
@@ -92,11 +94,7 @@ class RiwayatPangkatController extends Controller implements HasMiddleware
 
     public function store(StoreRiwayatPangkatRequest $request, Pegawai $pegawai): RedirectResponse
     {
-        DB::transaction(function () use ($request, $pegawai): void {
-            $riwayatPangkat = $pegawai->riwayatPangkat()->create($this->validatedData($request));
-
-            $this->syncAktifRiwayatPangkat($pegawai, $riwayatPangkat);
-        });
+        $this->riwayatPangkatService->store($pegawai, $request->validated());
 
         return to_route('kepegawaian.pegawai.riwayat-pangkat.index', $pegawai);
     }
@@ -105,11 +103,7 @@ class RiwayatPangkatController extends Controller implements HasMiddleware
     {
         abort_unless($riwayatPangkat->pegawai_id === $pegawai->id, 404);
 
-        DB::transaction(function () use ($request, $pegawai, $riwayatPangkat): void {
-            $riwayatPangkat->update($this->validatedData($request));
-
-            $this->syncAktifRiwayatPangkat($pegawai, $riwayatPangkat->fresh());
-        });
+        $this->riwayatPangkatService->update($riwayatPangkat, $pegawai, $request->validated());
 
         return to_route('kepegawaian.pegawai.riwayat-pangkat.index', $pegawai);
     }
@@ -121,28 +115,5 @@ class RiwayatPangkatController extends Controller implements HasMiddleware
         $riwayatPangkat->delete();
 
         return to_route('kepegawaian.pegawai.riwayat-pangkat.index', $pegawai);
-    }
-
-    private function validatedData(StoreRiwayatPangkatRequest|UpdateRiwayatPangkatRequest $request): array
-    {
-        return array_merge($request->validated(), [
-            'is_aktif' => $request->boolean('is_aktif'),
-        ]);
-    }
-
-    private function syncAktifRiwayatPangkat(Pegawai $pegawai, ?RiwayatPangkat $riwayatPangkat): void
-    {
-        if ($riwayatPangkat === null || ! $riwayatPangkat->is_aktif) {
-            return;
-        }
-
-        RiwayatPangkat::query()
-            ->where('pegawai_id', $pegawai->id)
-            ->where('id', '!=', $riwayatPangkat->id)
-            ->update(['is_aktif' => false]);
-
-        $pegawai->update([
-            'ref_pangkat_id' => $riwayatPangkat->ref_pangkat_id,
-        ]);
     }
 }

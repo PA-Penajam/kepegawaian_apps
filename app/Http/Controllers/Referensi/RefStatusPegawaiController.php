@@ -17,7 +17,10 @@ class RefStatusPegawaiController extends Controller
         $this->authorize('viewAny', RefStatusPegawai::class);
         $statusPegawai = RefStatusPegawai::query()
             ->when(request('search'), function ($query, $search) {
-                $query->where('kode', 'like', "%{$search}%")->orWhere('nama', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('kode', 'like', "%{$search}%")
+                        ->orWhere('nama', 'like', "%{$search}%");
+                });
             })
             ->orderBy('nama')->paginate(10)->withQueryString();
 

@@ -1,17 +1,9 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import {
     Table,
     TableBody,
@@ -22,7 +14,12 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, RefJenisDokumen, PaginatedData } from '@/types';
-import { create, edit, destroy } from '@/routes/referensi/jenis-dokumen';
+import {
+    index as jenisDokumenIndex,
+    create,
+    edit,
+    destroy,
+} from '@/routes/referensi/jenis-dokumen';
 
 type Props = {
     jenisDokumen: PaginatedData<RefJenisDokumen>;
@@ -31,22 +28,21 @@ type Props = {
     };
 };
 
-export default function Index() {
-    const { jenisDokumen, filters } = usePage<Props>().props;
+export default function Index({ jenisDokumen, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Referensi', href: '#' },
-            { title: 'Jenis Dokumen', href: '/referensi/jenis-dokumen' },
+            { title: 'Jenis Dokumen', href: jenisDokumenIndex.url() },
         ],
         [],
     );
 
     const handleSearch = useCallback(() => {
         router.get(
-            '/referensi/jenis-dokumen',
+            jenisDokumenIndex.url(),
             { search },
             { preserveState: true, preserveScroll: true },
         );
@@ -56,6 +52,7 @@ export default function Index() {
         const timeout = setTimeout(() => {
             handleSearch();
         }, 300);
+
         return () => clearTimeout(timeout);
     }, [search, handleSearch]);
 
@@ -148,69 +145,7 @@ export default function Index() {
                     </Table>
                 </div>
 
-                {jenisDokumen.meta.last_page > 1 && (
-                    <Pagination>
-                        <PaginationContent>
-                            {jenisDokumen.meta.current_page > 1 && (
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        href={`?page=${jenisDokumen.meta.current_page - 1}`}
-                                    />
-                                </PaginationItem>
-                            )}
-
-                            {Array.from(
-                                { length: jenisDokumen.meta.last_page },
-                                (_, i) => i + 1,
-                            ).map((page) => {
-                                if (
-                                    page === 1 ||
-                                    page === jenisDokumen.meta.last_page ||
-                                    (page >=
-                                        jenisDokumen.meta.current_page - 1 &&
-                                        page <=
-                                            jenisDokumen.meta.current_page + 1)
-                                ) {
-                                    return (
-                                        <PaginationItem key={page}>
-                                            <PaginationLink
-                                                href={`?page=${page}`}
-                                                isActive={
-                                                    page ===
-                                                    jenisDokumen.meta
-                                                        .current_page
-                                                }
-                                            >
-                                                {page}
-                                            </PaginationLink>
-                                        </PaginationItem>
-                                    );
-                                }
-                                if (
-                                    page ===
-                                        jenisDokumen.meta.current_page - 2 ||
-                                    page === jenisDokumen.meta.current_page + 2
-                                ) {
-                                    return (
-                                        <PaginationItem key={page}>
-                                            <PaginationEllipsis />
-                                        </PaginationItem>
-                                    );
-                                }
-                                return null;
-                            })}
-
-                            {jenisDokumen.meta.current_page <
-                                jenisDokumen.meta.last_page && (
-                                <PaginationItem>
-                                    <PaginationNext
-                                        href={`?page=${jenisDokumen.meta.current_page + 1}`}
-                                    />
-                                </PaginationItem>
-                            )}
-                        </PaginationContent>
-                    </Pagination>
-                )}
+                <PaginationWrapper meta={jenisDokumen.meta} />
             </div>
         </AppLayout>
     );

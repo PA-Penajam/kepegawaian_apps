@@ -8,7 +8,7 @@ class UpdatePenghargaanRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->hasPermission('pegawai.update');
     }
 
     public function rules(): array

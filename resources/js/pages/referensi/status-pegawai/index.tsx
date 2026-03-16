@@ -1,17 +1,9 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import {
     Table,
     TableBody,
@@ -22,7 +14,12 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, RefStatusPegawai, PaginatedData } from '@/types';
-import { create, edit, destroy } from '@/routes/referensi/status-pegawai';
+import {
+    index as statusPegawaiIndex,
+    create,
+    edit,
+    destroy,
+} from '@/routes/referensi/status-pegawai';
 
 type Props = {
     statusPegawai: PaginatedData<RefStatusPegawai>;
@@ -31,22 +28,21 @@ type Props = {
     };
 };
 
-export default function Index() {
-    const { statusPegawai, filters } = usePage<Props>().props;
+export default function Index({ statusPegawai, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Referensi', href: '#' },
-            { title: 'Status Pegawai', href: '/referensi/status-pegawai' },
+            { title: 'Status Pegawai', href: statusPegawaiIndex.url() },
         ],
         [],
     );
 
     const handleSearch = useCallback(() => {
         router.get(
-            '/referensi/status-pegawai',
+            statusPegawaiIndex.url(),
             { search },
             { preserveState: true, preserveScroll: true },
         );
@@ -56,6 +52,7 @@ export default function Index() {
         const timeout = setTimeout(() => {
             handleSearch();
         }, 300);
+
         return () => clearTimeout(timeout);
     }, [search, handleSearch]);
 
@@ -152,69 +149,7 @@ export default function Index() {
                     </Table>
                 </div>
 
-                {statusPegawai.meta.last_page > 1 && (
-                    <Pagination>
-                        <PaginationContent>
-                            {statusPegawai.meta.current_page > 1 && (
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        href={`?page=${statusPegawai.meta.current_page - 1}`}
-                                    />
-                                </PaginationItem>
-                            )}
-
-                            {Array.from(
-                                { length: statusPegawai.meta.last_page },
-                                (_, i) => i + 1,
-                            ).map((page) => {
-                                if (
-                                    page === 1 ||
-                                    page === statusPegawai.meta.last_page ||
-                                    (page >=
-                                        statusPegawai.meta.current_page - 1 &&
-                                        page <=
-                                            statusPegawai.meta.current_page + 1)
-                                ) {
-                                    return (
-                                        <PaginationItem key={page}>
-                                            <PaginationLink
-                                                href={`?page=${page}`}
-                                                isActive={
-                                                    page ===
-                                                    statusPegawai.meta
-                                                        .current_page
-                                                }
-                                            >
-                                                {page}
-                                            </PaginationLink>
-                                        </PaginationItem>
-                                    );
-                                }
-                                if (
-                                    page ===
-                                        statusPegawai.meta.current_page - 2 ||
-                                    page === statusPegawai.meta.current_page + 2
-                                ) {
-                                    return (
-                                        <PaginationItem key={page}>
-                                            <PaginationEllipsis />
-                                        </PaginationItem>
-                                    );
-                                }
-                                return null;
-                            })}
-
-                            {statusPegawai.meta.current_page <
-                                statusPegawai.meta.last_page && (
-                                <PaginationItem>
-                                    <PaginationNext
-                                        href={`?page=${statusPegawai.meta.current_page + 1}`}
-                                    />
-                                </PaginationItem>
-                            )}
-                        </PaginationContent>
-                    </Pagination>
-                )}
+                <PaginationWrapper meta={statusPegawai.meta} />
             </div>
         </AppLayout>
     );

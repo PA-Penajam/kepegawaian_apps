@@ -2,11 +2,15 @@
 
 namespace App\Http\Requests\Kepegawaian;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRiwayatPangkatRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return $this->user()->hasPermission('pegawai.update');
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

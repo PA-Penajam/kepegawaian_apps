@@ -4,9 +4,6 @@ use App\Http\Requests\Kepegawaian\UpdatePenghargaanRequest;
 use App\Http\Requests\Kepegawaian\UpdateRiwayatJabatanRequest;
 use App\Http\Requests\Kepegawaian\UpdateRiwayatPangkatRequest;
 use App\Models\Pegawai;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->viewerUser = Pegawai::factory()->viewer()->create();

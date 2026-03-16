@@ -4,6 +4,7 @@ use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
+use Illuminate\Support\Arr;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -26,11 +27,12 @@ function makePegawaiPayload(array $overrides = []): array
 {
     $references = createPegawaiReferences();
 
-    return Pegawai::factory()->raw(array_merge([
+    // Exclude password karena tidak dibutuhkan dalam payload HTTP (bukan form ubah password)
+    return Arr::except(Pegawai::factory()->raw(array_merge([
         'ref_pangkat_id' => $references['pangkat']->id,
         'ref_jabatan_id' => $references['jabatan']->id,
         'ref_unit_kerja_id' => $references['unitKerja']->id,
-    ], $overrides));
+    ], $overrides)), ['password', 'email_verified_at']);
 }
 
 test('guests are redirected to the login page', function () {
@@ -51,7 +53,8 @@ test('admins can view a paginated pegawai index with eager loaded relationships'
     $user = Pegawai::factory()->admin()->create();
     $references = createPegawaiReferences();
 
-    Pegawai::factory()->count(16)->create([
+    // Buat 15 pegawai tambahan (sudah ada 1 admin = total 16)
+    Pegawai::factory()->count(15)->create([
         'ref_pangkat_id' => $references['pangkat']->id,
         'ref_jabatan_id' => $references['jabatan']->id,
         'ref_unit_kerja_id' => $references['unitKerja']->id,
@@ -114,7 +117,6 @@ test('admins can filter pegawai index by jabatan and receive jabatan options', f
 });
 
 test('admins can sort pegawai index by jabatan name', function () {
-    $user = Pegawai::factory()->admin()->create();
     $pangkat = RefPangkat::factory()->create();
     $unitKerja = RefUnitKerja::factory()->create();
     $analisJabatan = RefJabatan::factory()->create([
@@ -125,6 +127,16 @@ test('admins can sort pegawai index by jabatan name', function () {
     ]);
     $sekretarisJabatan = RefJabatan::factory()->create([
         'nama' => 'Sekretaris',
+    ]);
+    // Admin diberi jabatan yang secara abjad muncul di akhir (Wakil Ketua > Sekretaris)
+    $wakilKetuaJabatan = RefJabatan::factory()->create([
+        'nama' => 'Wakil Ketua',
+    ]);
+
+    $user = Pegawai::factory()->admin()->create([
+        'ref_pangkat_id' => $pangkat->id,
+        'ref_jabatan_id' => $wakilKetuaJabatan->id,
+        'ref_unit_kerja_id' => $unitKerja->id,
     ]);
 
     $pegawaiPanitera = Pegawai::factory()->create([
@@ -148,6 +160,7 @@ test('admins can sort pegawai index by jabatan name', function () {
 
     actingAs($user);
 
+    // Urutan asc: Analis(0) < Panitera(1) < Sekretaris(2) < Wakil Ketua(3=admin)
     get(route('kepegawaian.pegawai.index', [
         'sort_by' => 'jabatan',
         'sort_dir' => 'asc',
@@ -162,6 +175,7 @@ test('admins can sort pegawai index by jabatan name', function () {
             ->where('pegawai.data.2.id', $pegawaiSekretaris->id),
         );
 
+    // Urutan desc: Wakil Ketua(0=admin) > Sekretaris(1) > Panitera(2) > Analis(3)
     get(route('kepegawaian.pegawai.index', [
         'sort_by' => 'jabatan',
         'sort_dir' => 'desc',
@@ -171,9 +185,9 @@ test('admins can sort pegawai index by jabatan name', function () {
             ->component('kepegawaian/pegawai/index')
             ->where('filters.sort_by', 'jabatan')
             ->where('filters.sort_dir', 'desc')
-            ->where('pegawai.data.0.id', $pegawaiSekretaris->id)
-            ->where('pegawai.data.1.id', $pegawaiPanitera->id)
-            ->where('pegawai.data.2.id', $pegawaiAnalis->id),
+            ->where('pegawai.data.1.id', $pegawaiSekretaris->id)
+            ->where('pegawai.data.2.id', $pegawaiPanitera->id)
+            ->where('pegawai.data.3.id', $pegawaiAnalis->id),
         );
 });
 

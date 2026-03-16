@@ -3,52 +3,31 @@
 namespace App\Policies;
 
 use App\Models\Pegawai;
-use App\Models\User;
 
 class PegawaiPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    public function viewAny(Pegawai $user): bool
     {
-        return $this->canManage($user);
+        return $user->hasPermission('pegawai.view');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Pegawai $pegawai): bool
+    public function view(Pegawai $user, Pegawai $pegawai): bool
     {
-        return $pegawai->exists && $this->canManage($user);
+        return $pegawai->exists && $user->hasPermission('pegawai.view');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(Pegawai $user): bool
     {
-        return $this->canManage($user);
+        return $user->hasPermission('pegawai.create');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Pegawai $pegawai): bool
+    public function update(Pegawai $user, Pegawai $pegawai): bool
     {
-        return $pegawai->exists && $this->canManage($user);
+        return $pegawai->exists && $user->hasPermission('pegawai.update');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Pegawai $pegawai): bool
+    public function delete(Pegawai $user, Pegawai $pegawai): bool
     {
-        return $pegawai->exists && $this->canManage($user);
-    }
-
-    protected function canManage(User $user): bool
-    {
-        return $user->isAdmin() || $user->isOperator();
+        return $pegawai->exists && $user->hasPermission('pegawai.delete');
     }
 }

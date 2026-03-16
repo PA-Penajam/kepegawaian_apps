@@ -45,11 +45,11 @@ class RefPermissionSeeder extends Seeder
                 ->pluck('id');
             $operatorRole->permissions()->sync($operatorPermissions);
         }
-        // Assign view-only permissions to Viewer
+        // Viewer hanya boleh akses self-service (tidak boleh akses manajemen kepegawaian)
         $viewerRole = RefRole::query()->where('nama', 'Viewer')->first();
         if ($viewerRole) {
             $viewerPermissions = RefPermission::query()
-                ->where('nama', 'like', '%.view')
+                ->whereIn('nama', ['self-service.view'])
                 ->pluck('id');
             $viewerRole->permissions()->sync($viewerPermissions);
         }

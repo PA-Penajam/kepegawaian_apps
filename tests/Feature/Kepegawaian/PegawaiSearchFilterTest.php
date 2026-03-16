@@ -10,9 +10,17 @@ use Inertia\Testing\AssertableInertia as Assert;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
-function signInAsPegawaiAdmin(): void
+function signInAsPegawaiAdmin(): Pegawai
 {
-    actingAs(Pegawai::factory()->admin()->create());
+    // Admin diberi nama "Zzzz Admin" agar selalu muncul di akhir saat sort asc,
+    // dan status Pensiun agar tidak mengganggu filter status Aktif
+    $admin = Pegawai::factory()->admin()->create([
+        'nama_lengkap' => 'Zzzz Admin Test',
+        'status_pegawai' => StatusPegawai::Pensiun->value,
+    ]);
+    actingAs($admin);
+
+    return $admin;
 }
 
 function createPegawaiFilterReferences(): array
@@ -192,14 +200,15 @@ test('sort by nama descending returns reverse alphabetical order', function () {
     createPegawaiListEntry($references, ['nama_lengkap' => 'Cici Lestari']);
     createPegawaiListEntry($references, ['nama_lengkap' => 'Budi Hartono']);
 
+    // Admin "Zzzz Admin Test" muncul di data.0 (desc), lalu Cici, Budi, Andi
     get(route('kepegawaian.pegawai.index', ['sort_by' => 'nama', 'sort_dir' => 'desc']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('filters.sort_by', 'nama')
             ->where('filters.sort_dir', 'desc')
-            ->where('pegawai.data.0.nama_lengkap', 'Cici Lestari')
-            ->where('pegawai.data.1.nama_lengkap', 'Budi Hartono')
-            ->where('pegawai.data.2.nama_lengkap', 'Andi Saputra'));
+            ->where('pegawai.data.1.nama_lengkap', 'Cici Lestari')
+            ->where('pegawai.data.2.nama_lengkap', 'Budi Hartono')
+            ->where('pegawai.data.3.nama_lengkap', 'Andi Saputra'));
 });
 
 test('combined search and filter returns the correct subset', function () {
@@ -248,11 +257,12 @@ test('empty search returns all pegawai and exposes filter options', function () 
         'ref_pangkat_id' => $references['pangkatB']->id,
     ]);
 
+    // Admin + 3 pegawai = 4 total
     get(route('kepegawaian.pegawai.index', ['search' => '']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('pegawai.total', 3)
-            ->has('pegawai.data', 3)
+            ->where('pegawai.total', 4)
+            ->has('pegawai.data', 4)
             ->has('filterOptions.golongan', 2)
             ->has('filterOptions.unitKerja', 2)
             ->has('filterOptions.statusPegawai', 5));

@@ -7,15 +7,7 @@ import {
 } from '@/components/kepegawaian/data-table-toolbar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import {
     Table,
     TableBody,
@@ -105,7 +97,7 @@ export default function PegawaiIndex({
     refJabatan,
 }: Props) {
     const { auth } = usePage().props;
-    const canEdit = auth.user.role === 'admin' || auth.user.role === 'operator';
+    const canEdit = (auth.user.permissions ?? []).includes('pegawai.update');
     const [searchValue, setSearchValue] = useState(filters.search ?? '');
 
     const applyFilters = useCallback(
@@ -486,69 +478,10 @@ export default function PegawaiIndex({
                     </div>
                 </div>
 
-                {pegawai.last_page > 1 && (
-                    <div className="mt-4">
-                        <Pagination>
-                            <PaginationContent>
-                                {pegawai.links.map((link, i) => {
-                                    const isPrevious =
-                                        link.label.includes('Previous');
-                                    const isNext = link.label.includes('Next');
-                                    const isEllipsis = link.label === '...';
-
-                                    if (isPrevious) {
-                                        return (
-                                            <PaginationItem key={i}>
-                                                <PaginationPrevious
-                                                    href={link.url ?? '#'}
-                                                    className={
-                                                        !link.url
-                                                            ? 'pointer-events-none opacity-50'
-                                                            : ''
-                                                    }
-                                                />
-                                            </PaginationItem>
-                                        );
-                                    }
-
-                                    if (isNext) {
-                                        return (
-                                            <PaginationItem key={i}>
-                                                <PaginationNext
-                                                    href={link.url ?? '#'}
-                                                    className={
-                                                        !link.url
-                                                            ? 'pointer-events-none opacity-50'
-                                                            : ''
-                                                    }
-                                                />
-                                            </PaginationItem>
-                                        );
-                                    }
-
-                                    if (isEllipsis) {
-                                        return (
-                                            <PaginationItem key={i}>
-                                                <PaginationEllipsis />
-                                            </PaginationItem>
-                                        );
-                                    }
-
-                                    return (
-                                        <PaginationItem key={i}>
-                                            <PaginationLink
-                                                href={link.url ?? '#'}
-                                                isActive={link.active}
-                                            >
-                                                {link.label}
-                                            </PaginationLink>
-                                        </PaginationItem>
-                                    );
-                                })}
-                            </PaginationContent>
-                        </Pagination>
-                    </div>
-                )}
+                <PaginationWrapper
+                    links={pegawai.links}
+                    lastPage={pegawai.last_page}
+                />
             </div>
         </AppLayout>
     );

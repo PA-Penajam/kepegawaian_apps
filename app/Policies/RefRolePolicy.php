@@ -3,8 +3,9 @@
 namespace App\Policies;
 
 use App\Models\Pegawai;
+use App\Models\RefRole;
 
-class RefStatusKepegawaianPolicy extends RefPolicy
+class RefRolePolicy extends RefPolicy
 {
     public function viewAny(Pegawai $user): bool
     {
@@ -28,6 +29,10 @@ class RefStatusKepegawaianPolicy extends RefPolicy
 
     public function delete(Pegawai $user, $model): bool
     {
+        if ($model instanceof RefRole && $model->is_system) {
+            return false;
+        }
+
         return parent::delete($user, $model);
     }
 

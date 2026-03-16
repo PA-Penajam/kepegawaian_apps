@@ -46,29 +46,29 @@ class RefJenisDokumenController extends Controller
             ->with('success', 'Jenis dokumen berhasil ditambahkan.');
     }
 
-    public function edit(RefJenisDokumen $jenisDokuman): Response
+    public function edit(RefJenisDokumen $jenisDokumen): Response
     {
-        $this->authorize('update', $jenisDokuman);
+        $this->authorize('update', $jenisDokumen);
 
         return Inertia::render('referensi/jenis-dokumen/edit', [
-            'jenisDokumen' => $jenisDokuman,
+            'jenisDokumen' => $jenisDokumen,
         ]);
     }
 
-    public function update(UpdateRefJenisDokumenRequest $request, RefJenisDokumen $jenisDokuman): RedirectResponse
+    public function update(UpdateRefJenisDokumenRequest $request, RefJenisDokumen $jenisDokumen): RedirectResponse
     {
-        $jenisDokuman->update($request->validated());
+        $jenisDokumen->update($request->validated());
 
         return redirect()
             ->route('referensi.jenis-dokumen.index')
             ->with('success', 'Jenis dokumen berhasil diperbarui.');
     }
 
-    public function destroy(RefJenisDokumen $jenisDokuman): RedirectResponse
+    public function destroy(RefJenisDokumen $jenisDokumen): RedirectResponse
     {
-        $this->authorize('delete', $jenisDokuman);
+        $this->authorize('delete', $jenisDokumen);
 
-        $jenisDokuman->delete();
+        $jenisDokumen->delete();
 
         return redirect()
             ->route('referensi.jenis-dokumen.index')

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Referensi;
 
 use App\Models\RefJenisDokumen;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRefJenisDokumenRequest extends FormRequest
 {
@@ -15,7 +16,7 @@ class StoreRefJenisDokumenRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama' => ['required', 'string', 'max:255'],
+            'nama' => ['required', 'string', 'max:255', Rule::unique('ref_jenis_dokumen', 'nama')],
             'keterangan' => ['nullable', 'string', 'max:1000'],
         ];
     }

@@ -9,14 +9,14 @@ class UpdateRefJenisDokumenRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $refJenisDokumen = $this->route('jenis_dokuman');
+        $refJenisDokumen = $this->route('jenisDokumen');
 
         return $this->user()->can('update', $refJenisDokumen);
     }
 
     public function rules(): array
     {
-        $refJenisDokumen = $this->route('jenis_dokuman');
+        $refJenisDokumen = $this->route('jenisDokumen');
 
         return [
             'nama' => [

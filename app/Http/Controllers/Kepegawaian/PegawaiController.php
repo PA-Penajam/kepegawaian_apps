@@ -156,7 +156,7 @@ class PegawaiController extends Controller
 
         return Inertia::render('kepegawaian/pegawai/show', [
             'pegawai' => $pegawai->load([
-                'pangkat', 'jabatan', 'unitKerja', 'user',
+                'pangkat', 'jabatan', 'unitKerja',
                 'riwayatPangkat.pangkat',
                 'riwayatJabatan.jabatan', 'riwayatJabatan.unitKerja',
                 'riwayatPendidikan',
@@ -177,7 +177,7 @@ class PegawaiController extends Controller
         Gate::authorize('update', $pegawai);
 
         return Inertia::render('kepegawaian/pegawai/edit', [
-            'pegawai' => $pegawai->load(['pangkat', 'jabatan', 'unitKerja', 'user']),
+            'pegawai' => $pegawai->load(['pangkat', 'jabatan', 'unitKerja']),
             'refPangkat' => RefPangkat::orderBy('urutan')->get(['id', 'kode', 'nama']),
             'refJabatan' => RefJabatan::orderBy('nama')->get(['id', 'nama', 'jenis_jabatan']),
             'refUnitKerja' => RefUnitKerja::orderBy('urutan')->get(['id', 'nama']),

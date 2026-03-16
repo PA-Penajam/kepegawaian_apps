@@ -1,0 +1,10 @@
+export { BiodataTab } from './biodata-tab';
+export { KeluargaTab } from './keluarga-tab';
+export { RiwayatPangkatTab } from './riwayat-pangkat-tab';
+export { RiwayatJabatanTab } from './riwayat-jabatan-tab';
+export { RiwayatPendidikanTab } from './riwayat-pendidikan-tab';
+export { RiwayatDiklatTab } from './riwayat-diklat-tab';
+export { PenghargaanTab } from './penghargaan-tab';
+export { HukumanDisiplinTab } from './hukuman-disiplin-tab';
+export { DokumenTab } from './dokumen-tab';
+export { DetailTabCard } from './detail-tab-card';

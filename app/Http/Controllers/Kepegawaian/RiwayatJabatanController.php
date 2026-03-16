@@ -9,10 +9,10 @@ use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefUnitKerja;
 use App\Models\RiwayatJabatan;
+use App\Services\RiwayatJabatanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -81,29 +81,17 @@ class RiwayatJabatanController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function store(StoreRiwayatJabatanRequest $request, Pegawai $pegawai): RedirectResponse
+    public function store(StoreRiwayatJabatanRequest $request, Pegawai $pegawai, RiwayatJabatanService $service): RedirectResponse
     {
-        DB::transaction(function () use ($request, $pegawai): void {
-            $riwayatJabatan = $pegawai->riwayatJabatan()->create($request->validated());
-
-            if ($riwayatJabatan->is_aktif) {
-                $this->syncRiwayatAktif($riwayatJabatan, $pegawai);
-            }
-        });
+        $service->store($pegawai, $request->validated());
 
         return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai);
     }
 
-    public function update(UpdateRiwayatJabatanRequest $request, Pegawai $pegawai, RiwayatJabatan $riwayatJabatan): RedirectResponse
+    public function update(UpdateRiwayatJabatanRequest $request, Pegawai $pegawai, RiwayatJabatan $riwayatJabatan, RiwayatJabatanService $service): RedirectResponse
     {
         abort_unless($riwayatJabatan->pegawai_id === $pegawai->id, 404);
-        DB::transaction(function () use ($request, $riwayatJabatan, $pegawai): void {
-            $riwayatJabatan->update($request->validated());
-
-            if ($riwayatJabatan->is_aktif) {
-                $this->syncRiwayatAktif($riwayatJabatan, $pegawai);
-            }
-        });
+        $service->update($riwayatJabatan, $pegawai, $request->validated());
 
         return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai);
     }
@@ -115,18 +103,5 @@ class RiwayatJabatanController extends Controller implements HasMiddleware
         $riwayatJabatan->delete();
 
         return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai);
-    }
-
-    private function syncRiwayatAktif(RiwayatJabatan $riwayatJabatan, Pegawai $pegawai): void
-    {
-        RiwayatJabatan::query()
-            ->where('pegawai_id', $pegawai->id)
-            ->where('id', '!=', $riwayatJabatan->id)
-            ->update(['is_aktif' => false]);
-
-        $pegawai->update([
-            'ref_jabatan_id' => $riwayatJabatan->ref_jabatan_id,
-            'ref_unit_kerja_id' => $riwayatJabatan->ref_unit_kerja_id,
-        ]);
     }
 }

@@ -2,47 +2,42 @@
 
 namespace App\Policies;
 
-use App\Models\User;
+use App\Models\Pegawai;
 
 abstract class RefPolicy
 {
-    public function viewAny(User $user): bool
+    public function viewAny(Pegawai $user): bool
     {
-        return $this->canManage($user);
+        return $user->hasAnyPermission('referensi.view', 'rbac.manage');
     }
 
-    public function view(User $user, $model): bool
+    public function view(Pegawai $user, $model): bool
     {
-        return $model->exists && $this->canManage($user);
+        return $model->exists && $user->hasAnyPermission('referensi.view', 'rbac.manage');
     }
 
-    public function create(User $user): bool
+    public function create(Pegawai $user): bool
     {
-        return $this->canManage($user);
+        return $user->hasAnyPermission('referensi.create', 'rbac.manage');
     }
 
-    public function update(User $user, $model): bool
+    public function update(Pegawai $user, $model): bool
     {
-        return $model->exists && $this->canManage($user);
+        return $model->exists && $user->hasAnyPermission('referensi.update', 'rbac.manage');
     }
 
-    public function delete(User $user, $model): bool
+    public function delete(Pegawai $user, $model): bool
     {
-        return $model->exists && $this->canManage($user);
+        return $model->exists && $user->hasAnyPermission('referensi.delete', 'rbac.manage');
     }
 
-    public function restore(User $user, $model): bool
+    public function restore(Pegawai $user, $model): bool
     {
-        return $model->exists && $this->canManage($user);
+        return $model->exists && $user->hasPermission('rbac.manage');
     }
 
-    public function forceDelete(User $user, $model): bool
+    public function forceDelete(Pegawai $user, $model): bool
     {
-        return $model->exists && $user->isAdmin();
-    }
-
-    protected function canManage(User $user): bool
-    {
-        return $user->isAdmin() || $user->isOperator();
+        return $model->exists && $user->hasPermission('rbac.manage');
     }
 }
