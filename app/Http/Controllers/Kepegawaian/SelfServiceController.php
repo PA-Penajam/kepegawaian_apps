@@ -44,7 +44,8 @@ class SelfServiceController extends Controller
 
     private function currentPegawai(Request $request, array $relations): Pegawai
     {
-        return $request->user()->pegawai()->with($relations)->firstOrFail();
+        // $request->user() sudah return Pegawai (Pegawai = User)
+        return $request->user()->load($relations);
     }
 
     private function indexRelations(): array
@@ -66,7 +67,6 @@ class SelfServiceController extends Controller
             'pangkat',
             'jabatan',
             'unitKerja',
-            'user',
             'riwayatPangkat.pangkat',
             'riwayatJabatan.jabatan',
             'riwayatJabatan.unitKerja',

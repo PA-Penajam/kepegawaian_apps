@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Middleware\EnsurePegawaiLinked;
+use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => EnsureRole::class,
-            'pegawai.linked' => EnsurePegawaiLinked::class,
+            'permission' => EnsurePermission::class,
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);

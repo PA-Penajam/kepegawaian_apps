@@ -12,8 +12,10 @@ use App\Http\Controllers\Kepegawaian\SelfServiceController;
 use App\Http\Controllers\Monitoring\MonitoringKenaikanPangkatController;
 use App\Http\Controllers\Monitoring\MonitoringKgbController;
 use App\Http\Controllers\Referensi\RefJenisDokumenController;
+use App\Http\Controllers\Referensi\RefRoleController;
 use App\Http\Controllers\Referensi\RefStatusKepegawaianController;
 use App\Http\Controllers\Referensi\RefStatusPegawaiController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -22,7 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 });
 
-Route::middleware(['auth', 'verified', 'role:admin,operator'])->group(function () {
+Route::middleware(['auth', 'verified', 'permission:pegawai.view,referensi.view,monitoring.view,rbac.manage'])->group(function () {
     Route::resource('kepegawaian/pegawai', PegawaiController::class)
         ->names('kepegawaian.pegawai');
 
@@ -33,7 +35,7 @@ Route::middleware(['auth', 'verified', 'role:admin,operator'])->group(function (
         ->name('monitoring.kenaikan-pangkat.index');
 
     Route::resource('referensi/jenis-dokumen', RefJenisDokumenController::class)
-        ->parameters(['jenis-dokumen' => 'jenisDokuman'])
+        ->parameters(['jenis-dokumen' => 'jenisDokumen'])
         ->names('referensi.jenis-dokumen')
         ->except(['show']);
 
@@ -45,9 +47,15 @@ Route::middleware(['auth', 'verified', 'role:admin,operator'])->group(function (
         ->parameters(['status-pegawai' => 'statusPegawai'])
         ->names('referensi.status-pegawai')
         ->except(['show']);
+
+    Route::resource('referensi/roles', RefRoleController::class)
+        ->names('referensi.roles')
+        ->except(['show']);
+
+    Route::resource('pengguna', UserController::class)->except(['show']);
 });
 
-Route::middleware(['auth', 'verified', 'role:admin,operator'])
+Route::middleware(['auth', 'verified', 'permission:pegawai.view,pegawai.create,pegawai.update,pegawai.delete'])
     ->prefix('kepegawaian')
     ->name('kepegawaian.')
     ->group(function () {
@@ -92,13 +100,8 @@ Route::middleware(['auth', 'verified'])
     ->prefix('self-service')
     ->name('self-service.')
     ->group(function () {
-        Route::get('/unlinked', [SelfServiceController::class, 'unlinked'])
-            ->name('unlinked');
-
-        Route::middleware('pegawai.linked')->group(function () {
-            Route::get('/', [SelfServiceController::class, 'index'])->name('index');
-            Route::get('/detail', [SelfServiceController::class, 'detail'])->name('detail');
-        });
+        Route::get('/', [SelfServiceController::class, 'index'])->name('index');
+        Route::get('/detail', [SelfServiceController::class, 'detail'])->name('detail');
     });
 
 require __DIR__.'/settings.php';

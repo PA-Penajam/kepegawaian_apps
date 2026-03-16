@@ -8,11 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         $user = $request->user();
@@ -27,12 +22,16 @@ class EnsureRole
 
         $allowedRoles = collect($roles)
             ->flatMap(fn (string $role) => explode(',', $role))
-            ->map(fn (string $role) => trim($role))
+            ->map(fn (string $role) => strtolower(trim($role)))
             ->filter()
             ->values()
             ->all();
 
-        if (! in_array($user->role?->value, $allowedRoles, true)) {
+        // Multi-role: cek apakah pegawai punya salah satu role yang diizinkan
+        $userRoles = $user->roles->pluck('nama')->map(fn ($r) => strtolower($r))->toArray();
+        $hasRole = count(array_intersect($userRoles, $allowedRoles)) > 0;
+
+        if (! $hasRole) {
             abort(Response::HTTP_FORBIDDEN);
         }
 
