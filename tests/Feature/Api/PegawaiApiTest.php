@@ -87,3 +87,73 @@ test('response single pegawai memiliki field yang benar', function () {
         ->assertJsonPath('data.nip', $pegawai->nip)
         ->assertJsonPath('data.nama', $pegawai->nama_lengkap);  // nama_lengkap di-map ke nama
 });
+
+// =============================================================================
+// Task 4: PegawaiApiController Tests
+// =============================================================================
+
+test('GET pegawai/{nip} 404 jika NIP tidak ditemukan', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user, ['*']);
+    $headers = makeSignedHeaders('GET', '/api/v1/pegawai/000000000000000000');
+
+    $response = $this->getJson('/api/v1/pegawai/000000000000000000', $headers);
+    $response->assertStatus(404)
+        ->assertJsonPath('message', 'Pegawai tidak ditemukan')
+        ->assertJsonPath('errors.nip.0', 'NIP tidak terdaftar');
+});
+
+test('GET pegawai batch mengembalikan data dan not_found', function () {
+    $user    = User::factory()->create();
+    $pegawai = \App\Models\Pegawai::factory()->create();
+    Sanctum::actingAs($user, ['*']);
+
+    $query   = ['nip' => [$pegawai->nip, '000000000000000001']];
+    $headers = makeSignedHeaders('GET', '/api/v1/pegawai', $query);
+
+    $response = $this->getJson('/api/v1/pegawai?' . http_build_query($query), $headers);
+    $response->assertStatus(200)
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('not_found.0', '000000000000000001');
+});
+
+test('GET pegawai batch > 50 NIP mengembalikan 422', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user, ['*']);
+
+    $nips    = array_fill(0, 51, '197501012005011001');
+    $query   = ['nip' => $nips];
+    $headers = makeSignedHeaders('GET', '/api/v1/pegawai', $query);
+
+    $response = $this->getJson('/api/v1/pegawai?' . http_build_query($query), $headers);
+    $response->assertStatus(422);
+});
+
+test('GET pegawai search mengembalikan hanya pegawai aktif', function () {
+    $user    = User::factory()->create();
+    $aktif   = \App\Models\Pegawai::factory()->create(['status_pegawai' => \App\Enums\StatusPegawai::Aktif, 'nama_lengkap' => 'Budi Aktif']);
+    $pensiun = \App\Models\Pegawai::factory()->create(['status_pegawai' => \App\Enums\StatusPegawai::Pensiun, 'nama_lengkap' => 'Budi Pensiun']);
+    Sanctum::actingAs($user, ['*']);
+
+    $query   = ['search' => 'Budi', 'status' => 'aktif'];
+    $headers = makeSignedHeaders('GET', '/api/v1/pegawai', $query);
+
+    $response = $this->getJson('/api/v1/pegawai?' . http_build_query($query), $headers);
+    $response->assertStatus(200)
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.nama', 'Budi Aktif');
+});
+
+test('parameter nip[] diprioritaskan jika search juga dikirim', function () {
+    $user    = User::factory()->create();
+    $pegawai = \App\Models\Pegawai::factory()->create(['nama_lengkap' => 'Target Pegawai']);
+    Sanctum::actingAs($user, ['*']);
+
+    $query   = ['nip' => [$pegawai->nip], 'search' => 'lainnya'];
+    $headers = makeSignedHeaders('GET', '/api/v1/pegawai', $query);
+
+    $response = $this->getJson('/api/v1/pegawai?' . http_build_query($query), $headers);
+    $response->assertStatus(200)
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.nama', 'Target Pegawai');
+});

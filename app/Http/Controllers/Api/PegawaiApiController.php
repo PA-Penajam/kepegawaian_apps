@@ -6,13 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PegawaiApiResource;
 use App\Models\Pegawai;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Controller untuk API Pegawai yang dikonsumsi oleh attendance-qr-system.
  *
  * Endpoint:
- * - GET /api/v1/pegawai/{nip} - Single lookup
+ * - GET /api/v1/pegawai/{nip} - Single lookup by NIP (18 digit)
  * - GET /api/v1/pegawai - Batch lookup (nip[]) atau search (search + status)
+ *
+ * Security: auth:sanctum + verify.hmac middleware
  */
 class PegawaiApiController extends Controller
 {
@@ -39,11 +42,82 @@ class PegawaiApiController extends Controller
 
     /**
      * Batch lookup atau search pegawai.
-     * Dipanggil via index() di routes.
+     *
+     * Mode:
+     * 1. Batch: nip[] parameter (max 50 NIP)
+     * 2. Search: search + status parameter (status default ke 'aktif')
+     *
+     * Priority: nip[] diprioritaskan jika search juga dikirim.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        // Akan diimplementasikan di Task 4
-        return response()->json(['message' => 'Not implemented yet'], 501);
+        // Batch lookup by NIPs diprioritaskan jika nip[] ada
+        if ($request->has('nip')) {
+            return $this->batchByNips($request);
+        }
+
+        // Search mode
+        return $this->search($request);
+    }
+
+    /**
+     * Batch lookup pegawai berdasarkan array NIPs.
+     */
+    private function batchByNips(Request $request): JsonResponse
+    {
+        $nips = $request->input('nip', []);
+
+        if (count($nips) > 50) {
+            return response()->json(['message' => 'Maksimal 50 NIP per request'], 422);
+        }
+
+        $pegawaiList = Pegawai::with(['jabatan', 'unitKerja'])
+            ->whereIn('nip', $nips)
+            ->get();
+
+        $foundNips = $pegawaiList->pluck('nip')->toArray();
+        $notFoundNips = array_values(array_diff($nips, $foundNips));
+
+        return response()->json([
+            'data' => $pegawaiList->map(fn ($p) => [
+                'nip' => $p->nip,
+                'nama' => $p->nama_lengkap,
+                'jabatan' => $p->jabatan?->nama ?? null,
+                'unit_kerja' => $p->unitKerja?->nama ?? null,
+                'status_pegawai' => $p->status_pegawai?->value ?? null,
+            ]),
+            'not_found' => $notFoundNips,
+        ]);
+    }
+
+    /**
+     * Search pegawai berdasarkan nama dengan filter status.
+     */
+    private function search(Request $request): JsonResponse
+    {
+        $query = Pegawai::with(['jabatan', 'unitKerja'])
+            ->when($request->input('status') === 'aktif', fn ($q) => $q->aktif())
+            ->when($request->input('search'), fn ($q, $search) =>
+                $q->where('nama_lengkap', 'like', "%{$search}%")
+            )
+            ->limit(20)
+            ->get();
+
+        $total = Pegawai::when($request->input('status') === 'aktif', fn ($q) => $q->aktif())
+            ->when($request->input('search'), fn ($q, $search) =>
+                $q->where('nama_lengkap', 'like', "%{$search}%")
+            )
+            ->count();
+
+        return response()->json([
+            'data' => $query->map(fn ($p) => [
+                'nip' => $p->nip,
+                'nama' => $p->nama_lengkap,
+                'jabatan' => $p->jabatan?->nama ?? null,
+                'unit_kerja' => $p->unitKerja?->nama ?? null,
+                'status_pegawai' => $p->status_pegawai?->value ?? null,
+            ]),
+            'meta' => ['total' => $total, 'per_page' => 20],
+        ]);
     }
 }
