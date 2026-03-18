@@ -66,3 +66,24 @@ test('request dengan timestamp kedaluwarsa ditolak 401', function () {
     ]);
     $response->assertStatus(401);
 });
+
+// =============================================================================
+// Task 3: PegawaiApiResource Tests
+// =============================================================================
+
+test('response single pegawai memiliki field yang benar', function () {
+    $user    = User::factory()->create();
+    $pegawai = \App\Models\Pegawai::factory()->create();
+
+    Sanctum::actingAs($user, ['*']);
+    $headers = makeSignedHeaders('GET', '/api/v1/pegawai/' . $pegawai->nip);
+
+    $response = $this->getJson('/api/v1/pegawai/' . $pegawai->nip, $headers);
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'data' => ['nip', 'nama', 'jabatan', 'unit_kerja', 'status_pegawai', 'foto_url'],
+        ])
+        ->assertJsonPath('data.nip', $pegawai->nip)
+        ->assertJsonPath('data.nama', $pegawai->nama_lengkap);  // nama_lengkap di-map ke nama
+});
