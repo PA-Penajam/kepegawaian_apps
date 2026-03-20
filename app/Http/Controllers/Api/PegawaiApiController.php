@@ -26,7 +26,7 @@ class PegawaiApiController extends Controller
      */
     public function show(string $nip): JsonResponse
     {
-        $pegawai = Pegawai::with(['jabatan', 'unitKerja'])
+        $pegawai = Pegawai::with(['jabatan', 'unitKerja', 'pangkat'])
             ->where('nip', $nip)
             ->first();
 
@@ -71,7 +71,7 @@ class PegawaiApiController extends Controller
             return response()->json(['message' => 'Maksimal 50 NIP per request'], 422);
         }
 
-        $pegawaiList = Pegawai::with(['jabatan', 'unitKerja'])
+        $pegawaiList = Pegawai::with(['jabatan', 'unitKerja', 'pangkat'])
             ->whereIn('nip', $nips)
             ->get();
 
@@ -79,13 +79,7 @@ class PegawaiApiController extends Controller
         $notFoundNips = array_values(array_diff($nips, $foundNips));
 
         return response()->json([
-            'data' => $pegawaiList->map(fn ($p) => [
-                'nip' => $p->nip,
-                'nama' => $p->nama_lengkap,
-                'jabatan' => $p->jabatan?->nama ?? null,
-                'unit_kerja' => $p->unitKerja?->nama ?? null,
-                'status_pegawai' => $p->status_pegawai?->value ?? null,
-            ]),
+            'data' => PegawaiApiResource::collection($pegawaiList),
             'not_found' => $notFoundNips,
         ]);
     }
@@ -95,28 +89,20 @@ class PegawaiApiController extends Controller
      */
     private function search(Request $request): JsonResponse
     {
-        $query = Pegawai::with(['jabatan', 'unitKerja'])
+        $query = Pegawai::with(['jabatan', 'unitKerja', 'pangkat'])
             ->when($request->input('status') === 'aktif', fn ($q) => $q->aktif())
-            ->when($request->input('search'), fn ($q, $search) =>
-                $q->where('nama_lengkap', 'like', "%{$search}%")
+            ->when($request->input('search'), fn ($q, $search) => $q->where('nama_lengkap', 'like', "%{$search}%")
             )
             ->limit(20)
             ->get();
 
         $total = Pegawai::when($request->input('status') === 'aktif', fn ($q) => $q->aktif())
-            ->when($request->input('search'), fn ($q, $search) =>
-                $q->where('nama_lengkap', 'like', "%{$search}%")
+            ->when($request->input('search'), fn ($q, $search) => $q->where('nama_lengkap', 'like', "%{$search}%")
             )
             ->count();
 
         return response()->json([
-            'data' => $query->map(fn ($p) => [
-                'nip' => $p->nip,
-                'nama' => $p->nama_lengkap,
-                'jabatan' => $p->jabatan?->nama ?? null,
-                'unit_kerja' => $p->unitKerja?->nama ?? null,
-                'status_pegawai' => $p->status_pegawai?->value ?? null,
-            ]),
+            'data' => PegawaiApiResource::collection($query),
             'meta' => ['total' => $total, 'per_page' => 20],
         ]);
     }
