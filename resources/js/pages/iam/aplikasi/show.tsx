@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -85,10 +84,6 @@ export default function Show() {
     // Form untuk delete
     const deleteForm = useForm({});
 
-    // Form untuk toggle permission - didefinisikan dengan tipe explicit
-    const togglePermissionForm = useForm<{ permission_id: string }>({
-        permission_id: '',
-    });
 
     // Tampilkan modal jika ada flash api_secret_once
     useEffect(() => {
@@ -182,25 +177,6 @@ export default function Show() {
         );
     }, [aplikasi.id, deletePermissionConfirm, deleteForm]);
 
-    // Toggle permission pada role
-    const handleTogglePermission = useCallback(
-        (role: IamRole, permission: IamPermission, checked: boolean) => {
-            if (checked) {
-                togglePermissionForm.setData(
-                    'permission_id',
-                    permission.id.toString(),
-                );
-                togglePermissionForm.post(
-                    `/iam/aplikasi/${aplikasi.id}/roles/${role.id}/permissions`,
-                );
-            } else {
-                togglePermissionForm.delete(
-                    `/iam/aplikasi/${aplikasi.id}/roles/${role.id}/permissions/${permission.id}`,
-                );
-            }
-        },
-        [aplikasi.id, togglePermissionForm],
-    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
