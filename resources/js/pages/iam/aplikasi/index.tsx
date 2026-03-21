@@ -1,6 +1,17 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +25,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Table,
     TableBody,
@@ -37,6 +49,21 @@ export default function Index() {
     const { aplikasi, flash } = usePage<Props>().props;
     const [showApiSecretModal, setShowApiSecretModal] = useState(false);
     const [apiSecret, setApiSecret] = useState<string | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{
+        id: number;
+        nama: string;
+    } | null>(null);
+
+    // Form untuk create aplikasi
+    const createForm = useForm({
+        nama: '',
+        slug: '',
+        url: '',
+        deskripsi: '',
+    });
+
+    // Form untuk delete aplikasi
+    const deleteForm = useForm({});
 
     // Tampilkan modal jika ada flash api_secret_once
     useEffect(() => {
@@ -56,10 +83,17 @@ export default function Index() {
     );
 
     const handleDelete = useCallback((id: number, nama: string) => {
-        if (confirm(`Apakah Anda yakin ingin menghapus aplikasi "${nama}"?`)) {
-            router.delete(`/iam/aplikasi/${id}`);
-        }
+        setDeleteConfirm({ id, nama });
     }, []);
+
+    const confirmDelete = useCallback(() => {
+        if (!deleteConfirm) return;
+        deleteForm.delete(`/iam/aplikasi/${deleteConfirm.id}`, {
+            onSuccess: () => {
+                setDeleteConfirm(null);
+            },
+        });
+    }, [deleteConfirm, deleteForm]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -90,75 +124,97 @@ export default function Index() {
                             <form
                                 onSubmit={(e) => {
                                     e.preventDefault();
-                                    const formData = new FormData(
-                                        e.currentTarget,
-                                    );
-                                    router.post('/iam/aplikasi', {
-                                        nama: formData.get('nama'),
-                                        slug: formData.get('slug'),
-                                        url: formData.get('url'),
-                                        deskripsi: formData.get('deskripsi'),
+                                    createForm.post('/iam/aplikasi', {
+                                        onSuccess: () => {
+                                            createForm.reset();
+                                        },
                                     });
                                 }}
                             >
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
-                                        <label
-                                            htmlFor="nama"
-                                            className="text-sm font-medium"
-                                        >
-                                            Nama Aplikasi
-                                        </label>
+                                        <Label htmlFor="nama">Nama Aplikasi</Label>
                                         <Input
                                             id="nama"
-                                            name="nama"
+                                            value={createForm.data.nama}
+                                            onChange={(e) =>
+                                                createForm.setData(
+                                                    'nama',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="Contoh: Aplikasi Keuangan"
                                             required
                                         />
+                                        {createForm.errors.nama && (
+                                            <p className="text-sm text-destructive">
+                                                {createForm.errors.nama}
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="grid gap-2">
-                                        <label
-                                            htmlFor="slug"
-                                            className="text-sm font-medium"
-                                        >
-                                            Slug
-                                        </label>
+                                        <Label htmlFor="slug">Slug</Label>
                                         <Input
                                             id="slug"
-                                            name="slug"
+                                            value={createForm.data.slug}
+                                            onChange={(e) =>
+                                                createForm.setData(
+                                                    'slug',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="Contoh: aplikasi-keuangan"
                                             pattern="[a-z0-9-]+"
                                             title="Hanya huruf kecil, angka, dan tanda hubung"
                                             required
                                         />
+                                        {createForm.errors.slug && (
+                                            <p className="text-sm text-destructive">
+                                                {createForm.errors.slug}
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="grid gap-2">
-                                        <label
-                                            htmlFor="url"
-                                            className="text-sm font-medium"
-                                        >
-                                            URL Aplikasi
-                                        </label>
+                                        <Label htmlFor="url">URL Aplikasi</Label>
                                         <Input
                                             id="url"
-                                            name="url"
+                                            value={createForm.data.url}
+                                            onChange={(e) =>
+                                                createForm.setData(
+                                                    'url',
+                                                    e.target.value,
+                                                )
+                                            }
                                             type="url"
                                             placeholder="https://example.com"
                                             required
                                         />
+                                        {createForm.errors.url && (
+                                            <p className="text-sm text-destructive">
+                                                {createForm.errors.url}
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="grid gap-2">
-                                        <label
-                                            htmlFor="deskripsi"
-                                            className="text-sm font-medium"
-                                        >
+                                        <Label htmlFor="deskripsi">
                                             Deskripsi (Opsional)
-                                        </label>
+                                        </Label>
                                         <Input
                                             id="deskripsi"
-                                            name="deskripsi"
+                                            value={createForm.data.deskripsi}
+                                            onChange={(e) =>
+                                                createForm.setData(
+                                                    'deskripsi',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="Deskripsi singkat aplikasi"
                                         />
+                                        {createForm.errors.deskripsi && (
+                                            <p className="text-sm text-destructive">
+                                                {createForm.errors.deskripsi}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                                 <DialogFooter>
@@ -167,7 +223,14 @@ export default function Index() {
                                             Batal
                                         </Button>
                                     </DialogClose>
-                                    <Button type="submit">Simpan</Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={createForm.processing}
+                                    >
+                                        {createForm.processing
+                                            ? 'Menyimpan...'
+                                            : 'Simpan'}
+                                    </Button>
                                 </DialogFooter>
                             </form>
                         </DialogContent>
@@ -278,6 +341,63 @@ export default function Index() {
                                                         >
                                                             <Trash2 className="h-4 w-4 text-destructive" />
                                                         </Button>
+                                                        <AlertDialog
+                                                            open={
+                                                                deleteConfirm?.id ===
+                                                                    app.id ||
+                                                                false
+                                                            }
+                                                            onOpenChange={(
+                                                                open: boolean,
+                                                            ) =>
+                                                                !open &&
+                                                                setDeleteConfirm(
+                                                                    null,
+                                                                )
+                                                            }
+                                                        >
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>
+                                                                        Hapus Aplikasi
+                                                                    </AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        Apakah
+                                                                        Anda
+                                                                        yakin
+                                                                        ingin
+                                                                        menghapus
+                                                                        aplikasi
+                                                                        "
+                                                                        {
+                                                                            deleteConfirm?.nama
+                                                                        }
+                                                                        "? Tindakan
+                                                                        ini
+                                                                        tidak
+                                                                        dapat
+                                                                        dibatalkan.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>
+                                                                        Batal
+                                                                    </AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        onClick={
+                                                                            confirmDelete
+                                                                        }
+                                                                        disabled={
+                                                                            deleteForm.processing
+                                                                        }
+                                                                    >
+                                                                        {deleteForm.processing
+                                                                            ? 'Menghapus...'
+                                                                            : 'Hapus'}
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
                                                     </>
                                                 )}
                                             </div>

@@ -165,7 +165,7 @@ export default function Index() {
                                 <Link
                                     href={`?page=${users.meta.current_page - 1}`}
                                 >
-                                    Previous
+                                    Sebelumnya
                                 </Link>
                             </Button>
                         )}
@@ -178,7 +178,7 @@ export default function Index() {
                                 <Link
                                     href={`?page=${users.meta.current_page + 1}`}
                                 >
-                                    Next
+                                    Selanjutnya
                                 </Link>
                             </Button>
                         )}

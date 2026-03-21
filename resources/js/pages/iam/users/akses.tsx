@@ -1,6 +1,16 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +20,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import {
     Table,
     TableBody,
@@ -36,6 +45,20 @@ export default function Akses() {
     const { user, akses, availableApps } = usePage<Props>().props;
     const [selectedAppId, setSelectedAppId] = useState<string>('');
     const [selectedRoleId, setSelectedRoleId] = useState<string>('');
+
+    // State untuk delete confirmation
+    const [revokeConfirm, setRevokeConfirm] = useState<{
+        roleId: number;
+        roleName: string;
+    } | null>(null);
+
+    // Form untuk tambah role
+    const addRoleForm = useForm({
+        iam_role_id: '',
+    });
+
+    // Form untuk delete
+    const deleteForm = useForm({});
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -88,27 +111,33 @@ export default function Akses() {
             return;
         }
 
-        router.post(`/iam/users/${user.id}/akses`, {
-            iam_role_id: selectedRoleId,
+        addRoleForm.post(`/iam/users/${user.id}/akses`, {
+            onSuccess: () => {
+                addRoleForm.reset();
+                setSelectedAppId('');
+                setSelectedRoleId('');
+            },
         });
-
-        // Reset form
-        setSelectedAppId('');
-        setSelectedRoleId('');
-    }, [user.id, selectedAppId, selectedRoleId]);
+    }, [user.id, selectedRoleId, addRoleForm]);
 
     const handleRevokeAkses = useCallback(
         (roleId: number, roleName: string) => {
-            if (
-                confirm(
-                    `Apakah Anda yakin ingin mencabut akses "${roleName}" dari user ini?`,
-                )
-            ) {
-                router.delete(`/iam/users/${user.id}/akses/${roleId}`);
-            }
+            setRevokeConfirm({ roleId, roleName });
         },
-        [user.id],
+        [],
     );
+
+    const confirmRevoke = useCallback(() => {
+        if (!revokeConfirm) return;
+        deleteForm.delete(
+            `/iam/users/${user.id}/akses/${revokeConfirm.roleId}`,
+            {
+                onSuccess: () => {
+                    setRevokeConfirm(null);
+                },
+            },
+        );
+    }, [revokeConfirm, user.id, deleteForm]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -179,10 +208,16 @@ export default function Akses() {
 
                         <Button
                             onClick={handleAddRole}
-                            disabled={!selectedAppId || !selectedRoleId}
+                            disabled={
+                                !selectedAppId ||
+                                !selectedRoleId ||
+                                addRoleForm.processing
+                            }
                         >
                             <Plus className="mr-2 h-4 w-4" />
-                            Tambah
+                            {addRoleForm.processing
+                                ? 'Menambahkan...'
+                                : 'Tambah'}
                         </Button>
                     </div>
                 </div>
@@ -301,15 +336,74 @@ export default function Akses() {
                                                                 size="icon"
                                                                 onClick={() =>
                                                                     handleRevokeAkses(
-                                                                        a.role
-                                                                            .id,
-                                                                        a.role
-                                                                            .nama,
+                                                                        a.role.id,
+                                                                        a.role.nama,
                                                                     )
                                                                 }
                                                             >
                                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                                             </Button>
+                                                            <AlertDialog
+                                                                open={
+                                                                    revokeConfirm?.roleId ===
+                                                                    a.role.id
+                                                                }
+                                                                onOpenChange={(
+                                                                    open: boolean,
+                                                                ) =>
+                                                                    !open &&
+                                                                    setRevokeConfirm(
+                                                                        null,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>
+                                                                            Cabut
+                                                                            Akses
+                                                                        </AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            Apakah
+                                                                            Anda
+                                                                            yakin
+                                                                            ingin
+                                                                            mencabut
+                                                                            akses
+                                                                            "
+                                                                            {
+                                                                                revokeConfirm?.roleName
+                                                                            }
+                                                                            "
+                                                                            dari
+                                                                            user
+                                                                            ini?
+                                                                            Tindakan
+                                                                            ini
+                                                                            tidak
+                                                                            dapat
+                                                                            dibatalkan.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>
+                                                                            Batal
+                                                                        </AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={
+                                                                                confirmRevoke
+                                                                            }
+                                                                            disabled={
+                                                                                deleteForm.processing
+                                                                            }
+                                                                        >
+                                                                            {deleteForm.processing
+                                                                                ? 'Mencabut...'
+                                                                                : 'Cabut'}
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>

@@ -1,12 +1,21 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Copy, Key, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -15,6 +24,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Table,
     TableBody,
@@ -44,6 +54,41 @@ export default function Show() {
     const { aplikasi, flash } = usePage<Props>().props;
     const [showApiSecretModal, setShowApiSecretModal] = useState(false);
     const [apiSecret, setApiSecret] = useState<string | null>(null);
+
+    // State untuk controlled dialogs
+    const [showAddRoleDialog, setShowAddRoleDialog] = useState(false);
+    const [showAddPermissionDialog, setShowAddPermissionDialog] = useState(false);
+
+    // State untuk delete confirmations
+    const [regenerateConfirm, setRegenerateConfirm] = useState(false);
+    const [deleteRoleConfirm, setDeleteRoleConfirm] = useState<IamRole | null>(
+        null,
+    );
+    const [deletePermissionConfirm, setDeletePermissionConfirm] =
+        useState<IamPermission | null>(null);
+
+    // Form untuk tambah role
+    const addRoleForm = useForm({
+        nama: '',
+        deskripsi: '',
+    });
+
+    // Form untuk tambah permission
+    const addPermissionForm = useForm({
+        nama: '',
+        deskripsi: '',
+    });
+
+    // Form untuk regenerate key
+    const regenerateForm = useForm({});
+
+    // Form untuk delete
+    const deleteForm = useForm({});
+
+    // Form untuk toggle permission - didefinisikan dengan tipe explicit
+    const togglePermissionForm = useForm<{ permission_id: string }>({
+        permission_id: '',
+    });
 
     // Tampilkan modal jika ada flash api_secret_once
     useEffect(() => {
@@ -81,88 +126,80 @@ export default function Show() {
     }, []);
 
     const handleRegenerateKey = useCallback(() => {
-        if (
-            confirm(
-                'Apakah Anda yakin ingin meregenerasi API key? API secret lama tidak akan berlaku lagi.',
-            )
-        ) {
-            router.post(`/iam/aplikasi/${aplikasi.id}/regenerate-key`);
-        }
-    }, [aplikasi.id]);
+        regenerateForm.post(`/iam/aplikasi/${aplikasi.id}/regenerate-key`, {
+            onSuccess: () => {
+                setRegenerateConfirm(false);
+            },
+        });
+    }, [aplikasi.id, regenerateForm]);
 
     // Form tambah role
-    const handleAddRole = useCallback(
-        (e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            router.post(`/iam/aplikasi/${aplikasi.id}/roles`, {
-                nama: formData.get('nama'),
-                deskripsi: formData.get('deskripsi'),
-            });
-        },
-        [aplikasi.id],
-    );
+    const handleAddRole = useCallback(() => {
+        addRoleForm.post(`/iam/aplikasi/${aplikasi.id}/roles`, {
+            onSuccess: () => {
+                addRoleForm.reset();
+                setShowAddRoleDialog(false);
+            },
+        });
+    }, [aplikasi.id, addRoleForm]);
 
     // Hapus role
-    const handleDeleteRole = useCallback(
-        (role: IamRole) => {
-            if (
-                confirm(
-                    `Apakah Anda yakin ingin menghapus role "${role.nama}"?`,
-                )
-            ) {
-                router.delete(`/iam/aplikasi/${aplikasi.id}/roles/${role.id}`);
-            }
-        },
-        [aplikasi.id],
-    );
+    const handleDeleteRole = useCallback(() => {
+        if (!deleteRoleConfirm) return;
+        deleteForm.delete(
+            `/iam/aplikasi/${aplikasi.id}/roles/${deleteRoleConfirm.id}`,
+            {
+                onSuccess: () => {
+                    setDeleteRoleConfirm(null);
+                },
+            },
+        );
+    }, [aplikasi.id, deleteRoleConfirm, deleteForm]);
 
     // Form tambah permission
-    const handleAddPermission = useCallback(
-        (e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            router.post(`/iam/aplikasi/${aplikasi.id}/permissions`, {
-                nama: formData.get('nama'),
-                deskripsi: formData.get('deskripsi'),
-            });
-        },
-        [aplikasi.id],
-    );
+    const handleAddPermission = useCallback(() => {
+        addPermissionForm.post(
+            `/iam/aplikasi/${aplikasi.id}/permissions`,
+            {
+                onSuccess: () => {
+                    addPermissionForm.reset();
+                    setShowAddPermissionDialog(false);
+                },
+            },
+        );
+    }, [aplikasi.id, addPermissionForm]);
 
     // Hapus permission
-    const handleDeletePermission = useCallback(
-        (permission: IamPermission) => {
-            if (
-                confirm(
-                    `Apakah Anda yakin ingin menghapus permission "${permission.nama}"?`,
-                )
-            ) {
-                router.delete(
-                    `/iam/aplikasi/${aplikasi.id}/permissions/${permission.id}`,
-                );
-            }
-        },
-        [aplikasi.id],
-    );
+    const handleDeletePermission = useCallback(() => {
+        if (!deletePermissionConfirm) return;
+        deleteForm.delete(
+            `/iam/aplikasi/${aplikasi.id}/permissions/${deletePermissionConfirm.id}`,
+            {
+                onSuccess: () => {
+                    setDeletePermissionConfirm(null);
+                },
+            },
+        );
+    }, [aplikasi.id, deletePermissionConfirm, deleteForm]);
 
     // Toggle permission pada role
     const handleTogglePermission = useCallback(
         (role: IamRole, permission: IamPermission, checked: boolean) => {
             if (checked) {
-                router.post(
+                togglePermissionForm.setData(
+                    'permission_id',
+                    permission.id.toString(),
+                );
+                togglePermissionForm.post(
                     `/iam/aplikasi/${aplikasi.id}/roles/${role.id}/permissions`,
-                    {
-                        permission_id: permission.id,
-                    },
                 );
             } else {
-                router.delete(
+                togglePermissionForm.delete(
                     `/iam/aplikasi/${aplikasi.id}/roles/${role.id}/permissions/${permission.id}`,
                 );
             }
         },
-        [aplikasi.id],
+        [aplikasi.id, togglePermissionForm],
     );
 
     return (
@@ -207,7 +244,10 @@ export default function Show() {
                     <TabsContent value="roles" className="mt-4">
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-end">
-                                <Dialog>
+                                <Dialog
+                                    open={showAddRoleDialog}
+                                    onOpenChange={setShowAddRoleDialog}
+                                >
                                     <DialogTrigger asChild>
                                         <Button size="sm">
                                             <Plus className="mr-2 h-4 w-4" />
@@ -224,47 +264,91 @@ export default function Show() {
                                                 aplikasi ini.
                                             </DialogDescription>
                                         </DialogHeader>
-                                        <form onSubmit={handleAddRole}>
+                                        <form
+                                            onSubmit={(e) => {
+                                                e.preventDefault();
+                                                handleAddRole();
+                                            }}
+                                        >
                                             <div className="grid gap-4 py-4">
                                                 <div className="grid gap-2">
-                                                    <label
-                                                        htmlFor="role-nama"
-                                                        className="text-sm font-medium"
-                                                    >
+                                                    <Label htmlFor="role-nama">
                                                         Nama Role
-                                                    </label>
+                                                    </Label>
                                                     <Input
                                                         id="role-nama"
-                                                        name="nama"
+                                                        value={
+                                                            addRoleForm.data.nama
+                                                        }
+                                                        onChange={(e) =>
+                                                            addRoleForm.setData(
+                                                                'nama',
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         placeholder="Contoh: Admin"
                                                         required
                                                     />
+                                                    {addRoleForm.errors.nama && (
+                                                        <p className="text-sm text-destructive">
+                                                            {
+                                                                addRoleForm
+                                                                    .errors.nama
+                                                            }
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div className="grid gap-2">
-                                                    <label
-                                                        htmlFor="role-deskripsi"
-                                                        className="text-sm font-medium"
-                                                    >
+                                                    <Label htmlFor="role-deskripsi">
                                                         Deskripsi (Opsional)
-                                                    </label>
+                                                    </Label>
                                                     <Input
                                                         id="role-deskripsi"
-                                                        name="deskripsi"
+                                                        value={
+                                                            addRoleForm.data
+                                                                .deskripsi
+                                                        }
+                                                        onChange={(e) =>
+                                                            addRoleForm.setData(
+                                                                'deskripsi',
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         placeholder="Deskripsi role"
                                                     />
+                                                    {addRoleForm.errors
+                                                        .deskripsi && (
+                                                        <p className="text-sm text-destructive">
+                                                            {
+                                                                addRoleForm
+                                                                    .errors
+                                                                    .deskripsi
+                                                            }
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                             <DialogFooter>
-                                                <DialogClose asChild>
-                                                    <Button
-                                                        variant="outline"
-                                                        type="button"
-                                                    >
-                                                        Batal
-                                                    </Button>
-                                                </DialogClose>
-                                                <Button type="submit">
-                                                    Simpan
+                                                <Button
+                                                    variant="outline"
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setShowAddRoleDialog(
+                                                            false,
+                                                        )
+                                                    }
+                                                >
+                                                    Batal
+                                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={
+                                                        addRoleForm.processing
+                                                    }
+                                                >
+                                                    {addRoleForm.processing
+                                                        ? 'Menyimpan...'
+                                                        : 'Simpan'}
                                                 </Button>
                                             </DialogFooter>
                                         </form>
@@ -341,17 +425,75 @@ export default function Show() {
                                                     <TableCell>
                                                         <div className="flex items-center justify-center gap-2">
                                                             {!aplikasi.is_system && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={() =>
-                                                                        handleDeleteRole(
-                                                                            role,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                                </Button>
+                                                                <>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() =>
+                                                                            setDeleteRoleConfirm(
+                                                                                role,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                                    </Button>
+                                                                    <AlertDialog
+                                                                        open={
+                                                                            deleteRoleConfirm?.id ===
+                                                                            role.id
+                                                                        }
+                                                                        onOpenChange={(
+                                                                            open: boolean,
+                                                                        ) =>
+                                                                            !open &&
+                                                                            setDeleteRoleConfirm(
+                                                                                null,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <AlertDialogContent>
+                                                                            <AlertDialogHeader>
+                                                                                <AlertDialogTitle>
+                                                                                    Hapus Role
+                                                                                </AlertDialogTitle>
+                                                                                <AlertDialogDescription>
+                                                                                    Apakah
+                                                                                    Anda
+                                                                                    yakin
+                                                                                    ingin
+                                                                                    menghapus
+                                                                                    role
+                                                                                    "
+                                                                                    {
+                                                                                        deleteRoleConfirm?.nama
+                                                                                    }
+                                                                                    "? Tindakan
+                                                                                    ini
+                                                                                    tidak
+                                                                                    dapat
+                                                                                    dibatalkan.
+                                                                                </AlertDialogDescription>
+                                                                            </AlertDialogHeader>
+                                                                            <AlertDialogFooter>
+                                                                                <AlertDialogCancel>
+                                                                                    Batal
+                                                                                </AlertDialogCancel>
+                                                                                <AlertDialogAction
+                                                                                    onClick={
+                                                                                        handleDeleteRole
+                                                                                    }
+                                                                                    disabled={
+                                                                                        deleteForm.processing
+                                                                                    }
+                                                                                >
+                                                                                    {deleteForm.processing
+                                                                                        ? 'Menghapus...'
+                                                                                        : 'Hapus'}
+                                                                                </AlertDialogAction>
+                                                                            </AlertDialogFooter>
+                                                                        </AlertDialogContent>
+                                                                    </AlertDialog>
+                                                                </>
                                                             )}
                                                         </div>
                                                     </TableCell>
@@ -368,7 +510,12 @@ export default function Show() {
                     <TabsContent value="permissions" className="mt-4">
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-end">
-                                <Dialog>
+                                <Dialog
+                                    open={showAddPermissionDialog}
+                                    onOpenChange={
+                                        setShowAddPermissionDialog
+                                    }
+                                >
                                     <DialogTrigger asChild>
                                         <Button size="sm">
                                             <Plus className="mr-2 h-4 w-4" />
@@ -385,47 +532,97 @@ export default function Show() {
                                                 aplikasi ini.
                                             </DialogDescription>
                                         </DialogHeader>
-                                        <form onSubmit={handleAddPermission}>
+                                        <form
+                                            onSubmit={(e) => {
+                                                e.preventDefault();
+                                                handleAddPermission();
+                                            }}
+                                        >
                                             <div className="grid gap-4 py-4">
                                                 <div className="grid gap-2">
-                                                    <label
-                                                        htmlFor="perm-nama"
-                                                        className="text-sm font-medium"
-                                                    >
+                                                    <Label htmlFor="perm-nama">
                                                         Nama Permission
-                                                    </label>
+                                                    </Label>
                                                     <Input
                                                         id="perm-nama"
-                                                        name="nama"
+                                                        value={
+                                                            addPermissionForm
+                                                                .data.nama
+                                                        }
+                                                        onChange={(e) =>
+                                                            addPermissionForm.setData(
+                                                                'nama',
+                                                                e.target
+                                                                    .value,
+                                                            )
+                                                        }
                                                         placeholder="Contoh: create-post"
                                                         required
                                                     />
+                                                    {addPermissionForm.errors
+                                                        .nama && (
+                                                        <p className="text-sm text-destructive">
+                                                            {
+                                                                addPermissionForm
+                                                                    .errors
+                                                                    .nama
+                                                            }
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div className="grid gap-2">
-                                                    <label
-                                                        htmlFor="perm-deskripsi"
-                                                        className="text-sm font-medium"
-                                                    >
+                                                    <Label htmlFor="perm-deskripsi">
                                                         Deskripsi (Opsional)
-                                                    </label>
+                                                    </Label>
                                                     <Input
                                                         id="perm-deskripsi"
-                                                        name="deskripsi"
+                                                        value={
+                                                            addPermissionForm
+                                                                .data
+                                                                .deskripsi
+                                                        }
+                                                        onChange={(e) =>
+                                                            addPermissionForm.setData(
+                                                                'deskripsi',
+                                                                e.target
+                                                                    .value,
+                                                            )
+                                                        }
                                                         placeholder="Deskripsi permission"
                                                     />
+                                                    {addPermissionForm.errors
+                                                        .deskripsi && (
+                                                        <p className="text-sm text-destructive">
+                                                            {
+                                                                addPermissionForm
+                                                                    .errors
+                                                                    .deskripsi
+                                                            }
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                             <DialogFooter>
-                                                <DialogClose asChild>
-                                                    <Button
-                                                        variant="outline"
-                                                        type="button"
-                                                    >
-                                                        Batal
-                                                    </Button>
-                                                </DialogClose>
-                                                <Button type="submit">
-                                                    Simpan
+                                                <Button
+                                                    variant="outline"
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setShowAddPermissionDialog(
+                                                            false,
+                                                        )
+                                                    }
+                                                >
+                                                    Batal
+                                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={
+                                                        addPermissionForm.processing
+                                                    }
+                                                >
+                                                    {addPermissionForm.processing
+                                                        ? 'Menyimpan...'
+                                                        : 'Simpan'}
                                                 </Button>
                                             </DialogFooter>
                                         </form>
@@ -469,17 +666,75 @@ export default function Show() {
                                                     <TableCell>
                                                         <div className="flex items-center justify-center gap-2">
                                                             {!aplikasi.is_system && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={() =>
-                                                                        handleDeletePermission(
-                                                                            perm,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                                </Button>
+                                                                <>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() =>
+                                                                            setDeletePermissionConfirm(
+                                                                                perm,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                                    </Button>
+                                                                    <AlertDialog
+                                                                        open={
+                                                                            deletePermissionConfirm?.id ===
+                                                                            perm.id
+                                                                        }
+                                                                        onOpenChange={(
+                                                                            open: boolean,
+                                                                        ) =>
+                                                                            !open &&
+                                                                            setDeletePermissionConfirm(
+                                                                                null,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <AlertDialogContent>
+                                                                            <AlertDialogHeader>
+                                                                                <AlertDialogTitle>
+                                                                                    Hapus Permission
+                                                                                </AlertDialogTitle>
+                                                                                <AlertDialogDescription>
+                                                                                    Apakah
+                                                                                    Anda
+                                                                                    yakin
+                                                                                    ingin
+                                                                                    menghapus
+                                                                                    permission
+                                                                                    "
+                                                                                    {
+                                                                                        deletePermissionConfirm?.nama
+                                                                                    }
+                                                                                    "? Tindakan
+                                                                                    ini
+                                                                                    tidak
+                                                                                    dapat
+                                                                                    dibatalkan.
+                                                                                </AlertDialogDescription>
+                                                                            </AlertDialogHeader>
+                                                                            <AlertDialogFooter>
+                                                                                <AlertDialogCancel>
+                                                                                    Batal
+                                                                                </AlertDialogCancel>
+                                                                                <AlertDialogAction
+                                                                                    onClick={
+                                                                                        handleDeletePermission
+                                                                                    }
+                                                                                    disabled={
+                                                                                        deleteForm.processing
+                                                                                    }
+                                                                                >
+                                                                                    {deleteForm.processing
+                                                                                        ? 'Menghapus...'
+                                                                                        : 'Hapus'}
+                                                                                </AlertDialogAction>
+                                                                            </AlertDialogFooter>
+                                                                        </AlertDialogContent>
+                                                                    </AlertDialog>
+                                                                </>
                                                             )}
                                                         </div>
                                                     </TableCell>
@@ -559,11 +814,46 @@ export default function Show() {
                                         </h3>
                                         <Button
                                             variant="outline"
-                                            onClick={handleRegenerateKey}
+                                            onClick={() => setRegenerateConfirm(true)}
                                         >
                                             <Key className="mr-2 h-4 w-4" />
                                             Regenerasi Key
                                         </Button>
+                                        <AlertDialog
+                                            open={regenerateConfirm}
+                                            onOpenChange={setRegenerateConfirm}
+                                        >
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>
+                                                        Regenerasi API Key
+                                                    </AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Apakah Anda yakin
+                                                        ingin meregenerasi API
+                                                        key? API secret lama
+                                                        tidak akan berlaku lagi.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>
+                                                        Batal
+                                                    </AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        onClick={
+                                                            handleRegenerateKey
+                                                        }
+                                                        disabled={
+                                                            regenerateForm.processing
+                                                        }
+                                                    >
+                                                        {regenerateForm.processing
+                                                            ? 'Meregenerasi...'
+                                                            : 'Regenerasi'}
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                         <p className="mt-1 text-sm text-muted-foreground">
                                             Perlu regenerasi jika API key
                                             tercompromise. Secret baru akan
