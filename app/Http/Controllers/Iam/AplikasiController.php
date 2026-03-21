@@ -12,22 +12,38 @@ class AplikasiController extends Controller
 {
     public function index(): Response
     {
-        $aplikasi = IamApplication::withCount('roles')->latest()->get();
+        $aplikasi = IamApplication::withCount('roles')
+            ->latest()
+            ->get()
+            ->map(function ($app) {
+                $app->api_key_display = $this->maskApiKey($app->api_key);
+                unset($app->api_key);
+                return $app;
+            });
+
         return inertia('iam/aplikasi/index', compact('aplikasi'));
     }
 
     public function show(IamApplication $aplikasi): Response
     {
         $aplikasi->load(['roles.permissions', 'permissions']);
-        return inertia('iam/aplikasi/show', compact('aplikasi'));
+
+        // Mask api_key — tampilkan 4 karakter pertama dan 8 terakhir saja
+        $aplikasiArray = $aplikasi->toArray();
+        $aplikasiArray['api_key_display'] = $this->maskApiKey($aplikasi->api_key);
+        unset($aplikasiArray['api_key']);
+
+        return inertia('iam/aplikasi/show', [
+            'aplikasi' => $aplikasiArray,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'nama'      => 'required|string|max:100',
-            'slug'      => 'required|string|unique:iam_applications,slug|alpha_dash',
-            'url'       => 'required|url',
+            'nama' => 'required|string|max:100',
+            'slug' => 'required|string|unique:iam_applications,slug|alpha_dash',
+            'url' => 'required|url',
             'deskripsi' => 'nullable|string',
         ]);
 
@@ -35,7 +51,7 @@ class AplikasiController extends Controller
 
         $app = IamApplication::create([
             ...$data,
-            'api_key'         => $key,
+            'api_key' => $key,
             'api_secret_hash' => $hash,
         ]);
 
@@ -51,13 +67,14 @@ class AplikasiController extends Controller
         }
 
         $data = $request->validate([
-            'nama'      => 'required|string|max:100',
-            'url'       => 'required|url',
+            'nama' => 'required|string|max:100',
+            'url' => 'required|url',
             'deskripsi' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 
         $aplikasi->update($data);
+
         return back();
     }
 
@@ -68,6 +85,7 @@ class AplikasiController extends Controller
         }
 
         $aplikasi->delete();
+
         return redirect()->route('iam.aplikasi.index');
     }
 
@@ -78,5 +96,25 @@ class AplikasiController extends Controller
         $aplikasi->update(['api_key' => $key, 'api_secret_hash' => $hash]);
 
         return back()->with('api_secret_once', $secret);
+    }
+
+    /**
+     * Mask API key untuk ditampilkan ke frontend.
+     * Tampilkan 4 karakter pertama dan 8 terakhir, sisanya asterisk.
+     */
+    private function maskApiKey(string $apiKey): string
+    {
+        $length = strlen($apiKey);
+
+        if ($length <= 12) {
+            // Jika key terlalu pendek, return semua asterisk
+            return str_repeat('*', $length);
+        }
+
+        $prefix = substr($apiKey, 0, 4);
+        $suffix = substr($apiKey, -8);
+        $maskedLength = $length - 12; // 4 prefix + 8 suffix
+
+        return $prefix . str_repeat('*', $maskedLength) . $suffix;
     }
 }

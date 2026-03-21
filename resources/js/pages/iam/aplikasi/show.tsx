@@ -24,6 +24,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
 import AppLayout from '@/layouts/app-layout';
 import type {
     BreadcrumbItem,
@@ -33,7 +34,7 @@ import type {
 } from '@/types';
 
 type Props = {
-    aplikasi: IamApplication;
+    aplikasi: IamApplication & { api_key_display?: string };
     flash?: {
         api_secret_once?: string;
     };
@@ -62,22 +63,10 @@ export default function Show() {
         [aplikasi],
     );
 
-    // Mask API key
+    // Mask API key — sudah di-mask dari backend, gunakan langsung
     const maskedApiKey = useMemo(() => {
-        if (!aplikasi.api_key) {
-            return '-';
-        }
-
-        if (aplikasi.api_key.length <= 8) {
-            return '********';
-        }
-
-        return (
-            aplikasi.api_key.substring(0, 4) +
-            '********' +
-            aplikasi.api_key.substring(aplikasi.api_key.length - 4)
-        );
-    }, [aplikasi.api_key]);
+        return aplikasi.api_key_display || '-';
+    }, [aplikasi.api_key_display]);
 
     const copyToClipboard = useCallback((text: string) => {
         navigator.clipboard.writeText(text).catch(() => {
@@ -556,9 +545,7 @@ export default function Show() {
                                             variant="ghost"
                                             size="icon"
                                             onClick={() =>
-                                                copyToClipboard(
-                                                    aplikasi.api_key,
-                                                )
+                                                copyToClipboard(maskedApiKey)
                                             }
                                         >
                                             <Copy className="h-4 w-4" />
@@ -590,29 +577,12 @@ export default function Show() {
                 </Tabs>
             </div>
 
-            {/* Modal API Secret */}
-            <Dialog
+            {/* Modal API Secret — gunakan komponen shared */}
+            <ApiSecretModal
+                apiSecret={apiSecret ?? undefined}
                 open={showApiSecretModal}
-                onOpenChange={setShowApiSecretModal}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>API Secret Baru</DialogTitle>
-                        <DialogDescription>
-                            Simpan API secret berikut. Secret ini hanya
-                            ditampilkan sekali dan tidak dapat diambil kembali.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="rounded-md bg-muted p-4 font-mono text-sm break-all">
-                        {apiSecret}
-                    </div>
-                    <DialogFooter>
-                        <Button onClick={() => setShowApiSecretModal(false)}>
-                            Saya Sudah Menyimpannya
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                onClose={() => setShowApiSecretModal(false)}
+            />
         </AppLayout>
     );
 }

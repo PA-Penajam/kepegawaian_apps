@@ -22,6 +22,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, IamApplication } from '@/types';
 
@@ -289,29 +290,12 @@ export default function Index() {
                 </div>
             </div>
 
-            {/* Modal API Secret - ditampilkan sekali saja */}
-            <Dialog
+            {/* Modal API Secret — gunakan komponen shared */}
+            <ApiSecretModal
+                apiSecret={apiSecret ?? undefined}
                 open={showApiSecretModal}
-                onOpenChange={setShowApiSecretModal}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>API Secret Aplikasi</DialogTitle>
-                        <DialogDescription>
-                            Simpan API secret berikut. Secret ini hanya
-                            ditampilkan sekali dan tidak dapat diambil kembali.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="rounded-md bg-muted p-4 font-mono text-sm break-all">
-                        {apiSecret}
-                    </div>
-                    <DialogFooter>
-                        <Button onClick={() => setShowApiSecretModal(false)}>
-                            Saya Sudah Menyimpannya
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                onClose={() => setShowApiSecretModal(false)}
+            />
         </AppLayout>
     );
 }

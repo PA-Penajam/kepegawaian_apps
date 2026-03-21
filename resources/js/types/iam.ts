@@ -6,7 +6,7 @@ export type IamApplication = {
     slug: string;
     url: string;
     deskripsi: string | null;
-    api_key: string;
+    api_key_display?: string; // API key yang sudah di-mask, bukan full key
     is_active: boolean;
     is_system: boolean;
     roles_count?: number;
