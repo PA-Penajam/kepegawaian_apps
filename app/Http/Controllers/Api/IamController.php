@@ -8,6 +8,7 @@ use App\Models\IamSsoCode;
 use App\Models\IamUserRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class IamController extends Controller
 {
@@ -66,24 +67,37 @@ class IamController extends Controller
     {
         $request->validate(['code' => 'required|string|size:64']);
 
-        $ssoCode = IamSsoCode::where('code', $request->code)->first();
+        $app = $request->attributes->get('iam_app');
 
-        if (! $ssoCode || ! $ssoCode->isValid()) {
-            return response()->json(['message' => 'Invalid or expired code'], 400);
-        }
+        return DB::transaction(function () use ($request, $app): JsonResponse {
+            // Atomic: update hanya jika code valid, milik app yang benar, belum dipakai, belum expired
+            $affected = IamSsoCode::where('code', $request->code)
+                ->where('app_slug', $app->slug)        // cegah cross-app token theft
+                ->whereNull('used_at')                 // belum digunakan
+                ->where('expires_at', '>', now())      // belum expired
+                ->update(['used_at' => now()]);
 
-        // Tandai code sebagai sudah dipakai
-        $ssoCode->update(['used_at' => now()]);
+            if ($affected === 0) {
+                return response()->json(['message' => 'Invalid or expired code'], 400);
+            }
 
-        // Generate Sanctum token untuk user
-        $user = $ssoCode->user;
-        $ttlHours = (int) config('iam.token_ttl_hours', 8);
-        $token = $user->createToken('sso', ['*'], now()->addHours($ttlHours));
+            // Ambil ssoCode setelah atomic update (dalam transaksi yang sama)
+            $ssoCode  = IamSsoCode::where('code', $request->code)->first();
+            $user     = $ssoCode->user;
+            $ttlHours = (int) config('iam.token_ttl_hours', 8);
 
-        return response()->json([
-            'token' => $token->plainTextToken,
-            'token_type' => 'Bearer',
-            'expires_at' => $token->accessToken->expires_at->timestamp,
-        ]);
+            // Scope token per aplikasi — bukan ['*'] yang terlalu luas
+            $token = $user->createToken(
+                "sso:{$app->slug}",
+                ["app:{$app->slug}"],
+                now()->addHours($ttlHours)
+            );
+
+            return response()->json([
+                'token'      => $token->plainTextToken,
+                'token_type' => 'Bearer',
+                'expires_at' => $token->accessToken->expires_at->timestamp,
+            ]);
+        });
     }
 }
