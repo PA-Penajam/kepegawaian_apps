@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class IamSsoCode extends Model
 {
+    use Prunable;
+
     public const UPDATED_AT = null; // tabel hanya punya created_at
 
     protected $fillable = [
@@ -15,7 +19,7 @@ class IamSsoCode extends Model
     protected function casts(): array
     {
         return [
-            'used_at'    => 'datetime',
+            'used_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
     }
@@ -38,5 +42,11 @@ class IamSsoCode extends Model
     public function isValid(): bool
     {
         return ! $this->isExpired() && ! $this->isUsed();
+    }
+
+    // Prune records yang expired lebih dari 24 jam yang lalu
+    public function prunable(): Builder
+    {
+        return static::where('expires_at', '<', now()->subDay());
     }
 }
