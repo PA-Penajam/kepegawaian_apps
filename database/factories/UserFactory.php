@@ -61,12 +61,13 @@ class UserFactory extends Factory
     }
 
     /**
-     * Assign admin IAM role to the user.
+     * Assign admin IAM role to the user (kepegawaian app).
      */
     public function admin(): static
     {
         return $this->afterCreating(function (User $user) {
-            $role = IamRole::where('slug', 'admin')->first();
+            $app = \App\Models\IamApplication::where('slug', 'kepegawaian')->first();
+            $role = $app ? IamRole::where('iam_application_id', $app->id)->where('slug', 'admin')->first() : null;
             if ($role) {
                 IamUserRole::firstOrCreate(
                     ['user_id' => $user->id, 'iam_role_id' => $role->id],
@@ -77,12 +78,13 @@ class UserFactory extends Factory
     }
 
     /**
-     * Assign operator IAM role to the user.
+     * Assign operator IAM role to the user (kepegawaian app).
      */
     public function operator(): static
     {
         return $this->afterCreating(function (User $user) {
-            $role = IamRole::where('slug', 'operator')->first();
+            $app = \App\Models\IamApplication::where('slug', 'kepegawaian')->first();
+            $role = $app ? IamRole::where('iam_application_id', $app->id)->where('slug', 'operator')->first() : null;
             if ($role) {
                 IamUserRole::firstOrCreate(
                     ['user_id' => $user->id, 'iam_role_id' => $role->id],
@@ -93,12 +95,13 @@ class UserFactory extends Factory
     }
 
     /**
-     * Assign viewer IAM role to the user.
+     * Assign viewer IAM role to the user (kepegawaian app).
      */
     public function viewer(): static
     {
         return $this->afterCreating(function (User $user) {
-            $role = IamRole::where('slug', 'viewer')->first();
+            $app = \App\Models\IamApplication::where('slug', 'kepegawaian')->first();
+            $role = $app ? IamRole::where('iam_application_id', $app->id)->where('slug', 'viewer')->first() : null;
             if ($role) {
                 IamUserRole::firstOrCreate(
                     ['user_id' => $user->id, 'iam_role_id' => $role->id],

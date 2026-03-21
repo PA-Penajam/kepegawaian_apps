@@ -1,0 +1,238 @@
+<h2>Section 4 — UI Admin IAM</h2>
+<p class="subtitle">Wireframe halaman manajemen aplikasi, role, permission, dan assignment user</p>
+
+<div class="section">
+  <h3>Struktur Halaman IAM (Navigasi)</h3>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;">
+
+    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:10px;overflow:hidden;min-width:200px;">
+      <div style="background:#1e293b;padding:10px 14px;color:#94a3b8;font-size:11px;letter-spacing:1px;">SIDEBAR — Grup IAM</div>
+      <div style="padding:12px;">
+        <div style="color:#64748b;font-size:10px;letter-spacing:1px;padding:0 8px;margin-bottom:6px;">IAM</div>
+        <div style="background:#312e81;border-radius:6px;padding:8px 12px;color:#c7d2fe;font-size:12px;margin-bottom:3px;display:flex;align-items:center;gap:8px;">
+          <span>🏢</span> Aplikasi
+        </div>
+        <div style="border-radius:6px;padding:8px 12px;color:#64748b;font-size:12px;margin-bottom:3px;display:flex;align-items:center;gap:8px;">
+          <span>👥</span> Role & Permission
+        </div>
+        <div style="border-radius:6px;padding:8px 12px;color:#64748b;font-size:12px;margin-bottom:3px;display:flex;align-items:center;gap:8px;">
+          <span>🔑</span> Akses User
+        </div>
+        <div style="border-top:1px solid #1e293b;margin-top:10px;padding-top:10px;">
+          <div style="color:#64748b;font-size:10px;letter-spacing:1px;padding:0 8px;margin-bottom:6px;">KEPEGAWAIAN</div>
+          <div style="border-radius:6px;padding:8px 12px;color:#64748b;font-size:12px;display:flex;align-items:center;gap:8px;">
+            <span>👤</span> Pegawai
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:300px;">
+      <div style="background:#1e293b;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+        <div style="background:#6366f1;color:white;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;">1</div>
+        <div>
+          <div style="color:#e2e8f0;font-size:13px;font-weight:600;">/iam/aplikasi</div>
+          <div style="color:#64748b;font-size:11px;">Daftar semua aplikasi terdaftar + register aplikasi baru</div>
+        </div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+        <div style="background:#6366f1;color:white;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;">2</div>
+        <div>
+          <div style="color:#e2e8f0;font-size:13px;font-weight:600;">/iam/aplikasi/{id}</div>
+          <div style="color:#64748b;font-size:11px;">Detail aplikasi + kelola Role & Permission + lihat API Key</div>
+        </div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+        <div style="background:#6366f1;color:white;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;">3</div>
+        <div>
+          <div style="color:#e2e8f0;font-size:13px;font-weight:600;">/iam/users/{id}/akses</div>
+          <div style="color:#64748b;font-size:11px;">Lihat & kelola role user di semua aplikasi sekaligus</div>
+        </div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+        <div style="background:#6366f1;color:white;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;">4</div>
+        <div>
+          <div style="color:#e2e8f0;font-size:13px;font-weight:600;">/iam/users (tab di halaman Akses User)</div>
+          <div style="color:#64748b;font-size:11px;">List semua user + shortcut ke halaman akses masing-masing</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Halaman 1 — Daftar Aplikasi (/iam/aplikasi)</h3>
+  <div class="mockup">
+    <div class="mockup-header">IAM › Aplikasi</div>
+    <div class="mockup-body" style="padding:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div>
+          <div style="color:#e2e8f0;font-weight:700;font-size:15px;">Manajemen Aplikasi</div>
+          <div style="color:#64748b;font-size:11px;">Aplikasi terdaftar di ekosistem PA Penajam</div>
+        </div>
+        <div style="background:#6366f1;color:white;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;">+ Daftarkan Aplikasi</div>
+      </div>
+      <div style="background:#0f172a;border-radius:8px;overflow:hidden;border:1px solid #1e293b;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="border-bottom:1px solid #1e293b;">
+              <th style="padding:10px 14px;text-align:left;color:#64748b;font-weight:600;">Nama Aplikasi</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748b;font-weight:600;">URL</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748b;font-weight:600;">Role</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748b;font-weight:600;">Status</th>
+              <th style="padding:10px 14px;text-align:left;color:#64748b;font-weight:600;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #1e293b;">
+              <td style="padding:10px 14px;">
+                <div style="color:#e2e8f0;font-weight:600;">Kepegawaian Apps</div>
+                <div style="color:#4ade80;font-size:10px;">🔒 Sistem</div>
+              </td>
+              <td style="padding:10px 14px;color:#64748b;">kepegawaian.pa-penajam.go.id</td>
+              <td style="padding:10px 14px;"><span style="background:#312e81;color:#c7d2fe;padding:2px 8px;border-radius:10px;font-size:10px;">3 role</span></td>
+              <td style="padding:10px 14px;"><span style="background:#14532d;color:#86efac;padding:2px 8px;border-radius:10px;font-size:10px;">Aktif</span></td>
+              <td style="padding:10px 14px;"><span style="color:#6366f1;font-size:11px;cursor:pointer;">Detail →</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid #1e293b;">
+              <td style="padding:10px 14px;">
+                <div style="color:#e2e8f0;font-weight:600;">Attendance QR System</div>
+                <div style="color:#64748b;font-size:10px;">Integrasi</div>
+              </td>
+              <td style="padding:10px 14px;color:#64748b;">attendance.pa-penajam.go.id</td>
+              <td style="padding:10px 14px;"><span style="background:#312e81;color:#c7d2fe;padding:2px 8px;border-radius:10px;font-size:10px;">3 role</span></td>
+              <td style="padding:10px 14px;"><span style="background:#14532d;color:#86efac;padding:2px 8px;border-radius:10px;font-size:10px;">Aktif</span></td>
+              <td style="padding:10px 14px;"><span style="color:#6366f1;font-size:11px;cursor:pointer;">Detail →</span></td>
+            </tr>
+            <tr>
+              <td style="padding:10px 14px;">
+                <div style="color:#94a3b8;font-weight:600;">App Baru...</div>
+                <div style="color:#64748b;font-size:10px;">Integrasi</div>
+              </td>
+              <td style="padding:10px 14px;color:#64748b;">—</td>
+              <td style="padding:10px 14px;"><span style="background:#1e293b;color:#64748b;padding:2px 8px;border-radius:10px;font-size:10px;">0 role</span></td>
+              <td style="padding:10px 14px;"><span style="background:#450a0a;color:#fca5a5;padding:2px 8px;border-radius:10px;font-size:10px;">Nonaktif</span></td>
+              <td style="padding:10px 14px;"><span style="color:#6366f1;font-size:11px;cursor:pointer;">Detail →</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Halaman 2 — Detail Aplikasi (/iam/aplikasi/{id})</h3>
+  <div class="mockup">
+    <div class="mockup-header">IAM › Aplikasi › Attendance QR System</div>
+    <div class="mockup-body" style="padding:16px;">
+
+      <!-- Info + API Key -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div style="background:#0f172a;border-radius:8px;padding:14px;border:1px solid #1e293b;">
+          <div style="color:#64748b;font-size:10px;letter-spacing:1px;margin-bottom:8px;">INFO APLIKASI</div>
+          <div style="color:#e2e8f0;font-size:13px;font-weight:600;margin-bottom:4px;">Attendance QR System</div>
+          <div style="color:#64748b;font-size:11px;">attendance.pa-penajam.go.id</div>
+        </div>
+        <div style="background:#0f172a;border-radius:8px;padding:14px;border:1px solid #f59e0b;">
+          <div style="color:#f59e0b;font-size:10px;letter-spacing:1px;margin-bottom:8px;">🔑 API CREDENTIALS</div>
+          <div style="color:#64748b;font-size:11px;margin-bottom:4px;">API Key:</div>
+          <div style="background:#1e293b;border-radius:4px;padding:6px 8px;font-family:monospace;font-size:11px;color:#fbbf24;margin-bottom:8px;">att_live_k3y_••••••••••••</div>
+          <div style="display:flex;gap:6px;">
+            <div style="background:#1e293b;color:#94a3b8;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;">👁 Tampilkan</div>
+            <div style="background:#1e293b;color:#94a3b8;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;">🔄 Regenerate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:2px;margin-bottom:14px;border-bottom:1px solid #1e293b;">
+        <div style="background:#312e81;color:#c7d2fe;padding:8px 16px;border-radius:6px 6px 0 0;font-size:12px;font-weight:600;">Role (3)</div>
+        <div style="color:#64748b;padding:8px 16px;font-size:12px;">Permission (8)</div>
+        <div style="color:#64748b;padding:8px 16px;font-size:12px;">User Terassign (12)</div>
+      </div>
+
+      <!-- Role list -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:#0f172a;border-radius:8px;padding:12px 14px;border:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="color:#e2e8f0;font-size:13px;font-weight:600;">Admin</div>
+            <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;">
+              <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">absensi:create</span>
+              <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">absensi:approve</span>
+              <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">rekap:export</span>
+              <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">+5 lagi</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <div style="color:#6366f1;font-size:11px;cursor:pointer;">Edit</div>
+            <div style="color:#ef4444;font-size:11px;cursor:pointer;">Hapus</div>
+          </div>
+        </div>
+        <div style="background:#0f172a;border-radius:8px;padding:12px 14px;border:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="color:#e2e8f0;font-size:13px;font-weight:600;">Petugas</div>
+            <div style="display:flex;gap:4px;margin-top:4px;">
+              <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">absensi:create</span>
+              <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">rekap:read</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <div style="color:#6366f1;font-size:11px;cursor:pointer;">Edit</div>
+            <div style="color:#ef4444;font-size:11px;cursor:pointer;">Hapus</div>
+          </div>
+        </div>
+        <div style="border:1px dashed #334155;border-radius:8px;padding:12px 14px;text-align:center;color:#475569;font-size:12px;cursor:pointer;">+ Tambah Role Baru</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Halaman 3 — Akses User (/iam/users/{id}/akses)</h3>
+  <div class="mockup">
+    <div class="mockup-header">IAM › Akses User › Budi Santoso</div>
+    <div class="mockup-body" style="padding:16px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="background:#312e81;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:#c7d2fe;font-weight:700;">BS</div>
+        <div>
+          <div style="color:#e2e8f0;font-weight:700;">Budi Santoso</div>
+          <div style="color:#64748b;font-size:11px;">budi@pa-penajam.go.id · NIP: 199107132020121003</div>
+        </div>
+      </div>
+      <div style="color:#64748b;font-size:11px;margin-bottom:10px;letter-spacing:1px;">AKSES PER APLIKASI</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:#0f172a;border-radius:8px;padding:14px;border:1px solid #1e293b;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="color:#e2e8f0;font-size:13px;font-weight:600;">🏢 Kepegawaian Apps</div>
+            <div style="background:#1e293b;border-radius:6px;padding:4px 8px;display:flex;align-items:center;gap:6px;">
+              <span style="background:#312e81;color:#c7d2fe;padding:2px 8px;border-radius:10px;font-size:11px;">Operator</span>
+              <span style="color:#64748b;font-size:10px;">▼</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">pegawai:read</span>
+            <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">pegawai:update</span>
+            <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">laporan:read</span>
+          </div>
+        </div>
+        <div style="background:#0f172a;border-radius:8px;padding:14px;border:1px solid #1e293b;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="color:#e2e8f0;font-size:13px;font-weight:600;">📱 Attendance QR System</div>
+            <div style="background:#1e293b;border-radius:6px;padding:4px 8px;display:flex;align-items:center;gap:6px;">
+              <span style="background:#312e81;color:#c7d2fe;padding:2px 8px;border-radius:10px;font-size:11px;">Petugas</span>
+              <span style="color:#64748b;font-size:10px;">▼</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">absensi:create</span>
+            <span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:1px 6px;border-radius:3px;">rekap:read</span>
+          </div>
+        </div>
+        <div style="border:1px dashed #334155;border-radius:8px;padding:12px;text-align:center;color:#475569;font-size:12px;cursor:pointer;">+ Berikan Akses ke Aplikasi Lain</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:20px;text-align:center;">Apakah UI ini sudah sesuai dengan yang Anda bayangkan? Balas di terminal.</p>

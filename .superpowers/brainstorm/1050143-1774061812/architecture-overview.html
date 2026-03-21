@@ -1,0 +1,116 @@
+<h2>Section 1 — Architecture Overview</h2>
+<p class="subtitle">kepegawaian-apps sebagai IAM Hub / SSO Gateway untuk seluruh ekosistem PA Penajam</p>
+
+<div class="section">
+  <h3>Gambaran Sistem</h3>
+  <div style="background:#0f172a;border-radius:12px;padding:28px;font-family:monospace;font-size:13px;color:#94a3b8;line-height:1.8;overflow-x:auto;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="display:inline-block;background:#1e293b;border:2px solid #6366f1;border-radius:10px;padding:16px 32px;color:#e2e8f0;">
+        <div style="color:#a5b4fc;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">● KEPEGAWAIAN-APPS</div>
+        <div style="color:#f1f5f9;font-size:15px;font-weight:bold;">IAM Hub / SSO Gateway</div>
+        <div style="display:flex;gap:12px;margin-top:12px;justify-content:center;">
+          <div style="background:#312e81;border-radius:6px;padding:6px 12px;color:#c7d2fe;font-size:11px;">Auth/Login<br/><span style="color:#818cf8">Fortify</span></div>
+          <div style="background:#1e3a5f;border-radius:6px;padding:6px 12px;color:#bae6fd;font-size:11px;">IAM Module<br/><span style="color:#38bdf8">★ Baru</span></div>
+          <div style="background:#14532d;border-radius:6px;padding:6px 12px;color:#bbf7d0;font-size:11px;">Kepegawaian<br/><span style="color:#4ade80">Existing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;color:#475569;margin-bottom:4px;">│</div>
+    <div style="text-align:center;color:#475569;margin-bottom:4px;">API (HMAC + Sanctum Token)</div>
+    <div style="text-align:center;color:#475569;margin-bottom:16px;">┌───────────────┴───────────────┐</div>
+
+    <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+      <div style="background:#1c1917;border:1px solid #44403c;border-radius:8px;padding:14px 20px;text-align:center;min-width:140px;">
+        <div style="color:#fbbf24;font-size:18px;margin-bottom:6px;">📱</div>
+        <div style="color:#fef3c7;font-size:12px;font-weight:bold;">attendance-qr-system</div>
+        <div style="color:#78716c;font-size:10px;margin-top:4px;">Sudah terintegrasi</div>
+      </div>
+      <div style="background:#1c1917;border:1px dashed #6366f1;border-radius:8px;padding:14px 20px;text-align:center;min-width:140px;">
+        <div style="color:#a78bfa;font-size:18px;margin-bottom:6px;">📄</div>
+        <div style="color:#ede9fe;font-size:12px;font-weight:bold;">app-B (e-surat?)</div>
+        <div style="color:#78716c;font-size:10px;margin-top:4px;">Akan terintegrasi</div>
+      </div>
+      <div style="background:#1c1917;border:1px dashed #6366f1;border-radius:8px;padding:14px 20px;text-align:center;min-width:140px;">
+        <div style="color:#a78bfa;font-size:18px;margin-bottom:6px;">⚙️</div>
+        <div style="color:#ede9fe;font-size:12px;font-weight:bold;">app-C (lainnya)</div>
+        <div style="color:#78716c;font-size:10px;margin-top:4px;">Akan terintegrasi</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Alur Login SSO (Step by Step)</h3>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;align-items:flex-start;gap:12px;background:#1e293b;border-radius:8px;padding:14px;">
+      <div style="background:#6366f1;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;flex-shrink:0;">1</div>
+      <div>
+        <div style="color:#e2e8f0;font-size:13px;font-weight:600;">User buka app-B — belum login</div>
+        <div style="color:#64748b;font-size:12px;margin-top:2px;">app-B detect tidak ada session → redirect ke kepegawaian-apps/login</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;background:#1e293b;border-radius:8px;padding:14px;">
+      <div style="background:#6366f1;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;flex-shrink:0;">2</div>
+      <div>
+        <div style="color:#e2e8f0;font-size:13px;font-weight:600;">User login di kepegawaian-apps</div>
+        <div style="color:#64748b;font-size:12px;margin-top:2px;">Fortify handle auth → generate session token (Sanctum)</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;background:#1e293b;border-radius:8px;padding:14px;">
+      <div style="background:#6366f1;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;flex-shrink:0;">3</div>
+      <div>
+        <div style="color:#e2e8f0;font-size:13px;font-weight:600;">app-B validasi token via API</div>
+        <div style="color:#64748b;font-size:12px;margin-top:2px;">Kirim token + HMAC signature → dapat info user + permissions untuk app-B</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;background:#1e293b;border-radius:8px;padding:14px;">
+      <div style="background:#6366f1;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;flex-shrink:0;">4</div>
+      <div>
+        <div style="color:#e2e8f0;font-size:13px;font-weight:600;">app-B cache hasil validasi (30-60 detik)</div>
+        <div style="color:#64748b;font-size:12px;margin-top:2px;">User bisa bergerak bebas tanpa round-trip tiap request</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;background:#1e293b;border-radius:8px;padding:14px;">
+      <div style="background:#dc2626;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;flex-shrink:0;">5</div>
+      <div>
+        <div style="color:#e2e8f0;font-size:13px;font-weight:600;">Logout — terpusat</div>
+        <div style="color:#64748b;font-size:12px;margin-top:2px;">kepegawaian-apps invalidate token → semua app otomatis logout saat cache expired</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Komponen Baru yang Dibangun (★)</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+    <div style="background:#1e293b;border-left:3px solid #38bdf8;border-radius:8px;padding:14px;">
+      <div style="color:#38bdf8;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">★ IAM Module</div>
+      <div style="color:#e2e8f0;font-size:13px;">UI kelola aplikasi, role, dan permission</div>
+    </div>
+    <div style="background:#1e293b;border-left:3px solid #38bdf8;border-radius:8px;padding:14px;">
+      <div style="color:#38bdf8;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">★ API Validasi Session</div>
+      <div style="color:#e2e8f0;font-size:13px;">Endpoint untuk cek token + ambil permissions per aplikasi</div>
+    </div>
+    <div style="background:#1e293b;border-left:3px solid #38bdf8;border-radius:8px;padding:14px;">
+      <div style="color:#38bdf8;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">★ Application Registry</div>
+      <div style="color:#e2e8f0;font-size:13px;">Daftar aplikasi terdaftar + API Key management</div>
+    </div>
+    <div style="background:#1e293b;border-left:3px solid #38bdf8;border-radius:8px;padding:14px;">
+      <div style="color:#38bdf8;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">★ Permission Guard</div>
+      <div style="color:#e2e8f0;font-size:13px;">Middleware baru berbasis IAM (ganti middleware lama)</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="background:#0f2a1a;border:1px solid #166534;border-radius:8px;padding:16px;">
+  <div style="color:#4ade80;font-size:12px;font-weight:600;margin-bottom:8px;">✓ Yang Tidak Berubah</div>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;">
+    <div style="color:#86efac;font-size:13px;">• Cara login user (Fortify)</div>
+    <div style="color:#86efac;font-size:13px;">• HMAC middleware (keamanan API)</div>
+    <div style="color:#86efac;font-size:13px;">• Seluruh modul kepegawaian</div>
+    <div style="color:#86efac;font-size:13px;">• Struktur database pegawai</div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:20px;text-align:center;">Apakah arsitektur ini sudah sesuai? Balas di terminal untuk lanjut ke Section 2.</p>
