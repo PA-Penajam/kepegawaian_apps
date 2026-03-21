@@ -9,6 +9,7 @@ use App\Models\Pegawai;
 use App\Models\Penghargaan;
 use App\Models\RefJenisPenghargaan;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,6 +17,8 @@ class PenghargaanController extends Controller
 {
     public function index(Pegawai $pegawai): Response
     {
+        Gate::authorize('view', $pegawai);
+
         return Inertia::render('kepegawaian/pegawai/penghargaan', [
             'pegawai' => [
                 'id' => $pegawai->id,
@@ -50,6 +53,8 @@ class PenghargaanController extends Controller
 
     public function store(StorePenghargaanRequest $request, Pegawai $pegawai): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $pegawai->penghargaan()->create($request->validated());
 
         return to_route('kepegawaian.pegawai.penghargaan.index', $pegawai);
@@ -57,6 +62,8 @@ class PenghargaanController extends Controller
 
     public function update(UpdatePenghargaanRequest $request, Pegawai $pegawai, Penghargaan $penghargaan): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $this->ensureBelongsToPegawai($pegawai, $penghargaan);
 
         $penghargaan->update($request->validated());
@@ -66,6 +73,8 @@ class PenghargaanController extends Controller
 
     public function destroy(Pegawai $pegawai, Penghargaan $penghargaan): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $this->ensureBelongsToPegawai($pegawai, $penghargaan);
 
         $penghargaan->delete();

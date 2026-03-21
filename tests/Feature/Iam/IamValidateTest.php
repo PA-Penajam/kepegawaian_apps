@@ -6,7 +6,7 @@ use App\Models\IamPermission;
 use App\Models\IamRole;
 use App\Models\IamRolePermission;
 use App\Models\IamUserRole;
-use App\Models\User;
+use App\Models\Pegawai;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
@@ -42,7 +42,7 @@ test('validate endpoint guest ditolak 401', function () {
 });
 
 test('validate endpoint tanpa iam signature ditolak 401', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user);
 
     Route::middleware(['auth:sanctum', 'iam.signature'])
@@ -52,7 +52,7 @@ test('validate endpoint tanpa iam signature ditolak 401', function () {
 });
 
 test('validate endpoint user tanpa role di aplikasi', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user);
 
     Route::middleware(['auth:sanctum', 'iam.signature'])
@@ -78,20 +78,7 @@ test('validate endpoint user tanpa role di aplikasi', function () {
 });
 
 test('validate endpoint dengan user berrole', function () {
-    $user = User::factory()->create(['name' => 'Test User']);
-    $user->pegawai()->create([
-        'nip' => '123456789012345678',
-        'nama_lengkap' => 'Test User',
-        'tempat_lahir' => 'Jakarta',
-        'tanggal_lahir' => '1990-01-01',
-        'jenis_kelamin' => 'laki_laki',
-        'agama' => 'islam',
-        'status_perkawinan' => 'belum_kawin',
-        'alamat' => 'Jl. Test No. 1',
-        'status_kepegawaian' => 'pns',
-        'status_pegawai' => 'aktif',
-        'tanggal_masuk' => '2015-01-01',
-    ]);
+    $user = Pegawai::factory()->create(['nama_lengkap' => 'Test User']);
 
     IamUserRole::create([
         'user_id' => $user->id,

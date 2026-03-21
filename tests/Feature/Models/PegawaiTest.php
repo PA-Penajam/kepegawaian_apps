@@ -8,7 +8,9 @@ use App\Enums\StatusPerkawinan;
 use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefPangkat;
-use App\Models\RefRole;
+use App\Models\IamApplication;
+use App\Models\IamRole;
+use App\Models\IamUserRole;
 use App\Models\RefUnitKerja;
 
 describe('Pegawai', function () {
@@ -85,17 +87,21 @@ describe('Pegawai', function () {
         expect($pegawai->unitKerja->is($unitKerja))->toBeTrue();
     });
 
-    it('has roles many-to-many relationship', function () {
+    it('has iamRoles many-to-many relationship', function () {
         $pegawai = Pegawai::factory()->create();
-        $role = RefRole::query()->firstOrCreate(
-            ['nama' => 'Admin'],
-            ['deskripsi' => 'Administrator'],
+        $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
+        $adminRole = IamRole::where('iam_application_id', $kepegawaian->id)
+            ->where('slug', 'admin')->first();
+
+        IamUserRole::firstOrCreate(
+            ['user_id' => $pegawai->id, 'iam_role_id' => $adminRole->id],
+            ['assigned_at' => now()]
         );
 
-        $pegawai->roles()->sync([$role->id]);
+        $pegawai->refresh();
 
-        expect($pegawai->roles)->not->toBeEmpty();
-        expect($pegawai->roles->first()->is($role))->toBeTrue();
+        expect($pegawai->iamRoles)->not->toBeEmpty();
+        expect($pegawai->iamRoles->first()->is($adminRole))->toBeTrue();
     });
 
     it('scope aktif returns only active pegawai', function () {

@@ -30,8 +30,8 @@ class HandleInertiaRequests extends Middleware
                     'foto' => $user->foto ?? null,
                     'email_verified_at' => $user->email_verified_at,
                     'two_factor_enabled' => ! is_null($user->two_factor_confirmed_at),
-                    'roles' => $user->roles->pluck('nama')->toArray(),
-                    'permissions' => $user->roles->flatMap(
+                    'roles' => $user->iamRoles->pluck('nama')->toArray(),
+                    'permissions' => $user->iamRoles->flatMap(
                         fn ($role) => $role->permissions->pluck('nama')
                     )->unique()->values()->toArray(),
                     'created_at' => $user->created_at,

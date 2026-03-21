@@ -2,7 +2,7 @@
 
 use App\Models\IamApplication;
 use App\Models\IamSsoCode;
-use App\Models\User;
+use App\Models\Pegawai;
 use Illuminate\Support\Facades\Crypt;
 
 test('GET /sso/login tanpa app param mengembalikan 422', function () {
@@ -30,7 +30,7 @@ test('GET /sso/login user sudah login generate SSO code dan redirect', function 
         'api_key' => 'att-key', 'api_secret_hash' => Crypt::encryptString('att-secret'),
     ]);
 
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     $response = $this->actingAs($user)
         ->get('/sso/login?app=attendance&redirect=http://att.local/callback');
@@ -52,7 +52,7 @@ test('GET /sso/login menolak redirect ke domain lain (open redirect prevention)'
         'api_key' => 'att-key', 'api_secret_hash' => Crypt::encryptString('att-secret'),
     ]);
 
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     // Redirect ke domain berbeda dari app.url — harus ditolak
     $this->actingAs($user)
@@ -62,7 +62,7 @@ test('GET /sso/login menolak redirect ke domain lain (open redirect prevention)'
 
 it('menolak open redirect via subdomain spoofing', function () {
     $app  = IamApplication::factory()->create(['slug' => 'att-app', 'url' => 'http://att.local', 'is_active' => true]);
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     $response = $this->actingAs($user)->get('/sso/login?app=att-app&redirect=http://att.local.evil.com/steal');
     $response->assertStatus(422);
@@ -70,7 +70,7 @@ it('menolak open redirect via subdomain spoofing', function () {
 
 it('menolak open redirect via URL authority confusion', function () {
     $app  = IamApplication::factory()->create(['slug' => 'att-app', 'url' => 'http://att.local', 'is_active' => true]);
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     $response = $this->actingAs($user)->get('/sso/login?app=att-app&redirect=http://att.local@evil.com/steal');
     $response->assertStatus(422);
@@ -78,7 +78,7 @@ it('menolak open redirect via URL authority confusion', function () {
 
 it('mengizinkan redirect ke subdirectory host yang sama', function () {
     $app  = IamApplication::factory()->create(['slug' => 'att-app', 'url' => 'http://att.local', 'is_active' => true]);
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
 
     $response = $this->actingAs($user)->get('/sso/login?app=att-app&redirect=http://att.local/callback');
 

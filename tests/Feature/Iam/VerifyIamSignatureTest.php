@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\IamApplication;
-use App\Models\User;
+use App\Models\Pegawai;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
@@ -12,14 +12,14 @@ beforeEach(function () {
 });
 
 test('request tanpa X-App-Key ditolak 401', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user);
 
     $this->getJson('/test-iam-signature')->assertStatus(401);
 });
 
 test('request dengan api_key tidak dikenal ditolak 401', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user);
 
     $this->getJson('/test-iam-signature', [
@@ -30,7 +30,7 @@ test('request dengan api_key tidak dikenal ditolak 401', function () {
 });
 
 test('request dengan signature salah ditolak 401', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $secret = 'correct-secret-64chars-padding-here-abc123def456ghi789';
     $app = IamApplication::create([
         'nama' => 'Test App',
@@ -56,7 +56,7 @@ test('request dengan signature salah ditolak 401', function () {
 });
 
 test('request dengan timestamp kedaluwarsa ditolak 401', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $secret = 'correct-secret-64chars-padding-here-abc123def456ghi789';
     $app = IamApplication::create([
         'nama' => 'Test App',
@@ -81,7 +81,7 @@ test('request dengan timestamp kedaluwarsa ditolak 401', function () {
 });
 
 test('request valid dengan signature benar lolos', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $secret = 'correct-secret-64chars-padding-here-abc123def456ghi789';
 
     // Buat application dengan manual assignment karena field tidak fillable

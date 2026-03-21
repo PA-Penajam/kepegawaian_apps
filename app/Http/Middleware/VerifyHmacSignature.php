@@ -54,7 +54,7 @@ class VerifyHmacSignature
 
         $expected = hash_hmac('sha256', $payload, $secret);
 
-        // Timing-safe comparison (mencegang timing attack)
+        // Timing-safe comparison (mencegah timing attack)
         if (! hash_equals($expected, $received)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }

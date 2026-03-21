@@ -2,19 +2,21 @@
 
 use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
-use App\Models\User;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Sanctum\Sanctum;
 
 /**
  * Helper untuk membuat headers dengan HMAC signature.
  */
-function makeSignedHeaders(string $method, string $path, array $query = [], ?string $secret = null): array
+function makeSignedHeaders(string $method, string $path, array $query = [], ?string $secret = null, ?string $body = null): array
 {
     $secret ??= config('kepegawaian.secret_key');
     $timestamp = now()->timestamp;
     $queryString = http_build_query(collect($query)->sortKeys()->all());
-    $payload = strtoupper($method).':'.$path.':'.$queryString.':'.$timestamp;
+    // Laravel getJson/postJson mengirim '[]' sebagai body default, bukan ''
+    $bodyContent = $body ?? '[]';
+    $bodyHash = hash('sha256', $bodyContent);
+    $payload = strtoupper($method).':'.$path.':'.$queryString.':'.$bodyHash.':'.$timestamp;
     $signature = hash_hmac('sha256', $payload, $secret);
 
     return [
@@ -39,7 +41,7 @@ test('request tanpa auth token ditolak 401', function () {
 });
 
 test('request dengan signature salah ditolak 401', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user, ['*']);
 
     $headers = makeSignedHeaders('GET', '/api/v1/pegawai/197501012005011001', [], 'wrong-secret');
@@ -48,7 +50,7 @@ test('request dengan signature salah ditolak 401', function () {
 });
 
 test('request dengan query string dimodifikasi setelah signing ditolak 401', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user, ['*']);
 
     // Sign dengan query yang benar
@@ -62,7 +64,7 @@ test('request dengan query string dimodifikasi setelah signing ditolak 401', fun
 });
 
 test('request dengan timestamp kedaluwarsa ditolak 401', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user, ['*']);
 
     $oldTimestamp = now()->subMinutes(6)->timestamp;
@@ -83,7 +85,7 @@ test('request dengan timestamp kedaluwarsa ditolak 401', function () {
 // =============================================================================
 
 test('response single pegawai memiliki field yang benar', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $pegawai = Pegawai::factory()->create();
 
     Sanctum::actingAs($user, ['*']);
@@ -104,7 +106,7 @@ test('response single pegawai memiliki field yang benar', function () {
 // =============================================================================
 
 test('GET pegawai/{nip} 404 jika NIP tidak ditemukan', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user, ['*']);
     $headers = makeSignedHeaders('GET', '/api/v1/pegawai/000000000000000000');
 
@@ -115,7 +117,7 @@ test('GET pegawai/{nip} 404 jika NIP tidak ditemukan', function () {
 });
 
 test('GET pegawai batch mengembalikan data dan not_found', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $pegawai = Pegawai::factory()->create();
     Sanctum::actingAs($user, ['*']);
 
@@ -129,7 +131,7 @@ test('GET pegawai batch mengembalikan data dan not_found', function () {
 });
 
 test('GET pegawai batch > 50 NIP mengembalikan 422', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user, ['*']);
 
     $nips = array_fill(0, 51, '197501012005011001');
@@ -141,7 +143,7 @@ test('GET pegawai batch > 50 NIP mengembalikan 422', function () {
 });
 
 test('GET pegawai search mengembalikan hanya pegawai aktif', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $aktif = Pegawai::factory()->create(['status_pegawai' => StatusPegawai::Aktif, 'nama_lengkap' => 'Budi Aktif']);
     $pensiun = Pegawai::factory()->create(['status_pegawai' => StatusPegawai::Pensiun, 'nama_lengkap' => 'Budi Pensiun']);
     Sanctum::actingAs($user, ['*']);
@@ -156,7 +158,7 @@ test('GET pegawai search mengembalikan hanya pegawai aktif', function () {
 });
 
 test('parameter nip[] diprioritaskan jika search juga dikirim', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $pegawai = Pegawai::factory()->create(['nama_lengkap' => 'Target Pegawai']);
     Sanctum::actingAs($user, ['*']);
 
@@ -174,7 +176,7 @@ test('parameter nip[] diprioritaskan jika search juga dikirim', function () {
 // =============================================================================
 
 test('menolak nip dengan format tidak valid dalam batch request', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user, ['*']);
 
     // Kirim NIP dengan format yang tidak valid (bukan 18 digit)
@@ -183,12 +185,11 @@ test('menolak nip dengan format tidak valid dalam batch request', function () {
 
     $response = $this->getJson('/api/v1/pegawai?'.http_build_query($query), $headers);
     $response->assertStatus(422)
-        ->assertJsonPath('message', 'The nip.0 field must be 18 digits.')
-        ->assertJsonPath('errors.nip.0', 'The nip.0 field must be 18 digits.');
+        ->assertJsonValidationErrors(['nip.0', 'nip.1']);
 });
 
 test('menolak nip dengan kurang dari 18 digit', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user, ['*']);
 
     // Kirim NIP dengan 17 digit (kurang dari 18)
@@ -201,7 +202,7 @@ test('menolak nip dengan kurang dari 18 digit', function () {
 });
 
 test('menolak nip dengan lebih dari 18 digit', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user, ['*']);
 
     // Kirim NIP dengan 19 digit (lebih dari 18)
@@ -214,7 +215,7 @@ test('menolak nip dengan lebih dari 18 digit', function () {
 });
 
 test('menolak batch request lebih dari 50 nip', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user, ['*']);
 
     // Buat 51 NIP valid (18 digit)

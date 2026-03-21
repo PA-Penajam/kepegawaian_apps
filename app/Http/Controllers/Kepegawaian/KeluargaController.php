@@ -8,6 +8,7 @@ use App\Http\Requests\Kepegawaian\UpdateKeluargaRequest;
 use App\Models\Keluarga;
 use App\Models\Pegawai;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,6 +16,8 @@ class KeluargaController extends Controller
 {
     public function index(Pegawai $pegawai): Response
     {
+        Gate::authorize('view', $pegawai);
+
         return Inertia::render('kepegawaian/pegawai/keluarga', [
             'pegawai' => [
                 'id' => $pegawai->id,
@@ -51,6 +54,8 @@ class KeluargaController extends Controller
 
     public function store(StoreKeluargaRequest $request, Pegawai $pegawai): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $pegawai->keluarga()->create($request->validated());
 
         return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
@@ -58,6 +63,8 @@ class KeluargaController extends Controller
 
     public function update(UpdateKeluargaRequest $request, Pegawai $pegawai, Keluarga $keluarga): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $this->ensureBelongsToPegawai($pegawai, $keluarga);
 
         $keluarga->update($request->validated());
@@ -67,6 +74,8 @@ class KeluargaController extends Controller
 
     public function destroy(Pegawai $pegawai, Keluarga $keluarga): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $this->ensureBelongsToPegawai($pegawai, $keluarga);
 
         $keluarga->delete();

@@ -4,65 +4,38 @@ use App\Models\IamApplication;
 use App\Models\IamPermission;
 use App\Models\IamRole;
 use App\Models\IamUserRole;
-use App\Models\User;
-use Illuminate\Support\Facades\Crypt;
+use App\Models\Pegawai;
 
 beforeEach(function () {
-    // Buat aplikasi kepegawaian + roles + permissions untuk test
-    // Field sensitif tidak fillable, jadi set manual
-    $app = new IamApplication([
-        'nama' => 'Kepegawaian Apps',
-        'slug' => 'kepegawaian',
-        'url' => config('app.url'),
-        'is_active' => true,
-    ]);
-    $app->api_key = 'test-kepegawaian-key';
-    $app->api_secret_hash = Crypt::encryptString('test-secret-64chars-padding-here-abc123');
-    $app->is_system = true;
-    $app->save();
-    $this->kepegawaianApp = $app;
+    // Gunakan data dari IamSeeder (sudah di-seed oleh Pest.php beforeEach)
+    $this->kepegawaianApp = IamApplication::where('slug', 'kepegawaian')->first();
 
-    $this->adminRole = IamRole::create([
-        'iam_application_id' => $this->kepegawaianApp->id,
-        'nama' => 'Admin',
-        'slug' => 'admin',
-        'is_system' => true,
-    ]);
+    $this->adminRole = IamRole::where('iam_application_id', $this->kepegawaianApp->id)
+        ->where('slug', 'admin')->first();
 
-    $this->viewerRole = IamRole::create([
-        'iam_application_id' => $this->kepegawaianApp->id,
-        'nama' => 'Viewer',
-        'slug' => 'viewer',
-        'is_system' => true,
-    ]);
+    $this->viewerRole = IamRole::where('iam_application_id', $this->kepegawaianApp->id)
+        ->where('slug', 'viewer')->first();
 
-    // Buat permission iam-manage dan assign ke admin role untuk akses penuh ke manajemen IAM
-    $this->adminPermission = IamPermission::create([
-        'iam_application_id' => $this->kepegawaianApp->id,
-        'nama' => 'Kelola IAM',
-        'slug' => 'iam-manage',
-        'group' => 'iam',
-        'keterangan' => 'Akses penuh ke manajemen IAM',
-    ]);
-
-    $this->adminRole->permissions()->attach($this->adminPermission->id);
+    $this->adminPermission = IamPermission::where('iam_application_id', $this->kepegawaianApp->id)
+        ->where('slug', 'iam-manage')->first();
 });
 
 test('admin dapat melihat daftar aplikasi', function () {
-    $admin = User::factory()->create();
-    IamUserRole::create(['user_id' => $admin->id, 'iam_role_id' => $this->adminRole->id, 'assigned_at' => now()]);
+    $admin = Pegawai::factory()->admin()->create();
 
     $this->actingAs($admin)->get('/iam/aplikasi')->assertOk();
 });
 
 test('user tanpa role tidak bisa akses halaman IAM', function () {
-    $user = User::factory()->create();
+    // Buat user tanpa role IAM (hapus viewer role yang di-assign otomatis oleh factory)
+    $user = Pegawai::factory()->create();
+    IamUserRole::where('user_id', $user->id)->delete();
+
     $this->actingAs($user)->get('/iam/aplikasi')->assertForbidden();
 });
 
 test('admin dapat mendaftarkan aplikasi baru', function () {
-    $admin = User::factory()->create();
-    IamUserRole::create(['user_id' => $admin->id, 'iam_role_id' => $this->adminRole->id, 'assigned_at' => now()]);
+    $admin = Pegawai::factory()->admin()->create();
 
     $response = $this->actingAs($admin)->post('/iam/aplikasi', [
         'nama' => 'E-Surat',
@@ -76,8 +49,7 @@ test('admin dapat mendaftarkan aplikasi baru', function () {
 });
 
 test('aplikasi is_system tidak bisa dihapus', function () {
-    $admin = User::factory()->create();
-    IamUserRole::create(['user_id' => $admin->id, 'iam_role_id' => $this->adminRole->id, 'assigned_at' => now()]);
+    $admin = Pegawai::factory()->admin()->create();
 
     $this->actingAs($admin)
         ->delete("/iam/aplikasi/{$this->kepegawaianApp->id}")
@@ -85,8 +57,7 @@ test('aplikasi is_system tidak bisa dihapus', function () {
 });
 
 test('admin dapat meregenerasi api key aplikasi', function () {
-    $admin = User::factory()->create();
-    IamUserRole::create(['user_id' => $admin->id, 'iam_role_id' => $this->adminRole->id, 'assigned_at' => now()]);
+    $admin = Pegawai::factory()->admin()->create();
 
     // Buat aplikasi test dengan manual assignment karena field tidak fillable
     $app = new IamApplication([
@@ -95,7 +66,7 @@ test('admin dapat meregenerasi api key aplikasi', function () {
         'url' => 'http://x.local',
     ]);
     $app->api_key = 'old-key';
-    $app->api_secret_hash = Crypt::encryptString('old-secret');
+    $app->api_secret_hash = \Illuminate\Support\Facades\Crypt::encryptString('old-secret');
     $app->is_system = false;
     $app->save();
 

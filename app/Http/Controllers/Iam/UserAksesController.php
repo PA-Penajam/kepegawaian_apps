@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\IamApplication;
 use App\Models\IamRole;
 use App\Models\IamUserRole;
-use App\Models\User;
+use App\Models\Pegawai;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
@@ -15,11 +15,11 @@ class UserAksesController extends Controller
 {
     public function index(): Response
     {
-        $users = User::with('iamRoles.role.application')->paginate(20);
+        $users = Pegawai::with('iamUserRoles.role.application')->paginate(20);
         return inertia('iam/users/index', compact('users'));
     }
 
-    public function show(User $user): Response
+    public function show(Pegawai $user): Response
     {
         $akses = IamUserRole::where('user_id', $user->id)
             ->with(['role.application', 'role.permissions', 'assignedByUser'])
@@ -30,7 +30,7 @@ class UserAksesController extends Controller
         return inertia('iam/users/akses', compact('user', 'akses', 'availableApps'));
     }
 
-    public function store(Request $request, User $user): RedirectResponse
+    public function store(Request $request, Pegawai $user): RedirectResponse
     {
         $data = $request->validate(['iam_role_id' => 'required|exists:iam_roles,id']);
 
@@ -41,7 +41,7 @@ class UserAksesController extends Controller
         return back();
     }
 
-    public function destroy(User $user, IamRole $role): RedirectResponse
+    public function destroy(Pegawai $user, IamRole $role): RedirectResponse
     {
         IamUserRole::where('user_id', $user->id)->where('iam_role_id', $role->id)->delete();
         return back();

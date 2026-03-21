@@ -9,6 +9,7 @@ use App\Models\HukumanDisiplin;
 use App\Models\Pegawai;
 use App\Models\RefJenisHukumanDisiplin;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,6 +17,8 @@ class HukumanDisiplinController extends Controller
 {
     public function index(Pegawai $pegawai): Response
     {
+        Gate::authorize('view', $pegawai);
+
         return Inertia::render('kepegawaian/pegawai/hukuman-disiplin', [
             'pegawai' => [
                 'id' => $pegawai->id,
@@ -51,6 +54,8 @@ class HukumanDisiplinController extends Controller
 
     public function store(StoreHukumanDisiplinRequest $request, Pegawai $pegawai): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $pegawai->hukumanDisiplin()->create($request->validated());
 
         return to_route('kepegawaian.pegawai.hukuman-disiplin.index', $pegawai);
@@ -58,6 +63,8 @@ class HukumanDisiplinController extends Controller
 
     public function update(UpdateHukumanDisiplinRequest $request, Pegawai $pegawai, HukumanDisiplin $hukumanDisiplin): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $this->ensureBelongsToPegawai($pegawai, $hukumanDisiplin);
 
         $hukumanDisiplin->update($request->validated());
@@ -67,6 +74,8 @@ class HukumanDisiplinController extends Controller
 
     public function destroy(Pegawai $pegawai, HukumanDisiplin $hukumanDisiplin): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $this->ensureBelongsToPegawai($pegawai, $hukumanDisiplin);
 
         $hukumanDisiplin->delete();

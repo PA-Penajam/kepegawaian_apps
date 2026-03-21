@@ -10,6 +10,7 @@ use App\Models\RefPangkat;
 use App\Models\RiwayatPangkat;
 use App\Services\RiwayatPangkatService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,6 +20,8 @@ class RiwayatPangkatController extends Controller
 
     public function index(Pegawai $pegawai): Response
     {
+        Gate::authorize('view', $pegawai);
+
         $pegawai->load('pangkat');
 
         return Inertia::render('kepegawaian/pegawai/riwayat-pangkat', [
@@ -83,6 +86,8 @@ class RiwayatPangkatController extends Controller
 
     public function store(StoreRiwayatPangkatRequest $request, Pegawai $pegawai): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $this->riwayatPangkatService->store($pegawai, $request->validated());
 
         return to_route('kepegawaian.pegawai.riwayat-pangkat.index', $pegawai);
@@ -90,6 +95,8 @@ class RiwayatPangkatController extends Controller
 
     public function update(UpdateRiwayatPangkatRequest $request, Pegawai $pegawai, RiwayatPangkat $riwayatPangkat): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         abort_unless($riwayatPangkat->pegawai_id === $pegawai->id, 404);
 
         $this->riwayatPangkatService->update($riwayatPangkat, $pegawai, $request->validated());
@@ -99,6 +106,8 @@ class RiwayatPangkatController extends Controller
 
     public function destroy(Pegawai $pegawai, RiwayatPangkat $riwayatPangkat): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         abort_unless($riwayatPangkat->pegawai_id === $pegawai->id, 404);
 
         $riwayatPangkat->delete();

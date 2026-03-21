@@ -9,6 +9,7 @@ use App\Models\Pegawai;
 use App\Models\RefJenisDiklat;
 use App\Models\RiwayatDiklat;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,6 +17,8 @@ class RiwayatDiklatController extends Controller
 {
     public function index(Pegawai $pegawai): Response
     {
+        Gate::authorize('view', $pegawai);
+
         return Inertia::render('kepegawaian/pegawai/riwayat-diklat', [
             'pegawai' => [
                 'id' => $pegawai->id,
@@ -57,6 +60,8 @@ class RiwayatDiklatController extends Controller
 
     public function store(StoreRiwayatDiklatRequest $request, Pegawai $pegawai): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $pegawai->riwayatDiklat()->create($request->validated());
 
         return redirect()->route('kepegawaian.pegawai.riwayat-diklat.index', $pegawai);
@@ -64,6 +69,8 @@ class RiwayatDiklatController extends Controller
 
     public function update(UpdateRiwayatDiklatRequest $request, Pegawai $pegawai, RiwayatDiklat $riwayatDiklat): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         abort_unless($riwayatDiklat->pegawai_id === $pegawai->id, 404);
 
         $riwayatDiklat->update($request->validated());
@@ -73,6 +80,8 @@ class RiwayatDiklatController extends Controller
 
     public function destroy(Pegawai $pegawai, RiwayatDiklat $riwayatDiklat): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         abort_unless($riwayatDiklat->pegawai_id === $pegawai->id, 404);
 
         $riwayatDiklat->delete();

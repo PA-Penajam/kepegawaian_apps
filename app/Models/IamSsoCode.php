@@ -26,7 +26,7 @@ class IamSsoCode extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Pegawai::class, 'user_id');
     }
 
     public function isExpired(): bool

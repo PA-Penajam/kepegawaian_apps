@@ -10,9 +10,9 @@ class IamValidateResource extends JsonResource
     {
         return [
             'id'    => $this->id,
-            'name'  => $this->name,
+            'name'  => $this->nama_lengkap,
             'email' => $this->email,
-            'nip'   => $this->pegawai?->nip,
+            'nip'   => $this->nip,
         ];
     }
 }

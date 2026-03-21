@@ -9,6 +9,7 @@ use App\Http\Requests\Kepegawaian\UpdateRiwayatPendidikanRequest;
 use App\Models\Pegawai;
 use App\Models\RiwayatPendidikan;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,6 +17,8 @@ class RiwayatPendidikanController extends Controller
 {
     public function index(Pegawai $pegawai): Response
     {
+        Gate::authorize('view', $pegawai);
+
         $pegawai->load([
             'riwayatPendidikan' => fn ($query) => $query
                 ->orderByDesc('tahun_lulus')
@@ -58,6 +61,8 @@ class RiwayatPendidikanController extends Controller
 
     public function store(StoreRiwayatPendidikanRequest $request, Pegawai $pegawai): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $pegawai->riwayatPendidikan()->create($request->validated());
 
         return to_route('kepegawaian.pegawai.riwayat-pendidikan.index', $pegawai);
@@ -65,6 +70,8 @@ class RiwayatPendidikanController extends Controller
 
     public function update(UpdateRiwayatPendidikanRequest $request, Pegawai $pegawai, RiwayatPendidikan $riwayatPendidikan): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         abort_unless($riwayatPendidikan->pegawai_id === $pegawai->id, 404);
 
         $riwayatPendidikan->update($request->validated());
@@ -74,6 +81,8 @@ class RiwayatPendidikanController extends Controller
 
     public function destroy(Pegawai $pegawai, RiwayatPendidikan $riwayatPendidikan): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         abort_unless($riwayatPendidikan->pegawai_id === $pegawai->id, 404);
 
         $riwayatPendidikan->delete();

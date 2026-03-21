@@ -13,7 +13,7 @@ class IamAuthorizationService
      * @param  string  $applicationId  ULID dari IamApplication
      * @return string[]
      */
-    public function getUserPermissions(int $userId, string $applicationId): array
+    public function getUserPermissions(string $userId, string $applicationId): array
     {
         return IamUserRole::where('user_id', $userId)
             ->whereHas('role', fn ($q) => $q->where('iam_application_id', $applicationId))
@@ -31,7 +31,7 @@ class IamAuthorizationService
      * @param  string  $applicationId  ULID dari IamApplication
      * @return string[]
      */
-    public function getUserRoles(int $userId, string $applicationId): array
+    public function getUserRoles(string $userId, string $applicationId): array
     {
         return IamUserRole::where('user_id', $userId)
             ->whereHas('role', fn ($q) => $q->where('iam_application_id', $applicationId))

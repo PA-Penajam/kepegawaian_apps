@@ -7,7 +7,7 @@ use App\Models\IamPermission;
 use App\Models\IamRole;
 use App\Models\IamRolePermission;
 use App\Models\IamUserRole;
-use App\Models\User;
+use App\Models\Pegawai;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -111,7 +111,7 @@ class IamSeeder extends Seeder
                 ->keyBy('slug');
 
             // Gunakan chunking untuk menghindari memory issues dengan data besar
-            User::chunk(100, function ($users) use ($kepegawaian, $rolesBySlug, $viewerRole) {
+            Pegawai::chunk(100, function ($users) use ($kepegawaian, $rolesBySlug, $viewerRole) {
                 foreach ($users as $user) {
                     $roleSlug = $user->getRawOriginal('role') ?? 'viewer';
                     $iamRole = $rolesBySlug->get($roleSlug) ?? $viewerRole;
@@ -126,15 +126,43 @@ class IamSeeder extends Seeder
             });
         }
 
-        // 7. Tambahkan permission iam-manage untuk akses penuh ke manajemen IAM
-        $iamManage = $kepegawaian->permissions()->firstOrCreate(
-            ['slug' => 'iam-manage'],
-            ['nama' => 'Kelola IAM', 'group' => 'iam', 'keterangan' => 'Akses penuh ke manajemen IAM']
-        );
+        // 7. Tambahkan default permissions untuk kepegawaian
+        $defaultPermissions = [
+            ['slug' => 'iam-manage', 'nama' => 'Kelola IAM', 'group' => 'iam', 'keterangan' => 'Akses penuh ke manajemen IAM'],
+            ['slug' => 'pegawai.view', 'nama' => 'Lihat Pegawai', 'group' => 'pegawai', 'keterangan' => 'Melihat data pegawai'],
+            ['slug' => 'pegawai.create', 'nama' => 'Tambah Pegawai', 'group' => 'pegawai', 'keterangan' => 'Menambah data pegawai'],
+            ['slug' => 'pegawai.update', 'nama' => 'Ubah Pegawai', 'group' => 'pegawai', 'keterangan' => 'Mengubah data pegawai'],
+            ['slug' => 'pegawai.delete', 'nama' => 'Hapus Pegawai', 'group' => 'pegawai', 'keterangan' => 'Menghapus data pegawai'],
+            ['slug' => 'referensi.view', 'nama' => 'Lihat Referensi', 'group' => 'referensi', 'keterangan' => 'Melihat data referensi'],
+            ['slug' => 'referensi.create', 'nama' => 'Tambah Referensi', 'group' => 'referensi', 'keterangan' => 'Menambah data referensi'],
+            ['slug' => 'referensi.update', 'nama' => 'Ubah Referensi', 'group' => 'referensi', 'keterangan' => 'Mengubah data referensi'],
+            ['slug' => 'referensi.delete', 'nama' => 'Hapus Referensi', 'group' => 'referensi', 'keterangan' => 'Menghapus data referensi'],
+            ['slug' => 'rbac.manage', 'nama' => 'Kelola RBAC', 'group' => 'rbac', 'keterangan' => 'Mengelola role & permission'],
+        ];
 
-        // Assign ke role admin
+        $permissionIds = [];
+        foreach ($defaultPermissions as $perm) {
+            $p = $kepegawaian->permissions()->firstOrCreate(
+                ['slug' => $perm['slug']],
+                ['nama' => $perm['nama'], 'group' => $perm['group'], 'keterangan' => $perm['keterangan']]
+            );
+            $permissionIds[$perm['slug']] = $p->id;
+        }
+
+        // Admin mendapat semua permission
         if ($adminRole) {
-            $adminRole->permissions()->syncWithoutDetaching([$iamManage->id]);
+            $adminRole->permissions()->syncWithoutDetaching(array_values($permissionIds));
+        }
+
+        // Operator mendapat pegawai.* dan referensi.view
+        if ($operatorRole) {
+            $operatorRole->permissions()->syncWithoutDetaching([
+                $permissionIds['pegawai.view'],
+                $permissionIds['pegawai.create'],
+                $permissionIds['pegawai.update'],
+                $permissionIds['pegawai.delete'],
+                $permissionIds['referensi.view'],
+            ]);
         }
     }
 }

@@ -8,12 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Drop kolom users.role
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
-        });
+        // Drop kolom users.role (hanya jika tabel users masih ada)
+        if (Schema::hasTable('users') && Schema::hasColumn('users', 'role')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('role');
+            });
+        }
 
         // Drop tabel lama (urutan: pivot dulu, lalu parent)
+        Schema::dropIfExists('pegawai_role');
         Schema::dropIfExists('ref_role_permission');
         Schema::dropIfExists('ref_permissions');
         Schema::dropIfExists('ref_roles');
@@ -22,8 +25,10 @@ return new class extends Migration
     public function down(): void
     {
         // Tidak bisa di-reverse secara otomatis (data sudah di IAM tables)
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('viewer');
-        });
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('role')->default('viewer');
+            });
+        }
     }
 };

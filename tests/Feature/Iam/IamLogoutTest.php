@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\IamController;
 use App\Models\IamApplication;
-use App\Models\User;
+use App\Models\Pegawai;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
@@ -16,7 +16,7 @@ beforeEach(function () {
 });
 
 test('logout endpoint menghapus token dan mengembalikan message', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     Sanctum::actingAs($user);
 
     // Helper baru otomatis membuat app baru, tapi kita butuh app yang spesifik

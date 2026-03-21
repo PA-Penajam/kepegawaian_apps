@@ -57,7 +57,7 @@ class SsoController extends Controller
         return $this->generateCodeAndRedirect($request->user()->id, $app, $redirect);
     }
 
-    private function generateCodeAndRedirect(int $userId, IamApplication $app, string $redirectUrl): RedirectResponse
+    private function generateCodeAndRedirect(string $userId, IamApplication $app, string $redirectUrl): RedirectResponse
     {
         // Validasi host: redirect harus ke domain yang sama persis dengan app terdaftar
         $appHost      = parse_url($app->url, PHP_URL_HOST);

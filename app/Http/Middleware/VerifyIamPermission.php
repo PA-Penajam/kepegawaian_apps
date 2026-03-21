@@ -33,12 +33,16 @@ class VerifyIamPermission
             abort(Response::HTTP_FORBIDDEN);
         }
 
-        $userPermissions = $this->iamAuth->getUserPermissions($user->id, $kepegawaian->id);
-
+        // Tanpa parameter: cukup cek user punya role di aplikasi ini
         if (empty($permissions)) {
-            abort_if(empty($userPermissions), Response::HTTP_FORBIDDEN);
+            $userRoles = $this->iamAuth->getUserRoles($user->id, $kepegawaian->id);
+            abort_if(empty($userRoles), Response::HTTP_FORBIDDEN);
+
             return $next($request);
         }
+
+        // Dengan parameter: cek setiap permission yang diminta
+        $userPermissions = $this->iamAuth->getUserPermissions($user->id, $kepegawaian->id);
 
         foreach ($permissions as $permission) {
             abort_unless(in_array($permission, $userPermissions, true), Response::HTTP_FORBIDDEN);

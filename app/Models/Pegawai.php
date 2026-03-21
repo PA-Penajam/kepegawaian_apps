@@ -19,10 +19,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class Pegawai extends Authenticatable
 {
-    use Filterable, HasFactory, HasUlids, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use Filterable, HasApiTokens, HasFactory, HasUlids, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     protected $table = 'pegawai';
 
@@ -80,12 +81,17 @@ class Pegawai extends Authenticatable
         return $this->belongsTo(RefUnitKerja::class, 'ref_unit_kerja_id');
     }
 
-    // === Relasi RBAC (many-to-many) ===
+    // === Relasi IAM (many-to-many via iam_user_roles) ===
 
-    public function roles(): BelongsToMany
+    public function iamUserRoles(): HasMany
     {
-        return $this->belongsToMany(RefRole::class, 'pegawai_role', 'pegawai_id', 'ref_role_id')
-            ->withPivot('created_at');
+        return $this->hasMany(IamUserRole::class, 'user_id');
+    }
+
+    public function iamRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(IamRole::class, 'iam_user_roles', 'user_id', 'iam_role_id')
+            ->withPivot('assigned_at');
     }
 
     // === Relasi riwayat ===
@@ -130,35 +136,35 @@ class Pegawai extends Authenticatable
         return $this->hasMany(HukumanDisiplin::class, 'pegawai_id');
     }
 
-    // === Permission methods (multi-role aware) ===
+    // === Permission methods (IAM-aware) ===
 
     public function hasPermission(string $permission): bool
     {
-        return $this->roles()->whereHas('permissions', function (Builder $q) use ($permission) {
-            $q->where('nama', $permission);
+        return $this->iamRoles()->whereHas('permissions', function (Builder $q) use ($permission) {
+            $q->where('slug', $permission);
         })->exists();
     }
 
     public function hasAnyPermission(string ...$permissions): bool
     {
-        return $this->roles()->whereHas('permissions', function (Builder $q) use ($permissions) {
-            $q->whereIn('nama', $permissions);
+        return $this->iamRoles()->whereHas('permissions', function (Builder $q) use ($permissions) {
+            $q->whereIn('slug', $permissions);
         })->exists();
     }
 
     public function isAdmin(): bool
     {
-        return $this->roles()->where('nama', 'Admin')->exists();
+        return $this->iamRoles()->where('slug', 'admin')->exists();
     }
 
     public function isOperator(): bool
     {
-        return $this->roles()->where('nama', 'Operator')->exists();
+        return $this->iamRoles()->where('slug', 'operator')->exists();
     }
 
     public function isViewer(): bool
     {
-        return $this->roles()->where('nama', 'Viewer')->exists();
+        return $this->iamRoles()->where('slug', 'viewer')->exists();
     }
 
     // === Notifikasi ===

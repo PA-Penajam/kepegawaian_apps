@@ -8,10 +8,12 @@ use App\Enums\JenisKelamin;
 use App\Enums\StatusKepegawaian;
 use App\Enums\StatusPegawai;
 use App\Enums\StatusPerkawinan;
+use App\Models\IamApplication;
+use App\Models\IamRole;
+use App\Models\IamUserRole;
 use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefPangkat;
-use App\Models\RefRole;
 use App\Models\RefUnitKerja;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -79,12 +81,36 @@ class PegawaiFactory extends Factory
         ];
     }
 
+    /**
+     * Auto-assign viewer role setelah create (agar lolos middleware iam.permission).
+     * Role state spesifik (admin/operator) menambahkan role di atas viewer.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Pegawai $pegawai) {
+            $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
+            $role = $kepegawaian
+                ? IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'viewer')->first()
+                : null;
+            if ($role) {
+                IamUserRole::firstOrCreate(
+                    ['user_id' => $pegawai->id, 'iam_role_id' => $role->id],
+                    ['assigned_at' => now()]
+                );
+            }
+        });
+    }
+
     public function admin(): static
     {
         return $this->afterCreating(function (Pegawai $pegawai) {
-            $role = RefRole::query()->where('nama', 'Admin')->first();
+            $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
+            $role = $kepegawaian ? IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'admin')->first() : null;
             if ($role) {
-                $pegawai->roles()->syncWithoutDetaching([$role->id]);
+                IamUserRole::firstOrCreate(
+                    ['user_id' => $pegawai->id, 'iam_role_id' => $role->id],
+                    ['assigned_at' => now()]
+                );
             }
         });
     }
@@ -92,9 +118,13 @@ class PegawaiFactory extends Factory
     public function operator(): static
     {
         return $this->afterCreating(function (Pegawai $pegawai) {
-            $role = RefRole::query()->where('nama', 'Operator')->first();
+            $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
+            $role = $kepegawaian ? IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'operator')->first() : null;
             if ($role) {
-                $pegawai->roles()->syncWithoutDetaching([$role->id]);
+                IamUserRole::firstOrCreate(
+                    ['user_id' => $pegawai->id, 'iam_role_id' => $role->id],
+                    ['assigned_at' => now()]
+                );
             }
         });
     }
@@ -102,9 +132,13 @@ class PegawaiFactory extends Factory
     public function viewer(): static
     {
         return $this->afterCreating(function (Pegawai $pegawai) {
-            $role = RefRole::query()->where('nama', 'Viewer')->first();
+            $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
+            $role = $kepegawaian ? IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'viewer')->first() : null;
             if ($role) {
-                $pegawai->roles()->syncWithoutDetaching([$role->id]);
+                IamUserRole::firstOrCreate(
+                    ['user_id' => $pegawai->id, 'iam_role_id' => $role->id],
+                    ['assigned_at' => now()]
+                );
             }
         });
     }

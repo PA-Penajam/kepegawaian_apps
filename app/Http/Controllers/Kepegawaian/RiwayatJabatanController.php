@@ -11,6 +11,7 @@ use App\Models\RefUnitKerja;
 use App\Models\RiwayatJabatan;
 use App\Services\RiwayatJabatanService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +19,8 @@ class RiwayatJabatanController extends Controller
 {
     public function index(Pegawai $pegawai): Response
     {
+        Gate::authorize('view', $pegawai);
+
         $pegawai->load(['jabatan:id,nama,kode', 'unitKerja:id,nama,kode']);
 
         return Inertia::render('kepegawaian/pegawai/riwayat-jabatan', [
@@ -72,6 +75,8 @@ class RiwayatJabatanController extends Controller
 
     public function store(StoreRiwayatJabatanRequest $request, Pegawai $pegawai, RiwayatJabatanService $service): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $service->store($pegawai, $request->validated());
 
         return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai);
@@ -79,6 +84,8 @@ class RiwayatJabatanController extends Controller
 
     public function update(UpdateRiwayatJabatanRequest $request, Pegawai $pegawai, RiwayatJabatan $riwayatJabatan, RiwayatJabatanService $service): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         abort_unless($riwayatJabatan->pegawai_id === $pegawai->id, 404);
         $service->update($riwayatJabatan, $pegawai, $request->validated());
 
@@ -87,6 +94,8 @@ class RiwayatJabatanController extends Controller
 
     public function destroy(Pegawai $pegawai, RiwayatJabatan $riwayatJabatan): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         abort_unless($riwayatJabatan->pegawai_id === $pegawai->id, 404);
 
         $riwayatJabatan->delete();

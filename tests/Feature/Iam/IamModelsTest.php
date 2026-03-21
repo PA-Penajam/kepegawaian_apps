@@ -2,7 +2,7 @@
 
 use App\Models\IamApplication;
 use App\Models\IamRole;
-use App\Models\User;
+use App\Models\Pegawai;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -34,8 +34,8 @@ test('IamRole memiliki relasi permissions dan application', function () {
 });
 
 test('User memiliki relasi iamRoles', function () {
-    $user = User::factory()->create();
-    expect($user->iamRoles())->toBeInstanceOf(HasMany::class);
+    $user = Pegawai::factory()->create();
+    expect($user->iamRoles())->toBeInstanceOf(BelongsToMany::class);
 });
 
 test('IamApplication generateApiCredentials menghasilkan key dan secret', function () {

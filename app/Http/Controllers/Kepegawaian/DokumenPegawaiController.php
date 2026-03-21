@@ -8,6 +8,7 @@ use App\Http\Requests\Kepegawaian\UpdateDokumenPegawaiRequest;
 use App\Models\DokumenPegawai;
 use App\Models\Pegawai;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,6 +16,8 @@ class DokumenPegawaiController extends Controller
 {
     public function index(Pegawai $pegawai): Response
     {
+        Gate::authorize('view', $pegawai);
+
         $pegawai->load([
             'dokumenPegawai' => fn ($query) => $query
                 ->orderBy('jenis_dokumen')
@@ -49,6 +52,8 @@ class DokumenPegawaiController extends Controller
 
     public function store(StoreDokumenPegawaiRequest $request, Pegawai $pegawai): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $pegawai->dokumenPegawai()->create($request->validated());
 
         return to_route('kepegawaian.pegawai.dokumen.index', $pegawai);
@@ -59,6 +64,8 @@ class DokumenPegawaiController extends Controller
         Pegawai $pegawai,
         DokumenPegawai $dokumen,
     ): RedirectResponse {
+        Gate::authorize('update', $pegawai);
+
         $this->ensureDokumenMilikPegawai($pegawai, $dokumen);
 
         $dokumen->update($request->validated());
@@ -68,6 +75,8 @@ class DokumenPegawaiController extends Controller
 
     public function destroy(Pegawai $pegawai, DokumenPegawai $dokumen): RedirectResponse
     {
+        Gate::authorize('update', $pegawai);
+
         $this->ensureDokumenMilikPegawai($pegawai, $dokumen);
 
         $dokumen->delete();

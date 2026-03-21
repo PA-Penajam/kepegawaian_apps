@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\IamController;
 use App\Models\IamApplication;
 use App\Models\IamSsoCode;
-use App\Models\User;
+use App\Models\Pegawai;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
@@ -21,7 +21,7 @@ beforeEach(function () {
 });
 
 test('exchange code valid mengembalikan token', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $code = str_repeat('a', 64);
 
     IamSsoCode::create([
@@ -73,7 +73,7 @@ test('exchange code invalid/expired mengembalikan 400', function () {
 });
 
 test('exchange code sudah dipakai mengembalikan 400', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $code = str_repeat('c', 64);
 
     IamSsoCode::create([

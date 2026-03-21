@@ -1,30 +1,20 @@
 <?php
 
 use App\Models\IamApplication;
-use App\Models\IamUserRole;
-use App\Models\User;
+use App\Models\IamRole;
+use App\Models\Pegawai;
 
 beforeEach(function () {
-    $cred = IamApplication::generateApiCredentials();
-    $this->kepegawaian = IamApplication::create([
-        'nama' => 'Kepegawaian', 'slug' => 'kepegawaian', 'url' => 'http://test.local',
-        'api_key' => $cred['key'], 'api_secret_hash' => $cred['hash'], 'is_active' => true,
-    ]);
-    $this->adminRole = $this->kepegawaian->roles()->create(['nama' => 'Admin', 'slug' => 'admin', 'is_system' => false]);
-    // Berikan permission ke role admin agar bisa melewati middleware VerifyIamPermission
-    $perm = $this->kepegawaian->permissions()->create(['nama' => 'Manage IAM', 'slug' => 'iam-manage']);
-    $this->adminRole->permissions()->attach($perm->id);
+    // Gunakan data dari IamSeeder
+    $this->kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
+    $this->adminRole = IamRole::where('iam_application_id', $this->kepegawaian->id)
+        ->where('slug', 'admin')->first();
 
-    $this->admin = User::factory()->create();
-    IamUserRole::create(['user_id' => $this->admin->id, 'iam_role_id' => $this->adminRole->id, 'assigned_at' => now()]);
+    $this->admin = Pegawai::factory()->admin()->create();
 });
 
 it('menolak update permission milik aplikasi lain (IDOR)', function () {
-    $cred2 = IamApplication::generateApiCredentials();
-    $app2  = IamApplication::create([
-        'nama' => 'App 2', 'slug' => 'app-2', 'url' => 'https://app2.test',
-        'api_key' => $cred2['key'], 'api_secret_hash' => $cred2['hash'], 'is_active' => true,
-    ]);
+    $app2 = IamApplication::factory()->create(['is_active' => true]);
     $permApp2 = $app2->permissions()->create(['nama' => 'Read', 'slug' => 'read']);
 
     $response = $this->actingAs($this->admin)
@@ -37,11 +27,7 @@ it('menolak update permission milik aplikasi lain (IDOR)', function () {
 });
 
 it('menolak hapus permission milik aplikasi lain (IDOR)', function () {
-    $cred2 = IamApplication::generateApiCredentials();
-    $app2  = IamApplication::create([
-        'nama' => 'App 2', 'slug' => 'app-2', 'url' => 'https://app2.test',
-        'api_key' => $cred2['key'], 'api_secret_hash' => $cred2['hash'], 'is_active' => true,
-    ]);
+    $app2 = IamApplication::factory()->create(['is_active' => true]);
     $permApp2 = $app2->permissions()->create(['nama' => 'Delete', 'slug' => 'delete']);
 
     $response = $this->actingAs($this->admin)
@@ -52,12 +38,11 @@ it('menolak hapus permission milik aplikasi lain (IDOR)', function () {
 });
 
 it('menolak slug permission duplikat dalam satu aplikasi', function () {
-    $this->kepegawaian->permissions()->create(['nama' => 'Read', 'slug' => 'read']);
-
+    // Slug 'pegawai.view' sudah ada dari IamSeeder
     $response = $this->actingAs($this->admin)
         ->from("/iam/aplikasi/{$this->kepegawaian->id}")
         ->post("/iam/aplikasi/{$this->kepegawaian->id}/permissions", [
-            'nama' => 'Read Duplicate', 'slug' => 'read',
+            'nama' => 'Duplicate', 'slug' => 'pegawai.view',
         ]);
 
     $response->assertStatus(302);

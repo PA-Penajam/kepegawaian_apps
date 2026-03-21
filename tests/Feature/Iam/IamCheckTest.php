@@ -1,12 +1,12 @@
 <?php
 
 use App\Models\IamUserRole;
-use App\Models\User;
+use App\Models\Pegawai;
 use Illuminate\Support\Facades\Crypt;
 use Laravel\Sanctum\Sanctum;
 
 it('mengembalikan allowed:true untuk user dengan permission yang diminta', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $app = \App\Models\IamApplication::factory()->create(['is_active' => true]);
 
     $permission = $app->permissions()->create(['nama' => 'Manage Pegawai', 'slug' => 'manage-pegawai']);
@@ -34,7 +34,7 @@ it('mengembalikan allowed:true untuk user dengan permission yang diminta', funct
 });
 
 it('mengembalikan allowed:false untuk user tanpa permission', function () {
-    $user = User::factory()->create();
+    $user = Pegawai::factory()->create();
     $app = \App\Models\IamApplication::factory()->create(['is_active' => true]);
 
     Sanctum::actingAs($user, ['*']);

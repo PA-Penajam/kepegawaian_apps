@@ -22,11 +22,11 @@ class IamUserRole extends Model
 
     public function assignedByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_by');
+        return $this->belongsTo(Pegawai::class, 'assigned_by');
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Pegawai::class, 'user_id');
     }
 }

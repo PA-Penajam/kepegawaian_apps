@@ -67,16 +67,17 @@ return new class extends Migration
 
         Schema::create('iam_user_roles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')
-                ->constrained('users')
+            $table->char('user_id', 26);
+            $table->foreign('user_id')
+                ->references('id')->on('pegawai')
                 ->cascadeOnDelete();
             $table->foreignUlid('iam_role_id')
                 ->constrained('iam_roles')
                 ->cascadeOnDelete();
             $table->timestamp('assigned_at')->useCurrent();
-            $table->foreignId('assigned_by')
-                ->nullable()
-                ->constrained('users')
+            $table->char('assigned_by', 26)->nullable();
+            $table->foreign('assigned_by')
+                ->references('id')->on('pegawai')
                 ->nullOnDelete();
             $table->timestamps();
             $table->unique(['user_id', 'iam_role_id']);
@@ -85,8 +86,9 @@ return new class extends Migration
         Schema::create('iam_sso_codes', function (Blueprint $table) {
             $table->id();
             $table->string('code', 64)->unique();
-            $table->foreignId('user_id')
-                ->constrained('users')
+            $table->char('user_id', 26);
+            $table->foreign('user_id')
+                ->references('id')->on('pegawai')
                 ->cascadeOnDelete();
             $table->string('app_slug');
             $table->timestamp('used_at')->nullable();
