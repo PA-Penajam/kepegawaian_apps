@@ -61,7 +61,8 @@ test('validate endpoint user tanpa role di aplikasi', function () {
     // GET request dengan getJson() mengirim body '[]'
     $ts = now()->timestamp;
     $bodyHash = hash('sha256', '[]');
-    $payload = 'GET:/test-iam-validate:'.$bodyHash.':'.$ts;
+    // Format: METHOD:PATH:SORTED_QUERY:BODY_HASH:TIMESTAMP
+    $payload = 'GET:/test-iam-validate::'.$bodyHash.':'.$ts;
     $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
 
     $response = $this->getJson('/test-iam-validate', [
@@ -106,7 +107,8 @@ test('validate endpoint dengan user berrole', function () {
     // GET request dengan getJson() mengirim body '[]'
     $ts = now()->timestamp;
     $bodyHash = hash('sha256', '[]');
-    $payload = 'GET:/test-iam-validate:'.$bodyHash.':'.$ts;
+    // Format: METHOD:PATH:SORTED_QUERY:BODY_HASH:TIMESTAMP
+    $payload = 'GET:/test-iam-validate::'.$bodyHash.':'.$ts;
     $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
 
     $response = $this->getJson('/test-iam-validate', [

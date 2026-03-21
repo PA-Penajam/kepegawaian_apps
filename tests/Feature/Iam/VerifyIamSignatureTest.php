@@ -95,12 +95,11 @@ test('request valid dengan signature benar lolos', function () {
     Sanctum::actingAs($user);
 
     // Buat signature manual dengan body hash
-    // Note: getJson() mengirim body '[]' jadi kita harus hash itu
+    // Note: get() mengirim body kosong, jadi body hash = hash('sha256', '')
     $ts = now()->timestamp;
-    $bodyContent = '[]'; // getJson() mengirim JSON empty array
-    $bodyHash = hash('sha256', $bodyContent);
+    $bodyHash = hash('sha256', '');
     // Format: METHOD:PATH:SORTED_QUERY:BODY_HASH:TIMESTAMP
-    $payload = 'GET:/test-iam-signature:'.$bodyHash.':'.$ts;
+    $payload = 'GET:/test-iam-signature::'.$bodyHash.':'.$ts;
     $signature = hash_hmac('sha256', $payload, $secret);
 
     // Gunakan get() dengan Accept header alih-alih getJson()
