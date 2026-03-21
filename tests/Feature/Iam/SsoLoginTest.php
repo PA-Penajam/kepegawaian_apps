@@ -59,3 +59,30 @@ test('GET /sso/login menolak redirect ke domain lain (open redirect prevention)'
         ->get('/sso/login?app=attendance&redirect=http://evil.com/steal')
         ->assertStatus(422);
 });
+
+it('menolak open redirect via subdomain spoofing', function () {
+    $app  = IamApplication::factory()->create(['slug' => 'att-app', 'url' => 'http://att.local', 'is_active' => true]);
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/sso/login?app=att-app&redirect=http://att.local.evil.com/steal');
+    $response->assertStatus(422);
+});
+
+it('menolak open redirect via URL authority confusion', function () {
+    $app  = IamApplication::factory()->create(['slug' => 'att-app', 'url' => 'http://att.local', 'is_active' => true]);
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/sso/login?app=att-app&redirect=http://att.local@evil.com/steal');
+    $response->assertStatus(422);
+});
+
+it('mengizinkan redirect ke subdirectory host yang sama', function () {
+    $app  = IamApplication::factory()->create(['slug' => 'att-app', 'url' => 'http://att.local', 'is_active' => true]);
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/sso/login?app=att-app&redirect=http://att.local/callback');
+
+    $response->assertRedirect();
+    $location = $response->headers->get('Location');
+    expect($location)->toStartWith('http://att.local/callback?code=');
+});

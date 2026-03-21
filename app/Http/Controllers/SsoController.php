@@ -16,7 +16,7 @@ class SsoController extends Controller
     {
         try {
             $validated = $request->validate([
-                'app'      => 'required|string',
+                'app' => 'required|string',
                 'redirect' => 'required|url',
             ]);
         } catch (ValidationException $e) {
@@ -31,6 +31,7 @@ class SsoController extends Controller
 
         if (! $request->user()) {
             session(['sso_app' => $validated['app'], 'sso_redirect' => $validated['redirect']]);
+
             return redirect()->route('login');
         }
 
@@ -40,7 +41,7 @@ class SsoController extends Controller
     /** Dipanggil setelah login berhasil jika ada SSO session */
     public function callback(Request $request): RedirectResponse
     {
-        $appSlug  = session()->pull('sso_app');
+        $appSlug = session()->pull('sso_app');
         $redirect = session()->pull('sso_redirect');
 
         if (! $appSlug || ! $redirect) {
@@ -58,23 +59,26 @@ class SsoController extends Controller
 
     private function generateCodeAndRedirect(int $userId, IamApplication $app, string $redirectUrl): RedirectResponse
     {
-        // Validasi domain whitelist — redirect harus dimulai dengan app.url terdaftar
-        if (! str_starts_with($redirectUrl, $app->url)) {
+        // Validasi host: redirect harus ke domain yang sama persis dengan app terdaftar
+        $appHost      = parse_url($app->url, PHP_URL_HOST);
+        $redirectHost = parse_url($redirectUrl, PHP_URL_HOST);
+
+        if (! $appHost || ! $redirectHost || $appHost !== $redirectHost) {
             abort(422, 'Redirect URL tidak diizinkan untuk aplikasi ini');
         }
 
-        $ttl  = (int) config('iam.sso_code_ttl_seconds', 60);
+        $ttl = (int) config('iam.sso_code_ttl_seconds', 60);
         $code = Str::random(64);
 
         IamSsoCode::create([
-            'code'       => $code,
-            'user_id'    => $userId,
-            'app_slug'   => $app->slug,
+            'code' => $code,
+            'user_id' => $userId,
+            'app_slug' => $app->slug,
             'expires_at' => now()->addSeconds($ttl),
         ]);
 
         $separator = str_contains($redirectUrl, '?') ? '&' : '?';
 
-        return redirect($redirectUrl . $separator . 'code=' . $code);
+        return redirect($redirectUrl.$separator.'code='.$code);
     }
 }
