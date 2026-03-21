@@ -155,6 +155,7 @@ export default function RiwayatJabatanPage({
 
         if (editingItem !== null) {
             router.put(editingItem.update_url, toPayload(form), requestOptions);
+
             return;
         }
 
@@ -194,7 +195,9 @@ export default function RiwayatJabatanPage({
                     <div className="flex items-center gap-4">
                         <Button
                             variant="outline"
-                            onClick={() => router.get(`/kepegawaian/pegawai/${pegawai.id}`)}
+                            onClick={() =>
+                                router.get(`/kepegawaian/pegawai/${pegawai.id}`)
+                            }
                         >
                             Kembali
                         </Button>

@@ -1,0 +1,159 @@
+<h2>Section 3 — API Design & Integrasi</h2>
+<p class="subtitle">Endpoint yang disediakan kepegawaian-apps untuk aplikasi lain</p>
+
+<div class="section">
+  <h3>Daftar Endpoint IAM</h3>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+
+    <!-- Endpoint 1 -->
+    <div style="background:#0f172a;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1e293b;">
+        <span style="background:#16a34a;color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1px;">GET</span>
+        <code style="color:#38bdf8;font-size:13px;">/api/v1/iam/validate</code>
+        <span style="color:#64748b;font-size:11px;margin-left:auto;">Validasi token + ambil info user & permissions</span>
+      </div>
+      <div style="padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div style="color:#64748b;font-size:10px;letter-spacing:1px;margin-bottom:6px;">REQUEST HEADER</div>
+          <div style="background:#0a0f1a;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:#94a3b8;">
+            Authorization: Bearer <span style="color:#fbbf24">{sanctum_token}</span><br/>
+            X-App-Key: <span style="color:#a78bfa">{api_key}</span><br/>
+            X-HMAC-Signature: <span style="color:#f472b6">{hmac}</span><br/>
+            X-Timestamp: <span style="color:#94a3b8">1774061812</span>
+          </div>
+        </div>
+        <div>
+          <div style="color:#64748b;font-size:10px;letter-spacing:1px;margin-bottom:6px;">RESPONSE 200</div>
+          <div style="background:#0a0f1a;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:#94a3b8;">
+            {<br/>
+            &nbsp;&nbsp;"user": {<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;"id": <span style="color:#fbbf24">"01J..."</span>,<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;"name": <span style="color:#4ade80">"Budi"</span>,<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;"email": <span style="color:#4ade80">"budi@..."</span>,<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;"nip": <span style="color:#4ade80">"199107..."</span><br/>
+            &nbsp;&nbsp;},<br/>
+            &nbsp;&nbsp;"roles": [<span style="color:#a78bfa">"operator"</span>],<br/>
+            &nbsp;&nbsp;"permissions": [<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#a78bfa">"absensi:create"</span>,<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#a78bfa">"rekap:read"</span><br/>
+            &nbsp;&nbsp;],<br/>
+            &nbsp;&nbsp;"expires_at": <span style="color:#fbbf24">1774065412</span><br/>
+            }
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 16px 12px;display:flex;gap:8px;">
+        <span style="background:#0c4a6e;color:#7dd3fc;font-size:10px;padding:2px 8px;border-radius:4px;">✓ Permissions yang dikembalikan = milik aplikasi pemanggil saja</span>
+        <span style="background:#14532d;color:#86efac;font-size:10px;padding:2px 8px;border-radius:4px;">✓ Cache di sisi klien 30-60 detik</span>
+      </div>
+    </div>
+
+    <!-- Endpoint 2 -->
+    <div style="background:#0f172a;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1e293b;">
+        <span style="background:#16a34a;color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1px;">GET</span>
+        <code style="color:#38bdf8;font-size:13px;">/api/v1/iam/check?permission=absensi:create</code>
+        <span style="color:#64748b;font-size:11px;margin-left:auto;">Cek satu permission spesifik</span>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="color:#64748b;font-size:10px;letter-spacing:1px;margin-bottom:6px;">RESPONSE 200</div>
+        <div style="background:#0a0f1a;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:#94a3b8;display:inline-block;">
+          { "allowed": <span style="color:#4ade80">true</span>, "permission": <span style="color:#a78bfa">"absensi:create"</span> }
+        </div>
+        <span style="background:#0c4a6e;color:#7dd3fc;font-size:10px;padding:2px 8px;border-radius:4px;margin-left:10px;">Shortcut untuk middleware aplikasi lain</span>
+      </div>
+    </div>
+
+    <!-- Endpoint 3 -->
+    <div style="background:#0f172a;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1e293b;">
+        <span style="background:#d97706;color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1px;">POST</span>
+        <code style="color:#38bdf8;font-size:13px;">/api/v1/iam/logout</code>
+        <span style="color:#64748b;font-size:11px;margin-left:auto;">Logout terpusat — invalidate token</span>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="background:#0a0f1a;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:#94a3b8;display:inline-block;">
+          { "message": <span style="color:#4ade80">"Token invalidated"</span> }
+        </div>
+        <span style="background:#450a0a;color:#fca5a5;font-size:10px;padding:2px 8px;border-radius:4px;margin-left:10px;">Semua app otomatis logout saat cache expired</span>
+      </div>
+    </div>
+
+    <!-- Endpoint 4 - Login redirect -->
+    <div style="background:#0f172a;border-radius:10px;overflow:hidden;border:1px solid #1e293b;">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#1e293b;">
+        <span style="background:#0284c7;color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1px;">WEB</span>
+        <code style="color:#38bdf8;font-size:13px;">/sso/login?app=attendance&redirect=https://...</code>
+        <span style="color:#64748b;font-size:11px;margin-left:auto;">Entry point SSO — halaman login terpusat</span>
+      </div>
+      <div style="padding:14px 16px;font-size:12px;color:#94a3b8;">
+        Setelah login berhasil → redirect ke <code style="color:#fbbf24">?redirect=</code> dengan token di URL fragment atau cookie.<br/>
+        Aplikasi lain tangkap token → simpan di localStorage / cookie mereka sendiri.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <h3>Alur Integrasi di Sisi Aplikasi Lain</h3>
+  <div style="background:#0f172a;border-radius:10px;padding:16px;font-size:12px;">
+    <div style="color:#38bdf8;font-size:11px;letter-spacing:1px;margin-bottom:12px;">CONTOH MIDDLEWARE DI attendance-qr-system (Laravel)</div>
+    <div style="background:#0a0f1a;border-radius:6px;padding:14px;font-family:monospace;font-size:11px;color:#94a3b8;line-height:2;">
+      <div><span style="color:#f472b6">function</span> <span style="color:#38bdf8">handle</span>(Request $request, <span style="color:#f472b6">string</span> $permission = <span style="color:#4ade80">null</span>)</div>
+      <div>{</div>
+      <div>&nbsp;&nbsp;<span style="color:#64748b">// 1. Cek cache dulu</span></div>
+      <div>&nbsp;&nbsp;$cached = Cache::get(<span style="color:#fbbf24">'iam_'</span> . $token);</div>
+      <div>&nbsp;&nbsp;<span style="color:#f472b6">if</span> ($cached && <span style="color:#fbbf24">!$permission</span>) <span style="color:#f472b6">return</span> $next($request);</div>
+      <div>&nbsp;&nbsp;</div>
+      <div>&nbsp;&nbsp;<span style="color:#64748b">// 2. Kalau tidak ada, panggil IAM API</span></div>
+      <div>&nbsp;&nbsp;$response = Http::withToken($token)</div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;->withHeaders([<span style="color:#fbbf24">'X-App-Key'</span> => config(<span style="color:#fbbf24">'iam.api_key'</span>)])</div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;->get(<span style="color:#4ade80">'kepegawaian.local/api/v1/iam/validate'</span>);</div>
+      <div>&nbsp;&nbsp;</div>
+      <div>&nbsp;&nbsp;<span style="color:#64748b">// 3. Cache 60 detik</span></div>
+      <div>&nbsp;&nbsp;Cache::put(<span style="color:#fbbf24">'iam_'</span> . $token, $response->json(), <span style="color:#a78bfa">60</span>);</div>
+      <div>}</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Security Layers pada Setiap Request</h3>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;align-items:center;gap:12px;background:#1e293b;border-radius:8px;padding:12px;">
+      <div style="background:#6366f1;color:white;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">🔒</div>
+      <div>
+        <div style="color:#e2e8f0;font-size:13px;font-weight:600;">Layer 1 — Sanctum Token</div>
+        <div style="color:#64748b;font-size:11px;">Identifikasi user yang sedang login</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:#1e293b;border-radius:8px;padding:12px;">
+      <div style="background:#6366f1;color:white;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">🔑</div>
+      <div>
+        <div style="color:#e2e8f0;font-size:13px;font-weight:600;">Layer 2 — X-App-Key</div>
+        <div style="color:#64748b;font-size:11px;">Identifikasi aplikasi mana yang memanggil → permissions dikembalikan sesuai aplikasi itu</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:#1e293b;border-radius:8px;padding:12px;">
+      <div style="background:#6366f1;color:white;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">✍️</div>
+      <div>
+        <div style="color:#e2e8f0;font-size:13px;font-weight:600;">Layer 3 — HMAC-SHA256</div>
+        <div style="color:#64748b;font-size:11px;">Verifikasi request tidak dimanipulasi + anti-replay (5 menit window) — sudah ada di codebase</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Endpoint Admin (Web — Hanya Super Admin)</h3>
+  <div style="background:#0f172a;border-radius:8px;padding:14px;font-family:monospace;font-size:12px;color:#94a3b8;line-height:2;">
+    <div><span style="color:#16a34a">GET </span> <span style="color:#38bdf8">/iam/applications</span> <span style="color:#475569">→ daftar aplikasi terdaftar</span></div>
+    <div><span style="color:#d97706">POST</span> <span style="color:#38bdf8">/iam/applications</span> <span style="color:#475569">→ daftarkan aplikasi baru + generate API key</span></div>
+    <div><span style="color:#16a34a">GET </span> <span style="color:#38bdf8">/iam/applications/{id}/roles</span> <span style="color:#475569">→ kelola role per aplikasi</span></div>
+    <div><span style="color:#16a34a">GET </span> <span style="color:#38bdf8">/iam/applications/{id}/permissions</span> <span style="color:#475569">→ kelola permission per aplikasi</span></div>
+    <div><span style="color:#16a34a">GET </span> <span style="color:#38bdf8">/iam/users/{id}/roles</span> <span style="color:#475569">→ assign/revoke role user di semua aplikasi</span></div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:20px;text-align:center;">Apakah API design ini sudah sesuai? Balas di terminal untuk lanjut ke Section 4 (UI Admin IAM).</p>

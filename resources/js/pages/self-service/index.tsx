@@ -1,7 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import { Calendar, ChevronRight, Clock3, TrendingUp, User } from 'lucide-react';
-import { dashboard } from '@/routes';
-import { detail as selfServiceDetail } from '@/routes/self-service';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +11,8 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { dashboard } from '@/routes';
+import { detail as selfServiceDetail } from '@/routes/self-service';
 import type { BreadcrumbItem } from '@/types';
 import type { PegawaiDetail } from '@/types/pegawai-detail';
 

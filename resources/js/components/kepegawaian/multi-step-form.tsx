@@ -1,3 +1,5 @@
+import { Check } from 'lucide-react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -7,8 +9,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
-import React from 'react';
 
 interface MultiStepFormProps {
     steps: string[];

@@ -207,11 +207,15 @@ export default function RiwayatPangkatPage({
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
-                            onClick={() => router.get(`/kepegawaian/pegawai/${pegawai.id}`)}
+                            onClick={() =>
+                                router.get(`/kepegawaian/pegawai/${pegawai.id}`)
+                            }
                         >
                             Kembali
                         </Button>
-                        <Button onClick={openCreateDialog}>Tambah riwayat</Button>
+                        <Button onClick={openCreateDialog}>
+                            Tambah riwayat
+                        </Button>
                     </div>
                 </div>
 

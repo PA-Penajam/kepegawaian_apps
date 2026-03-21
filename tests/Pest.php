@@ -1,15 +1,17 @@
 <?php
 
+require_once __DIR__ . '/Helpers/IamTestHelper.php';
+
+use Database\Seeders\IamSeeder;
 use Database\Seeders\RefPermissionSeeder;
-use Database\Seeders\RefRoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->beforeEach(function () {
-        // Seed roles & permissions agar factory ->admin(), ->operator(), ->viewer() berfungsi
-        $this->seed(RefRoleSeeder::class);
+        // Seed IAM data dan permissions agar factory dan middleware berfungsi
+        $this->seed(IamSeeder::class);
         $this->seed(RefPermissionSeeder::class);
     })
     ->in('Feature');

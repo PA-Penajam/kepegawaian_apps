@@ -1,11 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
 import { Award, Briefcase, Building } from 'lucide-react';
-import { index as selfServiceIndex } from '@/routes/self-service';
 import { PegawaiDetailTabs } from '@/components/pegawai-detail-tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { index as selfServiceIndex } from '@/routes/self-service';
 import type { BreadcrumbItem } from '@/types';
 import type { PegawaiDetail } from '@/types/pegawai-detail';
 

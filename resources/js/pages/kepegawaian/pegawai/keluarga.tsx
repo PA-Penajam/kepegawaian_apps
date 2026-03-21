@@ -13,10 +13,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import type { HubunganKeluarga, JenisKelamin } from '@/types/kepegawaian';
 import {
-    HubunganKeluarga,
     HubunganKeluargaLabels,
-    JenisKelamin,
     JenisKelaminLabels,
 } from '@/types/kepegawaian';
 
@@ -152,6 +151,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
 
         if (editingItem !== null) {
             router.put(editingItem.update_url, toPayload(form), requestOptions);
+
             return;
         }
 
@@ -188,7 +188,9 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
-                            onClick={() => router.get(`/kepegawaian/pegawai/${pegawai.id}`)}
+                            onClick={() =>
+                                router.get(`/kepegawaian/pegawai/${pegawai.id}`)
+                            }
                         >
                             Kembali
                         </Button>

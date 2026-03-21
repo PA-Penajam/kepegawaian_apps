@@ -1,10 +1,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Eye, Pencil, Plus } from 'lucide-react';
-import {
-    DataTableToolbar,
-    type DataTableToolbarFilter,
-} from '@/components/kepegawaian/data-table-toolbar';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DataTableToolbar } from '@/components/kepegawaian/data-table-toolbar';
+import type { DataTableToolbarFilter } from '@/components/kepegawaian/data-table-toolbar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
@@ -19,15 +17,15 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { index, show, create, edit } from '@/routes/kepegawaian/pegawai';
 import type { BreadcrumbItem } from '@/types';
-import {
-    StatusPegawaiLabels,
-    type PaginatedData,
-    type Pegawai,
-    type PegawaiListFilterOptions,
-    type PegawaiListFilters,
-    type PegawaiListSortBy,
-    type RefJabatan,
-    type StatusPegawai,
+import { StatusPegawaiLabels } from '@/types/kepegawaian';
+import type {
+    PaginatedData,
+    Pegawai,
+    PegawaiListFilterOptions,
+    PegawaiListFilters,
+    PegawaiListSortBy,
+    RefJabatan,
+    StatusPegawai,
 } from '@/types/kepegawaian';
 
 type PegawaiIndexSortBy = PegawaiListSortBy | 'jabatan';

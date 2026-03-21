@@ -10,23 +10,12 @@ use App\Models\RefPangkat;
 use App\Models\RiwayatPangkat;
 use App\Services\RiwayatPangkatService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class RiwayatPangkatController extends Controller implements HasMiddleware
+class RiwayatPangkatController extends Controller
 {
     public function __construct(private readonly RiwayatPangkatService $riwayatPangkatService) {}
-
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('auth'),
-            new Middleware('verified'),
-            new Middleware('role:admin,operator'),
-        ];
-    }
 
     public function index(Pegawai $pegawai): Response
     {

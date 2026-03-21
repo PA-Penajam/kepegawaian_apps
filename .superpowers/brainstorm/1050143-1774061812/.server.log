@@ -1,0 +1,4 @@
+{"type":"server-started","port":65014,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:65014","screen_dir":"/home/moohard/dev/project/kepegawaian-apps/.superpowers/brainstorm/1050143-1774061812"}
+{"type":"screen-added","file":"/home/moohard/dev/project/kepegawaian-apps/.superpowers/brainstorm/1050143-1774061812/architecture-overview.html"}
+{"type":"screen-added","file":"/home/moohard/dev/project/kepegawaian-apps/.superpowers/brainstorm/1050143-1774061812/database-schema.html"}
+{"type":"server-stopped","reason":"idle timeout"}

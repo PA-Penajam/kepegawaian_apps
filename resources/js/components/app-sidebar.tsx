@@ -6,6 +6,7 @@ import {
     ScrollText,
     Settings,
     Shield,
+    ShieldCheck,
     TrendingUp,
     User,
     Users,
@@ -23,6 +24,8 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import aplikasi from '@/routes/iam/aplikasi';
+import users from '@/routes/iam/users';
 import { index as selfServiceIndex } from '@/routes/self-service';
 import type { Auth, NavItem } from '@/types';
 
@@ -105,6 +108,21 @@ export function AppSidebar() {
           ]
         : [];
 
+    const iamNavItems: NavItem[] = isViewer
+        ? []
+        : [
+              {
+                  title: 'Aplikasi',
+                  href: aplikasi.index.url(),
+                  icon: ShieldCheck,
+              },
+              {
+                  title: 'User Akses',
+                  href: users.index.url(),
+                  icon: Users,
+              },
+          ];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -129,6 +147,9 @@ export function AppSidebar() {
                 ) : null}
                 {referensiNavItems.length > 0 ? (
                     <NavMain items={referensiNavItems} title="Referensi" />
+                ) : null}
+                {iamNavItems.length > 0 ? (
+                    <NavMain items={iamNavItems} title="IAM" />
                 ) : null}
             </SidebarContent>
 

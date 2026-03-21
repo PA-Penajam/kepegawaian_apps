@@ -156,6 +156,7 @@ export default function RiwayatDiklatPage({
 
         if (editingItem !== null) {
             router.put(editingItem.update_url, toPayload(form), requestOptions);
+
             return;
         }
 
@@ -192,11 +193,15 @@ export default function RiwayatDiklatPage({
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
-                            onClick={() => router.get(`/kepegawaian/pegawai/${pegawai.id}`)}
+                            onClick={() =>
+                                router.get(`/kepegawaian/pegawai/${pegawai.id}`)
+                            }
                         >
                             Kembali
                         </Button>
-                        <Button onClick={openCreateDialog}>Tambah riwayat</Button>
+                        <Button onClick={openCreateDialog}>
+                            Tambah riwayat
+                        </Button>
                     </div>
                 </div>
 
@@ -255,9 +260,7 @@ export default function RiwayatDiklatPage({
                                                 {item.tempat ?? '-'}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <div>
-                                                    {item.tanggal_mulai}
-                                                </div>
+                                                <div>{item.tanggal_mulai}</div>
                                                 <div className="text-xs text-muted-foreground">
                                                     s/d {item.tanggal_selesai}
                                                 </div>

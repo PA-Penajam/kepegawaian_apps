@@ -1,3 +1,5 @@
+import { Head, useForm } from '@inertiajs/react';
+import React, { useState } from 'react';
 import { EnumSelect } from '@/components/kepegawaian/enum-select';
 import { MultiStepForm } from '@/components/kepegawaian/multi-step-form';
 import { Input } from '@/components/ui/input';
@@ -11,9 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
-import React, { useState } from 'react';
+import type { BreadcrumbItem } from '@/types';
 
 interface EditProps {
     pegawai: {

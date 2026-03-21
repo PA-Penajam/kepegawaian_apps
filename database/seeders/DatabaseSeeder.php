@@ -2,14 +2,24 @@
 
 namespace Database\Seeders;
 
+use App\Models\IamApplication;
+use App\Models\IamRole;
+use App\Models\IamUserRole;
 use App\Models\Pegawai;
-use App\Models\RefRole;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\App;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Guard: di production, password WAJIB dari env variable
+        if (App::isProduction()) {
+            if (empty(env('SEEDER_ADMIN_PASSWORD')) || empty(env('SEEDER_OPERATOR_PASSWORD'))) {
+                throw new \RuntimeException('SEEDER_ADMIN_PASSWORD dan SEEDER_OPERATOR_PASSWORD wajib diset di environment production');
+            }
+        }
+
         $this->call([
             RefPangkatSeeder::class,
             RefJabatanSeeder::class,
@@ -20,44 +30,45 @@ class DatabaseSeeder extends Seeder
             RefJenisDokumenSeeder::class,
             RefStatusKepegawaianSeeder::class,
             RefStatusPegawaiSeeder::class,
-            RefRoleSeeder::class,
-            RefPermissionSeeder::class,
-            PegawaiSeeder::class,
+            IamSeeder::class,
         ]);
 
-        $adminRole = RefRole::query()->where('nama', 'Admin')->first();
-        $operatorRole = RefRole::query()->where('nama', 'Operator')->first();
+        // Get IAM application for kepegawaian
+        $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
 
-        // Assign admin ke pranata komputer (NIP: 199107132020121003)
-        $admin = Pegawai::query()->where('nip', '199107132020121003')->first();
+        if (! $kepegawaian) {
+            $this->command->warn('IAM application kepegawaian tidak ditemukan. Lewati pembuatan user.');
 
-        if (! $admin) {
-            $admin = Pegawai::query()->updateOrCreate([
-                'nip' => '199107132020121003',
-            ], [
-                'nama_lengkap' => 'Pranata Komputer',
-                'tempat_lahir' => 'Penajam',
-                'tanggal_lahir' => '1991-07-13',
-                'jenis_kelamin' => 'Laki-Laki',
-                'agama' => 'Islam',
-                'status_perkawinan' => 'Kawin',
-                'status_kepegawaian' => 'PNS',
-                'status_pegawai' => 'Aktif',
-                'tanggal_masuk' => '2020-12-01',
-                'email' => 'admin@pa-penajam.go.id',
-            ]);
+            return;
         }
 
-        $admin->update([
+        // Buat admin pegawai (pranata komputer)
+        $admin = Pegawai::query()->updateOrCreate([
+            'nip' => '199107132020121003',
+        ], [
+            'nama_lengkap' => 'Pranata Komputer',
+            'tempat_lahir' => 'Penajam',
+            'tanggal_lahir' => '1991-07-13',
+            'jenis_kelamin' => 'Laki-Laki',
+            'agama' => 'Islam',
+            'status_perkawinan' => 'Kawin',
+            'status_kepegawaian' => 'PNS',
+            'status_pegawai' => 'Aktif',
+            'tanggal_masuk' => '2020-12-01',
+            'email' => 'admin@pa-penajam.go.id',
             'email_verified_at' => now(),
-            'password' => bcrypt('admin123'),
+            'password' => env('SEEDER_ADMIN_PASSWORD', 'admin123'),
         ]);
 
+        $adminRole = IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'admin')->first();
         if ($adminRole) {
-            $admin->roles()->syncWithoutDetaching([$adminRole->id]);
+            IamUserRole::firstOrCreate(
+                ['user_id' => $admin->id, 'iam_role_id' => $adminRole->id],
+                ['assigned_at' => now()]
+            );
         }
 
-        // Buat pegawai operator
+        // Buat operator pegawai
         $operator = Pegawai::query()->updateOrCreate([
             'nip' => '199201012021011001',
         ], [
@@ -72,13 +83,17 @@ class DatabaseSeeder extends Seeder
             'tanggal_masuk' => '2021-01-01',
             'email' => 'operator@pa-penajam.go.id',
             'email_verified_at' => now(),
-            'password' => bcrypt('operator123'),
+            'password' => env('SEEDER_OPERATOR_PASSWORD', 'operator123'),
         ]);
 
+        $operatorRole = IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'operator')->first();
         if ($operatorRole) {
-            $operator->roles()->syncWithoutDetaching([$operatorRole->id]);
+            IamUserRole::firstOrCreate(
+                ['user_id' => $operator->id, 'iam_role_id' => $operatorRole->id],
+                ['assigned_at' => now()]
+            );
         }
 
-        $this->command->info('Pegawai admin dan operator berhasil dibuat.');
+        $this->command->info('Pegawai admin dan operator berhasil dibuat dengan IAM roles.');
     }
 }
