@@ -7,19 +7,21 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
 
 // Helper untuk membuat IAM signed headers
-function makeIamHeaders(string $method, string $path, string $apiKey, string $apiSecret, array $query = []): array
-{
-    $timestamp   = now()->timestamp;
-    $queryString = http_build_query(collect($query)->sortKeys()->all());
-    $payload     = strtoupper($method) . ':' . $path . ':' . $queryString . ':' . $timestamp;
-    $signature   = hash_hmac('sha256', $payload, $apiSecret);
+if (! function_exists('makeIamHeaders')) {
+    function makeIamHeaders(string $method, string $path, string $apiKey, string $apiSecret, array $query = []): array
+    {
+        $timestamp   = now()->timestamp;
+        $queryString = http_build_query(collect($query)->sortKeys()->all());
+        $payload     = strtoupper($method) . ':' . $path . ':' . $queryString . ':' . $timestamp;
+        $signature   = hash_hmac('sha256', $payload, $apiSecret);
 
-    return [
-        'X-App-Key'   => $apiKey,
-        'X-Signature' => $signature,
-        'X-Timestamp' => $timestamp,
-        'Accept'      => 'application/json',
-    ];
+        return [
+            'X-App-Key'   => $apiKey,
+            'X-Signature' => $signature,
+            'X-Timestamp' => $timestamp,
+            'Accept'      => 'application/json',
+        ];
+    }
 }
 
 beforeEach(function () {

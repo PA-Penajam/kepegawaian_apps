@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\IamController;
 use App\Http\Controllers\Api\PegawaiApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,4 +24,14 @@ Route::middleware(['auth:sanctum', 'verify.hmac'])->prefix('v1')->group(function
 
     // Batch lookup (nip[]) atau search (search + status)
     Route::get('pegawai', [PegawaiApiController::class, 'index']);
+});
+
+Route::middleware(['auth:sanctum', 'iam.signature'])->prefix('v1/iam')->group(function () {
+    Route::get('validate', [IamController::class, 'validate']);
+    Route::get('check', [IamController::class, 'check']);
+    Route::post('logout', [IamController::class, 'logout']);
+});
+
+Route::middleware(['iam.signature'])->prefix('v1/iam')->group(function () {
+    Route::post('exchange-code', [IamController::class, 'exchangeCode']);
 });
