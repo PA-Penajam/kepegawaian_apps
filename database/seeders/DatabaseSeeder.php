@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             RefRoleSeeder::class,
             RefPermissionSeeder::class,
             PegawaiSeeder::class,
+            IamSeeder::class,
         ]);
 
         // Create admin user
