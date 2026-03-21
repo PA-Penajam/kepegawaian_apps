@@ -146,6 +146,7 @@ export default function HukumanDisiplinPage({
 
         if (editingItem !== null) {
             router.put(editingItem.update_url, toPayload(form), requestOptions);
+
             return;
         }
 
@@ -182,7 +183,9 @@ export default function HukumanDisiplinPage({
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
-                            onClick={() => router.get(`/kepegawaian/pegawai/${pegawai.id}`)}
+                            onClick={() =>
+                                router.get(`/kepegawaian/pegawai/${pegawai.id}`)
+                            }
                         >
                             Kembali
                         </Button>

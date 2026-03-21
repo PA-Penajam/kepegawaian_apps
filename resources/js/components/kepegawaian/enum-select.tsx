@@ -1,3 +1,4 @@
+import React from 'react';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -6,7 +7,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import React from 'react';
 
 interface EnumOption {
     value: string;

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -7,7 +8,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { ReactNode } from 'react';
 
 interface CrudTableColumn<T> {
     key: string;

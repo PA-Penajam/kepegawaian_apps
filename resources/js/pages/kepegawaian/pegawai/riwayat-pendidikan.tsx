@@ -143,6 +143,7 @@ export default function RiwayatPendidikanPage({
 
         if (editingItem !== null) {
             router.put(editingItem.update_url, toPayload(form), requestOptions);
+
             return;
         }
 
@@ -184,11 +185,15 @@ export default function RiwayatPendidikanPage({
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
-                            onClick={() => router.get(`/kepegawaian/pegawai/${pegawai.id}`)}
+                            onClick={() =>
+                                router.get(`/kepegawaian/pegawai/${pegawai.id}`)
+                            }
                         >
                             Kembali
                         </Button>
-                        <Button onClick={openCreateDialog}>Tambah riwayat</Button>
+                        <Button onClick={openCreateDialog}>
+                            Tambah riwayat
+                        </Button>
                     </div>
                 </div>
 

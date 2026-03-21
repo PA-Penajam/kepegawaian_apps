@@ -136,6 +136,7 @@ export default function DokumenPegawaiPage({
 
         if (editingItem !== null) {
             router.put(editingItem.update_url, toPayload(form), requestOptions);
+
             return;
         }
 
@@ -175,11 +176,15 @@ export default function DokumenPegawaiPage({
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
-                            onClick={() => router.get(`/kepegawaian/pegawai/${pegawai.id}`)}
+                            onClick={() =>
+                                router.get(`/kepegawaian/pegawai/${pegawai.id}`)
+                            }
                         >
                             Kembali
                         </Button>
-                        <Button onClick={openCreateDialog}>Tambah dokumen</Button>
+                        <Button onClick={openCreateDialog}>
+                            Tambah dokumen
+                        </Button>
                     </div>
                 </div>
 

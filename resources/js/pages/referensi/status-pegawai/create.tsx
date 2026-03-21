@@ -1,13 +1,13 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
 import { index, store } from '@/routes/referensi/status-pegawai';
-import { useMemo } from 'react';
+import type { BreadcrumbItem } from '@/types';
 
 export default function Create() {
     const { data, setData, post, processing, errors } = useForm({

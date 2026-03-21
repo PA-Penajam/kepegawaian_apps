@@ -1,17 +1,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogClose,
@@ -22,6 +13,15 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, IamApplication } from '@/types';
 
@@ -66,7 +66,9 @@ export default function Index() {
 
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">Kelola Aplikasi IAM</h1>
+                    <h1 className="text-2xl font-semibold">
+                        Kelola Aplikasi IAM
+                    </h1>
                     <Dialog>
                         <DialogTrigger asChild>
                             <Button>
@@ -76,15 +78,20 @@ export default function Index() {
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Daftarkan Aplikasi Baru</DialogTitle>
+                                <DialogTitle>
+                                    Daftarkan Aplikasi Baru
+                                </DialogTitle>
                                 <DialogDescription>
-                                    Lengkapi form berikut untuk mendaftarkan aplikasi baru.
+                                    Lengkapi form berikut untuk mendaftarkan
+                                    aplikasi baru.
                                 </DialogDescription>
                             </DialogHeader>
                             <form
                                 onSubmit={(e) => {
                                     e.preventDefault();
-                                    const formData = new FormData(e.currentTarget);
+                                    const formData = new FormData(
+                                        e.currentTarget,
+                                    );
                                     router.post('/iam/aplikasi', {
                                         nama: formData.get('nama'),
                                         slug: formData.get('slug'),
@@ -95,7 +102,10 @@ export default function Index() {
                             >
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
-                                        <label htmlFor="nama" className="text-sm font-medium">
+                                        <label
+                                            htmlFor="nama"
+                                            className="text-sm font-medium"
+                                        >
                                             Nama Aplikasi
                                         </label>
                                         <Input
@@ -106,7 +116,10 @@ export default function Index() {
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label htmlFor="slug" className="text-sm font-medium">
+                                        <label
+                                            htmlFor="slug"
+                                            className="text-sm font-medium"
+                                        >
                                             Slug
                                         </label>
                                         <Input
@@ -119,7 +132,10 @@ export default function Index() {
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label htmlFor="url" className="text-sm font-medium">
+                                        <label
+                                            htmlFor="url"
+                                            className="text-sm font-medium"
+                                        >
                                             URL Aplikasi
                                         </label>
                                         <Input
@@ -131,7 +147,10 @@ export default function Index() {
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label htmlFor="deskripsi" className="text-sm font-medium">
+                                        <label
+                                            htmlFor="deskripsi"
+                                            className="text-sm font-medium"
+                                        >
                                             Deskripsi (Opsional)
                                         </label>
                                         <Input
@@ -160,15 +179,24 @@ export default function Index() {
                             <TableRow>
                                 <TableHead>Nama</TableHead>
                                 <TableHead>URL</TableHead>
-                                <TableHead className="text-center">Jumlah Role</TableHead>
-                                <TableHead className="text-center">Status</TableHead>
-                                <TableHead className="text-center">Aksi</TableHead>
+                                <TableHead className="text-center">
+                                    Jumlah Role
+                                </TableHead>
+                                <TableHead className="text-center">
+                                    Status
+                                </TableHead>
+                                <TableHead className="text-center">
+                                    Aksi
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {aplikasi.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center">
+                                    <TableCell
+                                        colSpan={5}
+                                        className="text-center"
+                                    >
                                         Tidak ada aplikasi yang terdaftar
                                     </TableCell>
                                 </TableRow>
@@ -200,22 +228,40 @@ export default function Index() {
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <Badge
-                                                variant={app.is_active ? 'default' : 'outline'}
+                                                variant={
+                                                    app.is_active
+                                                        ? 'default'
+                                                        : 'outline'
+                                                }
                                             >
-                                                {app.is_active ? 'Aktif' : 'Nonaktif'}
+                                                {app.is_active
+                                                    ? 'Aktif'
+                                                    : 'Nonaktif'}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-center gap-2">
-                                                <Button variant="ghost" size="icon" asChild>
-                                                    <Link href={`/iam/aplikasi/${app.id}`}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={`/iam/aplikasi/${app.id}`}
+                                                    >
                                                         <Eye className="h-4 w-4" />
                                                     </Link>
                                                 </Button>
                                                 {!app.is_system && (
                                                     <>
-                                                        <Button variant="ghost" size="icon" asChild>
-                                                            <Link href={`/iam/aplikasi/${app.id}/edit`}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            asChild
+                                                        >
+                                                            <Link
+                                                                href={`/iam/aplikasi/${app.id}/edit`}
+                                                            >
                                                                 <Pencil className="h-4 w-4" />
                                                             </Link>
                                                         </Button>
@@ -223,7 +269,10 @@ export default function Index() {
                                                             variant="ghost"
                                                             size="icon"
                                                             onClick={() =>
-                                                                handleDelete(app.id, app.nama)
+                                                                handleDelete(
+                                                                    app.id,
+                                                                    app.nama,
+                                                                )
                                                             }
                                                         >
                                                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -241,16 +290,19 @@ export default function Index() {
             </div>
 
             {/* Modal API Secret - ditampilkan sekali saja */}
-            <Dialog open={showApiSecretModal} onOpenChange={setShowApiSecretModal}>
+            <Dialog
+                open={showApiSecretModal}
+                onOpenChange={setShowApiSecretModal}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>API Secret Aplikasi</DialogTitle>
                         <DialogDescription>
-                            Simpan API secret berikut. Secret ini hanya ditampilkan sekali dan
-                            tidak dapat diambil kembali.
+                            Simpan API secret berikut. Secret ini hanya
+                            ditampilkan sekali dan tidak dapat diambil kembali.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="bg-muted p-4 rounded-md font-mono text-sm break-all">
+                    <div className="rounded-md bg-muted p-4 font-mono text-sm break-all">
                         {apiSecret}
                     </div>
                     <DialogFooter>

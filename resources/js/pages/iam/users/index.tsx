@@ -1,8 +1,8 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { useMemo } from 'react';
 import { Eye } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -15,16 +15,18 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, PaginatedData, User } from '@/types';
 
 type Props = {
-    users: PaginatedData<User & {
-        iam_roles_count?: number;
-        iam_roles?: Array<{
-            id: number;
-            nama: string;
-            application: {
+    users: PaginatedData<
+        User & {
+            iam_roles_count?: number;
+            iam_roles?: Array<{
+                id: number;
                 nama: string;
-            };
-        }>;
-    }>;
+                application: {
+                    nama: string;
+                };
+            }>;
+        }
+    >;
     filters: {
         search?: string;
     };
@@ -60,15 +62,22 @@ export default function Index() {
                             <TableRow>
                                 <TableHead>Nama</TableHead>
                                 <TableHead>Email</TableHead>
-                                <TableHead className="text-center">Jumlah Akses</TableHead>
+                                <TableHead className="text-center">
+                                    Jumlah Akses
+                                </TableHead>
                                 <TableHead>Akses Aplikasi</TableHead>
-                                <TableHead className="text-center">Aksi</TableHead>
+                                <TableHead className="text-center">
+                                    Aksi
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {users.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center">
+                                    <TableCell
+                                        colSpan={5}
+                                        className="text-center"
+                                    >
                                         Tidak ada data user
                                     </TableCell>
                                 </TableRow>
@@ -78,38 +87,64 @@ export default function Index() {
                                         <TableCell className="font-medium">
                                             {user.name}
                                         </TableCell>
-                                        <TableCell>
-                                            {user.email}
-                                        </TableCell>
+                                        <TableCell>{user.email}</TableCell>
                                         <TableCell className="text-center">
                                             <Badge variant="outline">
-                                                {user.iam_roles_count ?? 0} akses
+                                                {user.iam_roles_count ?? 0}{' '}
+                                                akses
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-wrap gap-1">
-                                                {user.iam_roles && user.iam_roles.length > 0 ? (
-                                                    user.iam_roles.slice(0, 3).map((role) => (
-                                                        <Badge key={role.id} variant="secondary" className="text-xs">
-                                                            {role.application.nama} / {role.nama}
-                                                        </Badge>
-                                                    ))
+                                                {user.iam_roles &&
+                                                user.iam_roles.length > 0 ? (
+                                                    user.iam_roles
+                                                        .slice(0, 3)
+                                                        .map((role) => (
+                                                            <Badge
+                                                                key={role.id}
+                                                                variant="secondary"
+                                                                className="text-xs"
+                                                            >
+                                                                {
+                                                                    role
+                                                                        .application
+                                                                        .nama
+                                                                }{' '}
+                                                                / {role.nama}
+                                                            </Badge>
+                                                        ))
                                                 ) : (
                                                     <span className="text-sm text-muted-foreground">
                                                         Tidak ada akses
                                                     </span>
                                                 )}
-                                                {user.iam_roles && user.iam_roles.length > 3 && (
-                                                    <Badge variant="outline" className="text-xs">
-                                                        +{user.iam_roles.length - 3} lagi
-                                                    </Badge>
-                                                )}
+                                                {user.iam_roles &&
+                                                    user.iam_roles.length >
+                                                        3 && (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-xs"
+                                                        >
+                                                            +
+                                                            {user.iam_roles
+                                                                .length -
+                                                                3}{' '}
+                                                            lagi
+                                                        </Badge>
+                                                    )}
                                             </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-center gap-2">
-                                                <Button variant="ghost" size="icon" asChild>
-                                                    <Link href={`/iam/users/${user.id}/akses`}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={`/iam/users/${user.id}/akses`}
+                                                    >
                                                         <Eye className="h-4 w-4" />
                                                     </Link>
                                                 </Button>
@@ -127,17 +162,22 @@ export default function Index() {
                     <div className="flex justify-center gap-2">
                         {users.meta.current_page > 1 && (
                             <Button variant="outline" asChild>
-                                <Link href={`?page=${users.meta.current_page - 1}`}>
+                                <Link
+                                    href={`?page=${users.meta.current_page - 1}`}
+                                >
                                     Previous
                                 </Link>
                             </Button>
                         )}
                         <span className="flex items-center px-4 text-sm text-muted-foreground">
-                            Halaman {users.meta.current_page} dari {users.meta.last_page}
+                            Halaman {users.meta.current_page} dari{' '}
+                            {users.meta.last_page}
                         </span>
                         {users.meta.current_page < users.meta.last_page && (
                             <Button variant="outline" asChild>
-                                <Link href={`?page=${users.meta.current_page + 1}`}>
+                                <Link
+                                    href={`?page=${users.meta.current_page + 1}`}
+                                >
                                     Next
                                 </Link>
                             </Button>

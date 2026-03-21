@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,8 +21,12 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, RefStatusKepegawaian, PaginatedData } from '@/types';
 import { create, edit, destroy } from '@/routes/referensi/status-kepegawaian';
+import type {
+    BreadcrumbItem,
+    RefStatusKepegawaian,
+    PaginatedData,
+} from '@/types';
 
 type Props = {
     statusKepegawaian: PaginatedData<RefStatusKepegawaian>;
@@ -39,7 +43,10 @@ export default function Index() {
         () => [
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Referensi', href: '#' },
-            { title: 'Status Kepegawaian', href: '/referensi/status-kepegawaian' },
+            {
+                title: 'Status Kepegawaian',
+                href: '/referensi/status-kepegawaian',
+            },
         ],
         [],
     );
@@ -56,11 +63,14 @@ export default function Index() {
         const timeout = setTimeout(() => {
             handleSearch();
         }, 300);
+
         return () => clearTimeout(timeout);
     }, [search, handleSearch]);
 
     const handleDelete = (id: string) => {
-        if (confirm('Apakah Anda yakin ingin menghapus status kepegawaian ini?')) {
+        if (
+            confirm('Apakah Anda yakin ingin menghapus status kepegawaian ini?')
+        ) {
             router.delete(destroy.url(id));
         }
     };
@@ -71,7 +81,9 @@ export default function Index() {
 
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">Status Kepegawaian</h1>
+                    <h1 className="text-2xl font-semibold">
+                        Status Kepegawaian
+                    </h1>
                     <Button asChild>
                         <Link href={create()}>
                             <Plus className="mr-2 h-4 w-4" />
@@ -169,9 +181,12 @@ export default function Index() {
                                     page === 1 ||
                                     page === statusKepegawaian.meta.last_page ||
                                     (page >=
-                                        statusKepegawaian.meta.current_page - 1 &&
+                                        statusKepegawaian.meta.current_page -
+                                            1 &&
                                         page <=
-                                            statusKepegawaian.meta.current_page + 1)
+                                            statusKepegawaian.meta
+                                                .current_page +
+                                                1)
                                 ) {
                                     return (
                                         <PaginationItem key={page}>
@@ -188,10 +203,13 @@ export default function Index() {
                                         </PaginationItem>
                                     );
                                 }
+
                                 if (
                                     page ===
-                                        statusKepegawaian.meta.current_page - 2 ||
-                                    page === statusKepegawaian.meta.current_page + 2
+                                        statusKepegawaian.meta.current_page -
+                                            2 ||
+                                    page ===
+                                        statusKepegawaian.meta.current_page + 2
                                 ) {
                                     return (
                                         <PaginationItem key={page}>
@@ -199,6 +217,7 @@ export default function Index() {
                                         </PaginationItem>
                                     );
                                 }
+
                                 return null;
                             })}
 

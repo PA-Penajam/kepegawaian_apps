@@ -1,11 +1,26 @@
 import { Head, Link } from '@inertiajs/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import {
+    Users,
+    AlertCircle,
+    TrendingUp,
+    Building2,
+    UserCircle,
+    UserPlus,
+    Briefcase,
+    GraduationCap,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
-import { Users, AlertCircle, TrendingUp, Building2, UserCircle, UserPlus, Briefcase, GraduationCap } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -32,40 +47,56 @@ interface Props {
 
 export default function Dashboard({ stats }: Props) {
     // Calculate percentages for Golongan
-    const totalGolongan = Object.values(stats.distribusi_golongan).reduce((a, b) => a + b, 0);
-    
+    const totalGolongan = Object.values(stats.distribusi_golongan).reduce(
+        (a, b) => a + b,
+        0,
+    );
+
     // Calculate percentages for Jenis Kelamin
-    const totalJK = stats.distribusi_jenis_kelamin.reduce((a, b) => a + b.total, 0);
-    
+    const totalJK = stats.distribusi_jenis_kelamin.reduce(
+        (a, b) => a + b.total,
+        0,
+    );
+
     // Calculate max unit kerja for progress bar scaling
-    const maxUnitKerja = stats.distribusi_unit_kerja.length > 0 
-        ? Math.max(...stats.distribusi_unit_kerja.map(u => u.pegawai_count)) 
-        : 0;
+    const maxUnitKerja =
+        stats.distribusi_unit_kerja.length > 0
+            ? Math.max(
+                  ...stats.distribusi_unit_kerja.map((u) => u.pegawai_count),
+              )
+            : 0;
 
     // Calculate max jabatan for progress bar scaling
-    const maxJabatan = stats.distribusi_jabatan.length > 0 
-        ? Math.max(...stats.distribusi_jabatan.map(j => j.pegawai_count)) 
-        : 0;
+    const maxJabatan =
+        stats.distribusi_jabatan.length > 0
+            ? Math.max(...stats.distribusi_jabatan.map((j) => j.pegawai_count))
+            : 0;
 
     // Calculate max pendidikan for progress bar scaling
-    const maxPendidikan = stats.distribusi_pendidikan.length > 0 
-        ? Math.max(...stats.distribusi_pendidikan.map(p => p.pegawai_count)) 
-        : 0;
+    const maxPendidikan =
+        stats.distribusi_pendidikan.length > 0
+            ? Math.max(
+                  ...stats.distribusi_pendidikan.map((p) => p.pegawai_count),
+              )
+            : 0;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
-                
                 {/* Top Cards Row */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Pegawai Aktif</CardTitle>
+                            <CardTitle className="text-sm font-medium">
+                                Total Pegawai Aktif
+                            </CardTitle>
                             <Users className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.total_pegawai_aktif}</div>
+                            <div className="text-2xl font-bold">
+                                {stats.total_pegawai_aktif}
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 Pegawai dengan status aktif
                             </p>
@@ -74,51 +105,76 @@ export default function Dashboard({ stats }: Props) {
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Pegawai Baru (Bulan Ini)</CardTitle>
+                            <CardTitle className="text-sm font-medium">
+                                Pegawai Baru (Bulan Ini)
+                            </CardTitle>
                             <UserPlus className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.pegawai_baru_bulan_ini}</div>
+                            <div className="text-2xl font-bold">
+                                {stats.pegawai_baru_bulan_ini}
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 Pegawai masuk bulan ini
                             </p>
                         </CardContent>
                     </Card>
-                    
+
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">KGB Segera (≤2 bln)</CardTitle>
+                            <CardTitle className="text-sm font-medium">
+                                KGB Segera (≤2 bln)
+                            </CardTitle>
                             <AlertCircle className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center justify-between">
-                                <div className="text-2xl font-bold">{stats.kgb_segera_count}</div>
+                                <div className="text-2xl font-bold">
+                                    {stats.kgb_segera_count}
+                                </div>
                                 {stats.kgb_segera_count > 0 && (
-                                    <Badge variant="destructive">Perlu Perhatian</Badge>
+                                    <Badge variant="destructive">
+                                        Perlu Perhatian
+                                    </Badge>
                                 )}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                <Link href="/kepegawaian/monitoring/kgb" className="text-primary hover:underline">
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                <Link
+                                    href="/kepegawaian/monitoring/kgb"
+                                    className="text-primary hover:underline"
+                                >
                                     Lihat Monitoring KGB
                                 </Link>
                             </p>
                         </CardContent>
                     </Card>
-                    
+
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">KP Eligible</CardTitle>
+                            <CardTitle className="text-sm font-medium">
+                                KP Eligible
+                            </CardTitle>
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center justify-between">
-                                <div className="text-2xl font-bold">{stats.kp_eligible_count}</div>
+                                <div className="text-2xl font-bold">
+                                    {stats.kp_eligible_count}
+                                </div>
                                 {stats.kp_eligible_count > 0 && (
-                                    <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">Eligible</Badge>
+                                    <Badge
+                                        variant="default"
+                                        className="bg-blue-600 hover:bg-blue-700"
+                                    >
+                                        Eligible
+                                    </Badge>
                                 )}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                <Link href="/kepegawaian/monitoring/kenaikan-pangkat" className="text-primary hover:underline">
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                <Link
+                                    href="/kepegawaian/monitoring/kenaikan-pangkat"
+                                    className="text-primary hover:underline"
+                                >
                                     Lihat Monitoring KP
                                 </Link>
                             </p>
@@ -128,7 +184,6 @@ export default function Dashboard({ stats }: Props) {
 
                 {/* Distribution Row */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    
                     {/* Golongan Distribution */}
                     <Card className="col-span-1">
                         <CardHeader>
@@ -136,20 +191,35 @@ export default function Dashboard({ stats }: Props) {
                                 <UserCircle className="h-5 w-5" />
                                 Distribusi Golongan
                             </CardTitle>
-                            <CardDescription>Berdasarkan pangkat terakhir</CardDescription>
+                            <CardDescription>
+                                Berdasarkan pangkat terakhir
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {['I', 'II', 'III', 'IV'].map((gol) => {
-                                const count = stats.distribusi_golongan[gol] || 0;
-                                const percentage = totalGolongan > 0 ? Math.round((count / totalGolongan) * 100) : 0;
-                                
+                                const count =
+                                    stats.distribusi_golongan[gol] || 0;
+                                const percentage =
+                                    totalGolongan > 0
+                                        ? Math.round(
+                                              (count / totalGolongan) * 100,
+                                          )
+                                        : 0;
+
                                 return (
                                     <div key={gol} className="space-y-1">
                                         <div className="flex items-center justify-between text-sm">
-                                            <span className="font-medium">Golongan {gol}</span>
-                                            <span className="text-muted-foreground">{count} ({percentage}%)</span>
+                                            <span className="font-medium">
+                                                Golongan {gol}
+                                            </span>
+                                            <span className="text-muted-foreground">
+                                                {count} ({percentage}%)
+                                            </span>
                                         </div>
-                                        <Progress value={percentage} className="h-2" />
+                                        <Progress
+                                            value={percentage}
+                                            className="h-2"
+                                        />
                                     </div>
                                 );
                             })}
@@ -163,29 +233,42 @@ export default function Dashboard({ stats }: Props) {
                                 <Building2 className="h-5 w-5" />
                                 Top Unit Kerja
                             </CardTitle>
-                            <CardDescription>Berdasarkan jumlah pegawai aktif</CardDescription>
+                            <CardDescription>
+                                Berdasarkan jumlah pegawai aktif
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {stats.distribusi_unit_kerja.length > 0 ? (
                                 stats.distribusi_unit_kerja.map((unit, idx) => {
-                                    const percentage = maxUnitKerja > 0 ? (unit.pegawai_count / maxUnitKerja) * 100 : 0;
-                                    
+                                    const percentage =
+                                        maxUnitKerja > 0
+                                            ? (unit.pegawai_count /
+                                                  maxUnitKerja) *
+                                              100
+                                            : 0;
+
                                     return (
                                         <div key={idx} className="space-y-1">
                                             <div className="flex items-center justify-between text-sm">
-                                                <span className="font-medium truncate pr-4" title={unit.nama}>
+                                                <span
+                                                    className="truncate pr-4 font-medium"
+                                                    title={unit.nama}
+                                                >
                                                     {unit.nama}
                                                 </span>
-                                                <span className="text-muted-foreground whitespace-nowrap">
+                                                <span className="whitespace-nowrap text-muted-foreground">
                                                     {unit.pegawai_count} pegawai
                                                 </span>
                                             </div>
-                                            <Progress value={percentage} className="h-2" />
+                                            <Progress
+                                                value={percentage}
+                                                className="h-2"
+                                            />
                                         </div>
                                     );
                                 })
                             ) : (
-                                <div className="text-center text-sm text-muted-foreground py-4">
+                                <div className="py-4 text-center text-sm text-muted-foreground">
                                     Belum ada data unit kerja
                                 </div>
                             )}
@@ -199,29 +282,43 @@ export default function Dashboard({ stats }: Props) {
                                 <Briefcase className="h-5 w-5" />
                                 Top Jabatan
                             </CardTitle>
-                            <CardDescription>Berdasarkan jumlah pegawai aktif</CardDescription>
+                            <CardDescription>
+                                Berdasarkan jumlah pegawai aktif
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {stats.distribusi_jabatan.length > 0 ? (
                                 stats.distribusi_jabatan.map((jabatan, idx) => {
-                                    const percentage = maxJabatan > 0 ? (jabatan.pegawai_count / maxJabatan) * 100 : 0;
-                                    
+                                    const percentage =
+                                        maxJabatan > 0
+                                            ? (jabatan.pegawai_count /
+                                                  maxJabatan) *
+                                              100
+                                            : 0;
+
                                     return (
                                         <div key={idx} className="space-y-1">
                                             <div className="flex items-center justify-between text-sm">
-                                                <span className="font-medium truncate pr-4" title={jabatan.nama}>
+                                                <span
+                                                    className="truncate pr-4 font-medium"
+                                                    title={jabatan.nama}
+                                                >
                                                     {jabatan.nama}
                                                 </span>
-                                                <span className="text-muted-foreground whitespace-nowrap">
-                                                    {jabatan.pegawai_count} pegawai
+                                                <span className="whitespace-nowrap text-muted-foreground">
+                                                    {jabatan.pegawai_count}{' '}
+                                                    pegawai
                                                 </span>
                                             </div>
-                                            <Progress value={percentage} className="h-2" />
+                                            <Progress
+                                                value={percentage}
+                                                className="h-2"
+                                            />
                                         </div>
                                     );
                                 })
                             ) : (
-                                <div className="text-center text-sm text-muted-foreground py-4">
+                                <div className="py-4 text-center text-sm text-muted-foreground">
                                     Belum ada data jabatan
                                 </div>
                             )}
@@ -235,29 +332,52 @@ export default function Dashboard({ stats }: Props) {
                                 <GraduationCap className="h-5 w-5" />
                                 Distribusi Pendidikan
                             </CardTitle>
-                            <CardDescription>Berdasarkan pendidikan terakhir</CardDescription>
+                            <CardDescription>
+                                Berdasarkan pendidikan terakhir
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {stats.distribusi_pendidikan.length > 0 ? (
-                                stats.distribusi_pendidikan.map((pendidikan, idx) => {
-                                    const percentage = maxPendidikan > 0 ? (pendidikan.pegawai_count / maxPendidikan) * 100 : 0;
-                                    
-                                    return (
-                                        <div key={idx} className="space-y-1">
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="font-medium truncate pr-4" title={pendidikan.pendidikan}>
-                                                    {pendidikan.pendidikan}
-                                                </span>
-                                                <span className="text-muted-foreground whitespace-nowrap">
-                                                    {pendidikan.pegawai_count} pegawai
-                                                </span>
+                                stats.distribusi_pendidikan.map(
+                                    (pendidikan, idx) => {
+                                        const percentage =
+                                            maxPendidikan > 0
+                                                ? (pendidikan.pegawai_count /
+                                                      maxPendidikan) *
+                                                  100
+                                                : 0;
+
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className="space-y-1"
+                                            >
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span
+                                                        className="truncate pr-4 font-medium"
+                                                        title={
+                                                            pendidikan.pendidikan
+                                                        }
+                                                    >
+                                                        {pendidikan.pendidikan}
+                                                    </span>
+                                                    <span className="whitespace-nowrap text-muted-foreground">
+                                                        {
+                                                            pendidikan.pegawai_count
+                                                        }{' '}
+                                                        pegawai
+                                                    </span>
+                                                </div>
+                                                <Progress
+                                                    value={percentage}
+                                                    className="h-2"
+                                                />
                                             </div>
-                                            <Progress value={percentage} className="h-2" />
-                                        </div>
-                                    );
-                                })
+                                        );
+                                    },
+                                )
                             ) : (
-                                <div className="text-center text-sm text-muted-foreground py-4">
+                                <div className="py-4 text-center text-sm text-muted-foreground">
                                     Belum ada data pendidikan
                                 </div>
                             )}
@@ -272,31 +392,52 @@ export default function Dashboard({ stats }: Props) {
                         <CardContent>
                             <div className="grid gap-4 md:grid-cols-2">
                                 {stats.distribusi_jenis_kelamin.length > 0 ? (
-                                    stats.distribusi_jenis_kelamin.map((jk, idx) => {
-                                        const percentage = totalJK > 0 ? Math.round((jk.total / totalJK) * 100) : 0;
-                                        const label = jk.jenis_kelamin === 'L' ? 'Laki-laki' : (jk.jenis_kelamin === 'P' ? 'Perempuan' : jk.jenis_kelamin);
-                                        
-                                        return (
-                                            <div key={idx} className="flex items-center p-4 border rounded-lg">
-                                                <div className="flex-1 space-y-1">
-                                                    <p className="text-sm font-medium leading-none">{label}</p>
-                                                    <p className="text-2xl font-bold">{jk.total}</p>
+                                    stats.distribusi_jenis_kelamin.map(
+                                        (jk, idx) => {
+                                            const percentage =
+                                                totalJK > 0
+                                                    ? Math.round(
+                                                          (jk.total / totalJK) *
+                                                              100,
+                                                      )
+                                                    : 0;
+                                            const label =
+                                                jk.jenis_kelamin === 'L'
+                                                    ? 'Laki-laki'
+                                                    : jk.jenis_kelamin === 'P'
+                                                      ? 'Perempuan'
+                                                      : jk.jenis_kelamin;
+
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center rounded-lg border p-4"
+                                                >
+                                                    <div className="flex-1 space-y-1">
+                                                        <p className="text-sm leading-none font-medium">
+                                                            {label}
+                                                        </p>
+                                                        <p className="text-2xl font-bold">
+                                                            {jk.total}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-sm text-muted-foreground">
+                                                            {percentage}%
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <div className="text-sm text-muted-foreground">{percentage}%</div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
+                                            );
+                                        },
+                                    )
                                 ) : (
-                                    <div className="col-span-2 text-center text-sm text-muted-foreground py-4">
+                                    <div className="col-span-2 py-4 text-center text-sm text-muted-foreground">
                                         Belum ada data jenis kelamin
                                     </div>
                                 )}
                             </div>
                         </CardContent>
                     </Card>
-
                 </div>
             </div>
         </AppLayout>

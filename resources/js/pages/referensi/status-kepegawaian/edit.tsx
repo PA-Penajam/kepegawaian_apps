@@ -1,13 +1,13 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, RefStatusKepegawaian } from '@/types';
 import { index, update } from '@/routes/referensi/status-kepegawaian';
-import { useMemo } from 'react';
+import type { BreadcrumbItem, RefStatusKepegawaian } from '@/types';
 
 type Props = {
     statusKepegawaian: RefStatusKepegawaian;
@@ -24,7 +24,10 @@ export default function Edit({ statusKepegawaian }: Props) {
         () => [
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Referensi', href: '#' },
-            { title: 'Status Kepegawaian', href: '/referensi/status-kepegawaian' },
+            {
+                title: 'Status Kepegawaian',
+                href: '/referensi/status-kepegawaian',
+            },
             { title: 'Edit', href: '#' },
         ],
         [],

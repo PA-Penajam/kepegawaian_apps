@@ -24,9 +24,9 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { index as selfServiceIndex } from '@/routes/self-service';
 import aplikasi from '@/routes/iam/aplikasi';
 import users from '@/routes/iam/users';
+import { index as selfServiceIndex } from '@/routes/self-service';
 import type { Auth, NavItem } from '@/types';
 
 export function AppSidebar() {

@@ -1,5 +1,4 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { dashboard, login } from '@/routes';
 import {
     Users,
     TrendingUp,
@@ -7,6 +6,7 @@ import {
     GraduationCap,
     Building2,
 } from 'lucide-react';
+import { dashboard, login } from '@/routes';
 
 export default function Welcome() {
     const { auth } = usePage().props;

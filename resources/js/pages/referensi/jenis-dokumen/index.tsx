@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,8 +21,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, RefJenisDokumen, PaginatedData } from '@/types';
 import { create, edit, destroy } from '@/routes/referensi/jenis-dokumen';
+import type { BreadcrumbItem, RefJenisDokumen, PaginatedData } from '@/types';
 
 type Props = {
     jenisDokumen: PaginatedData<RefJenisDokumen>;
@@ -56,6 +56,7 @@ export default function Index() {
         const timeout = setTimeout(() => {
             handleSearch();
         }, 300);
+
         return () => clearTimeout(timeout);
     }, [search, handleSearch]);
 
@@ -186,6 +187,7 @@ export default function Index() {
                                         </PaginationItem>
                                     );
                                 }
+
                                 if (
                                     page ===
                                         jenisDokumen.meta.current_page - 2 ||
@@ -197,6 +199,7 @@ export default function Index() {
                                         </PaginationItem>
                                     );
                                 }
+
                                 return null;
                             })}
 

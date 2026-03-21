@@ -1,3 +1,12 @@
+import { Link } from '@inertiajs/react';
+import DokumenPegawaiController from '@/actions/App/Http/Controllers/Kepegawaian/DokumenPegawaiController';
+import HukumanDisiplinController from '@/actions/App/Http/Controllers/Kepegawaian/HukumanDisiplinController';
+import KeluargaController from '@/actions/App/Http/Controllers/Kepegawaian/KeluargaController';
+import PenghargaanController from '@/actions/App/Http/Controllers/Kepegawaian/PenghargaanController';
+import RiwayatDiklatController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatDiklatController';
+import RiwayatJabatanController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatJabatanController';
+import RiwayatPangkatController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatPangkatController';
+import RiwayatPendidikanController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatPendidikanController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,16 +16,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Link } from '@inertiajs/react';
-import { toUrl } from '@/lib/utils';
-import KeluargaController from '@/actions/App/Http/Controllers/Kepegawaian/KeluargaController';
-import RiwayatPangkatController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatPangkatController';
-import RiwayatJabatanController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatJabatanController';
-import RiwayatPendidikanController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatPendidikanController';
-import RiwayatDiklatController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatDiklatController';
-import PenghargaanController from '@/actions/App/Http/Controllers/Kepegawaian/PenghargaanController';
-import HukumanDisiplinController from '@/actions/App/Http/Controllers/Kepegawaian/HukumanDisiplinController';
-import DokumenPegawaiController from '@/actions/App/Http/Controllers/Kepegawaian/DokumenPegawaiController';
 import {
     Table,
     TableBody,
@@ -26,7 +25,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { PegawaiDetail } from '@/types/pegawai-detail';
+import { toUrl } from '@/lib/utils';
 import {
     AgamaLabels,
     JenisKelaminLabels,
@@ -35,6 +34,7 @@ import {
     StatusPegawaiLabels,
     StatusPerkawinanLabels,
 } from '@/types/kepegawaian';
+import type { PegawaiDetail } from '@/types/pegawai-detail';
 
 export function PegawaiDetailTabs({ pegawai }: { pegawai: PegawaiDetail }) {
     return (
@@ -277,7 +277,11 @@ export function PegawaiDetailTabs({ pegawai }: { pegawai: PegawaiDetail }) {
                             </CardDescription>
                         </div>
                         <Button asChild>
-                            <Link href={toUrl(KeluargaController.index(pegawai.id))}>
+                            <Link
+                                href={toUrl(
+                                    KeluargaController.index(pegawai.id),
+                                )}
+                            >
                                 Kelola
                             </Link>
                         </Button>
@@ -340,7 +344,11 @@ export function PegawaiDetailTabs({ pegawai }: { pegawai: PegawaiDetail }) {
                             </CardDescription>
                         </div>
                         <Button asChild>
-                            <Link href={toUrl(RiwayatPangkatController.index(pegawai.id))}>
+                            <Link
+                                href={toUrl(
+                                    RiwayatPangkatController.index(pegawai.id),
+                                )}
+                            >
                                 Kelola
                             </Link>
                         </Button>
@@ -417,7 +425,11 @@ export function PegawaiDetailTabs({ pegawai }: { pegawai: PegawaiDetail }) {
                             </CardDescription>
                         </div>
                         <Button asChild>
-                            <Link href={toUrl(RiwayatJabatanController.index(pegawai.id))}>
+                            <Link
+                                href={toUrl(
+                                    RiwayatJabatanController.index(pegawai.id),
+                                )}
+                            >
                                 Kelola
                             </Link>
                         </Button>
@@ -491,7 +503,13 @@ export function PegawaiDetailTabs({ pegawai }: { pegawai: PegawaiDetail }) {
                             </CardDescription>
                         </div>
                         <Button asChild>
-                            <Link href={toUrl(RiwayatPendidikanController.index(pegawai.id))}>
+                            <Link
+                                href={toUrl(
+                                    RiwayatPendidikanController.index(
+                                        pegawai.id,
+                                    ),
+                                )}
+                            >
                                 Kelola
                             </Link>
                         </Button>
@@ -554,7 +572,11 @@ export function PegawaiDetailTabs({ pegawai }: { pegawai: PegawaiDetail }) {
                             </CardDescription>
                         </div>
                         <Button asChild>
-                            <Link href={toUrl(RiwayatDiklatController.index(pegawai.id))}>
+                            <Link
+                                href={toUrl(
+                                    RiwayatDiklatController.index(pegawai.id),
+                                )}
+                            >
                                 Kelola
                             </Link>
                         </Button>
@@ -620,7 +642,11 @@ export function PegawaiDetailTabs({ pegawai }: { pegawai: PegawaiDetail }) {
                             </CardDescription>
                         </div>
                         <Button asChild>
-                            <Link href={toUrl(PenghargaanController.index(pegawai.id))}>
+                            <Link
+                                href={toUrl(
+                                    PenghargaanController.index(pegawai.id),
+                                )}
+                            >
                                 Kelola
                             </Link>
                         </Button>
@@ -683,7 +709,11 @@ export function PegawaiDetailTabs({ pegawai }: { pegawai: PegawaiDetail }) {
                             </CardDescription>
                         </div>
                         <Button asChild>
-                            <Link href={toUrl(HukumanDisiplinController.index(pegawai.id))}>
+                            <Link
+                                href={toUrl(
+                                    HukumanDisiplinController.index(pegawai.id),
+                                )}
+                            >
                                 Kelola
                             </Link>
                         </Button>
@@ -751,7 +781,11 @@ export function PegawaiDetailTabs({ pegawai }: { pegawai: PegawaiDetail }) {
                             </CardDescription>
                         </div>
                         <Button asChild>
-                            <Link href={toUrl(DokumenPegawaiController.index(pegawai.id))}>
+                            <Link
+                                href={toUrl(
+                                    DokumenPegawaiController.index(pegawai.id),
+                                )}
+                            >
                                 Kelola
                             </Link>
                         </Button>

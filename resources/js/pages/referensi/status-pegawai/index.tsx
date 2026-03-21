@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,8 +21,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, RefStatusPegawai, PaginatedData } from '@/types';
 import { create, edit, destroy } from '@/routes/referensi/status-pegawai';
+import type { BreadcrumbItem, RefStatusPegawai, PaginatedData } from '@/types';
 
 type Props = {
     statusPegawai: PaginatedData<RefStatusPegawai>;
@@ -56,6 +56,7 @@ export default function Index() {
         const timeout = setTimeout(() => {
             handleSearch();
         }, 300);
+
         return () => clearTimeout(timeout);
     }, [search, handleSearch]);
 
@@ -190,6 +191,7 @@ export default function Index() {
                                         </PaginationItem>
                                     );
                                 }
+
                                 if (
                                     page ===
                                         statusPegawai.meta.current_page - 2 ||
@@ -201,6 +203,7 @@ export default function Index() {
                                         </PaginationItem>
                                     );
                                 }
+
                                 return null;
                             })}
 
