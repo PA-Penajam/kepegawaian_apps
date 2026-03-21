@@ -33,7 +33,21 @@ class IamSeeder extends Seeder
         $kepegawaian->is_system = true;         // Tidak fillable — set manual
         $kepegawaian->save();
 
-        // 2. Migrasi ref_roles -> iam_roles (hanya jika tabel masih ada)
+        // 2. Pastikan role default tersedia terlebih dahulu (sebelum migrasi user)
+        $adminRole = IamRole::firstOrCreate(
+            ['iam_application_id' => $kepegawaian->id, 'slug' => 'admin'],
+            ['nama' => 'Admin', 'is_system' => true]
+        );
+        $operatorRole = IamRole::firstOrCreate(
+            ['iam_application_id' => $kepegawaian->id, 'slug' => 'operator'],
+            ['nama' => 'Operator', 'is_system' => true]
+        );
+        $viewerRole = IamRole::firstOrCreate(
+            ['iam_application_id' => $kepegawaian->id, 'slug' => 'viewer'],
+            ['nama' => 'Viewer', 'is_system' => true]
+        );
+
+        // 3. Migrasi ref_roles -> iam_roles (hanya jika tabel masih ada)
         $roleMap = []; // ref_role_id => iam_role_id
         $hasRefRoles = false;
 
@@ -55,7 +69,7 @@ class IamSeeder extends Seeder
             }
         }
 
-        // 3. Migrasi ref_permissions -> iam_permissions (hanya jika tabel masih ada)
+        // 4. Migrasi ref_permissions -> iam_permissions (hanya jika tabel masih ada)
         $permMap = [];
         $hasRefPermissions = false;
 
@@ -76,7 +90,7 @@ class IamSeeder extends Seeder
             }
         }
 
-        // 4. Migrasi ref_role_permission -> iam_role_permissions (hanya jika tabel masih ada)
+        // 5. Migrasi ref_role_permission -> iam_role_permissions (hanya jika tabel masih ada)
         if ($hasRefRoles && $hasRefPermissions && DB::getSchemaBuilder()->hasTable('ref_role_permission')) {
             $pivots = DB::table('ref_role_permission')->get();
             foreach ($pivots as $pivot) {
@@ -89,37 +103,27 @@ class IamSeeder extends Seeder
             }
         }
 
-        // 5. Migrasi users.role -> iam_user_roles (jika kolom masih ada)
+        // 6. Migrasi users.role -> iam_user_roles (jika kolom masih ada)
         if (DB::getSchemaBuilder()->hasColumn('users', 'role')) {
-            $users = User::all();
-            $defaultRole = IamRole::where('iam_application_id', $kepegawaian->id)
-                ->where('slug', 'viewer')
-                ->first();
-
             // Optimasi N+1: muat semua role sekali ke memory
             $rolesBySlug = IamRole::where('iam_application_id', $kepegawaian->id)
                 ->get()
                 ->keyBy('slug');
 
-            foreach ($users as $user) {
-                $roleSlug = $user->getRawOriginal('role') ?? 'viewer';
-                $iamRole = $rolesBySlug->get($roleSlug) ?? $defaultRole;
+            // Gunakan chunking untuk menghindari memory issues dengan data besar
+            User::chunk(100, function ($users) use ($kepegawaian, $rolesBySlug, $viewerRole) {
+                foreach ($users as $user) {
+                    $roleSlug = $user->getRawOriginal('role') ?? 'viewer';
+                    $iamRole = $rolesBySlug->get($roleSlug) ?? $viewerRole;
 
-                if ($iamRole) {
-                    IamUserRole::firstOrCreate(
-                        ['user_id' => $user->id, 'iam_role_id' => $iamRole->id],
-                        ['assigned_at' => now()]
-                    );
+                    if ($iamRole) {
+                        IamUserRole::firstOrCreate(
+                            ['user_id' => $user->id, 'iam_role_id' => $iamRole->id],
+                            ['assigned_at' => now()]
+                        );
+                    }
                 }
-            }
-        }
-
-        // 6. Pastikan role default tersedia (admin, operator, viewer)
-        foreach (['admin', 'operator', 'viewer'] as $slug) {
-            IamRole::firstOrCreate(
-                ['iam_application_id' => $kepegawaian->id, 'slug' => $slug],
-                ['nama' => ucfirst($slug), 'is_system' => true]
-            );
+            });
         }
 
         // 7. Tambahkan permission iam-manage untuk akses penuh ke manajemen IAM
@@ -129,10 +133,6 @@ class IamSeeder extends Seeder
         );
 
         // Assign ke role admin
-        $adminRole = IamRole::where('iam_application_id', $kepegawaian->id)
-            ->where('slug', 'admin')
-            ->first();
-
         if ($adminRole) {
             $adminRole->permissions()->syncWithoutDetaching([$iamManage->id]);
         }
