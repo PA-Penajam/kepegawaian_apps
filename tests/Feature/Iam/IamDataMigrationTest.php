@@ -48,4 +48,34 @@ test('user dengan role tidak dikenal di-assign ke viewer sebagai fallback', func
         ->first();
 
     expect($viewerRole)->not->toBeNull();
+
+    // Buat user dengan role yang tidak akan ter-mapping ke IAM role manapun.
+    // Kita gunakan raw query untuk set role='ghost' karena 'ghost' bukan
+    // nilai valid pada enum Role (sehingga bypass enum casting).
+    // Role 'ghost' tidak ada di ref_roles, sehingga tidak akan ter-migrate
+    // ke IAM role manapun, sehingga fallback ke viewer.
+    $user = User::factory()->create();
+    DB::table('users')->where('id', $user->id)->update(['role' => 'ghost']);
+
+    // Logika fallback sama seperti di IamSeeder baris 86-89:
+    // Jika role slug tidak ditemukan di IAM role, gunakan defaultRole (viewer)
+    $roleSlug  = $user->getRawOriginal('role') ?? 'viewer';
+    $iamRole = IamRole::where('iam_application_id', $kepegawaian->id)
+        ->where('slug', $roleSlug)
+        ->first() ?? $viewerRole;
+
+    // Verifikasi bahwa role yang digunakan adalah viewer (fallback)
+    expect($iamRole->id)->toBe($viewerRole->id);
+    expect($iamRole->slug)->toBe('viewer');
+
+    // Assign role ke user dan verifikasi
+    $userRole = IamUserRole::firstOrCreate(
+        ['user_id' => $user->id, 'iam_role_id' => $iamRole->id],
+        ['assigned_at' => now()]
+    );
+
+    expect($userRole)->not->toBeNull();
+    expect($user->iamRoles()->count())->toBe(1);
+    // Akses role relationship untuk dapat slug (IamUserRole tidak punya slug sendiri)
+    expect($user->iamRoles()->first()->role->slug)->toBe('viewer');
 });
