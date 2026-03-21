@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'pegawai.linked' => EnsurePegawaiLinked::class,
             'verify.hmac' => \App\Http\Middleware\VerifyHmacSignature::class,
             'iam.signature' => VerifyIamSignature::class,
+            'iam.permission' => \App\Http\Middleware\VerifyIamPermission::class,
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
