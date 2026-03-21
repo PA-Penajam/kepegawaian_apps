@@ -76,4 +76,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Pegawai::class, 'pegawai_id');
     }
+
+    public function iamRoles(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(IamUserRole::class);
+    }
 }
