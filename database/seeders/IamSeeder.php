@@ -20,27 +20,29 @@ class IamSeeder extends Seeder
         // generateApiCredentials menggunakan Crypt::encryptString (bukan Hash::make)
         ['key' => $key, 'hash' => $hash] = IamApplication::generateApiCredentials();
 
-        $kepegawaian = IamApplication::create([
-            'nama'            => 'Kepegawaian Apps',
-            'slug'            => 'kepegawaian',
-            'url'             => config('app.url'),
-            'deskripsi'       => 'Sistem master data kepegawaian PA Penajam',
-            'api_key'         => $key,
-            'api_secret_hash' => $hash,
-            'is_system'       => true,
-            'is_active'       => true,
+        // Buat instance dan set field sensitif secara manual (bukan mass assignment)
+        $kepegawaian = new IamApplication([
+            'nama' => 'Kepegawaian Apps',
+            'slug' => 'kepegawaian',
+            'url' => config('app.url'),
+            'deskripsi' => 'Sistem master data kepegawaian PA Penajam',
+            'is_active' => true,
         ]);
+        $kepegawaian->api_key = $key;           // Tidak fillable — set manual
+        $kepegawaian->api_secret_hash = $hash;  // Tidak fillable — set manual
+        $kepegawaian->is_system = true;         // Tidak fillable — set manual
+        $kepegawaian->save();
 
         // 2. Migrasi ref_roles -> iam_roles
         $refRoles = DB::table('ref_roles')->whereNull('deleted_at')->get();
-        $roleMap  = []; // ref_role_id => iam_role_id
+        $roleMap = []; // ref_role_id => iam_role_id
 
         foreach ($refRoles as $refRole) {
             $slug = Str::slug($refRole->nama);
             $iamRole = IamRole::firstOrCreate(
                 ['iam_application_id' => $kepegawaian->id, 'slug' => $slug],
                 [
-                    'nama'      => $refRole->nama,
+                    'nama' => $refRole->nama,
                     'keterangan' => $refRole->keterangan,
                     'is_system' => $refRole->is_system ?? false,
                 ]
@@ -50,16 +52,16 @@ class IamSeeder extends Seeder
 
         // 3. Migrasi ref_permissions -> iam_permissions
         $refPerms = DB::table('ref_permissions')->whereNull('deleted_at')->get();
-        $permMap  = [];
+        $permMap = [];
 
         foreach ($refPerms as $refPerm) {
             $slug = Str::slug($refPerm->nama, ':');
             $iamPerm = IamPermission::create([
                 'iam_application_id' => $kepegawaian->id,
-                'nama'               => $refPerm->nama,
-                'slug'               => $slug,
-                'group'              => $refPerm->group,
-                'keterangan'         => $refPerm->keterangan,
+                'nama' => $refPerm->nama,
+                'slug' => $slug,
+                'group' => $refPerm->group,
+                'keterangan' => $refPerm->keterangan,
             ]);
             $permMap[$refPerm->id] = $iamPerm->id;
         }
@@ -69,7 +71,7 @@ class IamSeeder extends Seeder
         foreach ($pivots as $pivot) {
             if (isset($roleMap[$pivot->ref_role_id]) && isset($permMap[$pivot->ref_permission_id])) {
                 IamRolePermission::create([
-                    'iam_role_id'       => $roleMap[$pivot->ref_role_id],
+                    'iam_role_id' => $roleMap[$pivot->ref_role_id],
                     'iam_permission_id' => $permMap[$pivot->ref_permission_id],
                 ]);
             }

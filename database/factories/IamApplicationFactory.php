@@ -13,22 +13,42 @@ class IamApplicationFactory extends Factory
 {
     protected $model = IamApplication::class;
 
+    /**
+     * Callback otomatis untuk set api_key, api_secret_hash, dan is_system.
+     * Diperlukan karena field ini tidak mass-assignable (security).
+     * Factory mengisi nilai default agar test/seeders berjalan lancar.
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (IamApplication $app) {
+            // Set api_key dan secret jika belum ada
+            if (empty($app->api_key)) {
+                $secret = Str::random(64);
+                $app->api_key = 'iam_'.Str::random(32);
+                $app->api_secret_hash = encrypt($secret);
+            }
+
+            // Default is_system = false jika belum set
+            if (!isset($app->is_system)) {
+                $app->is_system = false;
+            }
+        });
+    }
+
     public function definition(): array
     {
-        $secret = Str::random(64);
-
         return [
-            'nama'            => fake()->company(),
-            'slug'            => fake()->unique()->slug(2),
-            'url'             => fake()->url(),
-            'deskripsi'       => fake()->sentence(),
-            'api_key'         => 'iam_' . Str::random(32),
-            'api_secret_hash' => encrypt($secret),
-            'is_active'       => true,
-            'is_system'       => false,
+            'nama' => fake()->company(),
+            'slug' => fake()->unique()->slug(2),
+            'url' => fake()->url(),
+            'deskripsi' => fake()->sentence(),
+            'is_active' => true,
         ];
     }
 
+    /**
+     * Buat aplikasi sistem (is_system = true).
+     */
     public function system(): static
     {
         return $this->state(fn () => [
@@ -36,6 +56,9 @@ class IamApplicationFactory extends Factory
         ]);
     }
 
+    /**
+     * Buat aplikasi tidak aktif (is_active = false).
+     */
     public function inactive(): static
     {
         return $this->state(fn () => [

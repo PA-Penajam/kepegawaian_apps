@@ -83,14 +83,18 @@ test('request dengan timestamp kedaluwarsa ditolak 401', function () {
 test('request valid dengan signature benar lolos', function () {
     $user = User::factory()->create();
     $secret = 'correct-secret-64chars-padding-here-abc123def456ghi789';
-    $app = IamApplication::create([
+
+    // Buat application dengan manual assignment karena field tidak fillable
+    $app = new IamApplication([
         'nama' => 'Test App',
         'slug' => 'test',
         'url' => 'http://test.local',
-        'api_key' => 'valid-key-123',
-        'api_secret_hash' => Crypt::encryptString($secret),
         'is_active' => true,
     ]);
+    $app->api_key = 'valid-key-123';
+    $app->api_secret_hash = Crypt::encryptString($secret);
+    $app->is_system = false;
+    $app->save();
 
     Sanctum::actingAs($user);
 

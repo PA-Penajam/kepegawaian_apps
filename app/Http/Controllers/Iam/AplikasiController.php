@@ -89,11 +89,19 @@ class AplikasiController extends Controller
         return redirect()->route('iam.aplikasi.index');
     }
 
+    /**
+     * Regenerate api_key dan api_secret untuk aplikasi.
+     * Field api_key dan api_secret_hash tidak mass-assignable (security),
+     * jadi harus di-set secara manual.
+     */
     public function regenerateKey(IamApplication $aplikasi): RedirectResponse
     {
         ['key' => $key, 'secret' => $secret, 'hash' => $hash] = IamApplication::generateApiCredentials();
 
-        $aplikasi->update(['api_key' => $key, 'api_secret_hash' => $hash]);
+        // Set field sensitif secara manual karena tidak fillable
+        $aplikasi->api_key = $key;
+        $aplikasi->api_secret_hash = $hash;
+        $aplikasi->save();
 
         return back()->with('api_secret_once', $secret);
     }
