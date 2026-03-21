@@ -28,29 +28,40 @@ class VerifyIamSignature
         $app = IamApplication::where('api_key', $apiKey)->where('is_active', true)->first();
 
         if (! $app) {
-            return response()->json(['message' => 'Unknown application'], 401);
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        // Rekonstruksi payload: METHOD:PATH:SORTED_QUERY:TIMESTAMP
+        // Coba verifikasi dengan format baru (dengan body hash) terlebih dahulu
         $queryString = http_build_query(collect($request->query())->sortKeys()->all());
-        $payload     = strtoupper($request->method())
+        $bodyHash    = hash('sha256', $request->getContent());
+        $payloadNew  = strtoupper($request->method())
+            . ':' . $request->getPathInfo()
+            . ':' . $queryString
+            . ':' . $bodyHash
+            . ':' . $timestamp;
+
+        // Coba juga format lama (tanpa body hash) untuk backward compatibility
+        $payloadOld = strtoupper($request->method())
             . ':' . $request->getPathInfo()
             . ':' . $queryString
             . ':' . $timestamp;
 
         try {
-            $secret   = \Illuminate\Support\Facades\Crypt::decryptString($app->api_secret_hash);
-            $expected = hash_hmac('sha256', $payload, $secret);
+            $secret = \Illuminate\Support\Facades\Crypt::decryptString($app->api_secret_hash);
 
-            if (! hash_equals($expected, $received)) {
-                return response()->json(['message' => 'Invalid signature'], 401);
+            $expectedNew = hash_hmac('sha256', $payloadNew, $secret);
+            $expectedOld = hash_hmac('sha256', $payloadOld, $secret);
+
+            // Verifikasi dengan salah satu format (new atau old)
+            if (! hash_equals($expectedNew, $received) && ! hash_equals($expectedOld, $received)) {
+                return response()->json(['message' => 'Invalid credentials'], 401);
             }
         } catch (\Exception) {
-            return response()->json(['message' => 'Invalid signature'], 401);
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        // Inject app ke request untuk digunakan controller
-        $request->merge(['_iam_app' => $app]);
+        // Inject app ke request attributes (aman, tidak bisa di-inject user via query string)
+        $request->attributes->set('iam_app', $app);
 
         return $next($request);
     }
