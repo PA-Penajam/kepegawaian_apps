@@ -82,11 +82,14 @@ class IamSeeder extends Seeder
                 ->where('slug', 'viewer')
                 ->first();
 
+            // Optimasi N+1: muat semua role sekali ke memory
+            $rolesBySlug = IamRole::where('iam_application_id', $kepegawaian->id)
+                ->get()
+                ->keyBy('slug');
+
             foreach ($users as $user) {
                 $roleSlug = $user->getRawOriginal('role') ?? 'viewer';
-                $iamRole = IamRole::where('iam_application_id', $kepegawaian->id)
-                    ->where('slug', $roleSlug)
-                    ->first() ?? $defaultRole;
+                $iamRole = $rolesBySlug->get($roleSlug) ?? $defaultRole;
 
                 if ($iamRole) {
                     IamUserRole::firstOrCreate(
