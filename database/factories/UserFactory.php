@@ -2,7 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Enums\Role;
+use App\Models\IamRole;
+use App\Models\IamUserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -31,32 +32,10 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'role' => Role::Viewer->value,
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ];
-    }
-
-    public function admin(): static
-    {
-        return $this->state(fn () => [
-            'role' => Role::Admin->value,
-        ]);
-    }
-
-    public function operator(): static
-    {
-        return $this->state(fn () => [
-            'role' => Role::Operator->value,
-        ]);
-    }
-
-    public function viewer(): static
-    {
-        return $this->state(fn () => [
-            'role' => Role::Viewer->value,
-        ]);
     }
 
     /**
@@ -79,5 +58,53 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),
         ]);
+    }
+
+    /**
+     * Assign admin IAM role to the user.
+     */
+    public function admin(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $role = IamRole::where('slug', 'admin')->first();
+            if ($role) {
+                IamUserRole::firstOrCreate(
+                    ['user_id' => $user->id, 'iam_role_id' => $role->id],
+                    ['assigned_at' => now()]
+                );
+            }
+        });
+    }
+
+    /**
+     * Assign operator IAM role to the user.
+     */
+    public function operator(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $role = IamRole::where('slug', 'operator')->first();
+            if ($role) {
+                IamUserRole::firstOrCreate(
+                    ['user_id' => $user->id, 'iam_role_id' => $role->id],
+                    ['assigned_at' => now()]
+                );
+            }
+        });
+    }
+
+    /**
+     * Assign viewer IAM role to the user.
+     */
+    public function viewer(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $role = IamRole::where('slug', 'viewer')->first();
+            if ($role) {
+                IamUserRole::firstOrCreate(
+                    ['user_id' => $user->id, 'iam_role_id' => $role->id],
+                    ['assigned_at' => now()]
+                );
+            }
+        });
     }
 }

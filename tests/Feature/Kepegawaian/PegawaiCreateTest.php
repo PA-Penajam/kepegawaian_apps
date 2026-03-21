@@ -4,7 +4,6 @@ use App\Enums\Agama;
 use App\Enums\GolonganDarah;
 use App\Enums\JenisKelamin;
 use App\Enums\JenjangPendidikan;
-use App\Enums\Role;
 use App\Enums\StatusKepegawaian;
 use App\Enums\StatusPegawai;
 use App\Enums\StatusPerkawinan;
@@ -18,7 +17,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create(['role' => Role::Admin]);
+    $this->user = User::factory()->admin()->create();
 });
 
 it('can render the create page', function () {

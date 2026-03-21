@@ -3,7 +3,6 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,7 +25,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
         'pegawai_id',
     ];
 
@@ -52,24 +50,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => Role::class,
             'two_factor_confirmed_at' => 'datetime',
         ];
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->role === Role::Admin;
-    }
-
-    public function isOperator(): bool
-    {
-        return $this->role === Role::Operator;
-    }
-
-    public function isViewer(): bool
-    {
-        return $this->role === Role::Viewer;
     }
 
     public function pegawai(): BelongsTo
@@ -80,5 +62,29 @@ class User extends Authenticatable
     public function iamRoles(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(IamUserRole::class);
+    }
+
+    /**
+     * Cek apakah user memiliki role admin di IAM.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->iamRoles()->whereHas('role', fn ($q) => $q->where('slug', 'admin'))->exists();
+    }
+
+    /**
+     * Cek apakah user memiliki role operator di IAM.
+     */
+    public function isOperator(): bool
+    {
+        return $this->iamRoles()->whereHas('role', fn ($q) => $q->where('slug', 'operator'))->exists();
+    }
+
+    /**
+     * Cek apakah user memiliki role viewer di IAM.
+     */
+    public function isViewer(): bool
+    {
+        return $this->iamRoles()->whereHas('role', fn ($q) => $q->where('slug', 'viewer'))->exists();
     }
 }

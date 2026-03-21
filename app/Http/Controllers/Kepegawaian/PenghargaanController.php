@@ -9,22 +9,11 @@ use App\Models\Pegawai;
 use App\Models\Penghargaan;
 use App\Models\RefJenisPenghargaan;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class PenghargaanController extends Controller implements HasMiddleware
+class PenghargaanController extends Controller
 {
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('auth'),
-            new Middleware('verified'),
-            new Middleware('role:admin,operator'),
-        ];
-    }
-
     public function index(Pegawai $pegawai): Response
     {
         return Inertia::render('kepegawaian/pegawai/penghargaan', [

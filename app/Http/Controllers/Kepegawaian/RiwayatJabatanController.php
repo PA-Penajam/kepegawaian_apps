@@ -10,23 +10,12 @@ use App\Models\RefJabatan;
 use App\Models\RefUnitKerja;
 use App\Models\RiwayatJabatan;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class RiwayatJabatanController extends Controller implements HasMiddleware
+class RiwayatJabatanController extends Controller
 {
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('auth'),
-            new Middleware('verified'),
-            new Middleware('role:admin,operator'),
-        ];
-    }
-
     public function index(Pegawai $pegawai): Response
     {
         $pegawai->load(['jabatan:id,nama,kode', 'unitKerja:id,nama,kode']);

@@ -22,7 +22,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 });
 
-Route::middleware(['auth', 'verified', 'role:admin,operator'])->group(function () {
+Route::middleware(['auth', 'verified'/* , 'role:admin,operator' */])->group(function () {
     Route::resource('kepegawaian/pegawai', PegawaiController::class)
         ->names('kepegawaian.pegawai');
 
@@ -47,7 +47,7 @@ Route::middleware(['auth', 'verified', 'role:admin,operator'])->group(function (
         ->except(['show']);
 });
 
-Route::middleware(['auth', 'verified', 'role:admin,operator'])
+Route::middleware(['auth', 'verified'/* , 'role:admin,operator' */])
     ->prefix('kepegawaian')
     ->name('kepegawaian.')
     ->group(function () {
