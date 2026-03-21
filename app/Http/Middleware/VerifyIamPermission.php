@@ -3,52 +3,45 @@
 namespace App\Http\Middleware;
 
 use App\Models\IamApplication;
-use App\Models\IamUserRole;
+use App\Services\IamAuthorizationService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 class VerifyIamPermission
 {
+    public function __construct(private readonly IamAuthorizationService $iamAuth) {}
+
     public function handle(Request $request, Closure $next, string ...$permissions): Response
     {
         $user = $request->user();
 
         if ($user === null) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Unauthenticated'], 401);
-            }
-            return redirect()->route('login');
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Unauthenticated'], 401)
+                : redirect()->route('login');
         }
 
-        $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
+        $appSlug = config('iam.app_slug', 'kepegawaian');
+        // Cache query IAM app (hasil statis, TTL 1 jam)
+        $kepegawaian = Cache::remember("iam_app:{$appSlug}", 3600,
+            fn () => IamApplication::where('slug', $appSlug)->first()
+        );
+
         if (! $kepegawaian) {
             abort(Response::HTTP_FORBIDDEN);
         }
 
-        // Kumpulkan semua permissions user untuk aplikasi kepegawaian
-        $userPermissions = IamUserRole::where('user_id', $user->id)
-            ->whereHas('role', fn ($q) => $q->where('iam_application_id', $kepegawaian->id))
-            ->with('role.permissions')
-            ->get()
-            ->flatMap(fn ($ur) => $ur->role->permissions->pluck('slug'))
-            ->unique()
-            ->values()
-            ->all();
+        $userPermissions = $this->iamAuth->getUserPermissions($user->id, $kepegawaian->id);
 
-        // Jika tidak ada permission yang diminta, cukup cek user punya role di app ini
         if (empty($permissions)) {
-            if (empty($userPermissions)) {
-                abort(Response::HTTP_FORBIDDEN);
-            }
+            abort_if(empty($userPermissions), Response::HTTP_FORBIDDEN);
             return $next($request);
         }
 
-        // Cek semua permission yang diminta terpenuhi
         foreach ($permissions as $permission) {
-            if (! in_array($permission, $userPermissions, true)) {
-                abort(Response::HTTP_FORBIDDEN);
-            }
+            abort_unless(in_array($permission, $userPermissions, true), Response::HTTP_FORBIDDEN);
         }
 
         return $next($request);
