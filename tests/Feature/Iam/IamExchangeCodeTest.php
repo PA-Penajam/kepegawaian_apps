@@ -7,34 +7,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 
-// Helper untuk membuat IAM signed headers
-if (! function_exists('makeIamHeaders')) {
-    function makeIamHeaders(string $method, string $path, string $apiKey, string $apiSecret, array $query = []): array
-{
-    $timestamp   = now()->timestamp;
-    $queryString = http_build_query(collect($query)->sortKeys()->all());
-    $payload     = strtoupper($method) . ':' . $path . ':' . $queryString . ':' . $timestamp;
-    $signature   = hash_hmac('sha256', $payload, $apiSecret);
-
-    return [
-        'X-App-Key'   => $apiKey,
-        'X-Signature' => $signature,
-        'X-Timestamp' => $timestamp,
-        'Accept'      => 'application/json',
-    ];
-    }
-}
-
 beforeEach(function () {
-    $this->iamApp = IamApplication::create([
-        'nama'            => 'Test App',
-        'slug'            => 'test-app',
-        'url'             => 'http://test.local',
-        'api_key'         => 'test-api-key',
-        'api_secret_hash' => Crypt::encryptString('test-secret-64chars-padding-here-abc123'),
-        'is_active'       => true,
-        'is_system'       => false,
-    ]);
+    $this->iamApp = IamApplication::factory()->create(['is_active' => true]);
 
     Route::middleware(['iam.signature'])->group(function () {
         Route::post('/test-iam-exchange', [IamController::class, 'exchangeCode']);
@@ -46,15 +20,25 @@ test('exchange code valid mengembalikan token', function () {
     $code = str_repeat('a', 64);
 
     IamSsoCode::create([
-        'code'       => $code,
-        'user_id'    => $user->id,
-        'app_slug'   => 'test-app',
+        'code' => $code,
+        'user_id' => $user->id,
+        'app_slug' => $this->iamApp->slug,
         'expires_at' => now()->addMinutes(5),
     ]);
 
-    $headers = makeIamHeaders('POST', '/test-iam-exchange', $this->iamApp->api_key, 'test-secret-64chars-padding-here-abc123');
+    // Helper baru membuat app sendiri, jadi kita pakai app yang sudah dibuat di beforeEach
+    $ts = now()->timestamp;
+    $body = ['code' => $code];
+    $bodyHash = hash('sha256', json_encode($body));
+    $payload = 'POST:/test-iam-exchange::'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
 
-    $response = $this->postJson('/test-iam-exchange', ['code' => $code], $headers);
+    $response = $this->postJson('/test-iam-exchange', $body, [
+        'X-App-Key' => $this->iamApp->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+        'Accept' => 'application/json',
+    ]);
 
     $response->assertOk()
         ->assertJsonStructure([
@@ -66,9 +50,18 @@ test('exchange code valid mengembalikan token', function () {
 });
 
 test('exchange code invalid/expired mengembalikan 400', function () {
-    $headers = makeIamHeaders('POST', '/test-iam-exchange', $this->iamApp->api_key, 'test-secret-64chars-padding-here-abc123');
+    $ts = now()->timestamp;
+    $body = ['code' => str_repeat('b', 64)];
+    $bodyHash = hash('sha256', json_encode($body));
+    $payload = 'POST:/test-iam-exchange::'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
 
-    $response = $this->postJson('/test-iam-exchange', ['code' => str_repeat('b', 64)], $headers);
+    $response = $this->postJson('/test-iam-exchange', $body, [
+        'X-App-Key' => $this->iamApp->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+        'Accept' => 'application/json',
+    ]);
 
     $response->assertBadRequest()
         ->assertJsonPath('message', 'Invalid or expired code');
@@ -79,16 +72,25 @@ test('exchange code sudah dipakai mengembalikan 400', function () {
     $code = str_repeat('c', 64);
 
     IamSsoCode::create([
-        'code'       => $code,
-        'user_id'    => $user->id,
-        'app_slug'   => 'test-app',
+        'code' => $code,
+        'user_id' => $user->id,
+        'app_slug' => $this->iamApp->slug,
         'expires_at' => now()->addMinutes(5),
-        'used_at'    => now(), // sudah dipakai
+        'used_at' => now(), // sudah dipakai
     ]);
 
-    $headers = makeIamHeaders('POST', '/test-iam-exchange', $this->iamApp->api_key, 'test-secret-64chars-padding-here-abc123');
+    $ts = now()->timestamp;
+    $body = ['code' => $code];
+    $bodyHash = hash('sha256', json_encode($body));
+    $payload = 'POST:/test-iam-exchange::'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
 
-    $response = $this->postJson('/test-iam-exchange', ['code' => $code], $headers);
+    $response = $this->postJson('/test-iam-exchange', $body, [
+        'X-App-Key' => $this->iamApp->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+        'Accept' => 'application/json',
+    ]);
 
     $response->assertBadRequest()
         ->assertJsonPath('message', 'Invalid or expired code');
