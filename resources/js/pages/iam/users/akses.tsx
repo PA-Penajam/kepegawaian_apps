@@ -339,6 +339,7 @@ export default function Akses() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
+                                                                aria-label={`Cabut akses ${a.role.nama}`}
                                                                 onClick={() =>
                                                                     handleRevokeAkses(
                                                                         a.role.id,
@@ -346,7 +347,10 @@ export default function Akses() {
                                                                     )
                                                                 }
                                                             >
-                                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                                                <Trash2
+                                                                    className="h-4 w-4 text-destructive"
+                                                                    aria-hidden="true"
+                                                                />
                                                             </Button>
                                                             <AlertDialog
                                                                 open={

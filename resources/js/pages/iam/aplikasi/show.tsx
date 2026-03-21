@@ -405,13 +405,17 @@ export default function Show() {
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="icon"
+                                                                        aria-label={`Hapus role ${role.nama}`}
                                                                         onClick={() =>
                                                                             setDeleteRoleConfirm(
                                                                                 role,
                                                                             )
                                                                         }
                                                                     >
-                                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                                        <Trash2
+                                                                            className="h-4 w-4 text-destructive"
+                                                                            aria-hidden="true"
+                                                                        />
                                                                     </Button>
                                                                     <AlertDialog
                                                                         open={
@@ -646,13 +650,17 @@ export default function Show() {
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="icon"
+                                                                        aria-label={`Hapus permission ${perm.nama}`}
                                                                         onClick={() =>
                                                                             setDeletePermissionConfirm(
                                                                                 perm,
                                                                             )
                                                                         }
                                                                     >
-                                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                                        <Trash2
+                                                                            className="h-4 w-4 text-destructive"
+                                                                            aria-hidden="true"
+                                                                        />
                                                                     </Button>
                                                                     <AlertDialog
                                                                         open={
@@ -775,11 +783,15 @@ export default function Show() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
+                                            aria-label="Salin API Key"
                                             onClick={() =>
                                                 copyToClipboard(maskedApiKey)
                                             }
                                         >
-                                            <Copy className="h-4 w-4" />
+                                            <Copy
+                                                className="h-4 w-4"
+                                                aria-hidden="true"
+                                            />
                                         </Button>
                                     </div>
                                 </div>

@@ -307,12 +307,16 @@ export default function Index() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
+                                                    aria-label={`Lihat detail ${app.nama}`}
                                                     asChild
                                                 >
                                                     <Link
                                                         href={`/iam/aplikasi/${app.id}`}
                                                     >
-                                                        <Eye className="h-4 w-4" />
+                                                        <Eye
+                                                            className="h-4 w-4"
+                                                            aria-hidden="true"
+                                                        />
                                                     </Link>
                                                 </Button>
                                                 {!app.is_system && (
@@ -320,17 +324,22 @@ export default function Index() {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
+                                                            aria-label={`Edit ${app.nama}`}
                                                             asChild
                                                         >
                                                             <Link
                                                                 href={`/iam/aplikasi/${app.id}/edit`}
                                                             >
-                                                                <Pencil className="h-4 w-4" />
+                                                                <Pencil
+                                                                    className="h-4 w-4"
+                                                                    aria-hidden="true"
+                                                                />
                                                             </Link>
                                                         </Button>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
+                                                            aria-label={`Hapus ${app.nama}`}
                                                             onClick={() =>
                                                                 handleDelete(
                                                                     app.id,
@@ -338,7 +347,10 @@ export default function Index() {
                                                                 )
                                                             }
                                                         >
-                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                            <Trash2
+                                                                className="h-4 w-4 text-destructive"
+                                                                aria-hidden="true"
+                                                            />
                                                         </Button>
                                                         <AlertDialog
                                                             open={
