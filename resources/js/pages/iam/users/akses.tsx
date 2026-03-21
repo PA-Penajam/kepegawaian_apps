@@ -1,14 +1,41 @@
-import { Head, usePage } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useCallback, useMemo, useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, User } from '@/types';
+import type { BreadcrumbItem, IamAvailableApp, IamUserAkses } from '@/types';
 
 type Props = {
-    user: User;
+    user: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    akses: IamUserAkses[];
+    availableApps: IamAvailableApp[];
 };
 
 export default function Akses() {
-    const { user } = usePage<Props>().props;
+    const { user, akses, availableApps } = usePage<Props>().props;
+    const [selectedAppId, setSelectedAppId] = useState<string>('');
+    const [selectedRoleId, setSelectedRoleId] = useState<string>('');
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -20,11 +47,191 @@ export default function Akses() {
         [user],
     );
 
+    // Filter roles berdasarkan app yang dipilih
+    const availableRoles = useMemo(() => {
+        if (!selectedAppId) return [];
+        const app = availableApps.find((a) => a.id.toString() === selectedAppId);
+        return app?.roles ?? [];
+    }, [selectedAppId, availableApps]);
+
+    // Group akses by application
+    const groupedAkses = useMemo(() => {
+        const grouped: Record<number, { app: IamAvailableApp; akses: IamUserAkses[] }> = {};
+
+        akses.forEach((a) => {
+            const appId = a.role.application.id;
+            if (!grouped[appId]) {
+                grouped[appId] = {
+                    app: a.role.application as unknown as IamAvailableApp,
+                    akses: [],
+                };
+            }
+            grouped[appId].akses.push(a);
+        });
+
+        return Object.values(grouped);
+    }, [akses]);
+
+    const handleAddRole = useCallback(() => {
+        if (!selectedAppId || !selectedRoleId) return;
+
+        router.post(`/iam/users/${user.id}/akses`, {
+            iam_role_id: selectedRoleId,
+        });
+
+        // Reset form
+        setSelectedAppId('');
+        setSelectedRoleId('');
+    }, [user.id, selectedAppId, selectedRoleId]);
+
+    const handleRevokeAkses = useCallback((roleId: number, roleName: string) => {
+        if (confirm(`Apakah Anda yakin ingin mencabut akses "${roleName}" dari user ini?`)) {
+            router.delete(`/iam/users/${user.id}/akses/${roleId}`);
+        }
+    }, [user.id]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Akses ${user.name}`} />
+
             <div className="flex flex-col gap-4 p-4">
-                <h1 className="text-2xl font-semibold">Akses User: {user.name}</h1>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-semibold">Akses User: {user.name}</h1>
+                        <p className="text-muted-foreground">{user.email}</p>
+                    </div>
+                </div>
+
+                {/* Form Tambah Akses */}
+                <div className="bg-muted/50 p-4 rounded-lg">
+                    <h2 className="text-lg font-medium mb-4">Tambah Akses Baru</h2>
+                    <div className="flex flex-wrap gap-4 items-end">
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium">Aplikasi</label>
+                            <Select value={selectedAppId} onValueChange={setSelectedAppId}>
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder="Pilih Aplikasi" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableApps.map((app) => (
+                                        <SelectItem key={app.id} value={app.id.toString()}>
+                                            {app.nama}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium">Role</label>
+                            <Select
+                                value={selectedRoleId}
+                                onValueChange={setSelectedRoleId}
+                                disabled={!selectedAppId}
+                            >
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder="Pilih Role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableRoles.map((role) => (
+                                        <SelectItem key={role.id} value={role.id.toString()}>
+                                            {role.nama}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <Button onClick={handleAddRole} disabled={!selectedAppId || !selectedRoleId}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Tambah
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Daftar Akses by Application */}
+                {groupedAkses.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                        User ini belum memiliki akses IAM.
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-6">
+                        {groupedAkses.map(({ app, akses: appAkses }) => (
+                            <div key={app.id} className="flex flex-col gap-3">
+                                <div className="flex items-center gap-3">
+                                    <h3 className="text-lg font-medium">{app.nama}</h3>
+                                    <Badge variant="outline">
+                                        {appAkses.length} role{appAkses.length !== 1 ? '' : ''}
+                                    </Badge>
+                                </div>
+
+                                <div className="rounded-md border">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Role</TableHead>
+                                                <TableHead>Permissions</TableHead>
+                                                <TableHead>Diberikan Oleh</TableHead>
+                                                <TableHead>Tanggal</TableHead>
+                                                <TableHead className="w-[100px] text-center">Aksi</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {appAkses.map((a) => (
+                                                <TableRow key={a.id}>
+                                                    <TableCell className="font-medium">
+                                                        {a.role.nama}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {a.role.permissions && a.role.permissions.length > 0 ? (
+                                                                a.role.permissions.slice(0, 5).map((perm) => (
+                                                                    <Badge key={perm.id} variant="secondary" className="text-xs">
+                                                                        {perm.nama}
+                                                                    </Badge>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-sm text-muted-foreground">
+                                                                    Tidak ada
+                                                                </span>
+                                                            )}
+                                                            {a.role.permissions && a.role.permissions.length > 5 && (
+                                                                <Badge variant="outline" className="text-xs">
+                                                                    +{a.role.permissions.length - 5}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {a.assignedByUser?.name ?? '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {new Date(a.assigned_at).toLocaleDateString('id-ID', {
+                                                            day: '2-digit',
+                                                            month: 'short',
+                                                            year: 'numeric',
+                                                        })}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center justify-center">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => handleRevokeAkses(a.role.id, a.role.nama)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </AppLayout>
     );
