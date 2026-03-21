@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsurePegawaiLinked;
+use App\Http\Middleware\VerifyIamSignature;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'pegawai.linked' => EnsurePegawaiLinked::class,
             'verify.hmac' => \App\Http\Middleware\VerifyHmacSignature::class,
+            'iam.signature' => VerifyIamSignature::class,
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
