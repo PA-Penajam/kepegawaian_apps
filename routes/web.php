@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SsoController;
 use App\Http\Controllers\Kepegawaian\DokumenPegawaiController;
 use App\Http\Controllers\Kepegawaian\HukumanDisiplinController;
 use App\Http\Controllers\Kepegawaian\KeluargaController;
@@ -17,6 +18,10 @@ use App\Http\Controllers\Referensi\RefStatusPegawaiController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
+
+// SSO Login routes
+Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
+Route::middleware('auth')->get('/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
