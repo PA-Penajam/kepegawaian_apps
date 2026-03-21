@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\IamValidateResource;
-use App\Models\IamApplication;
 use App\Models\IamSsoCode;
 use App\Models\IamUserRole;
 use Illuminate\Http\JsonResponse;
@@ -14,15 +13,15 @@ class IamController extends Controller
 {
     public function validate(Request $request): JsonResponse
     {
-        $user    = $request->user();
-        $app     = $request->get('_iam_app'); // diinjek oleh VerifyIamSignature
+        $user = $request->user();
+        $app = $request->attributes->get('iam_app'); // diinjek oleh VerifyIamSignature via attributes
 
         $userRoles = IamUserRole::where('user_id', $user->id)
             ->whereHas('role', fn ($q) => $q->where('iam_application_id', $app->id))
             ->with('role.permissions')
             ->get();
 
-        $roles       = $userRoles->map(fn ($ur) => $ur->role->slug)->values()->all();
+        $roles = $userRoles->map(fn ($ur) => $ur->role->slug)->values()->all();
         $permissions = $userRoles
             ->flatMap(fn ($ur) => $ur->role->permissions->pluck('slug'))
             ->unique()->values()->all();
@@ -30,17 +29,17 @@ class IamController extends Controller
         $token = $user->currentAccessToken();
 
         return response()->json([
-            'user'             => (new IamValidateResource($user))->resolve(),
-            'roles'            => $roles,
-            'permissions'      => $permissions,
+            'user' => (new IamValidateResource($user))->resolve(),
+            'roles' => $roles,
+            'permissions' => $permissions,
             'token_expires_at' => $token && $token->expires_at ? $token->expires_at->timestamp : null,
         ]);
     }
 
     public function check(Request $request): JsonResponse
     {
-        $user       = $request->user();
-        $app        = $request->get('_iam_app');
+        $user = $request->user();
+        $app = $request->attributes->get('iam_app');
         $permission = $request->query('permission', '');
 
         $userPermissions = IamUserRole::where('user_id', $user->id)
@@ -51,7 +50,7 @@ class IamController extends Controller
             ->unique()->values()->all();
 
         return response()->json([
-            'allowed'    => in_array($permission, $userPermissions, true),
+            'allowed' => in_array($permission, $userPermissions, true),
             'permission' => $permission,
         ]);
     }
@@ -59,6 +58,7 @@ class IamController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
+
         return response()->json(['message' => 'Token invalidated']);
     }
 
@@ -76,12 +76,12 @@ class IamController extends Controller
         $ssoCode->update(['used_at' => now()]);
 
         // Generate Sanctum token untuk user
-        $user     = $ssoCode->user;
+        $user = $ssoCode->user;
         $ttlHours = (int) config('iam.token_ttl_hours', 8);
-        $token    = $user->createToken('sso', ['*'], now()->addHours($ttlHours));
+        $token = $user->createToken('sso', ['*'], now()->addHours($ttlHours));
 
         return response()->json([
-            'token'      => $token->plainTextToken,
+            'token' => $token->plainTextToken,
             'token_type' => 'Bearer',
             'expires_at' => $token->accessToken->expires_at->timestamp,
         ]);
