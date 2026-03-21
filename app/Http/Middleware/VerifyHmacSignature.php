@@ -29,26 +29,34 @@ class VerifyHmacSignature
 
         // Validasi header wajib ada
         if (! $timestamp || ! $received) {
-            return response()->json(['message' => 'Missing signature headers'], 401);
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
         // Tolak request dengan timestamp > 5 menit (anti-replay)
         if (abs(now()->timestamp - (int) $timestamp) > self::TIMESTAMP_WINDOW) {
-            return response()->json(['message' => 'Request expired'], 401);
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        // Rekonstruksi payload yang di-sign: METHOD:PATH:SORTED_QUERY:TIMESTAMP
+        $secret = config('kepegawaian.secret_key');
+        if (empty($secret)) {
+            \Illuminate\Support\Facades\Log::critical('ATTENDANCE_HMAC_SECRET tidak dikonfigurasi');
+            return response()->json(['message' => 'Service configuration error'], 500);
+        }
+
+        // Rekonstruksi payload: METHOD:PATH:SORTED_QUERY:BODY_SHA256:TIMESTAMP
         $queryString = http_build_query(collect($request->query())->sortKeys()->all());
-        $payload = strtoupper($request->method())
-            . ':' . $request->getPathInfo()
-            . ':' . $queryString
-            . ':' . $timestamp;
+        $bodyHash    = hash('sha256', $request->getContent());
+        $payload     = strtoupper($request->method())
+            .':'.$request->getPathInfo()
+            .':'.$queryString
+            .':'.$bodyHash
+            .':'.$timestamp;
 
-        $expected = hash_hmac('sha256', $payload, config('kepegawaian.secret_key'));
+        $expected = hash_hmac('sha256', $payload, $secret);
 
-        // Timing-safe comparison (mencegah timing attack)
+        // Timing-safe comparison (mencegang timing attack)
         if (! hash_equals($expected, $received)) {
-            return response()->json(['message' => 'Invalid signature'], 401);
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
         return $next($request);

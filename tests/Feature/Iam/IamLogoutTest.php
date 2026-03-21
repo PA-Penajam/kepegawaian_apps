@@ -7,34 +7,8 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
 
-// Helper untuk membuat IAM signed headers
-if (! function_exists('makeIamHeaders')) {
-    function makeIamHeaders(string $method, string $path, string $apiKey, string $apiSecret, array $query = []): array
-{
-    $timestamp   = now()->timestamp;
-    $queryString = http_build_query(collect($query)->sortKeys()->all());
-    $payload     = strtoupper($method) . ':' . $path . ':' . $queryString . ':' . $timestamp;
-    $signature   = hash_hmac('sha256', $payload, $apiSecret);
-
-    return [
-        'X-App-Key'   => $apiKey,
-        'X-Signature' => $signature,
-        'X-Timestamp' => $timestamp,
-        'Accept'      => 'application/json',
-    ];
-    }
-}
-
 beforeEach(function () {
-    $this->iamApp = IamApplication::create([
-        'nama'            => 'Test App',
-        'slug'            => 'test-app',
-        'url'             => 'http://test.local',
-        'api_key'         => 'test-api-key',
-        'api_secret_hash' => Crypt::encryptString('test-secret-64chars-padding-here-abc123'),
-        'is_active'       => true,
-        'is_system'       => false,
-    ]);
+    $this->iamApp = IamApplication::factory()->create(['is_active' => true]);
 
     Route::middleware(['auth:sanctum', 'iam.signature'])->group(function () {
         Route::post('/test-iam-logout', [IamController::class, 'logout']);
@@ -45,9 +19,18 @@ test('logout endpoint menghapus token dan mengembalikan message', function () {
     $user = User::factory()->create();
     Sanctum::actingAs($user);
 
-    $headers = makeIamHeaders('POST', '/test-iam-logout', $this->iamApp->api_key, 'test-secret-64chars-padding-here-abc123');
+    // Helper baru otomatis membuat app baru, tapi kita butuh app yang spesifik
+    // Jadi kita buat signature manual untuk app yang sudah dibuat
+    $ts = now()->timestamp;
+    $bodyHash = hash('sha256', json_encode([]));
+    $payload = 'POST:/test-iam-logout::'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
 
-    $response = $this->postJson('/test-iam-logout', [], $headers);
+    $response = $this->postJson('/test-iam-logout', [], [
+        'X-App-Key' => $this->iamApp->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+    ]);
 
     $response->assertOk()
         ->assertJsonPath('message', 'Token invalidated');
