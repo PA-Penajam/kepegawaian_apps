@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Iam\AplikasiController;
+use App\Http\Controllers\Iam\PermissionController;
+use App\Http\Controllers\Iam\RoleController;
+use App\Http\Controllers\Iam\UserAksesController;
 use App\Http\Controllers\SsoController;
 use App\Http\Controllers\Kepegawaian\DokumenPegawaiController;
 use App\Http\Controllers\Kepegawaian\HukumanDisiplinController;
@@ -104,6 +108,30 @@ Route::middleware(['auth', 'verified'])
             Route::get('/', [SelfServiceController::class, 'index'])->name('index');
             Route::get('/detail', [SelfServiceController::class, 'detail'])->name('detail');
         });
+    });
+
+Route::middleware(['auth', 'verified', 'iam.permission'])
+    ->prefix('iam')
+    ->name('iam.')
+    ->group(function () {
+        Route::resource('aplikasi', AplikasiController::class)
+            ->except(['create', 'edit']);
+        Route::post('aplikasi/{aplikasi}/regenerate-key', [AplikasiController::class, 'regenerateKey'])
+            ->name('aplikasi.regenerate-key');
+
+        // Role & Permission (nested under aplikasi)
+        Route::post('aplikasi/{aplikasi}/roles', [RoleController::class, 'store'])->name('aplikasi.roles.store');
+        Route::put('aplikasi/{aplikasi}/roles/{role}', [RoleController::class, 'update'])->name('aplikasi.roles.update');
+        Route::delete('aplikasi/{aplikasi}/roles/{role}', [RoleController::class, 'destroy'])->name('aplikasi.roles.destroy');
+        Route::post('aplikasi/{aplikasi}/permissions', [PermissionController::class, 'store'])->name('aplikasi.permissions.store');
+        Route::put('aplikasi/{aplikasi}/permissions/{permission}', [PermissionController::class, 'update'])->name('aplikasi.permissions.update');
+        Route::delete('aplikasi/{aplikasi}/permissions/{permission}', [PermissionController::class, 'destroy'])->name('aplikasi.permissions.destroy');
+
+        // User akses
+        Route::get('users', [UserAksesController::class, 'index'])->name('users.index');
+        Route::get('users/{user}/akses', [UserAksesController::class, 'show'])->name('users.akses');
+        Route::post('users/{user}/akses', [UserAksesController::class, 'store'])->name('users.akses.store');
+        Route::delete('users/{user}/akses/{role}', [UserAksesController::class, 'destroy'])->name('users.akses.destroy');
     });
 
 require __DIR__.'/settings.php';
