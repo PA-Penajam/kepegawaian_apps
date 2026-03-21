@@ -95,7 +95,12 @@ export default function Akses() {
 
             if (!grouped[appId]) {
                 grouped[appId] = {
-                    app: a.role.application as unknown as IamAvailableApp,
+                    app: {
+                        id: a.role.application?.id ?? 0,
+                        nama: a.role.application?.nama ?? '',
+                        slug: a.role.application?.slug ?? '',
+                        roles: [],
+                    } satisfies IamAvailableApp,
                     akses: [],
                 };
             }
