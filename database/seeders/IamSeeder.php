@@ -33,47 +33,59 @@ class IamSeeder extends Seeder
         $kepegawaian->is_system = true;         // Tidak fillable — set manual
         $kepegawaian->save();
 
-        // 2. Migrasi ref_roles -> iam_roles
-        $refRoles = DB::table('ref_roles')->whereNull('deleted_at')->get();
+        // 2. Migrasi ref_roles -> iam_roles (hanya jika tabel masih ada)
         $roleMap = []; // ref_role_id => iam_role_id
+        $hasRefRoles = false;
 
-        foreach ($refRoles as $refRole) {
-            $slug = Str::slug($refRole->nama);
-            $iamRole = IamRole::firstOrCreate(
-                ['iam_application_id' => $kepegawaian->id, 'slug' => $slug],
-                [
-                    'nama' => $refRole->nama,
-                    'keterangan' => $refRole->keterangan,
-                    'is_system' => $refRole->is_system ?? false,
-                ]
-            );
-            $roleMap[$refRole->id] = $iamRole->id;
+        if (DB::getSchemaBuilder()->hasTable('ref_roles')) {
+            $hasRefRoles = true;
+            $refRoles = DB::table('ref_roles')->whereNull('deleted_at')->get();
+
+            foreach ($refRoles as $refRole) {
+                $slug = Str::slug($refRole->nama);
+                $iamRole = IamRole::firstOrCreate(
+                    ['iam_application_id' => $kepegawaian->id, 'slug' => $slug],
+                    [
+                        'nama' => $refRole->nama,
+                        'keterangan' => $refRole->keterangan,
+                        'is_system' => $refRole->is_system ?? false,
+                    ]
+                );
+                $roleMap[$refRole->id] = $iamRole->id;
+            }
         }
 
-        // 3. Migrasi ref_permissions -> iam_permissions
-        $refPerms = DB::table('ref_permissions')->whereNull('deleted_at')->get();
+        // 3. Migrasi ref_permissions -> iam_permissions (hanya jika tabel masih ada)
         $permMap = [];
+        $hasRefPermissions = false;
 
-        foreach ($refPerms as $refPerm) {
-            $slug = Str::slug($refPerm->nama, ':');
-            $iamPerm = IamPermission::create([
-                'iam_application_id' => $kepegawaian->id,
-                'nama' => $refPerm->nama,
-                'slug' => $slug,
-                'group' => $refPerm->group,
-                'keterangan' => $refPerm->keterangan,
-            ]);
-            $permMap[$refPerm->id] = $iamPerm->id;
+        if (DB::getSchemaBuilder()->hasTable('ref_permissions')) {
+            $hasRefPermissions = true;
+            $refPerms = DB::table('ref_permissions')->whereNull('deleted_at')->get();
+
+            foreach ($refPerms as $refPerm) {
+                $slug = Str::slug($refPerm->nama, ':');
+                $iamPerm = IamPermission::create([
+                    'iam_application_id' => $kepegawaian->id,
+                    'nama' => $refPerm->nama,
+                    'slug' => $slug,
+                    'group' => $refPerm->group,
+                    'keterangan' => $refPerm->keterangan,
+                ]);
+                $permMap[$refPerm->id] = $iamPerm->id;
+            }
         }
 
-        // 4. Migrasi ref_role_permission -> iam_role_permissions
-        $pivots = DB::table('ref_role_permission')->get();
-        foreach ($pivots as $pivot) {
-            if (isset($roleMap[$pivot->ref_role_id]) && isset($permMap[$pivot->ref_permission_id])) {
-                IamRolePermission::create([
-                    'iam_role_id' => $roleMap[$pivot->ref_role_id],
-                    'iam_permission_id' => $permMap[$pivot->ref_permission_id],
-                ]);
+        // 4. Migrasi ref_role_permission -> iam_role_permissions (hanya jika tabel masih ada)
+        if ($hasRefRoles && $hasRefPermissions && DB::getSchemaBuilder()->hasTable('ref_role_permission')) {
+            $pivots = DB::table('ref_role_permission')->get();
+            foreach ($pivots as $pivot) {
+                if (isset($roleMap[$pivot->ref_role_id]) && isset($permMap[$pivot->ref_permission_id])) {
+                    IamRolePermission::create([
+                        'iam_role_id' => $roleMap[$pivot->ref_role_id],
+                        'iam_permission_id' => $permMap[$pivot->ref_permission_id],
+                    ]);
+                }
             }
         }
 
@@ -108,6 +120,21 @@ class IamSeeder extends Seeder
                 ['iam_application_id' => $kepegawaian->id, 'slug' => $slug],
                 ['nama' => ucfirst($slug), 'is_system' => true]
             );
+        }
+
+        // 7. Tambahkan permission iam-manage untuk akses penuh ke manajemen IAM
+        $iamManage = $kepegawaian->permissions()->firstOrCreate(
+            ['slug' => 'iam-manage'],
+            ['nama' => 'Kelola IAM', 'group' => 'iam', 'keterangan' => 'Akses penuh ke manajemen IAM']
+        );
+
+        // Assign ke role admin
+        $adminRole = IamRole::where('iam_application_id', $kepegawaian->id)
+            ->where('slug', 'admin')
+            ->first();
+
+        if ($adminRole) {
+            $adminRole->permissions()->syncWithoutDetaching([$iamManage->id]);
         }
     }
 }

@@ -5,7 +5,6 @@ use App\Http\Controllers\Iam\AplikasiController;
 use App\Http\Controllers\Iam\PermissionController;
 use App\Http\Controllers\Iam\RoleController;
 use App\Http\Controllers\Iam\UserAksesController;
-use App\Http\Controllers\SsoController;
 use App\Http\Controllers\Kepegawaian\DokumenPegawaiController;
 use App\Http\Controllers\Kepegawaian\HukumanDisiplinController;
 use App\Http\Controllers\Kepegawaian\KeluargaController;
@@ -19,6 +18,7 @@ use App\Http\Controllers\Monitoring\MonitoringKgbController;
 use App\Http\Controllers\Referensi\RefJenisDokumenController;
 use App\Http\Controllers\Referensi\RefStatusKepegawaianController;
 use App\Http\Controllers\Referensi\RefStatusPegawaiController;
+use App\Http\Controllers\SsoController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -31,7 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 });
 
-Route::middleware(['auth', 'verified'/* , 'role:admin,operator' */])->group(function () {
+Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
     Route::resource('kepegawaian/pegawai', PegawaiController::class)
         ->names('kepegawaian.pegawai');
 
@@ -56,7 +56,7 @@ Route::middleware(['auth', 'verified'/* , 'role:admin,operator' */])->group(func
         ->except(['show']);
 });
 
-Route::middleware(['auth', 'verified'/* , 'role:admin,operator' */])
+Route::middleware(['auth', 'verified', 'iam.permission'])
     ->prefix('kepegawaian')
     ->name('kepegawaian.')
     ->group(function () {
@@ -110,7 +110,7 @@ Route::middleware(['auth', 'verified'])
         });
     });
 
-Route::middleware(['auth', 'verified', 'iam.permission'])
+Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])
     ->prefix('iam')
     ->name('iam.')
     ->group(function () {

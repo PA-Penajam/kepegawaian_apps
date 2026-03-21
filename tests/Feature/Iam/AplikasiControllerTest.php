@@ -36,12 +36,13 @@ beforeEach(function () {
         'is_system' => true,
     ]);
 
-    // Buat permission dan assign ke admin role
+    // Buat permission iam-manage dan assign ke admin role untuk akses penuh ke manajemen IAM
     $this->adminPermission = IamPermission::create([
         'iam_application_id' => $this->kepegawaianApp->id,
-        'nama' => 'Kelola Aplikasi',
-        'slug' => 'aplikasi:manage',
+        'nama' => 'Kelola IAM',
+        'slug' => 'iam-manage',
         'group' => 'iam',
+        'keterangan' => 'Akses penuh ke manajemen IAM',
     ]);
 
     $this->adminRole->permissions()->attach($this->adminPermission->id);
