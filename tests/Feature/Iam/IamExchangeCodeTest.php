@@ -5,14 +5,19 @@ use App\Models\IamApplication;
 use App\Models\IamSsoCode;
 use App\Models\User;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
 beforeEach(function () {
     $this->iamApp = IamApplication::factory()->create(['is_active' => true]);
 
-    Route::middleware(['iam.signature'])->group(function () {
+    Route::middleware(['iam.signature', 'throttle:10,1'])->group(function () {
         Route::post('/test-iam-exchange', [IamController::class, 'exchangeCode']);
     });
+
+    // Bersihkan rate limiter sebelum setiap test untuk menghindari cross-test interference
+    // Laravel throttle menggunakan IP atau user ID sebagai key, di test environment gunakan IP 127.0.0.1
+    RateLimiter::clear('127.0.0.1|test-iam-exchange');
 });
 
 test('exchange code valid mengembalikan token', function () {
@@ -94,4 +99,38 @@ test('exchange code sudah dipakai mengembalikan 400', function () {
 
     $response->assertBadRequest()
         ->assertJsonPath('message', 'Invalid or expired code');
+});
+
+test('menolak request ke-11 pada exchange-code dengan HTTP 429', function () {
+    // Kirim 10 request valid (semua akan gagal dengan 400 karena code tidak ada, tapi tidak ter-throttle)
+    for ($i = 0; $i < 10; $i++) {
+        $ts = now()->timestamp;
+        $body = ['code' => str_repeat('a', 64)];
+        $bodyHash = hash('sha256', json_encode($body));
+        $payload = 'POST:/test-iam-exchange::'.$bodyHash.':'.$ts;
+        $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
+
+        $this->postJson('/test-iam-exchange', $body, [
+            'X-App-Key' => $this->iamApp->api_key,
+            'X-Signature' => $signature,
+            'X-Timestamp' => $ts,
+            'Accept' => 'application/json',
+        ]);
+    }
+
+    // Request ke-11 harus mendapat 429 Too Many Requests
+    $ts = now()->timestamp;
+    $body = ['code' => str_repeat('a', 64)];
+    $bodyHash = hash('sha256', json_encode($body));
+    $payload = 'POST:/test-iam-exchange::'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
+
+    $response = $this->postJson('/test-iam-exchange', $body, [
+        'X-App-Key' => $this->iamApp->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+        'Accept' => 'application/json',
+    ]);
+
+    $response->assertStatus(429);
 });
