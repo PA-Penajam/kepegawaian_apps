@@ -8,6 +8,9 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { NumberTicker } from '@/components/ui/number-ticker';
+import { BorderBeam } from '@/components/ui/border-beam';
+import { BlurFade } from '@/components/ui/blur-fade';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
@@ -55,11 +58,11 @@ export default function Dashboard({ stats }: Props) {
                             <CardTitle className="text-sm font-medium">
                                 Total Pegawai Aktif
                             </CardTitle>
-                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <Users className="h-4 w-4 text-accent" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {stats.total_pegawai_aktif}
+                                <NumberTicker value={stats.total_pegawai_aktif} />
                             </div>
                             <p className="text-xs text-muted-foreground">
                                 Pegawai dengan status aktif
@@ -72,11 +75,11 @@ export default function Dashboard({ stats }: Props) {
                             <CardTitle className="text-sm font-medium">
                                 Pegawai Baru (Bulan Ini)
                             </CardTitle>
-                            <UserPlus className="h-4 w-4 text-muted-foreground" />
+                            <UserPlus className="h-4 w-4 text-accent" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {stats.pegawai_baru_bulan_ini}
+                                <NumberTicker value={stats.pegawai_baru_bulan_ini} />
                             </div>
                             <p className="text-xs text-muted-foreground">
                                 Pegawai masuk bulan ini
@@ -84,17 +87,18 @@ export default function Dashboard({ stats }: Props) {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="relative overflow-hidden">
+                        <BorderBeam />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
                                 KGB Segera (≤2 bln)
                             </CardTitle>
-                            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                            <AlertCircle className="h-4 w-4 text-destructive" />
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center justify-between">
                                 <div className="text-2xl font-bold">
-                                    {stats.kgb_segera_count}
+                                    <NumberTicker value={stats.kgb_segera_count} />
                                 </div>
                                 {stats.kgb_segera_count > 0 && (
                                     <Badge variant="destructive">
@@ -113,22 +117,23 @@ export default function Dashboard({ stats }: Props) {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="relative overflow-hidden">
+                        <BorderBeam />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
                                 KP Eligible
                             </CardTitle>
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            <TrendingUp className="h-4 w-4 text-accent" />
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center justify-between">
                                 <div className="text-2xl font-bold">
-                                    {stats.kp_eligible_count}
+                                    <NumberTicker value={stats.kp_eligible_count} />
                                 </div>
                                 {stats.kp_eligible_count > 0 && (
                                     <Badge
                                         variant="default"
-                                        className="bg-blue-600 hover:bg-blue-700"
+                                        className="bg-accent hover:bg-accent/90"
                                     >
                                         Eligible
                                     </Badge>
