@@ -239,7 +239,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                                     keluarga.map((item) => (
                                         <tr key={item.id}>
                                             <td className="px-4 py-3">
-                                                <span className="inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700">
+                                                <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                                                     {item.hubungan_label ??
                                                         item.hubungan}
                                                 </span>
