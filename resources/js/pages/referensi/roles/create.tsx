@@ -7,7 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, RefPermission, RefRole } from '@/types';
-import { index, store } from '@/routes/referensi/roles';
+import {
+    index as rolesIndex,
+    store as storeRole,
+} from '@/routes/referensi/roles';
 import { useMemo } from 'react';
 
 type Props = {
@@ -25,7 +28,7 @@ export default function Create({ permissions }: Props) {
         () => [
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Referensi', href: '#' },
-            { title: 'Roles', href: index() },
+            { title: 'Roles', href: rolesIndex() },
             { title: 'Tambah', href: '#' },
         ],
         [],
@@ -59,7 +62,7 @@ export default function Create({ permissions }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(store());
+        post(storeRole.url());
     };
 
     return (
@@ -69,7 +72,7 @@ export default function Create({ permissions }: Props) {
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" asChild>
-                        <Link href={index()}>
+                        <Link href={rolesIndex()}>
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -174,7 +177,7 @@ export default function Create({ permissions }: Props) {
                             Simpan
                         </Button>
                         <Button variant="outline" asChild>
-                            <Link href={index()}>Batal</Link>
+                            <Link href={rolesIndex()}>Batal</Link>
                         </Button>
                     </div>
                 </form>

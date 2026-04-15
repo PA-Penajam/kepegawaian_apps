@@ -6,7 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { index, update } from '@/routes/referensi/jenis-dokumen';
+import {
+    index as jenisDokumenIndex,
+    update as updateJenisDokumen,
+} from '@/routes/referensi/jenis-dokumen';
 import type { BreadcrumbItem, RefJenisDokumen } from '@/types';
 
 type Props = {
@@ -31,7 +34,7 @@ export default function Edit({ jenisDokumen }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(update(jenisDokumen.id));
+        put(updateJenisDokumen.url(jenisDokumen.id));
     };
 
     return (
@@ -41,7 +44,7 @@ export default function Edit({ jenisDokumen }: Props) {
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" asChild>
-                        <Link href={index()}>
+                        <Link href={jenisDokumenIndex()}>
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -91,7 +94,7 @@ export default function Edit({ jenisDokumen }: Props) {
                             Simpan
                         </Button>
                         <Button variant="outline" asChild>
-                            <Link href={index()}>Batal</Link>
+                            <Link href={jenisDokumenIndex()}>Batal</Link>
                         </Button>
                     </div>
                 </form>

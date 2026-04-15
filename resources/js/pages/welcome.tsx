@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Users,
     TrendingUp,
@@ -83,8 +83,7 @@ export default function Welcome() {
                                             background="oklch(0.32 0.10 155)"
                                             borderRadius="8px"
                                             onClick={() =>
-                                                (window.location.href =
-                                                    dashboard())
+                                                router.visit(dashboard.url())
                                             }
                                             className="px-6 py-3"
                                         >
@@ -96,8 +95,7 @@ export default function Welcome() {
                                             background="oklch(0.32 0.10 155)"
                                             borderRadius="8px"
                                             onClick={() =>
-                                                (window.location.href =
-                                                    login())
+                                                router.visit(login.url())
                                             }
                                             className="px-6 py-3"
                                         >

@@ -7,7 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, RefPermission, RefRole } from '@/types';
-import { index, update } from '@/routes/referensi/roles';
+import {
+    edit as editRole,
+    index as rolesIndex,
+    update as updateRole,
+} from '@/routes/referensi/roles';
 import { useMemo, useState } from 'react';
 
 type PegawaiItem = {
@@ -49,7 +53,7 @@ export default function Edit({
         () => [
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Referensi', href: '#' },
-            { title: 'Roles', href: index() },
+            { title: 'Roles', href: rolesIndex() },
             { title: 'Edit', href: '#' },
         ],
         [],
@@ -94,7 +98,7 @@ export default function Edit({
     const handleSearchPegawai = (value: string) => {
         setSearchPegawai(value);
         router.get(
-            route('referensi.roles.edit', role.id),
+            editRole.url(role.id),
             { search_pegawai: value },
             { preserveState: true, preserveScroll: true },
         );
@@ -102,7 +106,7 @@ export default function Edit({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(update(role.id));
+        put(updateRole.url(role.id));
     };
 
     return (
@@ -112,7 +116,7 @@ export default function Edit({
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" asChild>
-                        <Link href={index()}>
+                        <Link href={rolesIndex()}>
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -278,7 +282,7 @@ export default function Edit({
                             Simpan
                         </Button>
                         <Button variant="outline" asChild>
-                            <Link href={index()}>Batal</Link>
+                            <Link href={rolesIndex()}>Batal</Link>
                         </Button>
                     </div>
                 </form>

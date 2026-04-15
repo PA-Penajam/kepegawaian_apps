@@ -6,7 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { index, update } from '@/routes/referensi/status-kepegawaian';
+import {
+    index as statusKepegawaianIndex,
+    update as updateStatusKepegawaian,
+} from '@/routes/referensi/status-kepegawaian';
 import type { BreadcrumbItem, RefStatusKepegawaian } from '@/types';
 
 type Props = {
@@ -35,7 +38,7 @@ export default function Edit({ statusKepegawaian }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(update(statusKepegawaian.id));
+        put(updateStatusKepegawaian.url(statusKepegawaian.id));
     };
 
     return (
@@ -45,7 +48,7 @@ export default function Edit({ statusKepegawaian }: Props) {
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" asChild>
-                        <Link href={index()}>
+                        <Link href={statusKepegawaianIndex()}>
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -112,7 +115,7 @@ export default function Edit({ statusKepegawaian }: Props) {
                             Simpan
                         </Button>
                         <Button variant="outline" asChild>
-                            <Link href={index()}>Batal</Link>
+                            <Link href={statusKepegawaianIndex()}>Batal</Link>
                         </Button>
                     </div>
                 </form>

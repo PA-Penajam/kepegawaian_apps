@@ -6,7 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { index, update } from '@/routes/referensi/status-pegawai';
+import {
+    index as statusPegawaiIndex,
+    update as updateStatusPegawai,
+} from '@/routes/referensi/status-pegawai';
 import type { BreadcrumbItem, RefStatusPegawai } from '@/types';
 
 type Props = {
@@ -32,7 +35,7 @@ export default function Edit({ statusPegawai }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(update(statusPegawai.id));
+        put(updateStatusPegawai.url(statusPegawai.id));
     };
 
     return (
@@ -42,7 +45,7 @@ export default function Edit({ statusPegawai }: Props) {
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" asChild>
-                        <Link href={index()}>
+                        <Link href={statusPegawaiIndex()}>
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -109,7 +112,7 @@ export default function Edit({ statusPegawai }: Props) {
                             Simpan
                         </Button>
                         <Button variant="outline" asChild>
-                            <Link href={index()}>Batal</Link>
+                            <Link href={statusPegawaiIndex()}>Batal</Link>
                         </Button>
                     </div>
                 </form>

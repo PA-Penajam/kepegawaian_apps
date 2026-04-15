@@ -6,7 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { index, store } from '@/routes/referensi/jenis-dokumen';
+import {
+    index as jenisDokumenIndex,
+    store as storeJenisDokumen,
+} from '@/routes/referensi/jenis-dokumen';
 import type { BreadcrumbItem } from '@/types';
 
 export default function Create() {
@@ -27,7 +30,7 @@ export default function Create() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(store());
+        post(storeJenisDokumen.url());
     };
 
     return (
@@ -37,7 +40,7 @@ export default function Create() {
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" asChild>
-                        <Link href={index()}>
+                        <Link href={jenisDokumenIndex()}>
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -87,7 +90,7 @@ export default function Create() {
                             Simpan
                         </Button>
                         <Button variant="outline" asChild>
-                            <Link href={index()}>Batal</Link>
+                            <Link href={jenisDokumenIndex()}>Batal</Link>
                         </Button>
                     </div>
                 </form>

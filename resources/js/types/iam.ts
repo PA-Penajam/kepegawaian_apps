@@ -72,7 +72,7 @@ export type IamAvailableApp = {
 };
 
 // Interface untuk data paginasi dari Laravel
-export interface PaginatedData<T> {
+export interface IamPaginatedData<T> {
     data: T[];
     links: {
         first: string | null;

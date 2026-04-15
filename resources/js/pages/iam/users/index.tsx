@@ -12,10 +12,10 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, PaginatedData, User } from '@/types';
+import type { BreadcrumbItem, IamPaginatedData, User } from '@/types';
 
 type Props = {
-    users: PaginatedData<
+    users: IamPaginatedData<
         User & {
             iam_roles_count?: number;
             iam_roles?: Array<{
@@ -85,7 +85,7 @@ export default function Index() {
                                 users.data.map((user) => (
                                     <TableRow key={user.id}>
                                         <TableCell className="font-medium">
-                                            {user.name}
+                                            {user.nama_lengkap}
                                         </TableCell>
                                         <TableCell>{user.email}</TableCell>
                                         <TableCell className="text-center">
@@ -140,7 +140,7 @@ export default function Index() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    aria-label={`Lihat akses ${user.name}`}
+                                                    aria-label={`Lihat akses ${user.nama_lengkap}`}
                                                     asChild
                                                 >
                                                     <Link

@@ -136,7 +136,7 @@ export type PaginationLink = {
     active: boolean;
 };
 
-export type PaginatedData<T> = {
+export type KepegawaianPaginatedData<T> = {
     current_page: number;
     data: T[];
     first_page_url: string;

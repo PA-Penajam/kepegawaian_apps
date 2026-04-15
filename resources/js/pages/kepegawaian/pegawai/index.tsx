@@ -19,7 +19,7 @@ import { index, show, create, edit } from '@/routes/kepegawaian/pegawai';
 import type { BreadcrumbItem } from '@/types';
 import { StatusPegawaiLabels } from '@/types/kepegawaian';
 import type {
-    PaginatedData,
+    KepegawaianPaginatedData,
     Pegawai,
     PegawaiListFilterOptions,
     PegawaiListFilters,
@@ -36,7 +36,7 @@ type PegawaiIndexFilters = Omit<PegawaiListFilters, 'sort_by'> & {
 };
 
 type Props = {
-    pegawai: PaginatedData<Pegawai>;
+    pegawai: KepegawaianPaginatedData<Pegawai>;
     filters: PegawaiIndexFilters;
     filterOptions: PegawaiListFilterOptions;
     refJabatan: Pick<RefJabatan, 'id' | 'nama'>[];
