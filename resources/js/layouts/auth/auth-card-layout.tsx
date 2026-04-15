@@ -9,6 +9,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { home } from '@/routes';
+import { BlurFade } from '@/components/ui/blur-fade';
 
 export default function AuthCardLayout({
     children,
@@ -20,18 +21,20 @@ export default function AuthCardLayout({
     description?: string;
 }>) {
     return (
-        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
+        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-gradient-to-br from-background via-muted to-background p-6 md:p-10">
             <div className="flex w-full max-w-md flex-col gap-6">
-                <Link
-                    href={home()}
-                    className="flex items-center gap-2 self-center font-medium"
-                >
-                    <div className="flex h-9 w-9 items-center justify-center">
-                        <AppLogoIcon className="size-9 fill-current text-black dark:text-white" />
-                    </div>
-                </Link>
+                <BlurFade delay={0.1} duration={0.4}>
+                    <Link
+                        href={home()}
+                        className="flex items-center gap-2 self-center font-medium"
+                    >
+                        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                            <AppLogoIcon className="size-5 fill-current text-white" />
+                        </div>
+                    </Link>
+                </BlurFade>
 
-                <div className="flex flex-col gap-6">
+                <BlurFade delay={0.25} duration={0.4}>
                     <Card className="rounded-xl">
                         <CardHeader className="px-10 pt-8 pb-0 text-center">
                             <CardTitle className="text-xl">{title}</CardTitle>
@@ -41,7 +44,7 @@ export default function AuthCardLayout({
                             {children}
                         </CardContent>
                     </Card>
-                </div>
+                </BlurFade>
             </div>
         </div>
     );
