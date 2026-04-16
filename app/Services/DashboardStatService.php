@@ -10,22 +10,24 @@ use Carbon\Carbon;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class DashboardStatService
 {
     public function getStats(): array
     {
-        return [
-            'total_pegawai_aktif' => $this->getTotalPegawaiAktif(),
-            'distribusi_golongan' => $this->getDistribusiGolongan(),
-            'distribusi_unit_kerja' => $this->getDistribusiUnitKerja(),
-            'distribusi_jenis_kelamin' => $this->getDistribusiJenisKelamin(),
-            'kgb_segera_count' => $this->getKgbSegeraCount(),
-            'kp_eligible_count' => $this->getKpEligibleCount(),
-            'distribusi_jabatan' => $this->getDistribusiJabatan(),
-            'distribusi_pendidikan' => $this->getDistribusiPendidikan(),
+        return Cache::remember('dashboard_stats', 300, fn () => [
+            'total_pegawai_aktif'    => $this->getTotalPegawaiAktif(),
+            'distribusi_golongan'    => $this->getDistribusiGolongan(),
+            'distribusi_unit_kerja'  => $this->getDistribusiUnitKerja(),
+            'distribusi_jenis_kelamin'=> $this->getDistribusiJenisKelamin(),
+            'kgb_segera_count'       => $this->getKgbSegeraCount(),
+            'kp_eligible_count'      => $this->getKpEligibleCount(),
+            'distribusi_jabatan'     => $this->getDistribusiJabatan(),
+            'distribusi_pendidikan'  => $this->getDistribusiPendidikan(),
             'pegawai_baru_bulan_ini' => $this->getPegawaiBaruBulanIni(),
-        ];
+        ]);
     }
 
     public function getTotalPegawaiAktif(): int
@@ -35,28 +37,26 @@ class DashboardStatService
 
     public function getDistribusiGolongan(): array
     {
-        $pegawaiDenganPangkat = $this->pegawaiAktifQuery()
-            ->with('pangkat')
-            ->get();
+        $driver = DB::connection()->getDriverName();
+        $isMySQL = $driver === 'mysql';
 
-        $distribusiGolongan = [
-            'I' => 0,
-            'II' => 0,
-            'III' => 0,
-            'IV' => 0,
+        // SUBSTRING_INDEX untuk MySQL, SUBSTR+INSTR untuk SQLite
+        $golonganExpr = $isMySQL
+            ? "SUBSTRING_INDEX(ref_pangkat.kode, '/', 1)"
+            : "CASE WHEN INSTR(ref_pangkat.kode, '/') > 0 THEN SUBSTR(ref_pangkat.kode, 1, INSTR(ref_pangkat.kode, '/') - 1) ELSE ref_pangkat.kode END";
+
+        $rows = $this->pegawaiAktifQuery()
+            ->join('ref_pangkat', 'pegawai.ref_pangkat_id', '=', 'ref_pangkat.id')
+            ->selectRaw("{$golonganExpr} as golongan, COUNT(*) as total")
+            ->groupByRaw($golonganExpr)
+            ->pluck('total', 'golongan');
+
+        return [
+            'I'   => (int) ($rows['I'] ?? 0),
+            'II'  => (int) ($rows['II'] ?? 0),
+            'III' => (int) ($rows['III'] ?? 0),
+            'IV'  => (int) ($rows['IV'] ?? 0),
         ];
-
-        foreach ($pegawaiDenganPangkat as $pegawai) {
-            if ($pegawai->pangkat && $pegawai->pangkat->kode) {
-                $golongan = explode('/', $pegawai->pangkat->kode)[0];
-
-                if (array_key_exists($golongan, $distribusiGolongan)) {
-                    $distribusiGolongan[$golongan]++;
-                }
-            }
-        }
-
-        return $distribusiGolongan;
     }
 
     public function getDistribusiUnitKerja(): Collection
@@ -86,48 +86,47 @@ class DashboardStatService
 
     public function getKgbSegeraCount(): int
     {
-        return Container::getInstance()->make(KgbMonitoringService::class)->getUpcomingKgb(2)->count();
+        return Container::getInstance()->make(KgbMonitoringService::class)->getKgbStats(2)['total'];
     }
 
     public function getKpEligibleCount(): int
     {
         return Container::getInstance()->make(KenaikanPangkatMonitoringService::class)
-            ->getUpcomingKenaikanPangkat()
-            ->filter(fn ($kp) => $kp['status'] === 'Sudah Eligible')
-            ->count();
+            ->getKpStats()['sudahEligible'];
     }
 
     public function getDistribusiJabatan(): Collection
     {
         return $this->pegawaiAktifQuery()
-            ->with('jabatan')
+            ->join('ref_jabatan', 'pegawai.ref_jabatan_id', '=', 'ref_jabatan.id')
+            ->selectRaw('ref_jabatan.nama, COUNT(*) as pegawai_count')
+            ->groupBy('pegawai.ref_jabatan_id', 'ref_jabatan.nama')
+            ->orderByDesc('pegawai_count')
+            ->limit(6)
             ->get()
-            ->groupBy('ref_jabatan_id')
-            ->map(fn ($pegawaiGroup) => [
-                'nama' => $pegawaiGroup->first()->jabatan?->nama ?? 'Tidak Ada Jabatan',
-                'pegawai_count' => $pegawaiGroup->count(),
-            ])
-            ->sortByDesc('pegawai_count')
-            ->take(6)
-            ->values();
+            ->map(fn ($row) => [
+                'nama'         => $row->nama,
+                'pegawai_count'=> (int) $row->pegawai_count,
+            ]);
     }
 
     public function getDistribusiPendidikan(): Collection
     {
         return $this->pegawaiAktifQuery()
             ->whereNotNull('pendidikan_terakhir')
-            ->get()
+            ->selectRaw('pendidikan_terakhir, COUNT(*) as pegawai_count')
             ->groupBy('pendidikan_terakhir')
-            ->map(function ($pegawaiGroup, $pendidikan) {
-                $label = JenjangPendidikan::tryFrom($pendidikan)?->label() ?? strtoupper($pendidikan);
+            ->orderByDesc('pegawai_count')
+            ->get()
+            ->map(function ($row) {
+                $label = JenjangPendidikan::tryFrom($row->pendidikan_terakhir)?->label()
+                    ?? strtoupper($row->pendidikan_terakhir);
 
                 return [
-                    'pendidikan' => $label,
-                    'pegawai_count' => $pegawaiGroup->count(),
+                    'pendidikan'   => $label,
+                    'pegawai_count'=> (int) $row->pegawai_count,
                 ];
-            })
-            ->sortByDesc('pegawai_count')
-            ->values();
+            });
     }
 
     public function getPegawaiBaruBulanIni(): int
