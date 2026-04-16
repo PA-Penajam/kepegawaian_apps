@@ -5,6 +5,7 @@ use App\Models\IamPermission;
 use App\Models\IamRole;
 use App\Models\IamUserRole;
 use App\Models\Pegawai;
+use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
     // Gunakan data dari IamSeeder (sudah di-seed oleh Pest.php beforeEach)
@@ -75,4 +76,37 @@ test('admin dapat meregenerasi api key aplikasi', function () {
 
     $app->refresh();
     expect($app->api_key)->not->toBe($oldKey);
+});
+
+it('menghapus cache iam_app saat aplikasi diupdate', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    $app = IamApplication::factory()->create(['slug' => 'test-app', 'is_system' => false]);
+
+    // Set cache seolah-olah sudah ada sebelumnya
+    Cache::put('iam_app:test-app', $app, 3600);
+    expect(Cache::has('iam_app:test-app'))->toBeTrue();
+
+    $this->actingAs($admin)
+        ->put("/iam/aplikasi/{$app->id}", [
+            'nama'        => 'Updated App',
+            'slug'        => 'test-app',
+            'url'         => 'https://example.com',
+            'is_active'   => true,
+            'deskripsi'   => null,
+        ]);
+
+    expect(Cache::has('iam_app:test-app'))->toBeFalse();
+});
+
+it('menghapus cache iam_app saat aplikasi dihapus', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    $app = IamApplication::factory()->create(['slug' => 'hapus-app', 'is_system' => false]);
+
+    Cache::put('iam_app:hapus-app', $app, 3600);
+    expect(Cache::has('iam_app:hapus-app'))->toBeTrue();
+
+    $this->actingAs($admin)
+        ->delete("/iam/aplikasi/{$app->id}");
+
+    expect(Cache::has('iam_app:hapus-app'))->toBeFalse();
 });

@@ -9,6 +9,7 @@ use App\Models\IamUserRole;
 use App\Models\Pegawai;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Response;
 
 class UserAksesController extends Controller
@@ -38,12 +39,18 @@ class UserAksesController extends Controller
             ['user_id' => $user->id, 'iam_role_id' => $data['iam_role_id']],
             ['assigned_at' => now(), 'assigned_by' => $request->user()->id]
         );
+
+        Cache::flush();
+
         return back();
     }
 
     public function destroy(Pegawai $user, IamRole $role): RedirectResponse
     {
         IamUserRole::where('user_id', $user->id)->where('iam_role_id', $role->id)->delete();
+
+        Cache::flush();
+
         return back();
     }
 }

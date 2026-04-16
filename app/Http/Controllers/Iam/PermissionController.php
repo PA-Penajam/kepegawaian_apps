@@ -7,6 +7,7 @@ use App\Models\IamApplication;
 use App\Models\IamPermission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class PermissionController extends Controller
@@ -20,6 +21,8 @@ class PermissionController extends Controller
             'keterangan' => 'nullable|string',
         ]);
         $aplikasi->permissions()->create($data);
+
+        Cache::forget("iam_app:{$aplikasi->slug}");
 
         return back();
     }
@@ -36,6 +39,8 @@ class PermissionController extends Controller
         ]);
         $permission->update($data);
 
+        Cache::forget("iam_app:{$aplikasi->slug}");
+
         return back();
     }
 
@@ -45,6 +50,8 @@ class PermissionController extends Controller
         abort_unless($permission->iam_application_id === $aplikasi->id, 404);
 
         $permission->delete();
+
+        Cache::forget("iam_app:{$aplikasi->slug}");
 
         return back();
     }

@@ -7,6 +7,7 @@ use App\Models\IamApplication;
 use App\Models\IamRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
@@ -26,6 +27,8 @@ class RoleController extends Controller
         if (! empty($data['permission_ids'])) {
             $role->permissions()->sync($data['permission_ids']);
         }
+
+        Cache::forget("iam_app:{$aplikasi->slug}");
 
         return back();
     }
@@ -47,6 +50,8 @@ class RoleController extends Controller
         $role->update($data);
         $role->permissions()->sync($data['permission_ids'] ?? []);
 
+        Cache::forget("iam_app:{$aplikasi->slug}");
+
         return back();
     }
 
@@ -58,6 +63,8 @@ class RoleController extends Controller
         abort_unless($role->iam_application_id === $aplikasi->id, 404);
 
         $role->delete();
+
+        Cache::forget("iam_app:{$aplikasi->slug}");
 
         return back();
     }

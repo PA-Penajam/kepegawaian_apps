@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\IamApplication;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Response;
 
 class AplikasiController extends Controller
@@ -75,6 +76,8 @@ class AplikasiController extends Controller
 
         $aplikasi->update($data);
 
+        Cache::forget("iam_app:{$aplikasi->slug}");
+
         return back();
     }
 
@@ -84,6 +87,7 @@ class AplikasiController extends Controller
             abort(403, 'Aplikasi sistem tidak dapat dihapus');
         }
 
+        Cache::forget("iam_app:{$aplikasi->slug}");
         $aplikasi->delete();
 
         return redirect()->route('iam.aplikasi.index');
