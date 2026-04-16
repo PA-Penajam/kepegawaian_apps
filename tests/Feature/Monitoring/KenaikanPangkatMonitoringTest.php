@@ -102,6 +102,40 @@ test('it filters monitoring list by april promotion period', function () {
     Carbon::setTestNow();
 });
 
+test('controller mengembalikan data kp dalam format paginasi', function () {
+    Carbon::setTestNow('2026-01-01');
+
+    $user = Pegawai::factory()->operator()->create();
+
+    // Buat 20 pegawai yang eligible KP (TMT 4+ tahun lalu)
+    foreach (range(1, 20) as $i) {
+        $pegawai = Pegawai::factory()->create([
+            'status_pegawai' => StatusPegawai::Aktif->value,
+            'nama_lengkap' => "Pegawai KP {$i}",
+        ]);
+        RiwayatPangkat::factory()->create([
+            'pegawai_id' => $pegawai->id,
+            'tmt' => Carbon::now()->subYears(5)->toDateString(),
+            'is_aktif' => true,
+        ]);
+    }
+
+    actingAs($user);
+
+    get(route('monitoring.kenaikan-pangkat.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('kepegawaian/monitoring/kenaikan-pangkat/index')
+            ->has('pegawaiList.data', 15)
+            ->where('pegawaiList.total', 20)
+            ->where('pegawaiList.last_page', 2)
+            ->has('kpStats')
+            ->where('kpStats.sudahEligible', 20),
+        );
+
+    Carbon::setTestNow();
+});
+
 test('monitoring index returns inertia response', function () {
     $user = Pegawai::factory()->admin()->create();
     createPegawaiDenganPangkatAktif('2022-04-01');
@@ -112,7 +146,7 @@ test('monitoring index returns inertia response', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('kepegawaian/monitoring/kenaikan-pangkat/index')
-            ->has('pegawaiList', 1)
+            ->has('pegawaiList.data', 1)
             ->has('kpStats.total')
             ->has('kpStats.sudahEligible')
             ->has('kpStats.mendekatiEligible')

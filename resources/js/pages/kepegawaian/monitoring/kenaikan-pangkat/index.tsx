@@ -11,8 +11,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import type { PaginatedData } from '@/types';
 
 type StatusKp = 'Sudah Eligible' | 'Mendekati Eligible' | 'Belum Eligible';
 
@@ -31,7 +33,7 @@ type PegawaiMonitoringRow = {
 };
 
 type Props = {
-    pegawaiList: PegawaiMonitoringRow[];
+    pegawaiList: PaginatedData<PegawaiMonitoringRow>;
     selectedPeriode: string | null;
     kpStats: {
         total: number;
@@ -87,11 +89,11 @@ export default function MonitoringKenaikanPangkatPage({
 
     const filteredList = useMemo(() => {
         if (statusFilter === 'semua') {
-            return pegawaiList;
+            return pegawaiList.data;
         }
 
-        return pegawaiList.filter((item) => item.status === statusFilter);
-    }, [pegawaiList, statusFilter]);
+        return pegawaiList.data.filter((item) => item.status === statusFilter);
+    }, [pegawaiList.data, statusFilter]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -299,6 +301,8 @@ export default function MonitoringKenaikanPangkatPage({
                         </TableBody>
                     </Table>
                 </div>
+
+                <PaginationWrapper meta={pegawaiList.meta} />
             </div>
         </AppLayout>
     );

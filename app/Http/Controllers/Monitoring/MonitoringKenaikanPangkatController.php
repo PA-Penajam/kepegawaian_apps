@@ -14,18 +14,12 @@ class MonitoringKenaikanPangkatController extends Controller
     {
         $periode = $request->string('periode')->toString();
         $periode = $periode !== '' ? $periode : null;
-
-        $pegawaiList = $service->getUpcomingKenaikanPangkat($periode);
+        $perPage = $request->integer('per_page', 15);
 
         return Inertia::render('kepegawaian/monitoring/kenaikan-pangkat/index', [
-            'pegawaiList' => $pegawaiList,
-            'selectedPeriode' => $periode,
-            'kpStats' => [
-                'total' => $pegawaiList->count(),
-                'sudahEligible' => $pegawaiList->where('status', 'Sudah Eligible')->count(),
-                'mendekatiEligible' => $pegawaiList->where('status', 'Mendekati Eligible')->count(),
-                'belumEligible' => $pegawaiList->where('status', 'Belum Eligible')->count(),
-            ],
+            'pegawaiList'    => $service->getUpcomingKenaikanPangkat($periode, $perPage),
+            'selectedPeriode'=> $periode,
+            'kpStats'        => $service->getKpStats($periode),
         ]);
     }
 }
