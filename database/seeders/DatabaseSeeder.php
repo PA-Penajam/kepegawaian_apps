@@ -2,6 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Agama;
+use App\Enums\JenisKelamin;
+use App\Enums\StatusKepegawaian;
+use App\Enums\StatusPegawai;
+use App\Enums\StatusPerkawinan;
 use App\Models\IamApplication;
 use App\Models\IamRole;
 use App\Models\IamUserRole;
@@ -49,11 +54,11 @@ class DatabaseSeeder extends Seeder
             'nama_lengkap' => 'Pranata Komputer',
             'tempat_lahir' => 'Penajam',
             'tanggal_lahir' => '1991-07-13',
-            'jenis_kelamin' => 'Laki-Laki',
-            'agama' => 'Islam',
-            'status_perkawinan' => 'Kawin',
-            'status_kepegawaian' => 'PNS',
-            'status_pegawai' => 'Aktif',
+            'jenis_kelamin' => JenisKelamin::LakiLaki,
+            'agama' => Agama::Islam,
+            'status_perkawinan' => StatusPerkawinan::Kawin,
+            'status_kepegawaian' => StatusKepegawaian::PNS,
+            'status_pegawai' => StatusPegawai::Aktif,
             'tanggal_masuk' => '2020-12-01',
             'email' => 'admin@pa-penajam.go.id',
             'email_verified_at' => now(),
@@ -75,11 +80,11 @@ class DatabaseSeeder extends Seeder
             'nama_lengkap' => 'Operator',
             'tempat_lahir' => 'Penajam',
             'tanggal_lahir' => '1992-01-01',
-            'jenis_kelamin' => 'Perempuan',
-            'agama' => 'Islam',
-            'status_perkawinan' => 'Kawin',
-            'status_kepegawaian' => 'PNS',
-            'status_pegawai' => 'Aktif',
+            'jenis_kelamin' => JenisKelamin::Perempuan,
+            'agama' => Agama::Islam,
+            'status_perkawinan' => StatusPerkawinan::Kawin,
+            'status_kepegawaian' => StatusKepegawaian::PNS,
+            'status_pegawai' => StatusPegawai::Aktif,
             'tanggal_masuk' => '2021-01-01',
             'email' => 'operator@pa-penajam.go.id',
             'email_verified_at' => now(),

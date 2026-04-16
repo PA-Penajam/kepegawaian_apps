@@ -111,7 +111,7 @@ class IamSeeder extends Seeder
                 ->keyBy('slug');
 
             // Gunakan chunking untuk menghindari memory issues dengan data besar
-            Pegawai::chunk(100, function ($users) use ($kepegawaian, $rolesBySlug, $viewerRole) {
+            Pegawai::chunk(100, function ($users) use ($rolesBySlug, $viewerRole) {
                 foreach ($users as $user) {
                     $roleSlug = $user->getRawOriginal('role') ?? 'viewer';
                     $iamRole = $rolesBySlug->get($roleSlug) ?? $viewerRole;
@@ -133,6 +133,7 @@ class IamSeeder extends Seeder
             ['slug' => 'pegawai.create', 'nama' => 'Tambah Pegawai', 'group' => 'pegawai', 'keterangan' => 'Menambah data pegawai'],
             ['slug' => 'pegawai.update', 'nama' => 'Ubah Pegawai', 'group' => 'pegawai', 'keterangan' => 'Mengubah data pegawai'],
             ['slug' => 'pegawai.delete', 'nama' => 'Hapus Pegawai', 'group' => 'pegawai', 'keterangan' => 'Menghapus data pegawai'],
+            ['slug' => 'monitoring.view', 'nama' => 'Lihat Monitoring', 'group' => 'monitoring', 'keterangan' => 'Melihat data monitoring KGB & kenaikan pangkat'],
             ['slug' => 'referensi.view', 'nama' => 'Lihat Referensi', 'group' => 'referensi', 'keterangan' => 'Melihat data referensi'],
             ['slug' => 'referensi.create', 'nama' => 'Tambah Referensi', 'group' => 'referensi', 'keterangan' => 'Menambah data referensi'],
             ['slug' => 'referensi.update', 'nama' => 'Ubah Referensi', 'group' => 'referensi', 'keterangan' => 'Mengubah data referensi'],

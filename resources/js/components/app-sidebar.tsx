@@ -108,9 +108,8 @@ export function AppSidebar() {
           ]
         : [];
 
-    const iamNavItems: NavItem[] = isViewer
-        ? []
-        : [
+    const iamNavItems: NavItem[] = hasPermission('iam-manage')
+        ? [
               {
                   title: 'Aplikasi',
                   href: aplikasi.index.url(),
@@ -121,7 +120,8 @@ export function AppSidebar() {
                   href: users.index.url(),
                   icon: Users,
               },
-          ];
+          ]
+        : [];
 
     return (
         <Sidebar collapsible="icon" variant="inset">

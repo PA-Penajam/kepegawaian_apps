@@ -32,7 +32,7 @@ class HandleInertiaRequests extends Middleware
                     'two_factor_enabled' => ! is_null($user->two_factor_confirmed_at),
                     'roles' => $user->iamRoles->pluck('nama')->toArray(),
                     'permissions' => $user->iamRoles->flatMap(
-                        fn ($role) => $role->permissions->pluck('nama')
+                        fn ($role) => $role->permissions->pluck('slug')
                     )->unique()->values()->toArray(),
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,
