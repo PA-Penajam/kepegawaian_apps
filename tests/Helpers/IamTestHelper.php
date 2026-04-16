@@ -8,6 +8,7 @@ if (! function_exists('makeIamHeaders')) {
      * Generate valid IAM signature headers untuk testing.
      * Format payload: METHOD:PATH:SORTED_QUERY:BODY_SHA256:TIMESTAMP
      *
+<<<<<<< HEAD
      * @param  string  $method  HTTP method
      * @param  string  $path  Request path
      * @param  array<string, mixed>  $body  Request body

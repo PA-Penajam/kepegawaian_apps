@@ -14,9 +14,9 @@ class VerifyIamSignature
 
     public function handle(Request $request, Closure $next): Response
     {
-        $apiKey = $request->header('X-App-Key');
+        $apiKey    = $request->header('X-App-Key');
         $timestamp = $request->header('X-Timestamp');
-        $received = $request->header('X-Signature');
+        $received  = $request->header('X-Signature');
 
         if (! $apiKey || ! $timestamp || ! $received) {
             return response()->json(['message' => 'Invalid credentials'], 401);
@@ -42,14 +42,14 @@ class VerifyIamSignature
             .':'.$timestamp;
 
         try {
-            $secret = Crypt::decryptString($app->api_secret_hash);
+            $secret   = Crypt::decryptString($app->api_secret_hash);
             $expected = hash_hmac('sha256', $payload, $secret);
 
             if (! hash_equals($expected, $received)) {
-                return response()->json(['message' => 'Invalid signature'], 401);
+                return response()->json(['message' => 'Invalid credentials'], 401);
             }
         } catch (\Exception) {
-            return response()->json(['message' => 'Invalid signature'], 401);
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
         // Inject app ke request attributes (aman, tidak bisa di-inject user)

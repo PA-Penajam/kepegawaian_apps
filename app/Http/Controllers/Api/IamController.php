@@ -17,7 +17,7 @@ class IamController extends Controller
     public function validate(Request $request): JsonResponse
     {
         $user = $request->user();
-        $app = $request->attributes->get('iam_app'); // diinjek oleh VerifyIamSignature via attributes
+        $app  = $request->attributes->get('iam_app'); // diinjek oleh VerifyIamSignature via attributes
         $token = $user->currentAccessToken();
 
         return response()->json([
@@ -30,8 +30,8 @@ class IamController extends Controller
 
     public function check(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $app = $request->attributes->get('iam_app');
+        $user       = $request->user();
+        $app        = $request->attributes->get('iam_app');
         $permission = $request->query('permission', '');
 
         $allowed = in_array(
