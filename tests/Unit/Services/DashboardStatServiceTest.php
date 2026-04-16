@@ -83,16 +83,42 @@ test('getStats returns dashboard statistics with expected structure and values',
                 currentPage: 1
             );
         }
+
+        public function getKgbStats(int $months = 3): array
+        {
+            return [
+                'total'      => 2,
+                'jatuhTempo' => 0,
+                'segera'     => 2,
+                'mendekati'  => 0,
+                'aman'       => 0,
+            ];
+        }
     });
 
     app()->instance(KenaikanPangkatMonitoringService::class, new class extends KenaikanPangkatMonitoringService
     {
-        public function getUpcomingKenaikanPangkat(?string $periode = null): Collection
+        public function getUpcomingKenaikanPangkat(?string $periode = null, int $perPage = 15): LengthAwarePaginator
         {
-            return collect([
-                ['status' => 'Sudah Eligible'],
-                ['status' => 'Belum Eligible'],
-            ]);
+            return new LengthAwarePaginator(
+                items: collect([
+                    ['id' => 'kp-1', 'status' => 'Sudah Eligible'],
+                    ['id' => 'kp-2', 'status' => 'Belum Eligible'],
+                ]),
+                total: 2,
+                perPage: $perPage,
+                currentPage: 1
+            );
+        }
+
+        public function getKpStats(?string $periode = null): array
+        {
+            return [
+                'total'             => 2,
+                'sudahEligible'     => 1,
+                'mendekatiEligible' => 0,
+                'belumEligible'     => 1,
+            ];
         }
     });
 
