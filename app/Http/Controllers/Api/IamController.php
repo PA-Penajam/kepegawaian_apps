@@ -15,7 +15,7 @@ class IamController extends Controller
     public function validate(Request $request): JsonResponse
     {
         $user    = $request->user();
-        $app     = $request->get('_iam_app'); // diinjek oleh VerifyIamSignature
+        $app     = $request->attributes->get('iam_app'); // diinjek oleh VerifyIamSignature
 
         $userRoles = IamUserRole::where('user_id', $user->id)
             ->whereHas('role', fn ($q) => $q->where('iam_application_id', $app->id))
@@ -40,7 +40,7 @@ class IamController extends Controller
     public function check(Request $request): JsonResponse
     {
         $user       = $request->user();
-        $app        = $request->get('_iam_app');
+        $app        = $request->attributes->get('iam_app');
         $permission = $request->query('permission', '');
 
         $userPermissions = IamUserRole::where('user_id', $user->id)

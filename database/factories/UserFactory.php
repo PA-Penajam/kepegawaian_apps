@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\IamApplication;
 use App\Models\IamRole;
 use App\Models\IamUserRole;
 use App\Models\User;
@@ -66,8 +67,7 @@ class UserFactory extends Factory
     public function admin(): static
     {
         return $this->afterCreating(function (User $user) {
-            $app = \App\Models\IamApplication::where('slug', 'kepegawaian')->first();
-            $role = $app ? IamRole::where('iam_application_id', $app->id)->where('slug', 'admin')->first() : null;
+            $role = $this->resolveKepegawaianRole('admin');
             if ($role) {
                 IamUserRole::firstOrCreate(
                     ['user_id' => $user->id, 'iam_role_id' => $role->id],
@@ -83,8 +83,7 @@ class UserFactory extends Factory
     public function operator(): static
     {
         return $this->afterCreating(function (User $user) {
-            $app = \App\Models\IamApplication::where('slug', 'kepegawaian')->first();
-            $role = $app ? IamRole::where('iam_application_id', $app->id)->where('slug', 'operator')->first() : null;
+            $role = $this->resolveKepegawaianRole('operator');
             if ($role) {
                 IamUserRole::firstOrCreate(
                     ['user_id' => $user->id, 'iam_role_id' => $role->id],
@@ -100,8 +99,7 @@ class UserFactory extends Factory
     public function viewer(): static
     {
         return $this->afterCreating(function (User $user) {
-            $app = \App\Models\IamApplication::where('slug', 'kepegawaian')->first();
-            $role = $app ? IamRole::where('iam_application_id', $app->id)->where('slug', 'viewer')->first() : null;
+            $role = $this->resolveKepegawaianRole('viewer');
             if ($role) {
                 IamUserRole::firstOrCreate(
                     ['user_id' => $user->id, 'iam_role_id' => $role->id],
@@ -109,5 +107,31 @@ class UserFactory extends Factory
                 );
             }
         });
+    }
+
+    /**
+     * Pastikan IamApplication kepegawaian dan role-nya ada, lalu kembalikan role yang diminta.
+     * Berguna di test dengan RefreshDatabase agar factory tidak gagal diam-diam.
+     */
+    private function resolveKepegawaianRole(string $roleSlug): ?IamRole
+    {
+        ['key' => $key, 'hash' => $hash] = IamApplication::generateApiCredentials();
+
+        $app = IamApplication::firstOrCreate(
+            ['slug' => 'kepegawaian'],
+            [
+                'nama'            => 'Kepegawaian',
+                'url'             => 'http://localhost',
+                'api_key'         => $key,
+                'api_secret_hash' => $hash,
+                'is_active'       => true,
+                'is_system'       => true,
+            ]
+        );
+
+        return IamRole::firstOrCreate(
+            ['iam_application_id' => $app->id, 'slug' => $roleSlug],
+            ['nama' => ucfirst($roleSlug), 'is_system' => false]
+        );
     }
 }

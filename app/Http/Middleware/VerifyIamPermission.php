@@ -26,7 +26,17 @@ class VerifyIamPermission
             abort(Response::HTTP_FORBIDDEN);
         }
 
-        // Kumpulkan semua permissions user untuk aplikasi kepegawaian
+        $userRoles = IamUserRole::where('user_id', $user->id)
+            ->whereHas('role', fn ($q) => $q->where('iam_application_id', $kepegawaian->id))
+            ->exists();
+
+        // Jika tidak ada permission yang diminta, cukup cek user punya role di app ini
+        if (empty($permissions)) {
+            abort_unless($userRoles, Response::HTTP_FORBIDDEN);
+            return $next($request);
+        }
+
+        // Kumpulkan semua permissions user untuk cek permission spesifik
         $userPermissions = IamUserRole::where('user_id', $user->id)
             ->whereHas('role', fn ($q) => $q->where('iam_application_id', $kepegawaian->id))
             ->with('role.permissions')
@@ -35,14 +45,6 @@ class VerifyIamPermission
             ->unique()
             ->values()
             ->all();
-
-        // Jika tidak ada permission yang diminta, cukup cek user punya role di app ini
-        if (empty($permissions)) {
-            if (empty($userPermissions)) {
-                abort(Response::HTTP_FORBIDDEN);
-            }
-            return $next($request);
-        }
 
         // Cek semua permission yang diminta terpenuhi
         foreach ($permissions as $permission) {
