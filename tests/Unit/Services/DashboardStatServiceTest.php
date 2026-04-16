@@ -11,6 +11,7 @@ use App\Services\KenaikanPangkatMonitoringService;
 use App\Services\KgbMonitoringService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
@@ -70,12 +71,17 @@ test('getStats returns dashboard statistics with expected structure and values',
 
     app()->instance(KgbMonitoringService::class, new class extends KgbMonitoringService
     {
-        public function getUpcomingKgb(int $months = 3): Collection
+        public function getUpcomingKgb(int $months = 3, int $perPage = 15): LengthAwarePaginator
         {
-            return collect([
-                ['id' => 'kgb-1'],
-                ['id' => 'kgb-2'],
-            ]);
+            return new LengthAwarePaginator(
+                items: collect([
+                    ['id' => 'kgb-1'],
+                    ['id' => 'kgb-2'],
+                ]),
+                total: 2,
+                perPage: $perPage,
+                currentPage: 1
+            );
         }
     });
 

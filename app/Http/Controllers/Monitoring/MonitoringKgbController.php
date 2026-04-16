@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Monitoring;
 
 use App\Http\Controllers\Controller;
 use App\Services\KgbMonitoringService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,19 +14,13 @@ class MonitoringKgbController extends Controller
         protected KgbMonitoringService $kgbMonitoringService,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $pegawaiList = $this->kgbMonitoringService->getUpcomingKgb();
+        $perPage = $request->integer('per_page', 15);
 
         return Inertia::render('kepegawaian/monitoring/kgb/index', [
-            'pegawaiList' => $pegawaiList->all(),
-            'kgbStats' => [
-                'total' => $pegawaiList->count(),
-                'jatuhTempo' => $pegawaiList->where('status', 'Sudah Jatuh Tempo')->count(),
-                'segera' => $pegawaiList->where('status', 'Segera')->count(),
-                'mendekati' => $pegawaiList->where('status', 'Mendekati')->count(),
-                'aman' => $pegawaiList->where('status', 'Aman')->count(),
-            ],
+            'pegawaiList' => $this->kgbMonitoringService->getUpcomingKgb(3, $perPage),
+            'kgbStats'    => $this->kgbMonitoringService->getKgbStats(3),
         ]);
     }
 }

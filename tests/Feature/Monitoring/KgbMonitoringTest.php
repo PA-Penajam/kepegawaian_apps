@@ -76,7 +76,7 @@ test('service melewati pegawai tanpa riwayat pangkat aktif dan status pegawai ya
     expect($upcoming)->toHaveCount(3)
         ->and($upcoming->pluck('nama_lengkap')->all())
         ->toBe(['Jatuh Tempo', 'Segera', 'Mendekati'])
-        ->and($upcoming->pluck('kgb.status', 'nama_lengkap')->all())
+        ->and($upcoming->pluck('status', 'nama_lengkap')->all())
         ->toBe([
             'Jatuh Tempo' => 'Sudah Jatuh Tempo',
             'Segera' => 'Segera',
@@ -105,14 +105,42 @@ test('controller index menampilkan inertia monitoring kgb', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('kepegawaian/monitoring/kgb/index')
-            ->has('pegawaiList', 1)
-            ->where('pegawaiList.0.nama_lengkap', 'Operator Monitor')
-            ->where('pegawaiList.0.status', 'Segera')
+            ->has('pegawaiList.data', 1)
+            ->where('pegawaiList.data.0.nama_lengkap', 'Operator Monitor')
+            ->where('pegawaiList.data.0.status', 'Segera')
             ->where('kgbStats.total', 1)
             ->where('kgbStats.jatuhTempo', 0)
             ->where('kgbStats.segera', 1)
             ->where('kgbStats.mendekati', 0)
             ->where('kgbStats.aman', 0),
+        );
+
+    Carbon::setTestNow();
+});
+
+test('controller mengembalikan data pegawai dalam format paginasi', function () {
+    Carbon::setTestNow('2026-01-01');
+
+    $user = Pegawai::factory()->operator()->create();
+
+    // Buat 20 pegawai dengan KGB segera agar melebihi default per_page 15
+    foreach (range(1, 20) as $i) {
+        createPegawaiWithAktifPangkat('2026-01-31', [
+            'nama_lengkap' => "Pegawai {$i}",
+        ]);
+    }
+
+    actingAs($user);
+
+    get(route('monitoring.kgb.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('kepegawaian/monitoring/kgb/index')
+            ->has('pegawaiList.data', 15) // default per_page 15
+            ->where('pegawaiList.total', 20)
+            ->where('pegawaiList.last_page', 2)
+            ->has('kgbStats')
+            ->where('kgbStats.total', 20),
         );
 
     Carbon::setTestNow();

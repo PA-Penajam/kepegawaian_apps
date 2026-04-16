@@ -17,7 +17,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import type { BreadcrumbItem } from '@/types';
+import type { PaginatedData } from '@/types/kepegawaian';
 
 type KgbStatus = 'Sudah Jatuh Tempo' | 'Segera' | 'Mendekati' | 'Aman';
 type StatusFilter = 'semua' | 'jatuh-tempo' | 'segera' | 'mendekati' | 'aman';
@@ -34,7 +36,7 @@ type PegawaiMonitoringKgb = {
 };
 
 type Props = {
-    pegawaiList: PegawaiMonitoringKgb[];
+    pegawaiList: PaginatedData<PegawaiMonitoringKgb>;
     kgbStats: {
         total: number;
         jatuhTempo: number;
@@ -91,13 +93,13 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats }: Props) {
         const selectedStatus = filterMap[statusFilter];
 
         if (selectedStatus === null) {
-            return pegawaiList;
+            return pegawaiList.data;
         }
 
-        return pegawaiList.filter(
+        return pegawaiList.data.filter(
             (pegawai) => pegawai.status === selectedStatus,
         );
-    }, [pegawaiList, statusFilter]);
+    }, [pegawaiList.data, statusFilter]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -240,6 +242,11 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats }: Props) {
                                 </TableBody>
                             </Table>
                         </div>
+
+                        <PaginationWrapper
+                            links={pegawaiList.links}
+                            lastPage={pegawaiList.last_page}
+                        />
                     </CardContent>
                 </Card>
             </div>
