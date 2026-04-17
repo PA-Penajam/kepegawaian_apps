@@ -37,4 +37,24 @@ class StorePengajuanPerubahanDataRequest extends FormRequest
             'lampiran.*'         => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ];
     }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            $domain = $this->input('domain');
+            $afterPayload = $this->input('after_payload', []);
+            $lampiran = $this->file('lampiran', []);
+
+            $wajibLampiran = $domain === 'pasangan'
+                || $domain === 'anak'
+                || ($domain === 'profil_pribadi' && count(array_intersect(
+                    ['nama_lengkap', 'nik', 'tempat_lahir', 'tanggal_lahir', 'status_perkawinan'],
+                    array_keys($afterPayload),
+                )) > 0);
+
+            if ($wajibLampiran && count($lampiran) === 0) {
+                $validator->errors()->add('lampiran', 'Lampiran wajib diunggah untuk perubahan ini.');
+            }
+        });
+    }
 }

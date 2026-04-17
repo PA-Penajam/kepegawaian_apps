@@ -6,12 +6,14 @@ use App\Enums\StatusPengajuanPerubahanData;
 use App\Models\Keluarga;
 use App\Models\Pegawai;
 use App\Models\PengajuanPerubahanData;
+use Illuminate\Validation\ValidationException;
 
 class SubmitPengajuanPerubahanDataService
 {
     public function handle(Pegawai $pengaju, array $payload, string $jenisPengaju): PengajuanPerubahanData
     {
         $subjectPegawaiId = $this->resolveSubjectPegawaiId($payload);
+        $this->ensureNoPendingConflict($subjectPegawaiId, $payload);
         $beforePayload = $this->resolveBeforePayload($payload);
         $changedFields = array_keys($payload['after_payload']);
         $scopeKey = $this->makeScopeKey($subjectPegawaiId, $payload);
@@ -106,5 +108,21 @@ class SubmitPengajuanPerubahanDataService
         }
 
         return "{$payload['domain']}:{$payload['aksi']}:{$subjectPegawaiId}:".sha1(json_encode($payload['after_payload']));
+    }
+
+    private function ensureNoPendingConflict(string $subjectPegawaiId, array $payload): void
+    {
+        $scopeKey = $this->makeScopeKey($subjectPegawaiId, $payload);
+
+        $exists = PengajuanPerubahanData::query()
+            ->where('status', StatusPengajuanPerubahanData::Pending)
+            ->where('scope_key', $scopeKey)
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'domain' => 'Masih ada pengajuan pending untuk target yang sama.',
+            ]);
+        }
     }
 }

@@ -40,3 +40,43 @@ it('pegawai dapat mengajukan perubahan profil pribadi sebagai pending', function
 
     expect(Pegawai::query()->findOrFail($pegawai->id)->nama_lengkap)->toBe('Nama Lama');
 });
+
+it('menolak pengajuan baru jika masih ada pending untuk profil pribadi yang sama', function (): void {
+    $pegawai = Pegawai::factory()->viewer()->create();
+
+    \App\Models\PengajuanPerubahanData::factory()->create([
+        'pengaju_id' => $pegawai->id,
+        'jenis_pengaju' => 'pegawai',
+        'domain' => 'profil_pribadi',
+        'aksi' => 'update',
+        'target_type' => 'pegawai',
+        'target_id' => $pegawai->id,
+        'status' => 'pending',
+    ]);
+
+    actingAs($pegawai)
+        ->post(route('self-service.pengajuan.store'), [
+            'domain' => 'profil_pribadi',
+            'aksi' => 'update',
+            'target_type' => 'pegawai',
+            'target_id' => $pegawai->id,
+            'after_payload' => ['nama_lengkap' => 'Nama Kedua'],
+            'lampiran' => [UploadedFile::fake()->image('ktp-baru.jpg')],
+        ])
+        ->assertSessionHasErrors('domain');
+});
+
+it('mewajibkan lampiran untuk perubahan identitas utama profil pribadi', function (): void {
+    $pegawai = Pegawai::factory()->viewer()->create(['nama_lengkap' => 'Nama Lama']);
+
+    actingAs($pegawai)
+        ->post(route('self-service.pengajuan.store'), [
+            'domain' => 'profil_pribadi',
+            'aksi' => 'update',
+            'target_type' => 'pegawai',
+            'target_id' => $pegawai->id,
+            'after_payload' => ['nama_lengkap' => 'Nama Baru'],
+            'lampiran' => [],
+        ])
+        ->assertSessionHasErrors('lampiran');
+});
