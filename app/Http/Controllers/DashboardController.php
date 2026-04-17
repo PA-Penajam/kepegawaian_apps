@@ -12,7 +12,8 @@ class DashboardController extends Controller
     public function __invoke(Request $request, DashboardStatService $service): Response
     {
         return Inertia::render('dashboard', [
-            'stats' => $service->getStats(),
+            'fastStats' => $service->getFastStats(),
+            'heavyStats' => Inertia::defer(fn () => $service->getHeavyStats()),
         ]);
     }
 }

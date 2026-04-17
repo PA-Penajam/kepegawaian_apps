@@ -17,31 +17,31 @@ test('authenticated users can visit the dashboard', function () {
     $response->assertOk();
 });
 
-test('dashboard returns required statistics', function () {
+test('dashboard returns fastStats langsung dan heavyStats sebagai deferred', function () {
     $user = Pegawai::factory()->create();
     $this->actingAs($user);
 
-    $response = $this->get(route('dashboard'));
-    $response->assertOk();
-
-    $response->assertInertia(fn (AssertableInertia $page) => $page
-        ->component('dashboard')
-        ->has('stats', fn (AssertableInertia $page) => $page
-            ->has('total_pegawai_aktif')
-            ->has('distribusi_golongan')
-            ->has('distribusi_unit_kerja')
-            ->has('distribusi_jenis_kelamin')
-            ->has('kgb_segera_count')
-            ->has('kp_eligible_count')
-            ->has('distribusi_jabatan')
-            ->has('distribusi_pendidikan')
-            ->has('pegawai_baru_bulan_ini')
-        )
-    );
+    $this->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('dashboard')
+            ->has('fastStats', fn (AssertableInertia $stats) => $stats
+                ->has('total_pegawai_aktif')
+                ->has('kgb_segera_count')
+                ->has('kp_eligible_count')
+                ->has('pegawai_baru_bulan_ini')
+                ->whereAllType([
+                    'total_pegawai_aktif' => 'integer',
+                    'kgb_segera_count' => 'integer',
+                    'kp_eligible_count' => 'integer',
+                    'pegawai_baru_bulan_ini' => 'integer',
+                ])
+            )
+            ->missing('heavyStats')
+        );
 });
 
 test('distribusi golongan menggunakan query SQL bukan PHP collection', function () {
-    // Buat beberapa pegawai dengan pangkat berbeda golongan
     $user = Pegawai::factory()->admin()->create();
 
     DB::enableQueryLog();
@@ -50,7 +50,6 @@ test('distribusi golongan menggunakan query SQL bukan PHP collection', function 
     $queries = DB::getQueryLog();
     DB::disableQueryLog();
 
-    // Hanya 1 query untuk distribusi golongan
     expect($queries)->toHaveCount(1)
         ->and($result)->toBeArray()
         ->and($result)->toHaveKeys(['I', 'II', 'III', 'IV']);
@@ -65,7 +64,6 @@ test('distribusi jabatan menggunakan query SQL bukan PHP collection', function (
     $queries = DB::getQueryLog();
     DB::disableQueryLog();
 
-    // Hanya 1 query untuk distribusi jabatan
     expect($queries)->toHaveCount(1)
         ->and($result)->toBeCollection();
 });
@@ -79,7 +77,6 @@ test('distribusi pendidikan menggunakan query SQL bukan PHP collection', functio
     $queries = DB::getQueryLog();
     DB::disableQueryLog();
 
-    // Hanya 1 query untuk distribusi pendidikan
     expect($queries)->toHaveCount(1)
         ->and($result)->toBeCollection();
 });

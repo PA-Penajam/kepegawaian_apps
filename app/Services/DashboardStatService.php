@@ -17,16 +17,27 @@ class DashboardStatService
 {
     public function getStats(): array
     {
-        return Cache::remember('dashboard_stats', 300, fn () => [
+        return array_merge($this->getFastStats(), $this->getHeavyStats());
+    }
+
+    public function getFastStats(): array
+    {
+        return Cache::remember('dashboard_stats_fast', 300, fn () => [
             'total_pegawai_aktif'    => $this->getTotalPegawaiAktif(),
-            'distribusi_golongan'    => $this->getDistribusiGolongan(),
-            'distribusi_unit_kerja'  => $this->getDistribusiUnitKerja(),
-            'distribusi_jenis_kelamin'=> $this->getDistribusiJenisKelamin(),
             'kgb_segera_count'       => $this->getKgbSegeraCount(),
             'kp_eligible_count'      => $this->getKpEligibleCount(),
-            'distribusi_jabatan'     => $this->getDistribusiJabatan(),
-            'distribusi_pendidikan'  => $this->getDistribusiPendidikan(),
             'pegawai_baru_bulan_ini' => $this->getPegawaiBaruBulanIni(),
+        ]);
+    }
+
+    public function getHeavyStats(): array
+    {
+        return Cache::remember('dashboard_stats_heavy', 300, fn () => [
+            'distribusi_golongan'     => $this->getDistribusiGolongan(),
+            'distribusi_unit_kerja'   => $this->getDistribusiUnitKerja(),
+            'distribusi_jenis_kelamin'=> $this->getDistribusiJenisKelamin(),
+            'distribusi_jabatan'      => $this->getDistribusiJabatan(),
+            'distribusi_pendidikan'   => $this->getDistribusiPendidikan(),
         ]);
     }
 
