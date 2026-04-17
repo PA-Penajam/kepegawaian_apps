@@ -30,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Pegawai::class, PegawaiPolicy::class);
 
         $this->configureDefaults();
+        $this->registerSlowQueryLogger();
     }
 
     /**
@@ -55,5 +56,27 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    /**
+     * Mendaftarkan listener untuk query lambat.
+     * Query yang melebihi threshold akan dicatat sebagai warning.
+     */
+    private function registerSlowQueryLogger(): void
+    {
+        if (! config('app.log_slow_queries', false)) {
+            return;
+        }
+
+        $threshold = config('app.slow_query_threshold_ms', 500);
+
+        DB::listen(function ($query) use ($threshold): void {
+            if ($query->time >= $threshold) {
+                logger()->warning('[SLOW QUERY] '.$query->time.'ms | '.$query->sql, [
+                    'bindings' => $query->bindings,
+                    'time_ms'  => $query->time,
+                ]);
+            }
+        });
     }
 }

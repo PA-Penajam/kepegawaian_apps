@@ -123,4 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'log_slow_queries' => env('APP_LOG_SLOW_QUERIES', false),
+    'slow_query_threshold_ms' => env('APP_SLOW_QUERY_THRESHOLD_MS', 500),
+
 ];

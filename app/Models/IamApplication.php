@@ -8,14 +8,25 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class IamApplication extends Model
 {
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasFactory, HasUlids, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'nama', 'slug', 'url', 'deskripsi', 'is_active',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->logFillable()
+            ->setDescriptionForEvent(fn (string $eventName) => $eventName);
+    }
 
     /**
      * Field sensitif yang tidak boleh muncul di JSON/response.

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Iam\AplikasiController;
 use App\Http\Controllers\Iam\PermissionController;
@@ -31,6 +32,10 @@ Route::middleware('auth')->get('/sso/callback', [SsoController::class, 'callback
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 });
+
+Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])
+    ->get('activity-log', [ActivityLogController::class, 'index'])
+    ->name('activity-log.index');
 
 Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
     Route::resource('kepegawaian/pegawai', PegawaiController::class)

@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Keluarga extends Model
 {
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasFactory, HasUlids, LogsActivity, SoftDeletes;
 
     protected $table = 'keluarga';
 
@@ -35,6 +37,15 @@ class Keluarga extends Model
             'tanggal_lahir' => 'date',
             'deleted_at' => 'datetime',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->logFillable()
+            ->setDescriptionForEvent(fn (string $eventName) => $eventName);
     }
 
     public function pegawai(): BelongsTo
