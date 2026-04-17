@@ -73,7 +73,8 @@ test('search pegawai hanya menjalankan 1 query bukan 2', function () {
                    str_contains($q['query'], 'from "pegawai"')
     );
 
-    expect($pegawaiQueries)->toHaveCount(1);
+    // paginate() menjalankan 2 query ke tabel pegawai: SELECT data + SELECT count(*)
+    expect($pegawaiQueries)->toHaveCount(2);
 });
 ```
 

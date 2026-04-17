@@ -101,7 +101,7 @@ class PegawaiApiController extends Controller
 
         return response()->json([
             'data' => PegawaiApiResource::collection($result),
-            'meta' => ['total' => $result->total(), 'per_page' => 20],
+            'meta' => ['total' => $result->total(), 'per_page' => $result->perPage()],
         ]);
     }
 }
