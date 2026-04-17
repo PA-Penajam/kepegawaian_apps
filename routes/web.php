@@ -6,6 +6,7 @@ use App\Http\Controllers\Iam\AplikasiController;
 use App\Http\Controllers\Iam\PermissionController;
 use App\Http\Controllers\Iam\RoleController;
 use App\Http\Controllers\Iam\UserAksesController;
+use App\Http\Controllers\Kepegawaian\ApprovalPengajuanPerubahanDataController;
 use App\Http\Controllers\Kepegawaian\DokumenPegawaiController;
 use App\Http\Controllers\Kepegawaian\HukumanDisiplinController;
 use App\Http\Controllers\Kepegawaian\KeluargaController;
@@ -157,6 +158,17 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
                 'App\\Http\\Controllers\\Kepegawaian\\RiwayatPangkatController',
             )
                 ->only(['index', 'store', 'update', 'destroy']);
+
+            // Pengajuan perubahan data - validator inbox
+            Route::prefix('pengajuan')
+                ->name('pengajuan.')
+                ->middleware('iam.permission:pengajuan-perubahan.validate')
+                ->group(function () {
+                    Route::get('/', [ApprovalPengajuanPerubahanDataController::class, 'index'])->name('index');
+                    Route::get('/{pengajuan}', [ApprovalPengajuanPerubahanDataController::class, 'show'])->name('show');
+                    Route::post('/{pengajuan}/approve', [ApprovalPengajuanPerubahanDataController::class, 'approve'])->name('approve');
+                    Route::post('/{pengajuan}/reject', [ApprovalPengajuanPerubahanDataController::class, 'reject'])->name('reject');
+                });
         });
 });
 

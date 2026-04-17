@@ -35,7 +35,7 @@ return [
 
     'testing' => [
 
-        'ensure_pages_exist' => true,
+        'ensure_pages_exist' => env('INERTIA_ENSURE_PAGES_EXIST', env('APP_ENV') === 'production'),
 
         'page_paths' => [
             resource_path('js/pages'),
