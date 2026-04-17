@@ -12,7 +12,13 @@ use Illuminate\Support\Facades\DB;
 
 class KgbMonitoringService
 {
-    public function getUpcomingKgb(int $months = 3, int $perPage = 15): LengthAwarePaginator
+    public function getUpcomingKgb(
+        int $months = 3,
+        int $perPage = 15,
+        ?string $unitKerjaId = null,
+        ?string $golongan = null,
+        ?string $status = null,
+    ): LengthAwarePaginator
     {
         $maxSisaHari = $months * 30;
         $driver = DB::connection()->getDriverName();
@@ -35,21 +41,37 @@ class KgbMonitoringService
             ->whereIn('status_pegawai', [
                 StatusPegawai::Aktif->value,
                 StatusPegawai::MutasiKeluar->value,
-            ]);
+            ])
+            ->when($unitKerjaId !== null, fn ($q) => $q->where('pegawai.ref_unit_kerja_id', $unitKerjaId))
+            ->when($golongan !== null, fn ($q) => $q->byGolongan($golongan));
 
-        // Filter KGB yang akan jatuh tempo dalam X bulan ke depan
-        // Menggunakan DATE_ADD untuk MySQL dan date() untuk SQLite
-        if ($isMySQL) {
-            $query->whereRaw(
-                'DATE_ADD(rp_kgb.tmt, INTERVAL 2 YEAR) <= ?',
-                [$maxKgbDate]
-            );
+        // Build KGB date expression untuk filter status
+        $kgbDateExpr = $isMySQL
+            ? 'DATE_ADD(rp_kgb.tmt, INTERVAL 2 YEAR)'
+            : "date(rp_kgb.tmt, '+2 years')";
+
+        // Filter KGB berdasarkan status
+        if ($status === null) {
+            // Default: KGB yang akan jatuh tempo dalam X bulan ke depan
+            $query->whereRaw("{$kgbDateExpr} <= ?", [$maxKgbDate]);
         } else {
-            // SQLite: date() function dengan modifier +2 years
-            $query->whereRaw(
-                "date(rp_kgb.tmt, '+2 years') <= ?",
-                [$maxKgbDate]
-            );
+            $today = Carbon::today()->toDateString();
+
+            match ($status) {
+                'jatuh-tempo' => $query->whereRaw("{$kgbDateExpr} <= ?", [$today]),
+                'segera'      => $query->whereRaw("{$kgbDateExpr} > ? AND {$kgbDateExpr} <= ?", [
+                                    $today,
+                                    Carbon::today()->addDays(60)->toDateString(),
+                                 ]),
+                'mendekati'   => $query->whereRaw("{$kgbDateExpr} > ? AND {$kgbDateExpr} <= ?", [
+                                    Carbon::today()->addDays(60)->toDateString(),
+                                    Carbon::today()->addDays(90)->toDateString(),
+                                 ]),
+                'aman'        => $query->whereRaw("{$kgbDateExpr} > ?", [
+                                    Carbon::today()->addDays(90)->toDateString(),
+                                 ]),
+                default       => $query->whereRaw("{$kgbDateExpr} <= ?", [$maxKgbDate]),
+            };
         }
 
         // Order berdasarkan sisa hari (kurang hari = lebih mendesak)
@@ -77,7 +99,11 @@ class KgbMonitoringService
             });
     }
 
-    public function getKgbStats(int $months = 3): array
+    public function getKgbStats(
+        int $months = 3,
+        ?string $unitKerjaId = null,
+        ?string $golongan = null,
+    ): array
     {
         $maxSisaHari = $months * 30;
         $driver = DB::connection()->getDriverName();
@@ -113,6 +139,8 @@ class KgbMonitoringService
                 StatusPegawai::Aktif->value,
                 StatusPegawai::MutasiKeluar->value,
             ])
+            ->when($unitKerjaId !== null, fn ($q) => $q->where('pegawai.ref_unit_kerja_id', $unitKerjaId))
+            ->when($golongan !== null, fn ($q) => $q->byGolongan($golongan))
             ->whereRaw(
                 $isMySQL
                     ? 'DATE_ADD(rp_kgb.tmt, INTERVAL 2 YEAR) <= ?'

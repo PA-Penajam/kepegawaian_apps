@@ -71,7 +71,13 @@ test('getStats returns dashboard statistics with expected structure and values',
 
     app()->instance(KgbMonitoringService::class, new class extends KgbMonitoringService
     {
-        public function getUpcomingKgb(int $months = 3, int $perPage = 15): LengthAwarePaginator
+        public function getUpcomingKgb(
+            int $months = 3,
+            int $perPage = 15,
+            ?string $unitKerjaId = null,
+            ?string $golongan = null,
+            ?string $status = null,
+        ): LengthAwarePaginator
         {
             return new LengthAwarePaginator(
                 items: collect([
@@ -84,7 +90,11 @@ test('getStats returns dashboard statistics with expected structure and values',
             );
         }
 
-        public function getKgbStats(int $months = 3): array
+        public function getKgbStats(
+            int $months = 3,
+            ?string $unitKerjaId = null,
+            ?string $golongan = null,
+        ): array
         {
             return [
                 'total'      => 2,

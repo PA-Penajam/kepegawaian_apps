@@ -2,6 +2,8 @@
 
 use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
+use App\Models\RefPangkat;
+use App\Models\RefUnitKerja;
 use App\Models\RiwayatPangkat;
 use App\Services\KgbMonitoringService;
 use Carbon\Carbon;
@@ -144,4 +146,147 @@ test('controller mengembalikan data pegawai dalam format paginasi', function () 
         );
 
     Carbon::setTestNow();
+});
+
+test('filter unit_kerja_id hanya menampilkan pegawai dari unit kerja tersebut', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    actingAs($admin);
+
+    $unitKerja1 = RefUnitKerja::factory()->create();
+    $unitKerja2 = RefUnitKerja::factory()->create();
+
+    $pangkat = RefPangkat::factory()->create(['kode' => 'III/a']);
+
+    // Pegawai unit kerja 1 dengan KGB jatuh tempo
+    $pegawai1 = Pegawai::factory()->create([
+        'ref_unit_kerja_id' => $unitKerja1->id,
+        'ref_pangkat_id' => $pangkat->id,
+        'status_pegawai' => 'aktif',
+    ]);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawai1->id,
+        'ref_pangkat_id' => $pangkat->id,
+        'tmt' => now()->subYears(2)->subMonth(),
+        'is_aktif' => true,
+    ]);
+
+    // Pegawai unit kerja 2 dengan KGB jatuh tempo
+    $pegawai2 = Pegawai::factory()->create([
+        'ref_unit_kerja_id' => $unitKerja2->id,
+        'ref_pangkat_id' => $pangkat->id,
+        'status_pegawai' => 'aktif',
+    ]);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawai2->id,
+        'ref_pangkat_id' => $pangkat->id,
+        'tmt' => now()->subYears(2)->subMonth(),
+        'is_aktif' => true,
+    ]);
+
+    $service = app(\App\Services\KgbMonitoringService::class);
+    $result = $service->getUpcomingKgb(3, 15, $unitKerja1->id);
+
+    $ids = collect($result->items())->pluck('id')->toArray();
+
+    expect($ids)->toContain($pegawai1->id)
+        ->and($ids)->not->toContain($pegawai2->id);
+});
+
+test('filter status jatuh-tempo hanya menampilkan KGB yang sudah lewat', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    actingAs($admin);
+
+    $pangkat = RefPangkat::factory()->create(['kode' => 'III/a']);
+
+    // KGB sudah lewat (tmt 2 tahun + 1 hari yang lalu)
+    $pegawaiJatuhTempo = Pegawai::factory()->create([
+        'ref_pangkat_id' => $pangkat->id,
+        'status_pegawai' => 'aktif',
+    ]);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawaiJatuhTempo->id,
+        'ref_pangkat_id' => $pangkat->id,
+        'tmt' => now()->subYears(2)->subDay(),
+        'is_aktif' => true,
+    ]);
+
+    // KGB masih segera (tmt 2 tahun dikurangi 30 hari ke depan)
+    $pegawaiSegera = Pegawai::factory()->create([
+        'ref_pangkat_id' => $pangkat->id,
+        'status_pegawai' => 'aktif',
+    ]);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawaiSegera->id,
+        'ref_pangkat_id' => $pangkat->id,
+        'tmt' => now()->subYears(2)->addDays(30),
+        'is_aktif' => true,
+    ]);
+
+    $service = app(\App\Services\KgbMonitoringService::class);
+    $result = $service->getUpcomingKgb(3, 15, null, null, 'jatuh-tempo');
+
+    $ids = collect($result->items())->pluck('id')->toArray();
+
+    expect($ids)->toContain($pegawaiJatuhTempo->id)
+        ->and($ids)->not->toContain($pegawaiSegera->id);
+});
+
+test('filter golongan hanya menampilkan pegawai dengan golongan tersebut', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    actingAs($admin);
+
+    $pangkatIII = RefPangkat::factory()->create(['kode' => 'III/a', 'golongan' => 'III']);
+    $pangkatIV = RefPangkat::factory()->create(['kode' => 'IV/a', 'golongan' => 'IV']);
+
+    $pegawaiIII = Pegawai::factory()->create([
+        'ref_pangkat_id' => $pangkatIII->id,
+        'status_pegawai' => 'aktif',
+    ]);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawaiIII->id,
+        'ref_pangkat_id' => $pangkatIII->id,
+        'tmt' => now()->subYears(2)->subMonth(),
+        'is_aktif' => true,
+    ]);
+
+    $pegawaiIV = Pegawai::factory()->create([
+        'ref_pangkat_id' => $pangkatIV->id,
+        'status_pegawai' => 'aktif',
+    ]);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawaiIV->id,
+        'ref_pangkat_id' => $pangkatIV->id,
+        'tmt' => now()->subYears(2)->subMonth(),
+        'is_aktif' => true,
+    ]);
+
+    $service = app(\App\Services\KgbMonitoringService::class);
+    $result = $service->getUpcomingKgb(3, 15, null, 'III');
+
+    $ids = collect($result->items())->pluck('id')->toArray();
+
+    expect($ids)->toContain($pegawaiIII->id)
+        ->and($ids)->not->toContain($pegawaiIV->id);
+});
+
+test('controller kgb meneruskan filter ke service dan kembali ke view', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    $unitKerja = RefUnitKerja::factory()->create();
+    actingAs($admin);
+
+    get(route('monitoring.kgb.index', ['unit_kerja' => $unitKerja->id, 'status' => 'segera']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('kepegawaian/monitoring/kgb/index')
+            ->has('filters', fn (Assert $f) => $f
+                ->where('unit_kerja', $unitKerja->id)
+                ->where('status', 'segera')
+                ->etc()
+            )
+            ->has('filterOptions', fn (Assert $f) => $f
+                ->has('unitKerja')
+                ->has('golongan')
+                ->etc()
+            )
+        );
 });
