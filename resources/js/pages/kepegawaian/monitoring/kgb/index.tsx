@@ -1,5 +1,5 @@
-import { Head } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -19,10 +19,9 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import type { BreadcrumbItem } from '@/types';
-import type { PaginatedData } from '@/types/kepegawaian';
+import type { KepegawaianPaginatedData } from '@/types/kepegawaian';
 
 type KgbStatus = 'Sudah Jatuh Tempo' | 'Segera' | 'Mendekati' | 'Aman';
-type StatusFilter = 'semua' | 'jatuh-tempo' | 'segera' | 'mendekati' | 'aman';
 
 type PegawaiMonitoringKgb = {
     id: string;
@@ -35,8 +34,20 @@ type PegawaiMonitoringKgb = {
     status: KgbStatus;
 };
 
+type UnitKerjaOption = { id: string; nama: string };
+type FilterOptions = {
+    unitKerja: UnitKerjaOption[];
+    golongan: string[];
+};
+
+type Filters = {
+    unit_kerja: string | null;
+    golongan: string | null;
+    status: string | null;
+};
+
 type Props = {
-    pegawaiList: PaginatedData<PegawaiMonitoringKgb>;
+    pegawaiList: KepegawaianPaginatedData<PegawaiMonitoringKgb>;
     kgbStats: {
         total: number;
         jatuhTempo: number;
@@ -44,62 +55,46 @@ type Props = {
         mendekati: number;
         aman: number;
     };
+    filters: Filters;
+    filterOptions: FilterOptions;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Monitoring KGB',
-        href: '/kepegawaian/monitoring/kgb',
-    },
+    { title: 'Monitoring KGB', href: '/kepegawaian/monitoring/kgb' },
 ];
 
-const filterMap: Record<StatusFilter, KgbStatus | null> = {
-    semua: null,
-    'jatuh-tempo': 'Sudah Jatuh Tempo',
-    segera: 'Segera',
-    mendekati: 'Mendekati',
-    aman: 'Aman',
-};
-
 const statusBadgeClass: Record<KgbStatus, string> = {
-    'Sudah Jatuh Tempo':
-        'bg-red-100 text-red-700 border-red-200 hover:bg-red-100',
+    'Sudah Jatuh Tempo': 'bg-red-100 text-red-700 border-red-200 hover:bg-red-100',
     Segera: 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100',
-    Mendekati:
-        'bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100',
+    Mendekati: 'bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100',
     Aman: 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100',
 };
 
 function formatDate(date: string | null): string {
-    if (date === null) {
-        return '-';
-    }
-
-    const parsedDate = new Date(date);
-
-    return Number.isNaN(parsedDate.getTime())
+    if (date === null) return '-';
+    const parsed = new Date(date);
+    return Number.isNaN(parsed.getTime())
         ? '-'
-        : new Intl.DateTimeFormat('id-ID', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-          }).format(parsedDate);
+        : new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(parsed);
 }
 
-export default function MonitoringKgbIndex({ pegawaiList, kgbStats }: Props) {
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>('semua');
+function applyFilter(newFilters: Partial<Filters>) {
+    const params: Record<string, string> = {};
+    const merged = { ...newFilters };
+    if (merged.unit_kerja) params.unit_kerja = merged.unit_kerja;
+    if (merged.golongan) params.golongan = merged.golongan;
+    if (merged.status) params.status = merged.status;
+    router.get('/kepegawaian/monitoring/kgb', params, { preserveState: true, replace: true });
+}
 
-    const filteredPegawai = useMemo(() => {
-        const selectedStatus = filterMap[statusFilter];
+export default function MonitoringKgbIndex({ pegawaiList, kgbStats, filters, filterOptions }: Props) {
+    const [localFilters, setLocalFilters] = useState<Filters>(filters);
 
-        if (selectedStatus === null) {
-            return pegawaiList.data;
-        }
-
-        return pegawaiList.data.filter(
-            (pegawai) => pegawai.status === selectedStatus,
-        );
-    }, [pegawaiList.data, statusFilter]);
+    function handleFilterChange(key: keyof Filters, value: string) {
+        const updated = { ...localFilters, [key]: value === 'semua' || value === '' ? null : value };
+        setLocalFilters(updated);
+        applyFilter(updated);
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -111,8 +106,7 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats }: Props) {
                         Monitoring Kenaikan Gaji Berkala
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Pantau pegawai yang mendekati atau sudah jatuh tempo
-                        KGB.
+                        Pantau pegawai yang mendekati atau sudah jatuh tempo KGB.
                     </p>
                 </div>
 
@@ -146,34 +140,61 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats }: Props) {
                 <Card>
                     <CardHeader>
                         <CardTitle>Daftar Monitoring KGB</CardTitle>
-                        <CardDescription>
-                            Data pegawai disusun berdasarkan sisa hari terdekat.
-                        </CardDescription>
+                        <CardDescription>Data pegawai disusun berdasarkan sisa hari terdekat.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex w-full flex-col gap-2 sm:w-64">
-                            <label
-                                htmlFor="status-filter"
-                                className="text-sm font-medium"
-                            >
-                                Filter status
-                            </label>
-                            <select
-                                id="status-filter"
-                                value={statusFilter}
-                                onChange={(event) =>
-                                    setStatusFilter(
-                                        event.target.value as StatusFilter,
-                                    )
-                                }
-                                className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                            >
-                                <option value="semua">Semua</option>
-                                <option value="jatuh-tempo">Jatuh Tempo</option>
-                                <option value="segera">Segera</option>
-                                <option value="mendekati">Mendekati</option>
-                                <option value="aman">Aman</option>
-                            </select>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:flex-wrap">
+                            <div className="grid gap-1.5">
+                                <label htmlFor="filter-unit-kerja" className="text-sm font-medium">
+                                    Unit Kerja
+                                </label>
+                                <select
+                                    id="filter-unit-kerja"
+                                    value={localFilters.unit_kerja ?? ''}
+                                    onChange={(e) => handleFilterChange('unit_kerja', e.target.value)}
+                                    className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:w-48"
+                                >
+                                    <option value="">Semua Unit</option>
+                                    {filterOptions.unitKerja.map((uk) => (
+                                        <option key={uk.id} value={uk.id}>{uk.nama}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="grid gap-1.5">
+                                <label htmlFor="filter-golongan" className="text-sm font-medium">
+                                    Golongan
+                                </label>
+                                <select
+                                    id="filter-golongan"
+                                    value={localFilters.golongan ?? ''}
+                                    onChange={(e) => handleFilterChange('golongan', e.target.value)}
+                                    className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:w-36"
+                                >
+                                    <option value="">Semua Gol</option>
+                                    {filterOptions.golongan.map((gol) => (
+                                        <option key={gol} value={gol}>Golongan {gol}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="grid gap-1.5">
+                                <label htmlFor="filter-status" className="text-sm font-medium">
+                                    Status
+                                </label>
+                                <select
+                                    id="filter-status"
+                                    value={localFilters.status ?? 'semua'}
+                                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                                    className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:w-40"
+                                >
+                                    <option value="semua">Semua Status</option>
+                                    <option value="jatuh-tempo">Jatuh Tempo</option>
+                                    <option value="segera">Segera</option>
+                                    <option value="mendekati">Mendekati</option>
+                                    <option value="aman">Aman</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div className="rounded-lg border">
@@ -190,7 +211,7 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats }: Props) {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredPegawai.length === 0 ? (
+                                    {pegawaiList.data.length === 0 ? (
                                         <TableRow>
                                             <TableCell
                                                 colSpan={7}
@@ -200,38 +221,20 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats }: Props) {
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        filteredPegawai.map((pegawai) => (
+                                        pegawaiList.data.map((pegawai: PegawaiMonitoringKgb) => (
                                             <TableRow key={pegawai.id}>
                                                 <TableCell className="font-medium">
                                                     {pegawai.nip ?? '-'}
                                                 </TableCell>
-                                                <TableCell>
-                                                    {pegawai.nama_lengkap}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {pegawai.pangkat_gol || '-'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {formatDate(
-                                                        pegawai.tmt_pangkat,
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {formatDate(
-                                                        pegawai.tanggal_kgb_berikutnya,
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {pegawai.sisa_hari}
-                                                </TableCell>
+                                                <TableCell>{pegawai.nama_lengkap}</TableCell>
+                                                <TableCell>{pegawai.pangkat_gol || '-'}</TableCell>
+                                                <TableCell>{formatDate(pegawai.tmt_pangkat)}</TableCell>
+                                                <TableCell>{formatDate(pegawai.tanggal_kgb_berikutnya)}</TableCell>
+                                                <TableCell>{pegawai.sisa_hari}</TableCell>
                                                 <TableCell>
                                                     <Badge
                                                         variant="outline"
-                                                        className={
-                                                            statusBadgeClass[
-                                                                pegawai.status
-                                                            ]
-                                                        }
+                                                        className={statusBadgeClass[pegawai.status]}
                                                     >
                                                         {pegawai.status}
                                                     </Badge>
@@ -243,10 +246,7 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats }: Props) {
                             </Table>
                         </div>
 
-                        <PaginationWrapper
-                            links={pegawaiList.links}
-                            lastPage={pegawaiList.last_page}
-                        />
+                        <PaginationWrapper links={pegawaiList.links} lastPage={pegawaiList.last_page} />
                     </CardContent>
                 </Card>
             </div>
