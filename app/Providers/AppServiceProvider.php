@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Pegawai;
+use App\Models\PengajuanPerubahanData;
 use App\Policies\PegawaiPolicy;
+use App\Policies\PengajuanPerubahanDataPolicy;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Date;
@@ -28,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Pegawai::class, PegawaiPolicy::class);
+        Gate::policy(PengajuanPerubahanData::class, PengajuanPerubahanDataPolicy::class);
 
         $this->configureDefaults();
         $this->registerSlowQueryLogger();

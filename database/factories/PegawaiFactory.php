@@ -143,6 +143,20 @@ class PegawaiFactory extends Factory
         });
     }
 
+    public function validator(): static
+    {
+        return $this->afterCreating(function (Pegawai $pegawai) {
+            $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
+            $role = $kepegawaian ? IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'validator')->first() : null;
+            if ($role) {
+                IamUserRole::firstOrCreate(
+                    ['user_id' => $pegawai->id, 'iam_role_id' => $role->id],
+                    ['assigned_at' => now()]
+                );
+            }
+        });
+    }
+
     public function unverified(): static
     {
         return $this->state(fn () => [

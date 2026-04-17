@@ -46,6 +46,10 @@ class IamSeeder extends Seeder
             ['iam_application_id' => $kepegawaian->id, 'slug' => 'viewer'],
             ['nama' => 'Viewer', 'is_system' => true]
         );
+        $validatorRole = IamRole::firstOrCreate(
+            ['iam_application_id' => $kepegawaian->id, 'slug' => 'validator'],
+            ['nama' => 'Validator', 'is_system' => true]
+        );
 
         // 3. Migrasi ref_roles -> iam_roles (hanya jika tabel masih ada)
         $roleMap = []; // ref_role_id => iam_role_id
@@ -133,6 +137,7 @@ class IamSeeder extends Seeder
             ['slug' => 'pegawai.create', 'nama' => 'Tambah Pegawai', 'group' => 'pegawai', 'keterangan' => 'Menambah data pegawai'],
             ['slug' => 'pegawai.update', 'nama' => 'Ubah Pegawai', 'group' => 'pegawai', 'keterangan' => 'Mengubah data pegawai'],
             ['slug' => 'pegawai.delete', 'nama' => 'Hapus Pegawai', 'group' => 'pegawai', 'keterangan' => 'Menghapus data pegawai'],
+            ['slug' => 'pengajuan-perubahan.validate', 'nama' => 'Validasi Pengajuan Perubahan', 'group' => 'pengajuan-perubahan', 'keterangan' => 'Validasi pengajuan perubahan data'],
             ['slug' => 'monitoring.view', 'nama' => 'Lihat Monitoring', 'group' => 'monitoring', 'keterangan' => 'Melihat data monitoring KGB & kenaikan pangkat'],
             ['slug' => 'referensi.view', 'nama' => 'Lihat Referensi', 'group' => 'referensi', 'keterangan' => 'Melihat data referensi'],
             ['slug' => 'referensi.create', 'nama' => 'Tambah Referensi', 'group' => 'referensi', 'keterangan' => 'Menambah data referensi'],
@@ -163,6 +168,13 @@ class IamSeeder extends Seeder
                 $permissionIds['pegawai.update'],
                 $permissionIds['pegawai.delete'],
                 $permissionIds['referensi.view'],
+            ]);
+        }
+
+        // Validator mendapat pengajuan-perubahan.validate
+        if ($validatorRole && isset($permissionIds['pengajuan-perubahan.validate'])) {
+            $validatorRole->permissions()->syncWithoutDetaching([
+                $permissionIds['pengajuan-perubahan.validate'],
             ]);
         }
     }
