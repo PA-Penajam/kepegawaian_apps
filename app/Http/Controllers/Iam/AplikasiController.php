@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Iam;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Iam\StoreAplikasiRequest;
+use App\Http\Requests\Iam\UpdateAplikasiRequest;
 use App\Models\IamApplication;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Response;
 
@@ -39,19 +40,12 @@ class AplikasiController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreAplikasiRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'nama' => 'required|string|max:100',
-            'slug' => 'required|string|unique:iam_applications,slug|alpha_dash',
-            'url' => 'required|url',
-            'deskripsi' => 'nullable|string',
-        ]);
-
         ['key' => $key, 'secret' => $secret, 'hash' => $hash] = IamApplication::generateApiCredentials();
 
         $app = IamApplication::create([
-            ...$data,
+            ...$request->validated(),
             'api_key' => $key,
             'api_secret_hash' => $hash,
         ]);
@@ -61,20 +55,11 @@ class AplikasiController extends Controller
             ->with('api_secret_once', $secret);
     }
 
-    public function update(Request $request, IamApplication $aplikasi): RedirectResponse
+    public function update(UpdateAplikasiRequest $request, IamApplication $aplikasi): RedirectResponse
     {
-        if ($aplikasi->is_system) {
-            abort(403, 'Aplikasi sistem tidak dapat diubah');
-        }
+        abort_if($aplikasi->is_system, 403, 'Aplikasi sistem tidak dapat diubah');
 
-        $data = $request->validate([
-            'nama' => 'required|string|max:100',
-            'url' => 'required|url',
-            'deskripsi' => 'nullable|string',
-            'is_active' => 'boolean',
-        ]);
-
-        $aplikasi->update($data);
+        $aplikasi->update($request->validated());
 
         Cache::forget("iam_app:{$aplikasi->slug}");
 
@@ -83,9 +68,7 @@ class AplikasiController extends Controller
 
     public function destroy(IamApplication $aplikasi): RedirectResponse
     {
-        if ($aplikasi->is_system) {
-            abort(403, 'Aplikasi sistem tidak dapat dihapus');
-        }
+        abort_if($aplikasi->is_system, 403, 'Aplikasi sistem tidak dapat dihapus');
 
         Cache::forget("iam_app:{$aplikasi->slug}");
         $aplikasi->delete();

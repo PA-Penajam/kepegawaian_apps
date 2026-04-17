@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Iam;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Iam\StoreUserAksesRequest;
 use App\Models\IamApplication;
 use App\Models\IamRole;
 use App\Models\IamUserRole;
 use App\Models\Pegawai;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Response;
 
@@ -31,12 +31,10 @@ class UserAksesController extends Controller
         return inertia('iam/users/akses', compact('user', 'akses', 'availableApps'));
     }
 
-    public function store(Request $request, Pegawai $user): RedirectResponse
+    public function store(StoreUserAksesRequest $request, Pegawai $user): RedirectResponse
     {
-        $data = $request->validate(['iam_role_id' => 'required|exists:iam_roles,id']);
-
         IamUserRole::firstOrCreate(
-            ['user_id' => $user->id, 'iam_role_id' => $data['iam_role_id']],
+            ['user_id' => $user->id, 'iam_role_id' => $request->validated('iam_role_id')],
             ['assigned_at' => now(), 'assigned_by' => $request->user()->id]
         );
 

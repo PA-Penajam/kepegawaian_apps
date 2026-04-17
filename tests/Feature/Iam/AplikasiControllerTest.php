@@ -110,3 +110,40 @@ it('menghapus cache iam_app saat aplikasi dihapus', function () {
 
     expect(Cache::has('iam_app:hapus-app'))->toBeFalse();
 });
+
+it('viewer tidak bisa mendaftarkan aplikasi baru', function () {
+    $viewer = Pegawai::factory()->viewer()->create();
+
+    $response = $this->actingAs($viewer)->post('/iam/aplikasi', [
+        'nama' => 'Test App',
+        'slug' => 'test-app',
+        'url'  => 'http://test.local',
+    ]);
+
+    $response->assertForbidden();
+});
+
+it('viewer tidak bisa mengupdate aplikasi', function () {
+    $viewer = Pegawai::factory()->viewer()->create();
+    $app = IamApplication::factory()->create(['is_system' => false]);
+
+    $response = $this->actingAs($viewer)->put("/iam/aplikasi/{$app->id}", [
+        'nama'      => 'Updated',
+        'url'       => 'http://test.local',
+        'is_active' => true,
+    ]);
+
+    $response->assertForbidden();
+});
+
+it('viewer tidak bisa memberikan akses role ke user', function () {
+    $viewer = Pegawai::factory()->viewer()->create();
+    $targetUser = Pegawai::factory()->create();
+
+    $response = $this->actingAs($viewer)
+        ->post("/iam/users/{$targetUser->id}/akses", [
+            'iam_role_id' => $this->adminRole->id,
+        ]);
+
+    $response->assertForbidden();
+});
