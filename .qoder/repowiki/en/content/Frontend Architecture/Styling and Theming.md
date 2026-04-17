@@ -15,11 +15,11 @@
 
 ## Update Summary
 **Changes Made**
-- Updated design system architecture to reflect token-first approach with new color palette
-- Removed light/dark theme support documentation as it was deprecated
-- Added comprehensive coverage of Magic UI components integration
-- Enhanced design token documentation with new color scheme details
-- Updated component system documentation to include new UI primitives
+- Updated design system architecture to reflect the new hijau-gold-orange color palette with comprehensive oklch color specifications
+- Enhanced CSS variable system with specialized chart color tokens and sidebar color scales
+- Documented the complete color scale definitions for backgrounds, foregrounds, cards, popovers, and sidebar elements
+- Updated theming system documentation to reflect the unified color scheme approach
+- Added comprehensive color token documentation with detailed oklch specifications
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -34,9 +34,9 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document explains the styling and theming system built with Tailwind CSS v4 and integrated into the frontend stack. The system implements a comprehensive token-first design approach with a carefully curated color palette featuring dark green primary tones, gold accents, and orange highlights. The architecture emphasizes design token consistency, Magic UI component integration, and performance optimization through modern CSS techniques and React-based component composition.
+This document explains the styling and theming system built with Tailwind CSS v4 and integrated into the frontend stack. The system implements a comprehensive token-first design approach with a carefully curated hijau-gold-orange color palette featuring dark green primary tones, gold accents, and orange highlights. The architecture emphasizes design token consistency, Magic UI component integration, and performance optimization through modern CSS techniques and React-based component composition.
 
-**Updated** The theming system now operates on a simplified approach with a single unified color scheme, removing the previous light/dark mode toggle in favor of a consistent design language across all interfaces.
+**Updated** The theming system now operates on a unified approach with a complete color scale definition, removing the previous light/dark mode complexity in favor of a consistent design language across all interfaces with specialized color tokens for charts and sidebar elements.
 
 ## Project Structure
 The styling system centers around a token-driven architecture with centralized design tokens, Magic UI component integration, and optimized build pipeline for modern CSS generation and animation support.
@@ -44,16 +44,16 @@ The styling system centers around a token-driven architecture with centralized d
 ```mermaid
 graph TB
 subgraph "CSS Layer"
-A["resources/css/app.css<br/>Token-first design system, oklch color palette,<br/>Magic UI animations, base styles"]
+A["resources/css/app.css<br/>Token-first design system, hijau-gold-orange palette,<br/>oklch color specifications, chart tokens"]
 end
 subgraph "Build Pipeline"
 B["vite.config.ts<br/>Plugins: laravel-vite-plugin, @tailwindcss/vite,<br/>react, wayfinder, babel compiler"]
 C["package.json<br/>Tailwind CSS v4, magicui, tw-animate-css,<br/>react ecosystem dependencies"]
 end
 subgraph "React Runtime"
-D["resources/js/hooks/use-appearance.tsx<br/>Theme provider and persistence<br/>(deprecated - unified theme)"]
-E["resources/js/components/appearance-tabs.tsx<br/>Theme selector UI<br/>(deprecated - unified theme)"]
-F["resources/js/pages/settings/appearance.tsx<br/>Appearance settings page<br/>(deprecated - unified theme)"]
+D["resources/js/hooks/use-appearance.tsx<br/>Theme provider and persistence<br/>(light mode only)"]
+E["resources/js/components/appearance-tabs.tsx<br/>Theme selector UI<br/>(light mode only)"]
+F["resources/js/pages/settings/appearance.tsx<br/>Appearance settings page<br/>(light mode only)"]
 G["resources/js/lib/utils.ts<br/>Utility: cn() merging, clsx integration"]
 H["resources/js/components/ui/button.tsx<br/>CVA-based component with<br/>Magic UI enhancements"]
 I["resources/js/components/ui/card.tsx<br/>Semantic layout component<br/>with token integration"]
@@ -68,9 +68,9 @@ D --> A
 ```
 
 **Diagram sources**
-- [app.css:1-144](file://resources/css/app.css#L1-L144)
+- [app.css:1-146](file://resources/css/app.css#L1-L146)
 - [vite.config.ts:1-28](file://vite.config.ts#L1-L28)
-- [package.json:1-78](file://package.json#L1-L78)
+- [package.json:1-79](file://package.json#L1-L79)
 - [use-appearance.tsx:1-116](file://resources/js/hooks/use-appearance.tsx#L1-L116)
 - [appearance-tabs.tsx:1-46](file://resources/js/components/appearance-tabs.tsx#L1-L46)
 - [appearance.tsx:1-36](file://resources/js/pages/settings/appearance.tsx#L1-L36)
@@ -79,21 +79,21 @@ D --> A
 - [card.tsx:1-69](file://resources/js/components/ui/card.tsx#L1-L69)
 
 **Section sources**
-- [app.css:1-144](file://resources/css/app.css#L1-L144)
+- [app.css:1-146](file://resources/css/app.css#L1-L146)
 - [vite.config.ts:1-28](file://vite.config.ts#L1-L28)
-- [package.json:1-78](file://package.json#L1-L78)
+- [package.json:1-79](file://package.json#L1-L79)
 
 ## Core Components
-- **Token-First Design System**: Comprehensive CSS variable architecture with oklch-based color tokens, consistent spacing scales, and typography foundations
+- **Enhanced Token-First Design System**: Comprehensive CSS variable architecture with hijau-gold-orange oklch-based color tokens, complete sidebar color scales, and specialized chart color palettes
 - **Magic UI Integration**: Advanced animation components including shimmer effects, blur transitions, animated numbers, and particle systems
 - **Component Primitive Library**: CVA-based UI components with semantic structure, accessibility compliance, and design token integration
 - **Animation Framework**: tw-animate-css integration with custom animation utilities for smooth micro-interactions
 - **Utility Layer**: Enhanced class merging with clsx and tailwind-merge for conflict-free composition
 
-**Updated** The system now operates with a unified color scheme eliminating the previous light/dark mode complexity in favor of consistent design token application.
+**Updated** The system now operates with a unified color scheme eliminating the previous light/dark mode complexity in favor of consistent design token application with comprehensive color scale definitions.
 
 **Section sources**
-- [app.css:10-144](file://resources/css/app.css#L10-L144)
+- [app.css:10-146](file://resources/css/app.css#L10-L146)
 - [package.json:33-67](file://package.json#L33-L67)
 - [utils.ts:1-13](file://resources/js/lib/utils.ts#L1-L13)
 - [button.tsx:1-65](file://resources/js/components/ui/button.tsx#L1-L65)
@@ -121,26 +121,35 @@ Animations-->>User : Smooth transitions and effects
 
 ## Detailed Component Analysis
 
-### Token-First Design System Architecture
-The system implements a comprehensive token architecture with oklch-based color spaces, consistent typography, and semantic color relationships.
+### Enhanced Token-First Design System Architecture
+The system implements a comprehensive token architecture with hijau-gold-orange oklch-based color spaces, complete sidebar color scales, and specialized chart color palettes.
 
-**Design Token Categories**:
-- **Color Tokens**: Primary (dark green), Secondary (gold), Accent (orange), Background, Foreground, Muted, Destructive
+**Enhanced Design Token Categories**:
+- **Primary Color Tokens**: Hijau (dark green), Gold, Orange, Background, Foreground, Muted, Destructive
+- **Sidebar Color Tokens**: Complete sidebar color scale with primary, accent, and border variations
+- **Chart Color Tokens**: 5-color categorical palette specifically designed for data visualization
 - **Typography Tokens**: Instrument Sans font stack, consistent scale ratios, and semantic text roles
 - **Spacing Tokens**: Consistent unit system with logical relationships (base 4px grid)
 - **Border Radius Tokens**: Multi-scale radius system (base 0.625rem with variants)
 - **Shadow Tokens**: Subtle elevation system with consistent blur radii
-- **Chart Color Tokens**: 5-color categorical palette for data visualization
 
-**Color Palette Implementation**:
-- **Primary**: oklch(0.205 0 0) - Dark green base with high contrast
-- **Secondary**: oklch(0.97 0 0) - Light neutral with gold undertones
-- **Accent**: oklch(0.97 0 0) - Warm gold for highlights and emphasis
-- **Background**: oklch(1 0 0) - Pure white in light theme, oklch(0.145 0 0) in dark
-- **Foreground**: oklch(0.145 0 0) - Deep gray in light, oklch(0.985 0 0) in dark
+**Enhanced Color Palette Implementation**:
+- **Hijau (Primary)**: oklch(0.32 0.10 155) - Dark green base with high contrast
+- **Gold (Accent)**: oklch(0.72 0.16 75) - Warm gold for highlights and emphasis
+- **Orange (Accent)**: oklch(0.65 0.18 55) - Rich orange for warnings and urgency
+- **Background**: oklch(0.99 0.002 155) - Pure white in light theme
+- **Foreground**: oklch(0.15 0.02 155) - Deep gray in light theme
+- **Sidebar Colors**: Complete color scale from oklch(0.18 0.06 155) to oklch(0.92 0.02 155)
+
+**Specialized Chart Color Tokens**:
+- **Chart-1**: oklch(0.45 0.12 155) - Dark green for primary data series
+- **Chart-2**: oklch(0.72 0.16 75) - Gold for secondary data series
+- **Chart-3**: oklch(0.65 0.18 55) - Orange for tertiary data series
+- **Chart-4**: oklch(0.50 0.10 195) - Teal for quaternary data series
+- **Chart-5**: oklch(0.55 0.10 40) - Brown for quinary data series
 
 **Section sources**
-- [app.css:10-98](file://resources/css/app.css#L10-L98)
+- [app.css:67-104](file://resources/css/app.css#L67-L104)
 
 ### Magic UI Component Integration
 The system integrates advanced animation components through the magicui package, providing sophisticated micro-interactions and visual effects.
@@ -203,7 +212,7 @@ The system leverages tw-animate-css for smooth, performant animations that compl
 - Hardware acceleration through transform properties
 - Efficient animation timing with CSS variables
 - Reduced motion compatibility
-- Tree-shaking for unused animations
+- Tree shaking for unused animations
 
 **Section sources**
 - [app.css:3](file://resources/css/app.css#L3)
@@ -215,18 +224,18 @@ The styling pipeline integrates modern CSS processing, React component architect
 ```mermaid
 graph LR
 Pkg["package.json<br/>Tailwind CSS v4, magicui, tw-animate-css,<br/>react ecosystem, babel compiler"] --> ViteCfg["vite.config.ts<br/>Plugins: laravel-vite-plugin, @tailwindcss/vite,<br/>react with compiler, wayfinder"]
-ViteCfg --> CSS["resources/css/app.css<br/>Token system, base styles,<br/>animation utilities"]
+ViteCfg --> CSS["resources/css/app.css<br/>Enhanced token system, base styles,<br/>animation utilities"]
 ViteCfg --> JSX["React components<br/>UI primitives, hooks, pages,<br/>Magic UI integration"]
 JSX --> CSS
 ```
 
 **Diagram sources**
-- [package.json:1-78](file://package.json#L1-L78)
+- [package.json:1-79](file://package.json#L1-L79)
 - [vite.config.ts:1-28](file://vite.config.ts#L1-L28)
-- [app.css:1-144](file://resources/css/app.css#L1-L144)
+- [app.css:1-146](file://resources/css/app.css#L1-L146)
 
 **Section sources**
-- [package.json:1-78](file://package.json#L1-L78)
+- [package.json:1-79](file://package.json#L1-L79)
 - [vite.config.ts:1-28](file://vite.config.ts#L1-L28)
 
 ## Performance Considerations
@@ -237,7 +246,7 @@ JSX --> CSS
 - **Tree Shaking**: Strategic imports ensure only used animations and components are included
 - **Critical Rendering**: Essential styles extracted separately for optimal first paint
 
-**Updated** Performance considerations now emphasize the streamlined token system and Magic UI optimizations rather than theme switching overhead.
+**Updated** Performance considerations now emphasize the streamlined token system and Magic UI optimizations rather than theme switching overhead, with enhanced color token efficiency.
 
 ## Troubleshooting Guide
 - **Token values not applying**:
@@ -262,7 +271,7 @@ JSX --> CSS
 - [package.json:133-135](file://package.json#L133-L135)
 
 ## Conclusion
-The styling and theming system represents a comprehensive token-first approach with Magic UI integration, delivering consistent design language, smooth animations, and optimal performance. The unified color scheme eliminates theme complexity while maintaining design flexibility through the extensive token system. Following the established patterns ensures maintainable component development and consistent user experiences across all interfaces.
+The styling and theming system represents a comprehensive token-first approach with enhanced hijau-gold-orange color palette integration, Magic UI animation system, delivering consistent design language, smooth animations, and optimal performance. The unified color scheme with complete sidebar and chart color scales eliminates theme complexity while maintaining design flexibility through the extensive token system. Following the established patterns ensures maintainable component development and consistent user experiences across all interfaces.
 
 ## Appendices
 
@@ -301,22 +310,44 @@ The styling and theming system represents a comprehensive token-first approach w
 - [button.tsx:10-32](file://resources/js/components/ui/button.tsx#L10-L32)
 - [package.json:133-135](file://package.json#L133-L135)
 
-### Color System Reference
+### Enhanced Color System Reference
 **Primary Palette**:
-- Primary: oklch(0.205 0 0) - Dark green (#003300)
-- Primary Foreground: oklch(0.985 0 0) - White (#FFFFFF)
+- **Hijau (Primary)**: oklch(0.32 0.10 155) - Dark green (#528540)
+- **Hijau Foreground**: oklch(0.98 0 0) - White (#FFFFFF)
 
-**Supporting Colors**:
-- Secondary: oklch(0.97 0 0) - Light neutral (#F7F7F7)
-- Secondary Foreground: oklch(0.205 0 0) - Dark green (#003300)
-- Accent: oklch(0.97 0 0) - Gold (#F7F7F7)
-- Accent Foreground: oklch(0.205 0 0) - Dark green (#003300)
+**Accent Colors**:
+- **Gold**: oklch(0.72 0.16 75) - Warm gold (#B8B880)
+- **Gold Foreground**: oklch(0.25 0.05 60) - Dark green (#404020)
+- **Orange**: oklch(0.65 0.18 55) - Rich orange (#A5A56A)
+- **Orange Foreground**: oklch(0.25 0.05 60) - Dark green (#404020)
 
 **Neutral System**:
-- Background: oklch(1 0 0) - White (#FFFFFF)
-- Foreground: oklch(0.145 0 0) - Deep gray (#242424)
-- Muted: oklch(0.97 0 0) - Light neutral (#F7F7F7)
-- Muted Foreground: oklch(0.556 0 0) - Medium gray (#8E8E8E)
+- **Background**: oklch(0.99 0.002 155) - Pure white (#FCFCFC)
+- **Foreground**: oklch(0.15 0.02 155) - Deep gray (#242424)
+- **Muted**: oklch(0.96 0.01 155) - Light neutral (#F0F0F0)
+- **Muted Foreground**: oklch(0.50 0.02 155) - Medium gray (#808080)
+
+**Sidebar Color Scale**:
+- **Sidebar**: oklch(0.18 0.06 155) - Dark green (#2D452D)
+- **Sidebar Foreground**: oklch(0.92 0.02 155) - Light gray (#E8E8E8)
+- **Sidebar Primary**: oklch(0.78 0.15 80) - Medium green (#C8C890)
+- **Sidebar Primary Foreground**: oklch(0.18 0.06 155) - Dark green (#2D452D)
+- **Sidebar Accent**: oklch(0.25 0.07 155) - Very dark green (#404020)
+- **Sidebar Accent Foreground**: oklch(0.92 0.02 155) - Light gray (#E8E8E8)
+- **Sidebar Border**: oklch(0.28 0.06 155) - Dark green (#48482D)
+- **Sidebar Ring**: oklch(0.50 0.10 155) - Medium gray (#808080)
+
+**Chart Color Tokens**:
+- **Chart-1**: oklch(0.45 0.12 155) - Dark green (#739660)
+- **Chart-2**: oklch(0.72 0.16 75) - Gold (#B8B880)
+- **Chart-3**: oklch(0.65 0.18 55) - Orange (#A5A56A)
+- **Chart-4**: oklch(0.50 0.10 195) - Teal (#80A0A0)
+- **Chart-5**: oklch(0.55 0.10 40) - Brown (#8A7560)
+
+**Custom Color Variables**:
+- **Gold**: oklch(0.72 0.16 75) - Gold (#B8B880)
+- **Orange**: oklch(0.65 0.18 55) - Orange (#A5A56A)
+- **Green-Dark**: oklch(0.18 0.06 155) - Dark green (#2D452D)
 
 **Section sources**
-- [app.css:64-98](file://resources/css/app.css#L64-L98)
+- [app.css:67-104](file://resources/css/app.css#L67-L104)
