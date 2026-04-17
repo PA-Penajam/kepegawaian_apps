@@ -49,6 +49,11 @@ export function AppSidebar() {
             icon: User,
         },
         {
+            title: 'Pengajuan Saya',
+            href: '/self-service/pengajuan',
+            icon: FileText,
+        },
+        {
             title: 'Settings',
             href: '/settings',
             icon: Settings,

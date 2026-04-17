@@ -80,3 +80,25 @@ it('mewajibkan lampiran untuk perubahan identitas utama profil pribadi', functio
         ])
         ->assertSessionHasErrors('lampiran');
 });
+
+it('pengaju dapat melihat riwayat dan detail pengajuannya sendiri', function (): void {
+    $me = Pegawai::factory()->viewer()->create();
+
+    $pengajuan = \App\Models\PengajuanPerubahanData::factory()->create([
+        'pengaju_id' => $me->id,
+        'subject_pegawai_id' => $me->id,
+        'domain' => 'profil_pribadi',
+        'before_payload' => ['nama_lengkap' => 'Nama Lama'],
+        'after_payload' => ['nama_lengkap' => 'Nama Baru'],
+    ]);
+
+    actingAs($me)
+        ->withoutVite()
+        ->get(route('self-service.pengajuan.show', $pengajuan))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('self-service/pengajuan/show')
+            ->has('diffItems', 1)
+            ->where('pengajuan.id', $pengajuan->id)
+        );
+});

@@ -14,6 +14,10 @@ use Inertia\Response;
 
 class KeluargaController extends Controller
 {
+    public function __construct(
+        private \App\Services\PengajuanPerubahanData\SubmitPengajuanPerubahanDataService $submitPengajuanPerubahanData
+    ) {
+    }
     public function index(Pegawai $pegawai): Response
     {
         Gate::authorize('view', $pegawai);
@@ -56,6 +60,33 @@ class KeluargaController extends Controller
     {
         Gate::authorize('update', $pegawai);
 
+        // Intersepsi operator: jadikan pending request alih-alih store langsung
+        if ($request->user()?->isOperator()) {
+            $hubungan = $request->validated('hubungan');
+            $domain = match ($hubungan) {
+                'Suami', 'Istri' => 'pasangan',
+                'Anak' => 'anak',
+                'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
+                default => 'keluarga_lain',
+            };
+
+            $this->submitPengajuanPerubahanData->handle(
+                $request->user(),
+                [
+                    'domain' => $domain,
+                    'aksi' => 'create',
+                    'target_type' => 'keluarga',
+                    'target_id' => null,
+                    'subject_pegawai_id' => $pegawai->id,
+                    'after_payload' => $request->validated(),
+                    'lampiran' => [],
+                ],
+                'operator',
+            );
+
+            return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
+        }
+
         $pegawai->keluarga()->create($request->validated());
 
         return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
@@ -67,6 +98,33 @@ class KeluargaController extends Controller
 
         $this->ensureBelongsToPegawai($pegawai, $keluarga);
 
+        // Intersepsi operator: jadikan pending request alih-alih update langsung
+        if ($request->user()?->isOperator()) {
+            $hubungan = $request->validated('hubungan') ?? $keluarga->getRawOriginal('hubungan');
+            $domain = match ($hubungan) {
+                'Suami', 'Istri' => 'pasangan',
+                'Anak' => 'anak',
+                'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
+                default => 'keluarga_lain',
+            };
+
+            $this->submitPengajuanPerubahanData->handle(
+                $request->user(),
+                [
+                    'domain' => $domain,
+                    'aksi' => 'update',
+                    'target_type' => 'keluarga',
+                    'target_id' => $keluarga->id,
+                    'subject_pegawai_id' => $pegawai->id,
+                    'after_payload' => $request->safe()->except(['_token', '_method']),
+                    'lampiran' => [],
+                ],
+                'operator',
+            );
+
+            return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
+        }
+
         $keluarga->update($request->validated());
 
         return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
@@ -77,6 +135,33 @@ class KeluargaController extends Controller
         Gate::authorize('update', $pegawai);
 
         $this->ensureBelongsToPegawai($pegawai, $keluarga);
+
+        // Intersepsi operator: jadikan pending request alih-alih delete langsung
+        if (request()->user()?->isOperator()) {
+            $hubungan = $keluarga->getRawOriginal('hubungan');
+            $domain = match ($hubungan) {
+                'Suami', 'Istri' => 'pasangan',
+                'Anak' => 'anak',
+                'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
+                default => 'keluarga_lain',
+            };
+
+            $this->submitPengajuanPerubahanData->handle(
+                request()->user(),
+                [
+                    'domain' => $domain,
+                    'aksi' => 'delete',
+                    'target_type' => 'keluarga',
+                    'target_id' => $keluarga->id,
+                    'subject_pegawai_id' => $pegawai->id,
+                    'after_payload' => [],
+                    'lampiran' => [],
+                ],
+                'operator',
+            );
+
+            return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
+        }
 
         $keluarga->delete();
 

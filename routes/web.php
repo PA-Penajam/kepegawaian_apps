@@ -47,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     Route::get('/', [PengajuanPerubahanDataController::class, 'index'])->name('index');
                     Route::get('/create', [PengajuanPerubahanDataController::class, 'create'])->name('create');
                     Route::post('/', [PengajuanPerubahanDataController::class, 'store'])->name('store');
+                    Route::get('/{pengajuan}', [PengajuanPerubahanDataController::class, 'show'])->name('show');
                 });
         });
 });

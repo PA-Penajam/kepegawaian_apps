@@ -110,7 +110,14 @@ test('operator dapat menyimpan data keluarga baru', function () {
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('kepegawaian.pegawai.keluarga.index', $pegawai));
 
-    expect(Keluarga::query()->where('pegawai_id', $pegawai->id)->where('nama', 'Anak Pertama')->exists())->toBeTrue();
+    // Operator sekarang harus melalui proses approval, jadi data tidak langsung tersimpan
+    $this->assertDatabaseHas('pengajuan_perubahan_data', [
+        'pengaju_id' => $operator->id,
+        'subject_pegawai_id' => $pegawai->id,
+        'domain' => 'anak',
+        'aksi' => 'create',
+        'status' => 'pending',
+    ]);
 });
 
 test('operator dapat memperbarui data keluarga', function () {
@@ -134,8 +141,16 @@ test('operator dapat memperbarui data keluarga', function () {
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('kepegawaian.pegawai.keluarga.index', $pegawai));
 
-    expect($keluarga->fresh()->nama)->toBe('Nama Baru');
-    expect($keluarga->fresh()->hubungan)->toBe(HubunganKeluarga::IbuKandung);
+    // Operator sekarang harus melalui proses approval, jadi data tidak langsung berubah
+    expect($keluarga->fresh()->nama)->toBe('Nama Lama');
+
+    $this->assertDatabaseHas('pengajuan_perubahan_data', [
+        'pengaju_id' => $operator->id,
+        'subject_pegawai_id' => $pegawai->id,
+        'domain' => 'orang_tua', // IbuKandung masuk ke domain orang_tua
+        'aksi' => 'update',
+        'status' => 'pending',
+    ]);
 });
 
 test('operator dapat menghapus data keluarga secara soft delete', function () {
@@ -143,6 +158,7 @@ test('operator dapat menghapus data keluarga secara soft delete', function () {
     $pegawai = Pegawai::factory()->create();
     $keluarga = Keluarga::factory()->create([
         'pegawai_id' => $pegawai->id,
+        'hubungan' => 'Istri',
     ]);
 
     actingAs($operator);
@@ -151,8 +167,16 @@ test('operator dapat menghapus data keluarga secara soft delete', function () {
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('kepegawaian.pegawai.keluarga.index', $pegawai));
 
-    expect(Keluarga::query()->find($keluarga->id))->toBeNull();
-    expect(Keluarga::query()->withTrashed()->find($keluarga->id)?->trashed())->toBeTrue();
+    // Operator sekarang harus melalui proses approval, jadi data tidak langsung terhapus
+    expect(Keluarga::query()->find($keluarga->id))->not->toBeNull();
+
+    $this->assertDatabaseHas('pengajuan_perubahan_data', [
+        'pengaju_id' => $operator->id,
+        'subject_pegawai_id' => $pegawai->id,
+        'domain' => 'pasangan', // Istri masuk ke domain pasangan
+        'aksi' => 'delete',
+        'status' => 'pending',
+    ]);
 });
 
 test('validasi gagal jika hubungan tidak valid', function () {
@@ -165,4 +189,29 @@ test('validasi gagal jika hubungan tidak valid', function () {
         'hubungan' => 'INVALID_HUBUNGAN',
     ]))
         ->assertSessionHasErrors('hubungan');
+});
+
+it('operator update keluarga menjadi pending request alih-alih update langsung', function () {
+    $operator = Pegawai::factory()->operator()->create();
+    $pegawai = Pegawai::factory()->create();
+    $keluarga = Keluarga::factory()->create([
+        'pegawai_id' => $pegawai->id,
+        'hubungan' => 'Anak',
+        'nama' => 'Nama Lama Anak',
+    ]);
+
+    actingAs($operator)
+        ->patch(route('kepegawaian.pegawai.keluarga.update', [$pegawai, $keluarga]), makeKeluargaPayload([
+            'nama' => 'Nama Baru Anak',
+        ]))
+        ->assertRedirect(route('kepegawaian.pegawai.keluarga.index', $pegawai));
+
+    expect($keluarga->fresh()->nama)->toBe('Nama Lama Anak');
+
+    $this->assertDatabaseHas('pengajuan_perubahan_data', [
+        'pengaju_id' => $operator->id,
+        'subject_pegawai_id' => $pegawai->id,
+        'domain' => 'anak',
+        'status' => 'pending',
+    ]);
 });

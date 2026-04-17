@@ -28,6 +28,10 @@ use Intervention\Image\Drivers\Gd\Driver;
 
 class PegawaiController extends Controller
 {
+    public function __construct(
+        private \App\Services\PengajuanPerubahanData\SubmitPengajuanPerubahanDataService $submitPengajuanPerubahanData
+    ) {
+    }
     /**
      * Display a listing of the resource.
      */
@@ -203,6 +207,28 @@ class PegawaiController extends Controller
     public function update(UpdatePegawaiRequest $request, Pegawai $pegawai): RedirectResponse
     {
         Gate::authorize('update', $pegawai);
+
+        // Intersepsi operator: jadikan pending request alih-alih update langsung
+        if ($request->user()?->isOperator()) {
+            $this->submitPengajuanPerubahanData->handle(
+                $request->user(),
+                [
+                    'domain' => 'profil_pribadi',
+                    'aksi' => 'update',
+                    'target_type' => 'pegawai',
+                    'target_id' => $pegawai->id,
+                    'subject_pegawai_id' => $pegawai->id,
+                    'after_payload' => \Illuminate\Support\Arr::only(
+                        $request->safe()->except(['password', 'password_confirmation']),
+                        ['nama_lengkap', 'tempat_lahir', 'tanggal_lahir', 'status_perkawinan', 'alamat', 'no_telepon', 'email']
+                    ),
+                    'lampiran' => [],
+                ],
+                'operator',
+            );
+
+            return to_route('kepegawaian.pegawai.show', $pegawai);
+        }
 
         $pegawai->update($request->safe()->except(['password', 'password_confirmation']));
 

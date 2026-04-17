@@ -8,6 +8,7 @@ use App\Models\PengajuanPerubahanData;
 use App\Services\PengajuanPerubahanData\SubmitPengajuanPerubahanDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class PengajuanPerubahanDataController extends Controller
@@ -43,5 +44,15 @@ class PengajuanPerubahanDataController extends Controller
         $service->handle($request->user(), $request->validated(), $request->user()->isOperator() ? 'operator' : 'pegawai');
 
         return to_route('self-service.pengajuan.index');
+    }
+
+    public function show(PengajuanPerubahanData $pengajuan, \App\Services\PengajuanPerubahanData\PengajuanPerubahanDataDiffService $diffService): Response
+    {
+        abort_unless($pengajuan->pengaju_id === request()->user()->id, 404);
+
+        return Inertia::render('self-service/pengajuan/show', [
+            'pengajuan' => $pengajuan->load(['validator']),
+            'diffItems' => $diffService->make($pengajuan->before_payload ?? [], $pengajuan->after_payload),
+        ]);
     }
 }
