@@ -9,13 +9,16 @@ use App\Enums\StatusKepegawaian;
 use App\Enums\StatusPegawai;
 use App\Enums\StatusPerkawinan;
 use App\Traits\Filterable;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -30,6 +33,8 @@ class Pegawai extends Authenticatable
     }
 
     protected $table = 'pegawai';
+
+    protected $appends = ['foto_url'];
 
     protected $fillable = [
         'nip', 'nip_lama', 'nama_lengkap', 'tempat_lahir', 'tanggal_lahir',
@@ -200,6 +205,15 @@ class Pegawai extends Authenticatable
     }
 
     // === Accessors ===
+
+    protected function fotoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->foto !== null
+                ? Storage::disk('public')->url($this->foto)
+                : null,
+        );
+    }
 
     public function getNamaPangkatLengkapAttribute(): string
     {
