@@ -20,12 +20,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Concerns\HasActivityLogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
-use Spatie\Activitylog\Support\LogOptions;
 
 class Pegawai extends Authenticatable
 {
-    use Filterable, HasApiTokens, HasFactory, HasUlids, LogsActivity, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use Filterable, HasActivityLogOptions, HasApiTokens, HasFactory, HasUlids, LogsActivity, Notifiable, SoftDeletes, TwoFactorAuthenticatable {
+        HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
+    }
 
     protected $table = 'pegawai';
 
@@ -64,15 +66,6 @@ class Pegawai extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'email_verified_at' => 'datetime',
         ];
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges()
-            ->logFillable()
-            ->setDescriptionForEvent(fn (string $eventName) => $eventName);
     }
 
     // === Relasi referensi ===

@@ -124,10 +124,12 @@ export default function ActivityLogIndex({ activities, subjectTypes }: Props) {
                                         </TableCell>
                                         <TableCell>
                                             <span className="font-mono text-sm">{item.model}</span>
-                                            <span className="ml-1 text-xs text-muted-foreground">#{item.subject_id.slice(0, 8)}</span>
+                                            <span className="ml-1 text-xs text-muted-foreground">
+                                                {item.subject_id ? `#${item.subject_id.slice(0, 8)}` : ''}
+                                            </span>
                                         </TableCell>
                                         <TableCell>
-                                            {item.aksi === 'updated' && Object.keys(item.new).length > 0 && (
+                                            {item.aksi === 'updated' && item.new && Object.keys(item.new).length > 0 && (
                                                 <div className="space-y-1 text-xs">
                                                     {Object.entries(item.new).map(([key, newVal]) => (
                                                         <div key={key} className="flex gap-1">

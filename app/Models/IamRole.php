@@ -7,25 +7,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Concerns\HasActivityLogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
-use Spatie\Activitylog\Support\LogOptions;
 
 class IamRole extends Model
 {
-    use HasFactory, HasUlids, LogsActivity, SoftDeletes;
+    use HasActivityLogOptions, HasFactory, HasUlids, LogsActivity, SoftDeletes {
+        HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
+    }
 
     protected $fillable = [
         'iam_application_id', 'nama', 'slug', 'keterangan', 'is_system',
     ];
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges()
-            ->logFillable()
-            ->setDescriptionForEvent(fn (string $eventName) => $eventName);
-    }
 
     protected function casts(): array
     {

@@ -3,24 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\HasActivityLogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
-use Spatie\Activitylog\Support\LogOptions;
 
 class IamUserRole extends Model
 {
-    use LogsActivity;
+    use HasActivityLogOptions, LogsActivity {
+        HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
+    }
     protected $fillable = [
         'user_id', 'iam_role_id', 'assigned_at', 'assigned_by',
     ];
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges()
-            ->logFillable()
-            ->setDescriptionForEvent(fn (string $eventName) => $eventName);
-    }
 
     protected function casts(): array
     {

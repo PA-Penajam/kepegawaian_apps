@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Concerns\HasActivityLogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
-use Spatie\Activitylog\Support\LogOptions;
 
 class DokumenPegawai extends Model
 {
-    use HasFactory, HasUlids, LogsActivity, SoftDeletes;
+    use HasActivityLogOptions, HasFactory, HasUlids, LogsActivity, SoftDeletes {
+        HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
+    }
 
     protected $table = 'dokumen_pegawai';
 
@@ -30,15 +32,6 @@ class DokumenPegawai extends Model
             'tanggal_dokumen' => 'date',
             'deleted_at' => 'datetime',
         ];
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnlyDirty()
-            ->dontLogEmptyChanges()
-            ->logFillable()
-            ->setDescriptionForEvent(fn (string $eventName) => $eventName);
     }
 
     public function pegawai(): BelongsTo

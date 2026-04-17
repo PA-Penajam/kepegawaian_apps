@@ -8,10 +8,16 @@ use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogController extends Controller
 {
+    /** Namespace dasar model untuk konversi class_basename -> FQCN. */
+    private const MODEL_NAMESPACE = 'App\\Models\\';
+
     public function index(Request $request): Response
     {
         $activities = Activity::with('causer', 'subject')
-            ->when($request->input('subject_type'), fn ($q, $type) => $q->where('subject_type', $type))
+            ->when(
+                $request->input('subject_type'),
+                fn ($q, $type) => $q->where('subject_type', self::resolveModelFqcn($type)),
+            )
             ->when($request->input('causer_id'), fn ($q, $id) => $q->where('causer_id', $id))
             ->when($request->input('date_from'), fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
             ->when($request->input('date_to'), fn ($q, $date) => $q->whereDate('created_at', '<=', $date))
@@ -24,8 +30,8 @@ class ActivityLogController extends Controller
                 'aksi'         => $activity->description,
                 'model'        => class_basename($activity->subject_type ?? ''),
                 'subject_id'   => $activity->subject_id,
-                'old'          => $activity->attribute_changes->get('old', []),
-                'new'          => $activity->attribute_changes->get('attributes', []),
+                'old'          => $activity->attribute_changes?->get('old', []),
+                'new'          => $activity->attribute_changes?->get('attributes', []),
             ]);
 
         $subjectTypes = Activity::distinct()
@@ -35,5 +41,18 @@ class ActivityLogController extends Controller
             ->values();
 
         return inertia('activity-log/index', compact('activities', 'subjectTypes'));
+    }
+
+    /**
+     * Konversi class_basename (misal "Pegawai") menjadi FQCN ("App\Models\Pegawai").
+     * Jika input sudah FQCN (ada backslash), kembalikan apa adanya.
+     */
+    private static function resolveModelFqcn(string $type): string
+    {
+        if (str_contains($type, '\\')) {
+            return $type;
+        }
+
+        return self::MODEL_NAMESPACE . $type;
     }
 }

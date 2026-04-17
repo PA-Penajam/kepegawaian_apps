@@ -31,11 +31,44 @@ Route::middleware('auth')->get('/sso/callback', [SsoController::class, 'callback
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    // Self-service routes
+    Route::prefix('self-service')
+        ->name('self-service.')
+        ->group(function () {
+            Route::get('/', [SelfServiceController::class, 'index'])->name('index');
+            Route::get('/detail', [SelfServiceController::class, 'detail'])->name('detail');
+        });
 });
 
-Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])
-    ->get('activity-log', [ActivityLogController::class, 'index'])
-    ->name('activity-log.index');
+Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])->group(function () {
+    Route::get('activity-log', [ActivityLogController::class, 'index'])
+        ->name('activity-log.index');
+
+    // IAM management routes
+    Route::prefix('iam')
+        ->name('iam.')
+        ->group(function () {
+            Route::resource('aplikasi', AplikasiController::class)
+                ->except(['create', 'edit']);
+            Route::post('aplikasi/{aplikasi}/regenerate-key', [AplikasiController::class, 'regenerateKey'])
+                ->name('aplikasi.regenerate-key');
+
+            // Role & Permission (nested under aplikasi)
+            Route::post('aplikasi/{aplikasi}/roles', [RoleController::class, 'store'])->name('aplikasi.roles.store');
+            Route::put('aplikasi/{aplikasi}/roles/{role}', [RoleController::class, 'update'])->name('aplikasi.roles.update');
+            Route::delete('aplikasi/{aplikasi}/roles/{role}', [RoleController::class, 'destroy'])->name('aplikasi.roles.destroy');
+            Route::post('aplikasi/{aplikasi}/permissions', [PermissionController::class, 'store'])->name('aplikasi.permissions.store');
+            Route::put('aplikasi/{aplikasi}/permissions/{permission}', [PermissionController::class, 'update'])->name('aplikasi.permissions.update');
+            Route::delete('aplikasi/{aplikasi}/permissions/{permission}', [PermissionController::class, 'destroy'])->name('aplikasi.permissions.destroy');
+
+            // User akses
+            Route::get('users', [UserAksesController::class, 'index'])->name('users.index');
+            Route::get('users/{user}/akses', [UserAksesController::class, 'show'])->name('users.akses');
+            Route::post('users/{user}/akses', [UserAksesController::class, 'store'])->name('users.akses.store');
+            Route::delete('users/{user}/akses/{role}', [UserAksesController::class, 'destroy'])->name('users.akses.destroy');
+        });
+});
 
 Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
     Route::resource('kepegawaian/pegawai', PegawaiController::class)
@@ -65,79 +98,46 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
         ->names('referensi.roles')
         ->except(['show']);
 
+    // Nested kepegawaian routes
+    Route::prefix('kepegawaian')
+        ->name('kepegawaian.')
+        ->group(function () {
+            Route::resource(
+                'pegawai.riwayat-diklat',
+                'App\\Http\\Controllers\\Kepegawaian\\RiwayatDiklatController',
+            )
+                ->parameters([
+                    'riwayat-diklat' => 'riwayatDiklat',
+                ])
+                ->only(['index', 'store', 'update', 'destroy']);
+
+            Route::resource('pegawai.riwayat-jabatan', RiwayatJabatanController::class)
+                ->only(['index', 'store', 'update', 'destroy']);
+
+            Route::resource('pegawai.keluarga', KeluargaController::class)
+                ->only(['index', 'store', 'update', 'destroy']);
+
+            Route::resource('pegawai.penghargaan', PenghargaanController::class)
+                ->only(['index', 'store', 'update', 'destroy']);
+
+            Route::resource('pegawai.hukuman-disiplin', HukumanDisiplinController::class)
+                ->only(['index', 'store', 'update', 'destroy']);
+
+            Route::resource('pegawai.riwayat-pendidikan', RiwayatPendidikanController::class)
+                ->only(['index', 'store', 'update', 'destroy']);
+
+            Route::resource('pegawai.dokumen', DokumenPegawaiController::class)
+                ->parameters([
+                    'dokumen' => 'dokumen',
+                ])
+                ->only(['index', 'store', 'update', 'destroy']);
+
+            Route::resource(
+                'pegawai.riwayat-pangkat',
+                'App\\Http\\Controllers\\Kepegawaian\\RiwayatPangkatController',
+            )
+                ->only(['index', 'store', 'update', 'destroy']);
+        });
 });
-
-Route::middleware(['auth', 'verified', 'iam.permission'])
-    ->prefix('kepegawaian')
-    ->name('kepegawaian.')
-    ->group(function () {
-        Route::resource(
-            'pegawai.riwayat-diklat',
-            'App\\Http\\Controllers\\Kepegawaian\\RiwayatDiklatController',
-        )
-            ->parameters([
-                'riwayat-diklat' => 'riwayatDiklat',
-            ])
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('pegawai.riwayat-jabatan', RiwayatJabatanController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('pegawai.keluarga', KeluargaController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('pegawai.penghargaan', PenghargaanController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('pegawai.hukuman-disiplin', HukumanDisiplinController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('pegawai.riwayat-pendidikan', RiwayatPendidikanController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource('pegawai.dokumen', DokumenPegawaiController::class)
-            ->parameters([
-                'dokumen' => 'dokumen',
-            ])
-            ->only(['index', 'store', 'update', 'destroy']);
-
-        Route::resource(
-            'pegawai.riwayat-pangkat',
-            'App\\Http\\Controllers\\Kepegawaian\\RiwayatPangkatController',
-        )
-            ->only(['index', 'store', 'update', 'destroy']);
-    });
-
-Route::middleware(['auth', 'verified'])
-    ->prefix('self-service')
-    ->name('self-service.')
-    ->group(function () {
-        Route::get('/', [SelfServiceController::class, 'index'])->name('index');
-        Route::get('/detail', [SelfServiceController::class, 'detail'])->name('detail');
-    });
-
-Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])
-    ->prefix('iam')
-    ->name('iam.')
-    ->group(function () {
-        Route::resource('aplikasi', AplikasiController::class)
-            ->except(['create', 'edit']);
-        Route::post('aplikasi/{aplikasi}/regenerate-key', [AplikasiController::class, 'regenerateKey'])
-            ->name('aplikasi.regenerate-key');
-
-        // Role & Permission (nested under aplikasi)
-        Route::post('aplikasi/{aplikasi}/roles', [RoleController::class, 'store'])->name('aplikasi.roles.store');
-        Route::put('aplikasi/{aplikasi}/roles/{role}', [RoleController::class, 'update'])->name('aplikasi.roles.update');
-        Route::delete('aplikasi/{aplikasi}/roles/{role}', [RoleController::class, 'destroy'])->name('aplikasi.roles.destroy');
-        Route::post('aplikasi/{aplikasi}/permissions', [PermissionController::class, 'store'])->name('aplikasi.permissions.store');
-        Route::put('aplikasi/{aplikasi}/permissions/{permission}', [PermissionController::class, 'update'])->name('aplikasi.permissions.update');
-        Route::delete('aplikasi/{aplikasi}/permissions/{permission}', [PermissionController::class, 'destroy'])->name('aplikasi.permissions.destroy');
-
-        // User akses
-        Route::get('users', [UserAksesController::class, 'index'])->name('users.index');
-        Route::get('users/{user}/akses', [UserAksesController::class, 'show'])->name('users.akses');
-        Route::post('users/{user}/akses', [UserAksesController::class, 'store'])->name('users.akses.store');
-        Route::delete('users/{user}/akses/{role}', [UserAksesController::class, 'destroy'])->name('users.akses.destroy');
-    });
 
 require __DIR__.'/settings.php';
