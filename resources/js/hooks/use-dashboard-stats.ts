@@ -1,16 +1,21 @@
 import { useMemo } from 'react';
 
-interface DashboardStats {
+export interface FastDashboardStats {
     total_pegawai_aktif: number;
+    kgb_segera_count: number;
+    kp_eligible_count: number;
+    pegawai_baru_bulan_ini: number;
+}
+
+export interface HeavyDashboardStats {
     distribusi_golongan: Record<string, number>;
     distribusi_unit_kerja: Array<{ nama: string; pegawai_count: number }>;
     distribusi_jenis_kelamin: Array<{ jenis_kelamin: string; total: number }>;
-    kgb_segera_count: number;
-    kp_eligible_count: number;
     distribusi_jabatan: Array<{ nama: string; pegawai_count: number }>;
     distribusi_pendidikan: Array<{ pendidikan: string; pegawai_count: number }>;
-    pegawai_baru_bulan_ini: number;
 }
+
+export type DashboardStats = FastDashboardStats & HeavyDashboardStats;
 
 interface GolonganItem {
     golongan: string;
@@ -61,7 +66,7 @@ function jkLabel(code: string): string {
 }
 
 export function useDashboardStats(
-    stats: DashboardStats,
+    stats: HeavyDashboardStats,
 ): DashboardComputedStats {
     return useMemo(() => {
         const totalGolongan = Object.values(stats.distribusi_golongan).reduce(
@@ -151,4 +156,4 @@ export function useDashboardStats(
     }, [stats]);
 }
 
-export type { DashboardStats, DashboardComputedStats };
+export type { DashboardComputedStats };
