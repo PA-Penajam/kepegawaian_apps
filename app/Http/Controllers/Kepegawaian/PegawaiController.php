@@ -11,6 +11,7 @@ use App\Enums\StatusPegawai;
 use App\Enums\StatusPerkawinan;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kepegawaian\StorePegawaiRequest;
+use App\Http\Requests\Kepegawaian\UpdateFotoPegawaiRequest;
 use App\Http\Requests\Kepegawaian\UpdatePegawaiRequest;
 use App\Models\Pegawai;
 use App\Models\RefJabatan;
@@ -19,8 +20,11 @@ use App\Models\RefUnitKerja;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class PegawaiController extends Controller
 {
@@ -219,5 +223,24 @@ class PegawaiController extends Controller
         $pegawai->delete();
 
         return to_route('kepegawaian.pegawai.index');
+    }
+
+    /**
+     * Update foto pegawai.
+     */
+    public function updateFoto(UpdateFotoPegawaiRequest $request, Pegawai $pegawai): RedirectResponse
+    {
+        $path = "fotos/{$pegawai->id}.webp";
+
+        $manager = new ImageManager(new Driver());
+        $image = $manager->read($request->file('foto')->getRealPath());
+        $image->coverDown(400, 400, 'center');
+        $encoded = $image->toWebp(quality: 80);
+
+        Storage::disk('public')->put($path, $encoded->toString());
+
+        $pegawai->update(['foto' => $path]);
+
+        return back();
     }
 }

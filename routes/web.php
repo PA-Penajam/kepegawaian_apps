@@ -74,6 +74,9 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
     Route::resource('kepegawaian/pegawai', PegawaiController::class)
         ->names('kepegawaian.pegawai');
 
+    Route::post('kepegawaian/pegawai/{pegawai}/foto', [PegawaiController::class, 'updateFoto'])
+        ->name('kepegawaian.pegawai.foto.update');
+
     Route::get('kepegawaian/monitoring/kgb', [MonitoringKgbController::class, 'index'])
         ->name('monitoring.kgb.index');
 
