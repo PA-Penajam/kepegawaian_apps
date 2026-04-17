@@ -1,11 +1,11 @@
 <?php
 
 use App\Models\Pegawai;
+use App\Models\PengajuanPerubahanData;
 use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
-use function Pest\Laravel\post;
 
 it('pegawai dapat mengajukan perubahan profil pribadi sebagai pending', function (): void {
     $pegawai = Pegawai::factory()->viewer()->create([
@@ -44,7 +44,7 @@ it('pegawai dapat mengajukan perubahan profil pribadi sebagai pending', function
 it('menolak pengajuan baru jika masih ada pending untuk profil pribadi yang sama', function (): void {
     $pegawai = Pegawai::factory()->viewer()->create();
 
-    \App\Models\PengajuanPerubahanData::factory()->create([
+    PengajuanPerubahanData::factory()->create([
         'pengaju_id' => $pegawai->id,
         'jenis_pengaju' => 'pegawai',
         'domain' => 'profil_pribadi',
@@ -84,7 +84,7 @@ it('mewajibkan lampiran untuk perubahan identitas utama profil pribadi', functio
 it('pengaju dapat melihat riwayat dan detail pengajuannya sendiri', function (): void {
     $me = Pegawai::factory()->viewer()->create();
 
-    $pengajuan = \App\Models\PengajuanPerubahanData::factory()->create([
+    $pengajuan = PengajuanPerubahanData::factory()->create([
         'pengaju_id' => $me->id,
         'subject_pegawai_id' => $me->id,
         'domain' => 'profil_pribadi',
@@ -100,5 +100,44 @@ it('pengaju dapat melihat riwayat dan detail pengajuannya sendiri', function ():
             ->component('self-service/pengajuan/show')
             ->has('diffItems', 1)
             ->where('pengajuan.id', $pengajuan->id)
+        );
+});
+
+it('pengaju tidak dapat melihat pengajuan milik pegawai lain', function (): void {
+    $me = Pegawai::factory()->viewer()->create();
+    $other = Pegawai::factory()->viewer()->create();
+
+    $pengajuanOrang = PengajuanPerubahanData::factory()->create([
+        'pengaju_id' => $other->id,
+        'subject_pegawai_id' => $other->id,
+    ]);
+
+    actingAs($me)
+        ->withoutVite()
+        ->get(route('self-service.pengajuan.show', $pengajuanOrang))
+        ->assertNotFound();
+});
+
+it('pengaju melihat alasan penolakan dan diff pada riwayatnya sendiri', function (): void {
+    $pegawai = Pegawai::factory()->viewer()->create();
+
+    $pengajuan = PengajuanPerubahanData::factory()->create([
+        'pengaju_id' => $pegawai->id,
+        'subject_pegawai_id' => $pegawai->id,
+        'status' => 'rejected',
+        'before_payload' => ['nama_lengkap' => 'Nama Lama'],
+        'after_payload' => ['nama_lengkap' => 'Nama Baru'],
+        'alasan_penolakan' => 'Dokumen tidak sesuai.',
+    ]);
+
+    actingAs($pegawai)
+        ->withoutVite()
+        ->get(route('self-service.pengajuan.show', $pengajuan))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('self-service/pengajuan/show')
+            ->where('pengajuan.status', 'rejected')
+            ->where('pengajuan.alasan_penolakan', 'Dokumen tidak sesuai.')
+            ->where('diffItems.0.field', 'nama_lengkap')
         );
 });
