@@ -1,6 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -94,6 +96,14 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats, filters, fil
         const updated = { ...localFilters, [key]: value === 'semua' || value === '' ? null : value };
         setLocalFilters(updated);
         applyFilter(updated);
+    }
+
+    function handleExport() {
+        const params = new URLSearchParams();
+        if (localFilters.unit_kerja) params.set('unit_kerja', localFilters.unit_kerja);
+        if (localFilters.golongan) params.set('golongan', localFilters.golongan);
+        if (localFilters.status) params.set('status', localFilters.status);
+        window.location.href = `/kepegawaian/monitoring/kgb/export?${params.toString()}`;
     }
 
     return (
@@ -194,6 +204,19 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats, filters, fil
                                     <option value="mendekati">Mendekati</option>
                                     <option value="aman">Aman</option>
                                 </select>
+                            </div>
+
+                            <div className="grid gap-1.5">
+                                <label className="text-sm font-medium">Aksi</label>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleExport}
+                                    className="h-9"
+                                >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Export Excel
+                                </Button>
                             </div>
                         </div>
 

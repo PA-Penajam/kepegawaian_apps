@@ -24,7 +24,6 @@ class KenaikanPangkatMonitoringExport implements FromCollection, WithHeadings, W
     public function collection(): Collection
     {
         $service = app(KenaikanPangkatMonitoringService::class);
-        $normalizedPeriode = $this->periode !== null ? strtolower($this->periode) : null;
 
         $query = Pegawai::query()
             ->select('pegawai.*')

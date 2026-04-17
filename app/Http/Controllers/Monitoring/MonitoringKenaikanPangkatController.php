@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
 use App\Services\KenaikanPangkatMonitoringService;
+use App\Exports\KenaikanPangkatMonitoringExport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class MonitoringKenaikanPangkatController extends Controller
 {
@@ -41,5 +44,17 @@ class MonitoringKenaikanPangkatController extends Controller
                     ->pluck('golongan'),
             ],
         ]);
+    }
+
+    public function export(Request $request): BinaryFileResponse
+    {
+        $periode   = $request->string('periode')->value() ?: null;
+        $unitKerja = $request->string('unit_kerja')->value() ?: null;
+        $golongan  = $request->string('golongan')->value() ?: null;
+
+        return Excel::download(
+            new KenaikanPangkatMonitoringExport($periode, $unitKerja, $golongan),
+            'kenaikan-pangkat-monitoring.xlsx'
+        );
     }
 }

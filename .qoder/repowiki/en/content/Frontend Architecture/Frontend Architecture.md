@@ -17,6 +17,12 @@
 - [index.ts](file://resources/js/types/index.ts)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Updated UI Primitive Library section to clarify that magic UI components (shimmer-button, number-ticker, blur-fade, border-beam, particles) are no longer part of the current implementation despite still existing in the codebase
+- Added disclaimers about deprecated components in relevant sections
+- Updated troubleshooting guide to address magic UI component removal
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Project Structure](#project-structure)
@@ -31,6 +37,8 @@
 
 ## Introduction
 This document explains the modern frontend architecture built with React and TypeScript, styled via Tailwind CSS, and integrated with Laravel through Inertia.js. It covers the component hierarchy, layout system, state management patterns, UI primitive library, build system, styling approach, and server-side rendering integration. The goal is to provide both conceptual guidance for frontend developers and technical depth for React specialists.
+
+**Important**: The current implementation has removed magic UI components (shimmer-button, number-ticker, blur-fade, border-beam, particles) that were previously part of the UI primitive library. These components still exist in the codebase but are no longer actively used in the current application.
 
 ## Project Structure
 The frontend is organized around three pillars:
@@ -53,6 +61,7 @@ subgraph "UI Primitives"
 U1["components/ui/button.tsx"]
 U2["components/ui/card.tsx"]
 U3["lib/utils.ts"]
+U4["Magic UI Components<br/>(Removed)<br/>shimmer-button.tsx<br/>number-ticker.tsx<br/>blur-fade.tsx<br/>border-beam.tsx<br/>particles.tsx"]
 end
 subgraph "Styling & Build"
 V["vite.config.ts"]
@@ -67,6 +76,7 @@ L1 --> S
 L2 --> S
 U1 --> U3
 U2 --> U3
+U4 -.-> U3
 V --> A
 V --> B
 P --> V
@@ -83,14 +93,14 @@ T --> A
 - [card.tsx:1-69](file://resources/js/components/ui/card.tsx#L1-L69)
 - [utils.ts:1-13](file://resources/js/lib/utils.ts#L1-L13)
 - [vite.config.ts:1-28](file://vite.config.ts#L1-L28)
-- [package.json:1-77](file://package.json#L1-L77)
+- [package.json:1-80](file://package.json#L1-L80)
 - [tsconfig.json:1-122](file://tsconfig.json#L1-L122)
 
 **Section sources**
 - [app.tsx:1-36](file://resources/js/app.tsx#L1-L36)
 - [ssr.tsx:1-28](file://resources/js/ssr.tsx#L1-L28)
 - [vite.config.ts:1-28](file://vite.config.ts#L1-L28)
-- [package.json:1-77](file://package.json#L1-L77)
+- [package.json:1-80](file://package.json#L1-L80)
 - [tsconfig.json:1-122](file://tsconfig.json#L1-L122)
 
 ## Core Components
@@ -99,6 +109,8 @@ T --> A
 - UI primitives: A cohesive set of headless UI components built with Radix UI and styled via Tailwind, using class merging utilities.
 - Utilities: Shared helpers for class composition and URL normalization.
 - Appearance hook: Centralized theme management supporting system preference, persistence, and SSR.
+
+**Important**: Magic UI components (shimmer-button, number-ticker, blur-fade, border-beam, particles) were part of the original UI primitive library but have been removed from active use in the current implementation.
 
 Key implementation references:
 - Bootstrapping and rendering: [app.tsx:11-32](file://resources/js/app.tsx#L11-L32)
@@ -202,6 +214,8 @@ Practical usage examples:
 ### UI Primitive Library
 The UI primitives are built with Radix UI under the hood and styled with Tailwind CSS. They use a variant system and a shared class merging utility for consistent styling and composition.
 
+**Important**: Magic UI components (shimmer-button, number-ticker, blur-fade, border-beam, particles) were part of the original UI primitive library but have been removed from active use. These components still exist in the codebase but are not currently utilized.
+
 ```mermaid
 classDiagram
 class Button {
@@ -220,14 +234,28 @@ class Utils {
 +cn(...inputs) : string
 +toUrl(url) : string
 }
+class MagicUIComponents {
+<<Deprecated>>
++ShimmerButton : Removed
++NumberTicker : Removed
++BlurFade : Removed
++BorderBeam : Removed
++Particles : Removed
+}
 Button --> Utils : "uses cn()"
 Card --> Utils : "uses cn()"
+MagicUIComponents --> Utils : "would use cn() (deprecated)"
 ```
 
 **Diagram sources**
 - [button.tsx:7-39](file://resources/js/components/ui/button.tsx#L7-L39)
 - [card.tsx:5-66](file://resources/js/components/ui/card.tsx#L5-L66)
 - [utils.ts:6-12](file://resources/js/lib/utils.ts#L6-L12)
+- [shimmer-button.tsx:1-96](file://resources/js/components/ui/shimmer-button.tsx#L1-L96)
+- [number-ticker.tsx:1-73](file://resources/js/components/ui/number-ticker.tsx#L1-L73)
+- [blur-fade.tsx:1-93](file://resources/js/components/ui/blur-fade.tsx#L1-L93)
+- [border-beam.tsx:1-106](file://resources/js/components/ui/border-beam.tsx#L1-L106)
+- [particles.tsx:1-320](file://resources/js/components/ui/particles.tsx#L1-L320)
 
 Implementation details:
 - Variants and sizes for buttons: [button.tsx:7-39](file://resources/js/components/ui/button.tsx#L7-L39)
@@ -288,7 +316,7 @@ Bundle --> Output["Emit static assets"]
 
 **Section sources**
 - [vite.config.ts:1-28](file://vite.config.ts#L1-L28)
-- [package.json:1-77](file://package.json#L1-L77)
+- [package.json:1-80](file://package.json#L1-L80)
 - [tsconfig.json:1-122](file://tsconfig.json#L1-L122)
 
 ### Inertia.js Integration
@@ -321,6 +349,8 @@ Inertia-->>Client : "HTML + hydration payload"
 ## Dependency Analysis
 The frontend stack relies on a small set of core libraries and a curated plugin ecosystem. Dependencies are declared in package.json, while Vite orchestrates the build and development experience.
 
+**Important**: Magic UI components require the motion library dependency, which is still present in the current package.json but may not be actively used.
+
 ```mermaid
 graph LR
 React["react"]
@@ -329,27 +359,30 @@ Radix["@radix-ui/*"]
 Tailwind["tailwindcss"]
 Vite["vite"]
 Plugins["laravel-vite-plugin<br/>@vitejs/plugin-react<br/>@tailwindcss/vite<br/>@laravel/vite-plugin-wayfinder"]
+Motion["motion (dependency for magic UI)<br/>Currently unused in implementation"]
 React --> Inertia
 Inertia --> Radix
 Tailwind --> Plugins
 Vite --> Plugins
 Plugins --> React
+Motion -.-> Radix
 ```
 
 **Diagram sources**
-- [package.json:32-67](file://package.json#L32-L67)
+- [package.json:34-70](file://package.json#L34-L70)
 - [vite.config.ts:8-23](file://vite.config.ts#L8-L23)
 
 **Section sources**
-- [package.json:1-77](file://package.json#L1-L77)
+- [package.json:1-80](file://package.json#L1-L80)
 - [vite.config.ts:1-28](file://vite.config.ts#L1-L28)
 
 ## Performance Considerations
-- Prefer component-level lazy loading and code splitting via Inertia’s dynamic page resolution.
+- Prefer component-level lazy loading and code splitting via Inertia's dynamic page resolution.
 - Use the variant system in UI primitives to minimize custom CSS and leverage shared styles.
 - Keep class merging minimal to reduce bundle size; consolidate repeated utility classes.
 - Utilize SSR for initial page loads to improve perceived performance and SEO.
 - Monitor theme switching costs; the appearance hook is optimized to avoid unnecessary re-renders.
+- **Important**: Magic UI components (shimmer-button, number-ticker, blur-fade, border-beam, particles) are no longer part of the current implementation and should not be used, as they may cause confusion during development.
 
 ## Troubleshooting Guide
 Common issues and remedies:
@@ -361,6 +394,7 @@ Common issues and remedies:
   - Reference: [vite.config.ts:19-19](file://vite.config.ts#L19-L19), [utils.ts:6-8](file://resources/js/lib/utils.ts#L6-L8)
 - TypeScript errors in JSX: Ensure tsconfig JSX settings and module resolution are correct.
   - Reference: [tsconfig.json:110-115](file://tsconfig.json#L110-L115), [tsconfig.json:30-30](file://tsconfig.json#L30-L30)
+- **Important**: Magic UI components (shimmer-button, number-ticker, blur-fade, border-beam, particles) are deprecated and should not be used. If encountered in code searches, they are remnants of the previous implementation and are not part of the current architecture.
 
 **Section sources**
 - [use-appearance.tsx:73-112](file://resources/js/hooks/use-appearance.tsx#L73-L112)
@@ -373,6 +407,8 @@ Common issues and remedies:
 ## Conclusion
 This frontend architecture combines React and TypeScript with Tailwind CSS and Inertia.js to deliver a maintainable, scalable, and developer-friendly user interface. The layout system and UI primitives promote consistency and reuse, while the appearance hook and SSR setup ensure a smooth user experience across environments. The build system and strict TypeScript configuration provide reliability and predictability.
 
+**Important Note**: Magic UI components (shimmer-button, number-ticker, blur-fade, border-beam, particles) are no longer part of the current implementation despite still existing in the codebase. Developers should rely on the core UI primitives documented here for consistent, maintainable component development.
+
 ## Appendices
 - Practical examples:
   - Using the button primitive with variants and sizes: [button.tsx:41-62](file://resources/js/components/ui/button.tsx#L41-L62)
@@ -382,3 +418,9 @@ This frontend architecture combines React and TypeScript with Tailwind CSS and I
     - Header layout: [app-header-layout.tsx:6-16](file://resources/js/layouts/app/app-header-layout.tsx#L6-L16)
 - Type system:
   - Centralized type re-exports: [index.ts:1-6](file://resources/js/types/index.ts#L1-L6)
+- **Important**: Magic UI components are deprecated and should not be used in current development:
+  - ShimmerButton: [shimmer-button.tsx:1-96](file://resources/js/components/ui/shimmer-button.tsx#L1-L96)
+  - NumberTicker: [number-ticker.tsx:1-73](file://resources/js/components/ui/number-ticker.tsx#L1-L73)
+  - BlurFade: [blur-fade.tsx:1-93](file://resources/js/components/ui/blur-fade.tsx#L1-L93)
+  - BorderBeam: [border-beam.tsx:1-106](file://resources/js/components/ui/border-beam.tsx#L1-L106)
+  - Particles: [particles.tsx:1-320](file://resources/js/components/ui/particles.tsx#L1-L320)

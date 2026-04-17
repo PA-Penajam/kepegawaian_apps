@@ -1,7 +1,9 @@
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import { Download } from 'lucide-react';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
@@ -122,6 +124,16 @@ export default function MonitoringKenaikanPangkatPage({
             preserveState: true,
             replace: true,
         });
+    }
+
+    function handleExport() {
+        const params = new URLSearchParams();
+        if (unitKerjaFilter) params.set('unit_kerja', unitKerjaFilter);
+        if (golonganFilter) params.set('golongan', golonganFilter);
+        if (periodeFilter !== 'semua') {
+            params.set('periode', periodeFilter);
+        }
+        window.location.href = `/kepegawaian/monitoring/kenaikan-pangkat/export?${params.toString()}`;
     }
 
     const filteredList = useMemo(() => {
@@ -296,6 +308,16 @@ export default function MonitoringKenaikanPangkatPage({
                             </option>
                         </select>
                     </div>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleExport}
+                        className="mb-0.5"
+                    >
+                        <Download className="mr-2 h-4 w-4" />
+                        Export Excel
+                    </Button>
                 </div>
 
                 <div className="overflow-hidden rounded-xl border bg-card">

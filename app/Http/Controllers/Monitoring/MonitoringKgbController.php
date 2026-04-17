@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
 use App\Services\KgbMonitoringService;
+use App\Exports\KgbMonitoringExport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class MonitoringKgbController extends Controller
 {
@@ -44,5 +47,17 @@ class MonitoringKgbController extends Controller
                     ->pluck('golongan'),
             ],
         ]);
+    }
+
+    public function export(Request $request): BinaryFileResponse
+    {
+        $unitKerja = $request->string('unit_kerja')->value() ?: null;
+        $golongan  = $request->string('golongan')->value() ?: null;
+        $status    = $request->string('status')->value() ?: null;
+
+        return Excel::download(
+            new KgbMonitoringExport($unitKerja, $golongan, $status),
+            'kgb-monitoring.xlsx'
+        );
     }
 }

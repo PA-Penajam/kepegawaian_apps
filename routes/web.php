@@ -80,8 +80,14 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
     Route::get('kepegawaian/monitoring/kgb', [MonitoringKgbController::class, 'index'])
         ->name('monitoring.kgb.index');
 
+    Route::get('kepegawaian/monitoring/kgb/export', [MonitoringKgbController::class, 'export'])
+        ->name('monitoring.kgb.export');
+
     Route::get('kepegawaian/monitoring/kenaikan-pangkat', [MonitoringKenaikanPangkatController::class, 'index'])
         ->name('monitoring.kenaikan-pangkat.index');
+
+    Route::get('kepegawaian/monitoring/kenaikan-pangkat/export', [MonitoringKenaikanPangkatController::class, 'export'])
+        ->name('monitoring.kenaikan-pangkat.export');
 
     Route::resource('referensi/jenis-dokumen', RefJenisDokumenController::class)
         ->parameters(['jenis-dokumen' => 'jenisDokumen'])
