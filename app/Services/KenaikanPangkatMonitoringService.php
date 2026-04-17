@@ -11,8 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class KenaikanPangkatMonitoringService
 {
-    public function getUpcomingKenaikanPangkat(?string $periode = null, int $perPage = 15): LengthAwarePaginator
-    {
+    public function getUpcomingKenaikanPangkat(
+        ?string $periode = null,
+        int $perPage = 15,
+        ?string $unitKerjaId = null,
+        ?string $golongan = null,
+    ): LengthAwarePaginator {
         $normalizedPeriode = $periode !== null ? strtolower($periode) : null;
 
         $query = Pegawai::query()
@@ -30,6 +34,8 @@ class KenaikanPangkatMonitoringService
                 StatusPegawai::Meninggal->value,
                 StatusPegawai::Diberhentikan->value,
             ])
+            ->when($unitKerjaId !== null, fn ($q) => $q->where('pegawai.ref_unit_kerja_id', $unitKerjaId))
+            ->when($golongan !== null, fn ($q) => $q->byGolongan($golongan))
             ->orderBy('nama_lengkap');
 
         // Filter periode di level query (April = bulan 1-4, Oktober = bulan 5-10)
@@ -66,8 +72,11 @@ class KenaikanPangkatMonitoringService
             });
     }
 
-    public function getKpStats(?string $periode = null): array
-    {
+    public function getKpStats(
+        ?string $periode = null,
+        ?string $unitKerjaId = null,
+        ?string $golongan = null,
+    ): array {
         $normalizedPeriode = $periode !== null ? strtolower($periode) : null;
         $today = Carbon::today()->toDateString();
 
@@ -100,7 +109,9 @@ class KenaikanPangkatMonitoringService
                 StatusPegawai::Pensiun->value,
                 StatusPegawai::Meninggal->value,
                 StatusPegawai::Diberhentikan->value,
-            ]);
+            ])
+            ->when($unitKerjaId !== null, fn ($q) => $q->where('pegawai.ref_unit_kerja_id', $unitKerjaId))
+            ->when($golongan !== null, fn ($q) => $q->byGolongan($golongan));
 
         if ($normalizedPeriode === 'april') {
             $query->whereRaw($this->getPeriodeFilterSql('april'), [4]);

@@ -108,8 +108,12 @@ test('getStats returns dashboard statistics with expected structure and values',
 
     app()->instance(KenaikanPangkatMonitoringService::class, new class extends KenaikanPangkatMonitoringService
     {
-        public function getUpcomingKenaikanPangkat(?string $periode = null, int $perPage = 15): LengthAwarePaginator
-        {
+        public function getUpcomingKenaikanPangkat(
+            ?string $periode = null,
+            int $perPage = 15,
+            ?string $unitKerjaId = null,
+            ?string $golongan = null,
+        ): LengthAwarePaginator {
             return new LengthAwarePaginator(
                 items: collect([
                     ['id' => 'kp-1', 'status' => 'Sudah Eligible'],
@@ -121,7 +125,11 @@ test('getStats returns dashboard statistics with expected structure and values',
             );
         }
 
-        public function getKpStats(?string $periode = null): array
+        public function getKpStats(
+            ?string $periode = null,
+            ?string $unitKerjaId = null,
+            ?string $golongan = null,
+        ): array
         {
             return [
                 'total'             => 2,

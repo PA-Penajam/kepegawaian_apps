@@ -3,6 +3,7 @@
 use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
 use App\Models\RefPangkat;
+use App\Models\RefUnitKerja;
 use App\Models\RiwayatPangkat;
 use App\Services\KenaikanPangkatMonitoringService;
 use Carbon\Carbon;
@@ -151,5 +152,106 @@ test('monitoring index returns inertia response', function () {
             ->has('kpStats.sudahEligible')
             ->has('kpStats.mendekatiEligible')
             ->has('kpStats.belumEligible'),
+        );
+});
+
+test('filter unit_kerja_id hanya menampilkan pegawai KP dari unit kerja tersebut', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    actingAs($admin);
+
+    $unitKerja1 = RefUnitKerja::factory()->create();
+    $unitKerja2 = RefUnitKerja::factory()->create();
+
+    $pangkat = RefPangkat::factory()->create(['kode' => 'III/a', 'golongan' => 'III']);
+
+    $pegawai1 = Pegawai::factory()->create([
+        'ref_unit_kerja_id' => $unitKerja1->id,
+        'ref_pangkat_id' => $pangkat->id,
+        'status_pegawai' => 'aktif',
+    ]);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawai1->id,
+        'ref_pangkat_id' => $pangkat->id,
+        'tmt' => now()->subYears(5),
+        'is_aktif' => true,
+    ]);
+
+    $pegawai2 = Pegawai::factory()->create([
+        'ref_unit_kerja_id' => $unitKerja2->id,
+        'ref_pangkat_id' => $pangkat->id,
+        'status_pegawai' => 'aktif',
+    ]);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawai2->id,
+        'ref_pangkat_id' => $pangkat->id,
+        'tmt' => now()->subYears(5),
+        'is_aktif' => true,
+    ]);
+
+    $service = app(\App\Services\KenaikanPangkatMonitoringService::class);
+    $result = $service->getUpcomingKenaikanPangkat(null, 15, $unitKerja1->id);
+
+    $ids = collect($result->items())->pluck('id')->toArray();
+
+    expect($ids)->toContain($pegawai1->id)
+        ->and($ids)->not->toContain($pegawai2->id);
+});
+
+test('filter golongan hanya menampilkan pegawai KP dengan golongan tersebut', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    actingAs($admin);
+
+    $pangkatIII = RefPangkat::factory()->create(['kode' => 'III/a', 'golongan' => 'III']);
+    $pangkatIV = RefPangkat::factory()->create(['kode' => 'IV/a', 'golongan' => 'IV']);
+
+    $pegawaiIII = Pegawai::factory()->create([
+        'ref_pangkat_id' => $pangkatIII->id,
+        'status_pegawai' => 'aktif',
+    ]);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawaiIII->id,
+        'ref_pangkat_id' => $pangkatIII->id,
+        'tmt' => now()->subYears(5),
+        'is_aktif' => true,
+    ]);
+
+    $pegawaiIV = Pegawai::factory()->create([
+        'ref_pangkat_id' => $pangkatIV->id,
+        'status_pegawai' => 'aktif',
+    ]);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawaiIV->id,
+        'ref_pangkat_id' => $pangkatIV->id,
+        'tmt' => now()->subYears(5),
+        'is_aktif' => true,
+    ]);
+
+    $service = app(\App\Services\KenaikanPangkatMonitoringService::class);
+    $result = $service->getUpcomingKenaikanPangkat(null, 15, null, 'III');
+
+    $ids = collect($result->items())->pluck('id')->toArray();
+
+    expect($ids)->toContain($pegawaiIII->id)
+        ->and($ids)->not->toContain($pegawaiIV->id);
+});
+
+test('controller kp meneruskan filter dan filterOptions ke view', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    $unitKerja = RefUnitKerja::factory()->create();
+    actingAs($admin);
+
+    get(route('monitoring.kenaikan-pangkat.index', ['unit_kerja' => $unitKerja->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('kepegawaian/monitoring/kenaikan-pangkat/index')
+            ->has('filters', fn (Assert $f) => $f
+                ->where('unit_kerja', $unitKerja->id)
+                ->etc()
+            )
+            ->has('filterOptions', fn (Assert $f) => $f
+                ->has('unitKerja')
+                ->has('golongan')
+                ->etc()
+            )
         );
 });

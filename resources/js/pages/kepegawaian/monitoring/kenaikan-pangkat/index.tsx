@@ -13,8 +13,7 @@ import {
 } from '@/components/ui/table';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
-import type { PaginatedData } from '@/types';
+import type { BreadcrumbItem, IamPaginatedData } from '@/types';
 
 type StatusKp = 'Sudah Eligible' | 'Mendekati Eligible' | 'Belum Eligible';
 
@@ -32,8 +31,19 @@ type PegawaiMonitoringRow = {
     status: StatusKp;
 };
 
+type UnitKerjaOption = { id: string; nama: string };
+type KpFilters = {
+    unit_kerja: string | null;
+    golongan: string | null;
+    periode: string | null;
+};
+type KpFilterOptions = {
+    unitKerja: UnitKerjaOption[];
+    golongan: string[];
+};
+
 type Props = {
-    pegawaiList: PaginatedData<PegawaiMonitoringRow>;
+    pegawaiList: IamPaginatedData<PegawaiMonitoringRow>;
     selectedPeriode: string | null;
     kpStats: {
         total: number;
@@ -41,6 +51,8 @@ type Props = {
         mendekatiEligible: number;
         belumEligible: number;
     };
+    filters: KpFilters;
+    filterOptions: KpFilterOptions;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -75,6 +87,8 @@ export default function MonitoringKenaikanPangkatPage({
     pegawaiList,
     selectedPeriode,
     kpStats,
+    filters,
+    filterOptions,
 }: Props) {
     const [statusFilter, setStatusFilter] = useState<'semua' | StatusKp>(
         'semua',
@@ -86,13 +100,36 @@ export default function MonitoringKenaikanPangkatPage({
             ? selectedPeriode
             : 'semua',
     );
+    const [unitKerjaFilter, setUnitKerjaFilter] = useState(
+        filters.unit_kerja ?? '',
+    );
+    const [golonganFilter, setGolonganFilter] = useState(
+        filters.golongan ?? '',
+    );
+
+    function handleFilterChange(newParams: Record<string, string>) {
+        const params: Record<string, string> = {};
+        const resolved = {
+            unit_kerja: unitKerjaFilter,
+            golongan: golonganFilter,
+            periode: periodeFilter !== 'semua' ? periodeFilter : '',
+            ...newParams,
+        };
+        if (resolved.unit_kerja) params.unit_kerja = resolved.unit_kerja;
+        if (resolved.golongan) params.golongan = resolved.golongan;
+        if (resolved.periode) params.periode = resolved.periode;
+        router.get('/kepegawaian/monitoring/kenaikan-pangkat', params, {
+            preserveState: true,
+            replace: true,
+        });
+    }
 
     const filteredList = useMemo(() => {
         if (statusFilter === 'semua') {
             return pegawaiList.data;
         }
 
-        return pegawaiList.data.filter((item) => item.status === statusFilter);
+        return pegawaiList.data.filter((item: PegawaiMonitoringRow) => item.status === statusFilter);
     }, [pegawaiList.data, statusFilter]);
 
     return (
@@ -172,23 +209,64 @@ export default function MonitoringKenaikanPangkatPage({
                                     | 'semua'
                                     | 'april'
                                     | 'oktober';
-
                                 setPeriodeFilter(value);
-
-                                router.get(
-                                    '/kepegawaian/monitoring/kenaikan-pangkat',
-                                    value === 'semua' ? {} : { periode: value },
-                                    {
-                                        preserveState: true,
-                                        replace: true,
-                                    },
-                                );
+                                handleFilterChange({
+                                    periode: value === 'semua' ? '' : value,
+                                });
                             }}
                             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
                         >
                             <option value="semua">Semua</option>
                             <option value="april">April</option>
                             <option value="oktober">Oktober</option>
+                        </select>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <label htmlFor="unit-kerja" className="text-sm font-medium">
+                            Unit Kerja
+                        </label>
+                        <select
+                            id="unit-kerja"
+                            value={unitKerjaFilter}
+                            onChange={(e) => {
+                                setUnitKerjaFilter(e.target.value);
+                                handleFilterChange({
+                                    unit_kerja: e.target.value,
+                                });
+                            }}
+                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                            <option value="">Semua Unit</option>
+                            {filterOptions.unitKerja.map((uk) => (
+                                <option key={uk.id} value={uk.id}>
+                                    {uk.nama}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <label htmlFor="golongan" className="text-sm font-medium">
+                            Golongan
+                        </label>
+                        <select
+                            id="golongan"
+                            value={golonganFilter}
+                            onChange={(e) => {
+                                setGolonganFilter(e.target.value);
+                                handleFilterChange({
+                                    golongan: e.target.value,
+                                });
+                            }}
+                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                            <option value="">Semua Gol</option>
+                            {filterOptions.golongan.map((gol) => (
+                                <option key={gol} value={gol}>
+                                    Golongan {gol}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -288,7 +366,7 @@ export default function MonitoringKenaikanPangkatPage({
                                                 variant="outline"
                                                 className={
                                                     statusBadgeClass[
-                                                        pegawai.status
+                                                        pegawai.status as StatusKp
                                                     ]
                                                 }
                                             >
