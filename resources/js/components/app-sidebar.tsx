@@ -70,6 +70,17 @@ export function AppSidebar() {
           ]
         : [];
 
+    const validatorNavItems: NavItem[] = hasPermission('pengajuan-perubahan.validate')
+        ? [
+              {
+                  title: 'Validasi Pengajuan',
+                  href: '/kepegawaian/pengajuan',
+                  icon: ShieldCheck,
+                  badge: auth.user.pending_pengajuan_count ?? null,
+              },
+          ]
+        : [];
+
     const monitoringNavItems: NavItem[] = hasPermission('monitoring.view')
         ? [
               {
@@ -144,6 +155,9 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                {validatorNavItems.length > 0 ? (
+                    <NavMain items={validatorNavItems} title="Validator" />
+                ) : null}
                 {kepegawaianNavItems.length > 0 ? (
                     <NavMain items={kepegawaianNavItems} title="Kepegawaian" />
                 ) : null}

@@ -126,3 +126,25 @@ it('non-validator tidak dapat mengakses inbox pengajuan', function (): void {
         ->get(route('kepegawaian.pengajuan.index'))
         ->assertForbidden();
 });
+
+it('validator melihat diff item dan counter pending pada response inertia', function (): void {
+    $validator = Pegawai::factory()->validator()->create();
+
+    $pengajuan = PengajuanPerubahanData::factory()->create([
+        'status' => 'pending',
+        'before_payload' => ['nama_lengkap' => 'Nama Lama'],
+        'after_payload' => ['nama_lengkap' => 'Nama Baru'],
+    ]);
+
+    actingAs($validator)
+        ->withoutVite()
+        ->get(route('kepegawaian.pengajuan.show', $pengajuan))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('kepegawaian/pengajuan/show')
+            ->etc()
+            ->has('diffItems', 1)
+            ->where('diffItems.0.field', 'nama_lengkap')
+            ->where('auth.user.pending_pengajuan_count', 1)
+        );
+});

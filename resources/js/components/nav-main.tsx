@@ -3,6 +3,7 @@ import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarMenu,
+    SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
@@ -32,6 +33,9 @@ export function NavMain({
                             <Link href={item.href} prefetch>
                                 {item.icon && <item.icon />}
                                 <span>{item.title}</span>
+                                {item.badge != null && (
+                                    <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                                )}
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

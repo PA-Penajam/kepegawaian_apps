@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\StatusPengajuanPerubahanData;
+use App\Models\PengajuanPerubahanData;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -18,6 +20,13 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        // Ambil permissions user untuk penggunaan berulang
+        $permissions = $user
+            ? $user->iamRoles->flatMap(
+                fn ($role) => $role->permissions->pluck('slug')
+            )->unique()->values()->toArray()
+            : [];
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -31,9 +40,10 @@ class HandleInertiaRequests extends Middleware
                     'email_verified_at' => $user->email_verified_at,
                     'two_factor_enabled' => ! is_null($user->two_factor_confirmed_at),
                     'roles' => $user->iamRoles->pluck('nama')->toArray(),
-                    'permissions' => $user->iamRoles->flatMap(
-                        fn ($role) => $role->permissions->pluck('slug')
-                    )->unique()->values()->toArray(),
+                    'permissions' => $permissions,
+                    'pending_pengajuan_count' => in_array('pengajuan-perubahan.validate', $permissions, true)
+                        ? PengajuanPerubahanData::query()->where('status', StatusPengajuanPerubahanData::Pending)->count()
+                        : 0,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,
                 ] : null,
