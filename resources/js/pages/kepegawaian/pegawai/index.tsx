@@ -6,6 +6,7 @@ import type { DataTableToolbarFilter } from '@/components/kepegawaian/data-table
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     Table,
     TableBody,
@@ -290,6 +291,7 @@ export default function PegawaiIndex({
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead className="w-12">Foto</TableHead>
                                     <TableHead>
                                         <button
                                             type="button"
@@ -369,7 +371,7 @@ export default function PegawaiIndex({
                                 {pegawai.data.length === 0 ? (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={7}
+                                            colSpan={8}
                                             className="h-32 text-center text-muted-foreground"
                                         >
                                             <div className="flex flex-col items-center justify-center gap-2">
@@ -391,6 +393,14 @@ export default function PegawaiIndex({
                                 ) : (
                                     pegawai.data.map((item) => (
                                         <TableRow key={item.id}>
+                                            <TableCell>
+                                                <Avatar className="h-8 w-8">
+                                                    <AvatarImage src={item.foto_url ?? undefined} alt={item.nama_lengkap} />
+                                                    <AvatarFallback className="text-xs">
+                                                        {item.nama_lengkap.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                            </TableCell>
                                             <TableCell className="font-medium">
                                                 {item.nip ?? '-'}
                                             </TableCell>

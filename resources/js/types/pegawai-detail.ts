@@ -43,6 +43,7 @@ export type PegawaiDetail = {
     no_bpjs_ketenagakerjaan: string | null;
     no_taspen: string | null;
     foto: string | null;
+    foto_url: string | null;
     keterangan: string | null;
     pangkat: ReferenceOption | null;
     jabatan: ReferenceOption | null;

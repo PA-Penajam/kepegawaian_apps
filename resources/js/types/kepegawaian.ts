@@ -237,6 +237,7 @@ export type Pegawai = {
     no_bpjs_ketenagakerjaan: string | null;
     no_taspen: string | null;
     foto: string | null;
+    foto_url: string | null;
     keterangan: string | null;
     created_at: string;
     updated_at: string;

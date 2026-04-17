@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Award, Briefcase, Building, Edit } from 'lucide-react';
 import { PegawaiDetailTabs } from '@/components/pegawai-detail-tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { FotoUpload } from '@/components/pegawai/FotoUpload';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
@@ -36,15 +36,12 @@ export default function PegawaiShow({ pegawai }: { pegawai: PegawaiDetail }) {
             <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
                 <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
                     <div className="flex items-start gap-4">
-                        <Avatar className="h-20 w-20 border-2 border-border">
-                            <AvatarImage
-                                src={pegawai.foto ?? undefined}
-                                alt={pegawai.nama_lengkap}
-                            />
-                            <AvatarFallback className="text-2xl">
-                                {getInitials(pegawai.nama_lengkap)}
-                            </AvatarFallback>
-                        </Avatar>
+                        <FotoUpload
+                            pegawaiId={pegawai.id}
+                            currentFotoUrl={pegawai.foto_url}
+                            initials={getInitials(pegawai.nama_lengkap)}
+                            canUpdate={true}
+                        />
                         <div className="space-y-1.5">
                             <h1 className="text-2xl font-bold tracking-tight">
                                 {pegawai.nama_lengkap}
