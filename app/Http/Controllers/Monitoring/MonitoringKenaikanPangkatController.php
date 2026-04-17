@@ -54,7 +54,7 @@ class MonitoringKenaikanPangkatController extends Controller
 
         return Excel::download(
             new KenaikanPangkatMonitoringExport($periode, $unitKerja, $golongan),
-            'kenaikan-pangkat-monitoring.xlsx'
+            'kp-monitoring.xlsx'
         );
     }
 }
