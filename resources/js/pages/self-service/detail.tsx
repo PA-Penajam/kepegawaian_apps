@@ -37,7 +37,7 @@ export default function SelfServiceDetail({
                     <div className="flex items-start gap-4">
                         <Avatar className="h-20 w-20 border-2 border-border">
                             <AvatarImage
-                                src={pegawai.foto ?? undefined}
+                                src={pegawai.foto_url ?? undefined}
                                 alt={pegawai.nama_lengkap}
                             />
                             <AvatarFallback className="text-2xl">

@@ -21,7 +21,7 @@ type PegawaiSummary = Pick<
     | 'id'
     | 'nip'
     | 'nama_lengkap'
-    | 'foto'
+    | 'foto_url'
     | 'pangkat'
     | 'jabatan'
     | 'unit_kerja'
@@ -159,7 +159,7 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
                             <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
                                 <Avatar className="h-20 w-20 text-2xl">
                                     <AvatarImage
-                                        src={pegawai.foto ?? undefined}
+                                        src={pegawai.foto_url ?? undefined}
                                         alt={pegawai.nama_lengkap}
                                     />
                                     <AvatarFallback>
