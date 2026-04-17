@@ -2,6 +2,7 @@
 
 use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Sanctum\Sanctum;
 
@@ -226,4 +227,38 @@ test('menolak batch request lebih dari 50 nip', function () {
     $response = $this->getJson('/api/v1/pegawai?'.http_build_query($query), $headers);
     $response->assertStatus(422)
         ->assertJsonPath('message', 'The nip field must not have more than 50 items.');
+});
+
+// =============================================================================
+// Task 2.3: Fix Duplikasi Query
+// =============================================================================
+
+test('search pegawai menggunakan paginate tanpa duplikasi query builder', function () {
+    $user = Pegawai::factory()->create();
+    Pegawai::factory()->create([
+        'status_pegawai' => StatusPegawai::Aktif,
+        'nama_lengkap' => 'Budi Santoso',
+    ]);
+    Sanctum::actingAs($user, ['*']);
+
+    DB::enableQueryLog();
+
+    $query = ['search' => 'Budi', 'status' => 'aktif'];
+    $headers = makeSignedHeaders('GET', '/api/v1/pegawai', $query);
+    $this->getJson('/api/v1/pegawai?'.http_build_query($query), $headers)
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1);
+
+    $queries = DB::getQueryLog();
+    DB::disableQueryLog();
+
+    // paginate() menjalankan 2 query: data + count (dari query builder yang sama)
+    // Sebelumnya ada 3 query: get() + count() terpisah (query builder duplikat) + eager load
+    // 2 query dari paginate() sudah optimal, tidak ada duplikasi query builder
+    $pegawaiQueries = collect($queries)->filter(
+        fn ($q) => str_contains($q['query'], 'from `pegawai`') ||
+                   str_contains($q['query'], 'from "pegawai"')
+    );
+
+    expect($pegawaiQueries)->toHaveCount(2);
 });

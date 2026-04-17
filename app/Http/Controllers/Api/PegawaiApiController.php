@@ -91,21 +91,17 @@ class PegawaiApiController extends Controller
      */
     private function search(Request $request): JsonResponse
     {
-        $query = Pegawai::with(['jabatan', 'unitKerja', 'pangkat'])
+        $result = Pegawai::with(['jabatan', 'unitKerja', 'pangkat'])
             ->when($request->input('status') === 'aktif', fn ($q) => $q->aktif())
-            ->when($request->input('search'), fn ($q, $search) => $q->where('nama_lengkap', 'like', "%{$search}%")
+            ->when(
+                $request->input('search'),
+                fn ($q, $search) => $q->where('nama_lengkap', 'like', "%{$search}%")
             )
-            ->limit(20)
-            ->get();
-
-        $total = Pegawai::when($request->input('status') === 'aktif', fn ($q) => $q->aktif())
-            ->when($request->input('search'), fn ($q, $search) => $q->where('nama_lengkap', 'like', "%{$search}%")
-            )
-            ->count();
+            ->paginate(20);
 
         return response()->json([
-            'data' => PegawaiApiResource::collection($query),
-            'meta' => ['total' => $total, 'per_page' => 20],
+            'data' => PegawaiApiResource::collection($result),
+            'meta' => ['total' => $result->total(), 'per_page' => 20],
         ]);
     }
 }
