@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SelfService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SelfService\StorePengajuanPerubahanDataRequest;
 use App\Models\PengajuanPerubahanData;
+use App\Services\PengajuanPerubahanData\PengajuanPerubahanDataDiffService;
 use App\Services\PengajuanPerubahanData\SubmitPengajuanPerubahanDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,14 +23,14 @@ class PengajuanPerubahanDataController extends Controller
                 ->latest('submitted_at')
                 ->paginate(10)
                 ->through(fn (PengajuanPerubahanData $item) => [
-                    'id'           => $item->id,
-                    'domain'       => $item->domain,
-                    'aksi'         => $item->aksi,
-                    'status'       => $item->status->value,
+                    'id' => $item->id,
+                    'domain' => $item->domain,
+                    'aksi' => $item->aksi,
+                    'status' => $item->status->value,
                     'submitted_at' => $item->submitted_at?->toDateTimeString(),
-                    'approved_at'  => $item->approved_at?->toDateTimeString(),
-                    'rejected_at'  => $item->rejected_at?->toDateTimeString(),
-                    'validator'    => $item->validator?->nama_lengkap,
+                    'approved_at' => $item->approved_at?->toDateTimeString(),
+                    'rejected_at' => $item->rejected_at?->toDateTimeString(),
+                    'validator' => $item->validator?->nama_lengkap,
                 ]),
         ]);
     }
@@ -43,10 +44,11 @@ class PengajuanPerubahanDataController extends Controller
     {
         $service->handle($request->user(), $request->validated(), $request->user()->isOperator() ? 'operator' : 'pegawai');
 
-        return to_route('self-service.pengajuan.index');
+        return to_route('self-service.pengajuan.index')
+            ->with('success', 'Pengajuan berhasil dikirim dan menunggu validasi.');
     }
 
-    public function show(PengajuanPerubahanData $pengajuan, \App\Services\PengajuanPerubahanData\PengajuanPerubahanDataDiffService $diffService): Response
+    public function show(PengajuanPerubahanData $pengajuan, PengajuanPerubahanDataDiffService $diffService): Response
     {
         abort_unless($pengajuan->pengaju_id === request()->user()->id, 404);
 

@@ -33,11 +33,11 @@ export function NavMain({
                             <Link href={item.href} prefetch>
                                 {item.icon && <item.icon />}
                                 <span>{item.title}</span>
-                                {item.badge != null && (
-                                    <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
-                                )}
                             </Link>
                         </SidebarMenuButton>
+                        {item.badge != null && (
+                            <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                        )}
                     </SidebarMenuItem>
                 ))}
             </SidebarMenu>

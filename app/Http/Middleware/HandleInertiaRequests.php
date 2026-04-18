@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\StatusPengajuanPerubahanData;
 use App\Models\PengajuanPerubahanData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -20,7 +21,9 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
-        // Ambil permissions user untuk penggunaan berulang
+        // Eager load permissions sekaligus untuk mencegah N+1 per role
+        $user?->loadMissing('iamRoles.permissions');
+
         $permissions = $user
             ? $user->iamRoles->flatMap(
                 fn ($role) => $role->permissions->pluck('slug')
@@ -42,7 +45,7 @@ class HandleInertiaRequests extends Middleware
                     'roles' => $user->iamRoles->pluck('nama')->toArray(),
                     'permissions' => $permissions,
                     'pending_pengajuan_count' => in_array('pengajuan-perubahan.validate', $permissions, true)
-                        ? PengajuanPerubahanData::query()->where('status', StatusPengajuanPerubahanData::Pending)->count()
+                        ? Cache::remember('pending_pengajuan_count', 60, fn () => PengajuanPerubahanData::query()->where('status', StatusPengajuanPerubahanData::Pending)->count())
                         : 0,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,

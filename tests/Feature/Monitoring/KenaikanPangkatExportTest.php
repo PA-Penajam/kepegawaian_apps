@@ -35,12 +35,12 @@ function createKpPegawai(string $tmtPangkat, array $overrides = []): Pegawai
 test('KenaikanPangkatMonitoringExport bisa di-download sebagai xlsx', function () {
     Excel::fake();
 
-    $user = \App\Models\Pegawai::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
     actingAs($user);
 
     createKpPegawai('2022-04-01');
 
-    $export = new KenaikanPangkatMonitoringExport();
+    $export = new KenaikanPangkatMonitoringExport;
 
     Excel::download($export, 'kp-monitoring.xlsx');
 
@@ -48,7 +48,7 @@ test('KenaikanPangkatMonitoringExport bisa di-download sebagai xlsx', function (
 });
 
 test('KenaikanPangkatMonitoringExport memiliki heading yang benar', function () {
-    $export = new KenaikanPangkatMonitoringExport();
+    $export = new KenaikanPangkatMonitoringExport;
 
     expect($export->headings())->toBe([
         'NIP',
@@ -66,7 +66,7 @@ test('KenaikanPangkatMonitoringExport memiliki heading yang benar', function () 
 test('endpoint export kp mengembalikan file xlsx', function () {
     Excel::fake();
 
-    $user = \App\Models\Pegawai::factory()->admin()->create();
+    $user = Pegawai::factory()->admin()->create();
     actingAs($user);
 
     createKpPegawai('2022-04-01');
@@ -74,5 +74,17 @@ test('endpoint export kp mengembalikan file xlsx', function () {
     $response = $this->get('/kepegawaian/monitoring/kenaikan-pangkat/export');
 
     $response->assertStatus(200);
+    Excel::assertDownloaded('kp-monitoring.xlsx');
+});
+
+test('endpoint export kp tetap bisa di-download walau data kosong', function () {
+    Excel::fake();
+
+    $user = Pegawai::factory()->admin()->create();
+    actingAs($user);
+
+    $this->get(route('monitoring.kenaikan-pangkat.export'))
+        ->assertSuccessful();
+
     Excel::assertDownloaded('kp-monitoring.xlsx');
 });

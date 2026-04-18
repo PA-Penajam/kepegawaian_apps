@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\SelfService;
 
-use App\Models\Pegawai;
+use App\Enums\AksiPengajuan;
+use App\Enums\DomainPengajuan;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePengajuanPerubahanDataRequest extends FormRequest
 {
@@ -15,7 +17,7 @@ class StorePengajuanPerubahanDataRequest extends FormRequest
         }
 
         $targetType = $this->input('target_type');
-        $targetId   = $this->input('target_id');
+        $targetId = $this->input('target_id');
 
         if ($targetType === 'pegawai' && $targetId && $user->id !== $targetId && ! $user->isOperator()) {
             return false;
@@ -27,14 +29,14 @@ class StorePengajuanPerubahanDataRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'domain'             => ['required', 'in:profil_pribadi,pasangan,anak,keluarga_lain'],
-            'aksi'               => ['required', 'in:create,update,delete'],
-            'target_type'        => ['required', 'in:pegawai,keluarga'],
-            'target_id'          => ['nullable', 'string'],
+            'domain' => ['required', Rule::enum(DomainPengajuan::class)],
+            'aksi' => ['required', Rule::enum(AksiPengajuan::class)],
+            'target_type' => ['required', 'in:pegawai,keluarga'],
+            'target_id' => ['nullable', 'string'],
             'subject_pegawai_id' => ['nullable', 'string'],
-            'after_payload'      => ['required', 'array'],
-            'lampiran'           => ['array'],
-            'lampiran.*'         => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+            'after_payload' => ['required', 'array'],
+            'lampiran' => ['array'],
+            'lampiran.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ];
     }
 

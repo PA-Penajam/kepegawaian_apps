@@ -6,6 +6,8 @@ use App\Enums\StatusPengajuanPerubahanData;
 use App\Models\Keluarga;
 use App\Models\Pegawai;
 use App\Models\PengajuanPerubahanData;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class SubmitPengajuanPerubahanDataService
@@ -13,28 +15,32 @@ class SubmitPengajuanPerubahanDataService
     public function handle(Pegawai $pengaju, array $payload, string $jenisPengaju): PengajuanPerubahanData
     {
         $subjectPegawaiId = $this->resolveSubjectPegawaiId($payload);
-        $this->ensureNoPendingConflict($subjectPegawaiId, $payload);
         $beforePayload = $this->resolveBeforePayload($payload);
         $changedFields = array_keys($payload['after_payload']);
         $scopeKey = $this->makeScopeKey($subjectPegawaiId, $payload);
 
-        $pengajuan = PengajuanPerubahanData::query()->create([
-            'nomor_pengajuan'    => 'PGJ-'.now()->format('YmdHis').'-'.str()->upper(str()->random(6)),
-            'pengaju_id'         => $pengaju->id,
-            'subject_pegawai_id' => $subjectPegawaiId,
-            'jenis_pengaju'      => $jenisPengaju,
-            'domain'             => $payload['domain'],
-            'aksi'               => $payload['aksi'],
-            'scope_key'          => $scopeKey,
-            'target_type'        => $payload['target_type'],
-            'target_id'          => $payload['target_id'] ?? null,
-            'status'             => StatusPengajuanPerubahanData::Pending,
-            'before_payload'     => $beforePayload,
-            'after_payload'      => $payload['after_payload'],
-            'changed_fields'     => $changedFields,
-            'lampiran_paths'     => [],
-            'submitted_at'       => now(),
-        ]);
+        // Lock scope_key + create dalam satu transaksi untuk mencegah duplicate pending concurrent
+        $pengajuan = DB::transaction(function () use ($pengaju, $payload, $jenisPengaju, $subjectPegawaiId, $beforePayload, $changedFields, $scopeKey): PengajuanPerubahanData {
+            $this->ensureNoPendingConflict($scopeKey);
+
+            return PengajuanPerubahanData::query()->create([
+                'nomor_pengajuan' => 'PGJ-'.Str::upper((string) Str::ulid()),
+                'pengaju_id' => $pengaju->id,
+                'subject_pegawai_id' => $subjectPegawaiId,
+                'jenis_pengaju' => $jenisPengaju,
+                'domain' => $payload['domain'],
+                'aksi' => $payload['aksi'],
+                'scope_key' => $scopeKey,
+                'target_type' => $payload['target_type'],
+                'target_id' => $payload['target_id'] ?? null,
+                'status' => StatusPengajuanPerubahanData::Pending,
+                'before_payload' => $beforePayload,
+                'after_payload' => $payload['after_payload'],
+                'changed_fields' => $changedFields,
+                'lampiran_paths' => [],
+                'submitted_at' => now(),
+            ]);
+        });
 
         $lampiranPaths = collect($payload['lampiran'] ?? [])
             ->map(fn ($file) => $file->store("pengajuan/{$pengajuan->id}", 'local'))
@@ -72,14 +78,14 @@ class SubmitPengajuanPerubahanDataService
             $targetPegawai = Pegawai::query()->findOrFail($payload['target_id']);
 
             return array_filter([
-                'nama_lengkap'      => $targetPegawai->nama_lengkap,
-                'nik'               => $targetPegawai->nik ?? null,
-                'tempat_lahir'      => $targetPegawai->tempat_lahir ?? null,
-                'tanggal_lahir'     => $targetPegawai->tanggal_lahir?->toDateString() ?? null,
+                'nama_lengkap' => $targetPegawai->nama_lengkap,
+                'nik' => $targetPegawai->nik ?? null,
+                'tempat_lahir' => $targetPegawai->tempat_lahir ?? null,
+                'tanggal_lahir' => $targetPegawai->tanggal_lahir?->toDateString() ?? null,
                 'status_perkawinan' => $targetPegawai->status_perkawinan?->value ?? $targetPegawai->getRawOriginal('status_perkawinan'),
-                'alamat'            => $targetPegawai->alamat ?? null,
-                'no_telepon'        => $targetPegawai->no_telepon ?? null,
-                'email'             => $targetPegawai->email ?? null,
+                'alamat' => $targetPegawai->alamat ?? null,
+                'no_telepon' => $targetPegawai->no_telepon ?? null,
+                'email' => $targetPegawai->email ?? null,
             ], fn ($v) => $v !== null);
         }
 
@@ -110,13 +116,12 @@ class SubmitPengajuanPerubahanDataService
         return "{$payload['domain']}:{$payload['aksi']}:{$subjectPegawaiId}:".sha1(json_encode($payload['after_payload']));
     }
 
-    private function ensureNoPendingConflict(string $subjectPegawaiId, array $payload): void
+    private function ensureNoPendingConflict(string $scopeKey): void
     {
-        $scopeKey = $this->makeScopeKey($subjectPegawaiId, $payload);
-
         $exists = PengajuanPerubahanData::query()
             ->where('status', StatusPengajuanPerubahanData::Pending)
             ->where('scope_key', $scopeKey)
+            ->lockForUpdate()
             ->exists();
 
         if ($exists) {

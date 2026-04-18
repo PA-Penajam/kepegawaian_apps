@@ -8,6 +8,7 @@ export type User = {
     two_factor_enabled?: boolean;
     roles: string[];
     permissions: string[];
+    pending_pengajuan_count?: number;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;

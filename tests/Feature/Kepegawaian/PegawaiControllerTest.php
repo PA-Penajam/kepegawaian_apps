@@ -259,10 +259,11 @@ test('admins can view a pegawai detail page with loaded relationships', function
         );
 });
 
-test('operators can update a pegawai while keeping the same nip', function () {
+test('operators submitting pegawai update creates pending request instead of direct change', function () {
     $user = Pegawai::factory()->operator()->create();
     $references = createPegawaiReferences();
     $pegawai = Pegawai::factory()->create([
+        'nama_lengkap' => 'Nama Asli',
         'ref_pangkat_id' => $references['pangkat']->id,
         'ref_jabatan_id' => $references['jabatan']->id,
         'ref_unit_kerja_id' => $references['unitKerja']->id,
@@ -283,8 +284,15 @@ test('operators can update a pegawai while keeping the same nip', function () {
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('kepegawaian.pegawai.show', $pegawai));
 
-    expect($pegawai->refresh()->nama_lengkap)->toBe('Nama Pegawai Diperbarui');
-    expect($pegawai->nip)->toBe($payload['nip']);
+    // Operator tidak langsung mengubah data — perubahan dibuat sebagai pengajuan pending
+    expect($pegawai->refresh()->nama_lengkap)->toBe('Nama Asli');
+
+    \Pest\Laravel\assertDatabaseHas('pengajuan_perubahan_data', [
+        'pengaju_id' => $user->id,
+        'subject_pegawai_id' => $pegawai->id,
+        'domain' => 'profil_pribadi',
+        'status' => 'pending',
+    ]);
 });
 
 test('operators can soft delete a pegawai', function () {

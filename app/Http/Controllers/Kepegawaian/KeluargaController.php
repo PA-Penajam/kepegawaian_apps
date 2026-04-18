@@ -7,7 +7,9 @@ use App\Http\Requests\Kepegawaian\StoreKeluargaRequest;
 use App\Http\Requests\Kepegawaian\UpdateKeluargaRequest;
 use App\Models\Keluarga;
 use App\Models\Pegawai;
+use App\Services\PengajuanPerubahanData\SubmitPengajuanPerubahanDataService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,9 +17,9 @@ use Inertia\Response;
 class KeluargaController extends Controller
 {
     public function __construct(
-        private \App\Services\PengajuanPerubahanData\SubmitPengajuanPerubahanDataService $submitPengajuanPerubahanData
-    ) {
-    }
+        private SubmitPengajuanPerubahanDataService $submitPengajuanPerubahanData
+    ) {}
+
     public function index(Pegawai $pegawai): Response
     {
         Gate::authorize('view', $pegawai);
@@ -84,7 +86,8 @@ class KeluargaController extends Controller
                 'operator',
             );
 
-            return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
+            return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
+                ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
         }
 
         $pegawai->keluarga()->create($request->validated());
@@ -122,7 +125,8 @@ class KeluargaController extends Controller
                 'operator',
             );
 
-            return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
+            return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
+                ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
         }
 
         $keluarga->update($request->validated());
@@ -130,14 +134,14 @@ class KeluargaController extends Controller
         return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
     }
 
-    public function destroy(Pegawai $pegawai, Keluarga $keluarga): RedirectResponse
+    public function destroy(Request $request, Pegawai $pegawai, Keluarga $keluarga): RedirectResponse
     {
         Gate::authorize('update', $pegawai);
 
         $this->ensureBelongsToPegawai($pegawai, $keluarga);
 
         // Intersepsi operator: jadikan pending request alih-alih delete langsung
-        if (request()->user()?->isOperator()) {
+        if ($request->user()?->isOperator()) {
             $hubungan = $keluarga->getRawOriginal('hubungan');
             $domain = match ($hubungan) {
                 'Suami', 'Istri' => 'pasangan',
@@ -147,7 +151,7 @@ class KeluargaController extends Controller
             };
 
             $this->submitPengajuanPerubahanData->handle(
-                request()->user(),
+                $request->user(),
                 [
                     'domain' => $domain,
                     'aksi' => 'delete',
@@ -160,7 +164,8 @@ class KeluargaController extends Controller
                 'operator',
             );
 
-            return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
+            return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
+                ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
         }
 
         $keluarga->delete();

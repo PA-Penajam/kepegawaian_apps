@@ -1,13 +1,10 @@
 <?php
 
-use App\Enums\StatusPengajuanPerubahanData;
 use App\Models\Pegawai;
 use App\Models\PengajuanPerubahanData;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
-use function Pest\Laravel\get;
-use function Pest\Laravel\post;
 
 it('validator dapat melihat inbox pengajuan pending global', function (): void {
     $validator = Pegawai::factory()->validator()->create();
@@ -147,4 +144,71 @@ it('validator melihat diff item dan counter pending pada response inertia', func
             ->where('diffItems.0.field', 'nama_lengkap')
             ->where('auth.user.pending_pengajuan_count', 1)
         );
+});
+
+// C1: bug operator precedence — validator tidak boleh approve pengajuan yang bukan pending
+it('validator tidak dapat approve pengajuan yang sudah approved', function (): void {
+    $validator = Pegawai::factory()->validator()->create();
+    $pegawai = Pegawai::factory()->create(['nama_lengkap' => 'Nama Lama']);
+
+    $pengajuan = PengajuanPerubahanData::factory()->create([
+        'subject_pegawai_id' => $pegawai->id,
+        'target_type' => 'pegawai',
+        'target_id' => $pegawai->id,
+        'status' => 'approved',
+        'after_payload' => ['nama_lengkap' => 'Nama Baru'],
+    ]);
+
+    actingAs($validator)
+        ->post(route('kepegawaian.pengajuan.approve', $pengajuan))
+        ->assertForbidden();
+});
+
+it('validator tidak dapat reject pengajuan yang sudah rejected', function (): void {
+    $validator = Pegawai::factory()->validator()->create();
+
+    $pengajuan = PengajuanPerubahanData::factory()->create([
+        'status' => 'rejected',
+        'alasan_penolakan' => 'Alasan sebelumnya.',
+    ]);
+
+    actingAs($validator)
+        ->post(route('kepegawaian.pengajuan.reject', $pengajuan), [
+            'alasan_penolakan' => 'Mencoba reject ulang yang sudah rejected.',
+        ])
+        ->assertForbidden();
+});
+
+// M5: flash message setelah approve dan reject
+it('approve memberikan flash message sukses', function (): void {
+    $validator = Pegawai::factory()->validator()->create();
+    $pegawai = Pegawai::factory()->create(['nama_lengkap' => 'Nama Lama']);
+
+    $pengajuan = PengajuanPerubahanData::factory()->create([
+        'pengaju_id' => $pegawai->id,
+        'subject_pegawai_id' => $pegawai->id,
+        'domain' => 'profil_pribadi',
+        'aksi' => 'update',
+        'target_type' => 'pegawai',
+        'target_id' => $pegawai->id,
+        'status' => 'pending',
+        'before_payload' => ['nama_lengkap' => 'Nama Lama'],
+        'after_payload' => ['nama_lengkap' => 'Nama Baru'],
+    ]);
+
+    actingAs($validator)
+        ->post(route('kepegawaian.pengajuan.approve', $pengajuan))
+        ->assertSessionHas('success');
+});
+
+it('reject memberikan flash message sukses', function (): void {
+    $validator = Pegawai::factory()->validator()->create();
+
+    $pengajuan = PengajuanPerubahanData::factory()->create(['status' => 'pending']);
+
+    actingAs($validator)
+        ->post(route('kepegawaian.pengajuan.reject', $pengajuan), [
+            'alasan_penolakan' => 'Dokumen tidak memenuhi persyaratan.',
+        ])
+        ->assertSessionHas('success');
 });

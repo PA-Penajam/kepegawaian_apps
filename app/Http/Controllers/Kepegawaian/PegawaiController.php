@@ -17,21 +17,23 @@ use App\Models\Pegawai;
 use App\Models\RefJabatan;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
+use App\Services\PengajuanPerubahanData\SubmitPengajuanPerubahanDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class PegawaiController extends Controller
 {
     public function __construct(
-        private \App\Services\PengajuanPerubahanData\SubmitPengajuanPerubahanDataService $submitPengajuanPerubahanData
-    ) {
-    }
+        private SubmitPengajuanPerubahanDataService $submitPengajuanPerubahanData
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -218,7 +220,7 @@ class PegawaiController extends Controller
                     'target_type' => 'pegawai',
                     'target_id' => $pegawai->id,
                     'subject_pegawai_id' => $pegawai->id,
-                    'after_payload' => \Illuminate\Support\Arr::only(
+                    'after_payload' => Arr::only(
                         $request->safe()->except(['password', 'password_confirmation']),
                         ['nama_lengkap', 'tempat_lahir', 'tanggal_lahir', 'status_perkawinan', 'alamat', 'no_telepon', 'email']
                     ),
@@ -227,7 +229,8 @@ class PegawaiController extends Controller
                 'operator',
             );
 
-            return to_route('kepegawaian.pegawai.show', $pegawai);
+            return to_route('kepegawaian.pegawai.show', $pegawai)
+                ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
         }
 
         $pegawai->update($request->safe()->except(['password', 'password_confirmation']));
@@ -258,7 +261,7 @@ class PegawaiController extends Controller
     {
         $path = "fotos/{$pegawai->id}.webp";
 
-        $manager = new ImageManager(new Driver());
+        $manager = new ImageManager(new Driver);
         $image = $manager->read($request->file('foto')->getRealPath());
         $image->coverDown(400, 400, 'center');
         $encoded = $image->toWebp(quality: 80);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Kepegawaian;
 
+use App\Enums\StatusPengajuanPerubahanData;
 use App\Models\PengajuanPerubahanData;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -11,9 +12,9 @@ class RejectPengajuanPerubahanDataRequest extends FormRequest
     {
         $pengajuan = $this->route('pengajuan');
 
-        return $this->user()?->hasPermission('pengajuan-perubahan.validate') ?? false
+        return ($this->user()?->hasPermission('pengajuan-perubahan.validate') ?? false)
             && $pengajuan instanceof PengajuanPerubahanData
-            && $pengajuan->status === \App\Enums\StatusPengajuanPerubahanData::Pending;
+            && $pengajuan->status === StatusPengajuanPerubahanData::Pending;
     }
 
     public function rules(): array

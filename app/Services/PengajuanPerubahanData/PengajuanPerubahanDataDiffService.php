@@ -23,6 +23,9 @@ class PengajuanPerubahanDataDiffService
             'change_type' => ! array_key_exists($key, $before)
                 ? 'added'
                 : (! array_key_exists($key, $after) ? 'removed' : (($before[$key] ?? null) === ($after[$key] ?? null) ? 'unchanged' : 'updated')),
-        ])->values()->all();
+        ])
+            ->filter(fn (array $item) => $item['change_type'] !== 'unchanged')
+            ->values()
+            ->all();
     }
 }
