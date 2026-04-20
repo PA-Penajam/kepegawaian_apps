@@ -113,7 +113,7 @@ export function DashboardHeavySection() {
                 </Card>
             </BlurFade>
 
-            <BlurFade delay={0.5} className="col-span-1 md:col-span-2 lg:col-span-3">
+            <BlurFade delay={0.5} className="col-span-1 md:col-span-2 lg:col-span-1">
                 <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
                     <CardHeader>
                         <CardTitle>Distribusi Jenis Kelamin</CardTitle>
