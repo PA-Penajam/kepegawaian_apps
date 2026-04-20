@@ -22,7 +22,7 @@ export function DashboardHeavySection() {
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <BlurFade delay={0.1} className="col-span-1">
-                <Card>
+                <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <UserCircle className="h-5 w-5 text-accent" />
@@ -41,7 +41,7 @@ export function DashboardHeavySection() {
             </BlurFade>
 
             <BlurFade delay={0.2} className="col-span-1 lg:col-span-2">
-                <Card>
+                <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Building2 className="h-5 w-5 text-accent" />
@@ -68,7 +68,7 @@ export function DashboardHeavySection() {
             </BlurFade>
 
             <BlurFade delay={0.3} className="col-span-1 lg:col-span-2">
-                <Card>
+                <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Briefcase className="h-5 w-5 text-accent" />
@@ -95,7 +95,7 @@ export function DashboardHeavySection() {
             </BlurFade>
 
             <BlurFade delay={0.4} className="col-span-1 lg:col-span-2">
-                <Card>
+                <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <GraduationCap className="h-5 w-5 text-accent" />
@@ -114,7 +114,7 @@ export function DashboardHeavySection() {
             </BlurFade>
 
             <BlurFade delay={0.5} className="col-span-1 md:col-span-2 lg:col-span-3">
-                <Card>
+                <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
                     <CardHeader>
                         <CardTitle>Distribusi Jenis Kelamin</CardTitle>
                     </CardHeader>
