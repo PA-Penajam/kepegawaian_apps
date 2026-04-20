@@ -1,3 +1,4 @@
+import {
     Bar,
     BarChart,
     CartesianGrid,

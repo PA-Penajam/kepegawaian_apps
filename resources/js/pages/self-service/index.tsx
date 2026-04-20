@@ -378,7 +378,7 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
                     </Card>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4">
                     <Card className="border-dashed shadow-sm">
                         <CardContent className="flex h-full flex-col justify-between gap-4 pt-6">
                             <div>
@@ -392,25 +392,6 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
                                 <Button asChild className="w-full sm:w-auto">
                                     <Link href={selfServiceDetail()}>
                                         Buka Detail Lengkap
-                                    </Link>
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-dashed shadow-sm bg-muted/30">
-                        <CardContent className="flex h-full flex-col justify-between gap-4 pt-6">
-                            <div>
-                                <p className="font-medium">Pengajuan Perubahan Data</p>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    Buat, lacak, dan kelola semua pengajuan pembaruan data 
-                                    kepegawaian Anda secara mandiri di sini.
-                                </p>
-                            </div>
-                            <div>
-                                <Button asChild variant="secondary" className="w-full sm:w-auto bg-background shadow-sm border">
-                                    <Link href="/self-service/pengajuan">
-                                        Lihat Pengajuan Saya
                                     </Link>
                                 </Button>
                             </div>

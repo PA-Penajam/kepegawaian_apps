@@ -12,7 +12,7 @@ use App\Http\Controllers\Kepegawaian\HukumanDisiplinController;
 use App\Http\Controllers\Kepegawaian\KeluargaController;
 use App\Http\Controllers\Kepegawaian\PegawaiController;
 use App\Http\Controllers\Kepegawaian\PenghargaanController;
-use App\Http\Controllers\SelfService\PengajuanPerubahanDataController;
+
 use App\Http\Controllers\Kepegawaian\RiwayatJabatanController;
 use App\Http\Controllers\Kepegawaian\RiwayatPendidikanController;
 use App\Http\Controllers\Kepegawaian\SelfServiceController;
@@ -41,15 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/', [SelfServiceController::class, 'index'])->name('index');
             Route::get('/detail', [SelfServiceController::class, 'detail'])->name('detail');
 
-            // Pengajuan perubahan data routes
-            Route::prefix('pengajuan')
-                ->name('pengajuan.')
-                ->group(function () {
-                    Route::get('/', [PengajuanPerubahanDataController::class, 'index'])->name('index');
-                    Route::get('/create', [PengajuanPerubahanDataController::class, 'create'])->name('create');
-                    Route::post('/', [PengajuanPerubahanDataController::class, 'store'])->name('store');
-                    Route::get('/{pengajuan}', [PengajuanPerubahanDataController::class, 'show'])->name('show');
-                });
+
         });
 });
 
