@@ -48,6 +48,13 @@ class SsoController extends Controller
             return redirect()->route('dashboard');
         }
 
+        // Kepegawaian adalah SSO provider-nya sendiri — skip code generation
+        // karena session Fortify sudah terbuat. Redirect langsung ke URL tujuan.
+        $selfSlug = config('iam.app_slug', 'kepegawaian');
+        if ($appSlug === $selfSlug) {
+            return redirect($redirect);
+        }
+
         $app = IamApplication::where('slug', $appSlug)->where('is_active', true)->first();
 
         if (! $app) {
@@ -60,7 +67,7 @@ class SsoController extends Controller
     private function generateCodeAndRedirect(string $userId, IamApplication $app, string $redirectUrl): RedirectResponse
     {
         // Validasi host: redirect harus ke domain yang sama persis dengan app terdaftar
-        $appHost      = parse_url($app->url, PHP_URL_HOST);
+        $appHost = parse_url($app->url, PHP_URL_HOST);
         $redirectHost = parse_url($redirectUrl, PHP_URL_HOST);
 
         if (! $appHost || ! $redirectHost || $appHost !== $redirectHost) {
