@@ -457,25 +457,6 @@ export default function PegawaiIndex({
                                                             </span>
                                                         </Link>
                                                     </Button>
-                                                    {canEdit ? (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            asChild
-                                                            title="Ubah Data"
-                                                        >
-                                                            <Link
-                                                                href={edit(
-                                                                    item.id,
-                                                                )}
-                                                            >
-                                                                <Pencil className="h-4 w-4" />
-                                                                <span className="sr-only">
-                                                                    Ubah
-                                                                </span>
-                                                            </Link>
-                                                        </Button>
-                                                    ) : null}
                                                 </div>
                                             </TableCell>
                                         </TableRow>

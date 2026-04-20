@@ -1,12 +1,23 @@
 import { Head, Link } from '@inertiajs/react';
 import { Award, Briefcase, Building, Edit } from 'lucide-react';
-import { PegawaiDetailTabs } from '@/components/pegawai-detail-tabs';
 import { FotoUpload } from '@/components/pegawai/FotoUpload';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 import type { PegawaiDetail } from '@/types/pegawai-detail';
+
+// Controller Actions untuk redirect
+import PegawaiController from '@/actions/App/Http/Controllers/Kepegawaian/PegawaiController';
+import KeluargaController from '@/actions/App/Http/Controllers/Kepegawaian/KeluargaController';
+import RiwayatJabatanController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatJabatanController';
+import RiwayatPangkatController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatPangkatController';
+import RiwayatPendidikanController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatPendidikanController';
+import RiwayatDiklatController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatDiklatController';
+import PenghargaanController from '@/actions/App/Http/Controllers/Kepegawaian/PenghargaanController';
+import HukumanDisiplinController from '@/actions/App/Http/Controllers/Kepegawaian/HukumanDisiplinController';
+import DokumenPegawaiController from '@/actions/App/Http/Controllers/Kepegawaian/DokumenPegawaiController';
 
 export default function PegawaiShow({ pegawai }: { pegawai: PegawaiDetail }) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -33,8 +44,8 @@ export default function PegawaiShow({ pegawai }: { pegawai: PegawaiDetail }) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={pegawai.nama_lengkap} />
 
-            <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
-                <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6 lg:max-w-6xl lg:mx-auto lg:w-full">
+                <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between bg-card text-card-foreground p-6 border-2 border-foreground drop-shadow-[4px_4px_0_rgba(0,0,0,1)] rounded-xl">
                     <div className="flex items-start gap-4">
                         <FotoUpload
                             pegawaiId={pegawai.id}
@@ -43,31 +54,31 @@ export default function PegawaiShow({ pegawai }: { pegawai: PegawaiDetail }) {
                             canUpdate={true}
                         />
                         <div className="space-y-1.5">
-                            <h1 className="text-2xl font-bold tracking-tight">
+                            <h1 className="text-2xl font-black tracking-tight">
                                 {pegawai.nama_lengkap}
                             </h1>
-                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-foreground/80">
                                 <Badge
                                     variant="secondary"
-                                    className="font-normal"
+                                    className="font-bold border-2 border-foreground"
                                 >
                                     NIP: {pegawai.nip ?? '-'}
                                 </Badge>
-                                <span className="flex items-center gap-1">
-                                    <Briefcase className="h-3.5 w-3.5" />
+                                <span className="flex items-center gap-1 font-semibold">
+                                    <Briefcase className="h-4 w-4" />
                                     {pegawai.jabatan?.nama ??
                                         'Belum ada jabatan'}
                                 </span>
-                                <span className="hidden md:inline">•</span>
-                                <span className="flex items-center gap-1">
-                                    <Building className="h-3.5 w-3.5" />
+                                <span className="hidden md:inline font-bold">•</span>
+                                <span className="flex items-center gap-1 font-semibold">
+                                    <Building className="h-4 w-4" />
                                     {pegawai.unit_kerja?.nama ??
                                         'Belum ada unit kerja'}
                                 </span>
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-foreground/80 font-semibold">
                                 <span className="flex items-center gap-1">
-                                    <Award className="h-3.5 w-3.5" />
+                                    <Award className="h-4 w-4" />
                                     {pegawai.pangkat
                                         ? `${pegawai.pangkat.nama} (${pegawai.pangkat.golongan}/${pegawai.pangkat.ruang})`
                                         : 'Belum ada pangkat'}
@@ -77,10 +88,10 @@ export default function PegawaiShow({ pegawai }: { pegawai: PegawaiDetail }) {
                     </div>
 
                     <div className="flex gap-3">
-                        <Button variant="outline" asChild>
+                        <Button variant="outline" className="font-bold border-2 border-foreground drop-shadow-[2px_2px_0_rgba(0,0,0,1)] hover:bg-accent hover:text-accent-foreground" asChild>
                             <Link href="/kepegawaian/pegawai">Kembali</Link>
                         </Button>
-                        <Button asChild>
+                        <Button className="font-bold border-2 border-foreground drop-shadow-[2px_2px_0_rgba(0,0,0,1)] hover:bg-primary/90" asChild>
                             <Link
                                 href={`/kepegawaian/pegawai/${pegawai.id}/edit`}
                             >
@@ -91,7 +102,106 @@ export default function PegawaiShow({ pegawai }: { pegawai: PegawaiDetail }) {
                     </div>
                 </div>
 
-                <PegawaiDetailTabs pegawai={pegawai} />
+                <div className="mt-4">
+                    <h2 className="text-xl font-black mb-6 uppercase tracking-tighter border-b-4 border-foreground inline-block pb-1">
+                        Menu Pengelolaan Data Pegawai
+                    </h2>
+
+                    {/* Retro Grid App Launcher */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
+                        
+                        {/* Biodata */}
+                        <Link 
+                            href={toUrl(PegawaiController.edit(pegawai.id))}
+                            className="group block bg-[#facc15] dark:bg-yellow-600 border-2 border-foreground drop-shadow-[4px_4px_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-xl p-6 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">📝</div>
+                            <h3 className="text-xl font-black mb-2 border-b-2 border-foreground/30 pb-2 group-hover:text-foreground">Biodata Pribadi</h3>
+                            <p className="text-sm font-semibold text-foreground/80 leading-tight">Ubah data personal, kontak, dan alamat domisili untuk pegawai ini.</p>
+                        </Link>
+
+                        {/* Keluarga */}
+                        <Link 
+                            href={toUrl(KeluargaController.index(pegawai.id))}
+                            className="group block bg-[#fce7f3] dark:bg-pink-900 border-2 border-foreground drop-shadow-[4px_4px_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-xl p-6 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">👨‍👩‍👧</div>
+                            <h3 className="text-xl font-black mb-2 border-b-2 border-foreground/30 pb-2">Keluarga</h3>
+                            <p className="text-sm font-semibold text-foreground/80 leading-tight">Kelola dan lihat data pasangan & anak tanggungan dari pegawai.</p>
+                        </Link>
+
+                        {/* Riwayat Jabatan */}
+                        <Link 
+                            href={toUrl(RiwayatJabatanController.index(pegawai.id))}
+                            className="group block bg-[#dcfce3] dark:bg-green-900 border-2 border-foreground drop-shadow-[4px_4px_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-xl p-6 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">💼</div>
+                            <h3 className="text-xl font-black mb-2 border-b-2 border-foreground/30 pb-2">Riwayat Jabatan</h3>
+                            <p className="text-sm font-semibold text-foreground/80 leading-tight">Lihat daftar riwayat mutasi, fungsional, dan promosi pelantikan.</p>
+                        </Link>
+
+                        {/* Riwayat Pangkat */}
+                        <Link 
+                            href={toUrl(RiwayatPangkatController.index(pegawai.id))}
+                            className="group block bg-[#e0e7ff] dark:bg-indigo-900 border-2 border-foreground drop-shadow-[4px_4px_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-xl p-6 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">⭐</div>
+                            <h3 className="text-xl font-black mb-2 border-b-2 border-foreground/30 pb-2">Riwayat Pangkat</h3>
+                            <p className="text-sm font-semibold text-foreground/80 leading-tight">Data riwayat update golongan, hingga status kenaikan pangkat resmi.</p>
+                        </Link>
+
+                        {/* Pendidikan */}
+                        <Link 
+                            href={toUrl(RiwayatPendidikanController.index(pegawai.id))}
+                            className="group block bg-[#ffedd5] dark:bg-orange-900 border-2 border-foreground drop-shadow-[4px_4px_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-xl p-6 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">🎓</div>
+                            <h3 className="text-xl font-black mb-2 border-b-2 border-foreground/30 pb-2">Pendidikan</h3>
+                            <p className="text-sm font-semibold text-foreground/80 leading-tight">Rekam jejak gelar akademik formal dan rincian ijazah dari institut.</p>
+                        </Link>
+
+                        {/* Diklat */}
+                        <Link 
+                            href={toUrl(RiwayatDiklatController.index(pegawai.id))}
+                            className="group block bg-[#dbeafe] dark:bg-blue-900 border-2 border-foreground drop-shadow-[4px_4px_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-xl p-6 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">📜</div>
+                            <h3 className="text-xl font-black mb-2 border-b-2 border-foreground/30 pb-2">Riwayat Diklat</h3>
+                            <p className="text-sm font-semibold text-foreground/80 leading-tight">Kualifikasi bersertifikasi teknis serta pelengkap riwayat kompetensi.</p>
+                        </Link>
+
+                        {/* Penghargaan */}
+                        <Link 
+                            href={toUrl(PenghargaanController.index(pegawai.id))}
+                            className="group block bg-[#fae8ff] dark:bg-fuchsia-900 border-2 border-foreground drop-shadow-[4px_4px_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-xl p-6 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">🏆</div>
+                            <h3 className="text-xl font-black mb-2 border-b-2 border-foreground/30 pb-2">Penghargaan</h3>
+                            <p className="text-sm font-semibold text-foreground/80 leading-tight">Daftar rekapan satyalancana karya satya dan penghargaan lainnya.</p>
+                        </Link>
+
+                        {/* Hukuman Disiplin */}
+                        <Link 
+                            href={toUrl(HukumanDisiplinController.index(pegawai.id))}
+                            className="group block bg-[#fee2e2] dark:bg-red-900 border-2 border-foreground drop-shadow-[4px_4px_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-xl p-6 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">⚖️</div>
+                            <h3 className="text-xl font-black mb-2 border-b-2 border-foreground/30 pb-2">Hukuman Disiplin</h3>
+                            <p className="text-sm font-semibold text-foreground/80 leading-tight">Data riwayat teguran tertulis atau pemotongan terkait tata ruang dispilin.</p>
+                        </Link>
+
+                        {/* Dokumen */}
+                        <Link 
+                            href={toUrl(DokumenPegawaiController.index(pegawai.id))}
+                            className="group block bg-[#f3f4f6] dark:bg-gray-800 border-2 border-foreground drop-shadow-[4px_4px_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:drop-shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-xl p-6 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">📁</div>
+                            <h3 className="text-xl font-black mb-2 border-b-2 border-foreground/30 pb-2">Dokumen Digital</h3>
+                            <p className="text-sm font-semibold text-foreground/80 leading-tight">Kelola berkas terverifikasi, PDF SK legal, dan semua arsip digital personal.</p>
+                        </Link>
+
+                    </div>
+                </div>
             </div>
         </AppLayout>
     );

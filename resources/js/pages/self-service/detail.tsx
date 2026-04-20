@@ -91,7 +91,7 @@ export default function SelfServiceDetail({
 
                     <div>
                         <Link 
-                            href={selfServiceIndex()} 
+                            href={toUrl(selfServiceIndex())} 
                             className="inline-flex h-10 items-center justify-center rounded-xl bg-background px-4 py-2 text-sm font-bold border-2 border-foreground drop-shadow-[2px_2px_0_rgba(0,0,0,1)] hover:bg-accent hover:text-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             Kembali

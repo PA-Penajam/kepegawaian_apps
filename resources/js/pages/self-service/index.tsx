@@ -13,6 +13,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { detail as selfServiceDetail } from '@/routes/self-service';
+import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 import type { PegawaiDetail } from '@/types/pegawai-detail';
 
@@ -207,7 +208,7 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
                             </div>
 
                             <Button variant="outline" asChild>
-                                <Link href={selfServiceDetail()}>
+                                <Link href={toUrl(selfServiceDetail())}>
                                     <User className="mr-2 h-4 w-4" />
                                     Lihat Detail Lengkap
                                     <ChevronRight className="ml-1 h-4 w-4" />
@@ -390,7 +391,7 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
                             </div>
                             <div>
                                 <Button asChild className="w-full sm:w-auto">
-                                    <Link href={selfServiceDetail()}>
+                                    <Link href={toUrl(selfServiceDetail())}>
                                         Buka Detail Lengkap
                                     </Link>
                                 </Button>
@@ -401,7 +402,7 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
 
                 <div className="flex justify-end">
                     <Button variant="ghost" asChild>
-                        <Link href={dashboard()}>Kembali ke Dashboard</Link>
+                        <Link href={toUrl(dashboard())}>Kembali ke Dashboard</Link>
                     </Button>
                 </div>
             </div>
