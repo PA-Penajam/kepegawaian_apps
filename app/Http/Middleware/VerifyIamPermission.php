@@ -20,7 +20,12 @@ class VerifyIamPermission
         if ($user === null) {
             return $request->expectsJson()
                 ? response()->json(['message' => 'Unauthenticated'], 401)
-                : redirect()->route('login');
+                : redirect()->to(
+                    route('sso.login', [
+                        'app' => config('iam.app_slug', 'kepegawaian'),
+                        'redirect' => $request->url(),
+                    ])
+                );
         }
 
         $appSlug = config('iam.app_slug', 'kepegawaian');

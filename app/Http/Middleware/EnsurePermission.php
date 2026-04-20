@@ -17,7 +17,12 @@ class EnsurePermission
                 abort(Response::HTTP_UNAUTHORIZED);
             }
 
-            return redirect()->route('login');
+            return redirect()->to(
+                route('sso.login', [
+                    'app' => config('iam.app_slug', 'kepegawaian'),
+                    'redirect' => $request->url(),
+                ])
+            );
         }
 
         $requiredPermissions = collect($permissions)
