@@ -1,94 +1,102 @@
 <?php
 
-namespace Tests\Feature\Monitoring;
-
+use App\Enums\StatusPegawai;
 use App\Exports\KgbMonitoringExport;
 use App\Models\Pegawai;
-use Database\Seeders\IamSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
+use App\Models\RiwayatPangkat;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
-use Tests\TestCase;
 
-class KgbExportTest extends TestCase
+use function Pest\Laravel\actingAs;
+
+beforeEach(function () {
+    Carbon::setTestNow('2026-04-17');
+});
+
+afterEach(function () {
+    Carbon::setTestNow();
+});
+
+function createKgbPegawai(string $nextKgbDate, array $overrides = []): Pegawai
 {
-    use RefreshDatabase;
+    $pegawai = Pegawai::factory()->create(array_merge([
+        'status_pegawai' => StatusPegawai::Aktif->value,
+    ], $overrides));
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawai->id,
+        'tmt' => Carbon::parse($nextKgbDate)->subYears(2)->toDateString(),
+        'is_aktif' => true,
+    ]);
 
-        $this->seed(IamSeeder::class);
-    }
-
-    public function test_kgb_monitoring_export_class_exists(): void
-    {
-        $this->assertTrue(class_exists(KgbMonitoringExport::class));
-    }
-
-    public function test_kgb_monitoring_export_implements_required_interfaces(): void
-    {
-        $export = new KgbMonitoringExport;
-
-        $this->assertInstanceOf(FromCollection::class, $export);
-        $this->assertInstanceOf(WithHeadings::class, $export);
-        $this->assertInstanceOf(WithMapping::class, $export);
-    }
-
-    public function test_kgb_monitoring_export_has_correct_headings(): void
-    {
-        $export = new KgbMonitoringExport;
-
-        $expectedHeadings = [
-            'NIP',
-            'Nama Lengkap',
-            'Unit Kerja',
-            'Golongan',
-            'Kenaikan Gaji Berkala Sebelumnya',
-            'Kenaikan Gaji Berkala Berikutnya',
-            'Sisa Waktu',
-        ];
-
-        $this->assertEquals($expectedHeadings, $export->headings());
-    }
-
-    public function test_kgb_monitoring_export_has_constructor_with_parameters(): void
-    {
-        // Test constructor dengan parameter default
-        $export1 = new KgbMonitoringExport;
-        $this->assertInstanceOf(KgbMonitoringExport::class, $export1);
-
-        // Test constructor dengan semua parameter
-        $export2 = new KgbMonitoringExport('unit-1', 'III/a', 'pns', 6);
-        $this->assertInstanceOf(KgbMonitoringExport::class, $export2);
-    }
-
-    public function test_kgb_monitoring_export_has_collection_method(): void
-    {
-        $export = new KgbMonitoringExport;
-
-        // Test bahwa method collection() ada
-        $this->assertTrue(method_exists($export, 'collection'));
-    }
-
-    public function test_kgb_monitoring_export_has_map_method(): void
-    {
-        $export = new KgbMonitoringExport;
-
-        // Test bahwa method map() ada
-        $this->assertTrue(method_exists($export, 'map'));
-    }
-
-    public function test_endpoint_export_kgb_tetap_bisa_di_download_walau_data_kosong(): void
-    {
-        Excel::fake();
-
-        $this->actingAs(Pegawai::factory()->admin()->create())
-            ->get(route('monitoring.kgb.export'))
-            ->assertSuccessful();
-
-        Excel::assertDownloaded('kgb-monitoring.xlsx');
-    }
+    return $pegawai;
 }
+
+test('KgbMonitoringExport bisa di-download sebagai xlsx', function () {
+    Excel::fake();
+
+    $user = Pegawai::factory()->admin()->create();
+    actingAs($user);
+
+    createKgbPegawai('2026-05-01');
+
+    $export = new KgbMonitoringExport;
+
+    Excel::download($export, 'kgb-monitoring.xlsx');
+
+    Excel::assertDownloaded('kgb-monitoring.xlsx');
+});
+
+test('KgbMonitoringExport memiliki heading yang benar', function () {
+    $export = new KgbMonitoringExport;
+
+    expect($export->headings())->toBe([
+        'NIP',
+        'Nama Lengkap',
+        'Pangkat/Golongan',
+        'TMT Pangkat',
+        'KGB Berikutnya',
+        'Sisa Hari',
+        'Status',
+    ]);
+});
+
+test('endpoint export kgb mengembalikan file xlsx', function () {
+    Excel::fake();
+
+    $user = Pegawai::factory()->admin()->create();
+    actingAs($user);
+
+    createKgbPegawai('2026-05-01');
+
+    $this->get(route('monitoring.kgb.export'))
+        ->assertStatus(200);
+
+    Excel::assertDownloaded('kgb-monitoring.xlsx');
+});
+
+test('endpoint export kgb dengan filter golongan', function () {
+    Excel::fake();
+
+    $user = Pegawai::factory()->admin()->create();
+    actingAs($user);
+
+    createKgbPegawai('2026-05-01');
+
+    $this->get(route('monitoring.kgb.export', ['golongan' => 'III']))
+        ->assertStatus(200);
+
+    Excel::assertDownloaded('kgb-monitoring.xlsx');
+});
+
+test('endpoint export kgb tetap bisa di-download walau data kosong', function () {
+    Excel::fake();
+
+    $user = Pegawai::factory()->admin()->create();
+    actingAs($user);
+
+    $this->get(route('monitoring.kgb.export'))
+        ->assertSuccessful();
+
+    Excel::assertDownloaded('kgb-monitoring.xlsx');
+});

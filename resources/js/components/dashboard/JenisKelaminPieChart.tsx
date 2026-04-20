@@ -1,4 +1,4 @@
-import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface JenisKelaminItem {
   label: string;
@@ -70,7 +70,7 @@ export function JenisKelaminPieChart({ data }: Props) {
           labelLine={false}
         >
           {chartData.map((entry, index) => (
-            <Pie key={`pie-${index}`} fill={COLORS[index % COLORS.length]} />
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
         <Tooltip content={<CustomTooltip />} />

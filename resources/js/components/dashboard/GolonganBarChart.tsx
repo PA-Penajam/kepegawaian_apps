@@ -2,6 +2,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -67,7 +68,7 @@ export function GolonganBarChart({ data }: GolonganBarChartProps) {
         <Tooltip content={<CustomTooltip />} />
         <Bar dataKey="value">
           {chartData.map((entry, index) => (
-            <Bar key={`bar-${index}`} fill={entry.color} />
+            <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Bar>
       </BarChart>

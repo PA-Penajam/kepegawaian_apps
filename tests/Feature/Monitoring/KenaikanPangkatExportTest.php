@@ -71,9 +71,9 @@ test('endpoint export kp mengembalikan file xlsx', function () {
 
     createKpPegawai('2022-04-01');
 
-    $response = $this->get('/kepegawaian/monitoring/kenaikan-pangkat/export');
+    $this->get(route('monitoring.kenaikan-pangkat.export'))
+        ->assertStatus(200);
 
-    $response->assertStatus(200);
     Excel::assertDownloaded('kp-monitoring.xlsx');
 });
 
