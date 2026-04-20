@@ -277,7 +277,7 @@ export default function PegawaiIndex({
                     )}
                 </div>
 
-                <div className="space-y-4 rounded-xl border bg-card p-4 shadow-sm">
+                <div className="space-y-4 rounded-xl border-2 border-foreground bg-card p-4 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
                     <DataTableToolbar
                         searchValue={searchValue}
                         onSearchChange={setSearchValue}
@@ -287,7 +287,7 @@ export default function PegawaiIndex({
                         onClear={clearFilters}
                     />
 
-                    <div className="overflow-x-auto rounded-xl border">
+                    <div className="overflow-x-auto rounded-xl border-2 border-foreground">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -426,10 +426,10 @@ export default function PegawaiIndex({
                                                     className={
                                                         item.status_pegawai ===
                                                         'mutasi_keluar'
-                                                            ? 'border-yellow-300 bg-yellow-50 text-yellow-700 hover:bg-yellow-50'
+                                                            ? 'border-black bg-yellow-200 text-black hover:bg-yellow-200'
                                                             : item.status_pegawai ===
                                                                 'diberhentikan'
-                                                              ? 'border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-50'
+                                                              ? 'border-black bg-orange-200 text-black hover:bg-orange-200'
                                                               : ''
                                                     }
                                                 >

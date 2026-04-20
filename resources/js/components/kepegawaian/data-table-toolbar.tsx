@@ -47,7 +47,7 @@ export function DataTableToolbar({
     return (
         <div
             className={cn(
-                'flex flex-col gap-3 rounded-xl border bg-card/70 p-4 shadow-sm md:flex-row md:items-end md:justify-between',
+                'flex flex-col gap-3 rounded-xl border-2 border-foreground bg-card p-4 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] md:flex-row md:items-end md:justify-between',
                 className,
             )}
         >
