@@ -198,7 +198,13 @@ export default function Index({ roles, permissions, filters }: Props) {
                                         )}
                                     </div>
                                     <CardDescription className="line-clamp-2 min-h-[40px] text-sm font-medium text-foreground/80">
-                                        {item.keterangan || 'Tidak ada keterangan spesifik untuk role ini.'}
+                                        {item.keterangan || (
+                                            item.nama.toLowerCase() === 'admin' ? 'Memiliki kontrol penuh atas referensi sistem, parameter, dan tata kelola hak akses pengguna (IAM).' :
+                                            item.nama.toLowerCase() === 'operator' ? 'Memiliki akses operasional untuk menginput, mengubah, dan mengelola master data rekam jejak seluruh pegawai.' :
+                                            item.nama.toLowerCase() === 'validator' ? 'Memiliki otoritas untuk memverifikasi dan menyetujui setiap pengajuan penyesuaian profil dari layanan mandiri (self-service).' :
+                                            item.nama.toLowerCase() === 'viewer' ? 'Hanya memiliki izin akses baca (read-only) untuk melihat data agregat dan profil tanpa hak memodifikasi.' :
+                                            'Tidak ada keterangan spesifik untuk role ini.'
+                                        )}
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="py-4 flex-grow flex flex-col gap-3">

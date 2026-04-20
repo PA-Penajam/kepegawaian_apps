@@ -16,8 +16,25 @@ class UserAksesController extends Controller
 {
     public function index(): Response
     {
-        $users = Pegawai::with('iamUserRoles.role.application')->paginate(20);
-        return inertia('iam/users/index', compact('users'));
+        $search = request('search');
+
+        $users = Pegawai::query()
+            ->withCount('iamRoles')
+            ->with('iamRoles.application')
+            ->when($search, fn ($query, $search) => $query->where(function ($q) use ($search) {
+                $q->where('nama_lengkap', 'like', "%{$search}%")
+                    ->orWhere('nip', 'like', "%{$search}%");
+            }))
+            ->orderBy('nama_lengkap')
+            ->paginate(20)
+            ->withQueryString();
+
+        return inertia('iam/users/index', [
+            'users' => $users,
+            'filters' => [
+                'search' => $search,
+            ],
+        ]);
     }
 
     public function show(Pegawai $user): Response
@@ -28,6 +45,7 @@ class UserAksesController extends Controller
         $availableApps = IamApplication::where('is_active', true)
             ->with('roles')
             ->get();
+
         return inertia('iam/users/akses', compact('user', 'akses', 'availableApps'));
     }
 
