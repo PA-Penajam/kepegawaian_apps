@@ -20,18 +20,24 @@ class IamSeeder extends Seeder
         // generateApiCredentials menggunakan Crypt::encryptString (bukan Hash::make)
         ['key' => $key, 'hash' => $hash] = IamApplication::generateApiCredentials();
 
-        // Buat instance dan set field sensitif secara manual (bukan mass assignment)
-        $kepegawaian = new IamApplication([
-            'nama' => 'Kepegawaian Apps',
-            'slug' => 'kepegawaian',
-            'url' => config('app.url'),
-            'deskripsi' => 'Sistem master data kepegawaian PA Penajam',
-            'is_active' => true,
-        ]);
-        $kepegawaian->api_key = $key;           // Tidak fillable — set manual
-        $kepegawaian->api_secret_hash = $hash;  // Tidak fillable — set manual
-        $kepegawaian->is_system = true;         // Tidak fillable — set manual
-        $kepegawaian->save();
+        // Gunakan firstOrCreate untuk mencegah duplicate key saat re-seed
+        $kepegawaian = IamApplication::firstOrCreate(
+            ['slug' => 'kepegawaian'],
+            [
+                'nama' => 'Kepegawaian Apps',
+                'url' => config('app.url'),
+                'deskripsi' => 'Sistem master data kepegawaian PA Penajam',
+                'is_active' => true,
+            ]
+        );
+
+        // Set field sensitif hanya jika record baru
+        if ($kepegawaian->wasRecentlyCreated) {
+            $kepegawaian->api_key = $key;           // Tidak fillable — set manual
+            $kepegawaian->api_secret_hash = $hash;  // Tidak fillable — set manual
+            $kepegawaian->is_system = true;         // Tidak fillable — set manual
+            $kepegawaian->save();
+        }
 
         // 2. Pastikan role default tersedia terlebih dahulu (sebelum migrasi user)
         $adminRole = IamRole::firstOrCreate(
