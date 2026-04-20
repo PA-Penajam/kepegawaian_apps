@@ -10,8 +10,8 @@ interface Props {
   data: JenisKelaminItem[];
 }
 
-// Gunakan warna yang konsisten dengan tema shadcn/ui
-const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))'];
+// Warna cerah untuk grafik: Biru (Laki-laki) dan Pink (Perempuan)
+const COLORS = ['#3b82f6', '#ec4899'];
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -63,9 +63,9 @@ export function JenisKelaminPieChart({ data }: Props) {
         <Pie
           data={chartData}
           cx="50%"
-          cy="50%"
-          innerRadius={60}
-          outerRadius={100}
+          cy="45%"
+          innerRadius={50}
+          outerRadius={80}
           dataKey="value"
           label={(props: any) => `${props.percentage}%`}
           labelLine={false}
@@ -75,7 +75,7 @@ export function JenisKelaminPieChart({ data }: Props) {
           ))}
         </Pie>
         <Tooltip content={<CustomTooltip />} />
-        <Legend />
+        <Legend verticalAlign="bottom" height={36} wrapperStyle={{ paddingTop: '20px' }} />
       </PieChart>
     </ResponsiveContainer>
   );

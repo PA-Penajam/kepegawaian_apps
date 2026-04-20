@@ -1,7 +1,7 @@
-import {
     Bar,
     BarChart,
     CartesianGrid,
+    Cell,
     ResponsiveContainer,
     Tooltip,
     XAxis,
@@ -48,11 +48,14 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
     return null;
 }
 
+const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#0ea5e9'];
+
 export function PendidikanBarChart({ data }: Props) {
-    const chartData = data.map((item) => ({
+    const chartData = data.map((item, index) => ({
         name: item.pendidikan,
         value: item.count,
         pct: item.percentage,
+        color: COLORS[index % COLORS.length],
     }));
 
     return (
@@ -71,7 +74,11 @@ export function PendidikanBarChart({ data }: Props) {
                     width={80}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} label={{ position: 'right', fontSize: 12 }} />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} label={{ position: 'right', fontSize: 12 }}>
+                    {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                </Bar>
             </BarChart>
         </ResponsiveContainer>
     );
