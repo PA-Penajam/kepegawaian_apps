@@ -47,6 +47,7 @@ class KgbMonitoringExport implements FromCollection, WithHeadings, WithMapping
             return (object) [
                 'nip' => $item['nip'] ?? '',
                 'nama_lengkap' => $item['nama_lengkap'] ?? '',
+                'unit_kerja' => $item['unit_kerja'] ?? '-',
                 'pangkat_gol' => $item['pangkat_gol'] ?? '',
                 'tmt_pangkat' => $item['tmt_pangkat'] ?? '',
                 'tanggal_kgb_berikutnya' => $item['tanggal_kgb_berikutnya'] ?? '',
@@ -84,7 +85,7 @@ class KgbMonitoringExport implements FromCollection, WithHeadings, WithMapping
         return [
             $row->nip ?? '',
             $row->nama_lengkap ?? '',
-            '', // Unit Kerja - perlu diambil dari pegawai jika ada relasi
+            $row->unit_kerja ?? '-',
             $row->pangkat_gol ?? '',
             $row->tmt_pangkat ? date('d-m-Y', strtotime($row->tmt_pangkat)) : '-',
             $row->tanggal_kgb_berikutnya ? date('d-m-Y', strtotime($row->tanggal_kgb_berikutnya)) : '-',

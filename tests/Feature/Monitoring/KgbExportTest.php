@@ -81,6 +81,25 @@ class KgbExportTest extends TestCase
         $this->assertTrue(method_exists($export, 'map'));
     }
 
+    public function test_kgb_export_map_includes_unit_kerja_data(): void
+    {
+        $export = new KgbMonitoringExport;
+
+        $mockRow = (object) [
+            'nip' => '1234567890',
+            'nama_lengkap' => 'Test User',
+            'unit_kerja' => 'Bagian Testing',
+            'pangkat_gol' => 'III/a',
+            'tmt_pangkat' => '2023-01-01',
+            'tanggal_kgb_berikutnya' => '2025-01-01',
+            'sisa_hari' => 30,
+        ];
+
+        $mapped = $export->map($mockRow);
+
+        $this->assertEquals('Bagian Testing', $mapped[2]);
+    }
+
     public function test_endpoint_export_kgb_tetap_bisa_di_download_walau_data_kosong(): void
     {
         Excel::fake();
