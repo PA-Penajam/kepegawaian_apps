@@ -49,7 +49,7 @@ type Props = {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Data Saya', href: '/self-service' },
+    { title: 'Self Service', href: '/self-service' },
 ];
 
 const statusVariantMap: Record<
@@ -150,7 +150,7 @@ function getMasaKerja(tmtPns: string | null): string {
 export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Data Saya" />
+            <Head title="Self Service" />
 
             <div className="flex flex-col gap-6 p-4 sm:p-6">
                 <Card>
@@ -378,24 +378,45 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
                     </Card>
                 </div>
 
-                <Card className="border-dashed">
-                    <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p className="font-medium">
-                                Butuh rincian lengkap?
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                                Lihat biodata, keluarga, riwayat pangkat, hingga
-                                dokumen pegawai Anda dalam mode baca saja.
-                            </p>
-                        </div>
-                        <Button asChild>
-                            <Link href={selfServiceDetail()}>
-                                Buka Detail Lengkap
-                            </Link>
-                        </Button>
-                    </CardContent>
-                </Card>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <Card className="border-dashed shadow-sm">
+                        <CardContent className="flex h-full flex-col justify-between gap-4 pt-6">
+                            <div>
+                                <p className="font-medium">Detail Profile Pegawai</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Lihat rincian biodata, keluarga, riwayat pangkat, pendidikan, 
+                                    serta dokumen-dokumen terkait Anda.
+                                </p>
+                            </div>
+                            <div>
+                                <Button asChild className="w-full sm:w-auto">
+                                    <Link href={selfServiceDetail()}>
+                                        Buka Detail Lengkap
+                                    </Link>
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-dashed shadow-sm bg-muted/30">
+                        <CardContent className="flex h-full flex-col justify-between gap-4 pt-6">
+                            <div>
+                                <p className="font-medium">Pengajuan Perubahan Data</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Buat, lacak, dan kelola semua pengajuan pembaruan data 
+                                    kepegawaian Anda secara mandiri di sini.
+                                </p>
+                            </div>
+                            <div>
+                                <Button asChild variant="secondary" className="w-full sm:w-auto bg-background shadow-sm border">
+                                    <Link href="/self-service/pengajuan">
+                                        Lihat Pengajuan Saya
+                                    </Link>
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <div className="flex justify-end">
                     <Button variant="ghost" asChild>
