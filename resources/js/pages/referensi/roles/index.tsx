@@ -176,7 +176,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                         placeholder="Cari role berdasarkan nama atau keterangan..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="max-w-md border-2 border-black drop-shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:drop-shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
+                        className="max-w-md border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
                     />
                 </div>
 
@@ -247,11 +247,11 @@ export default function Index({ roles, permissions, filters }: Props) {
                     )}
 
                     <Card 
-                        className="flex flex-col items-center justify-center min-h-[300px] border-dashed border-4 border-black/30 hover:border-black/60 transition-colors bg-muted/20 cursor-pointer group hover:bg-muted/40 drop-shadow-none box-border m-0 pt-0 gap-0" 
+                        className="flex flex-col items-center justify-center min-h-[300px] border-dashed border-4 border-black/30 hover:border-black/60 transition-colors bg-muted/20 cursor-pointer group hover:bg-muted/40 shadow-none box-border m-0 pt-0 gap-0" 
                         onClick={openCreateModal}
                     >
                         <CardContent className="flex flex-col items-center justify-center p-6 text-center select-none pt-6 h-full">
-                            <div className="rounded-full bg-primary p-4 drop-shadow-[4px_4px_0_rgba(0,0,0,1)] text-primary-foreground border-2 border-black mb-4 group-hover:scale-110 transition-transform group-hover:drop-shadow-[6px_6px_0_rgba(0,0,0,1)]">
+                            <div className="rounded-full bg-primary p-4 shadow-[4px_4px_0_rgba(0,0,0,1)] text-primary-foreground border-2 border-black mb-4 group-hover:scale-110 transition-transform group-hover:shadow-[6px_6px_0_rgba(0,0,0,1)]">
                                 <Plus className="h-8 w-8 stroke-[3] text-black" />
                             </div>
                             <h3 className="text-xl font-black uppercase mt-2">Tambah Role Baru</h3>
@@ -268,7 +268,7 @@ export default function Index({ roles, permissions, filters }: Props) {
 
             {/* Modal Tambah Role */}
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogContent className="max-w-2xl border-4 border-black drop-shadow-[8px_8px_0_rgba(0,0,0,1)] top-[50%] max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl border-4 border-black shadow-[8px_8px_0_rgba(0,0,0,1)] top-[50%] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tight">Tambah Role Baru</DialogTitle>
                     </DialogHeader>
@@ -282,7 +282,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                                 value={createData.nama}
                                 onChange={(e) => setCreateData('nama', e.target.value)}
                                 placeholder="Masukkan nama role"
-                                className="border-2 border-black focus-visible:drop-shadow-[2px_2px_0_rgba(0,0,0,1)]"
+                                className="border-2 border-black focus-visible:shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all"
                             />
                             {errorsCreate.nama && <p className="text-sm text-destructive font-semibold">{errorsCreate.nama}</p>}
                         </div>
@@ -295,7 +295,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                                 onChange={(e) => setCreateData('keterangan', e.target.value)}
                                 placeholder="Masukkan keterangan (opsional)"
                                 rows={3}
-                                className="border-2 border-black focus-visible:drop-shadow-[2px_2px_0_rgba(0,0,0,1)]"
+                                className="border-2 border-black focus-visible:shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all"
                             />
                             {errorsCreate.keterangan && <p className="text-sm text-destructive font-semibold">{errorsCreate.keterangan}</p>}
                         </div>
@@ -342,7 +342,7 @@ export default function Index({ roles, permissions, filters }: Props) {
 
             {/* Modal Edit Role */}
             <Dialog open={!!editingRole} onOpenChange={(open) => !open && closeEditModal()}>
-                <DialogContent className="max-w-2xl border-4 border-black drop-shadow-[8px_8px_0_rgba(0,0,0,1)] top-[50%] max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl border-4 border-black shadow-[8px_8px_0_rgba(0,0,0,1)] top-[50%] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tight">Edit Role/Hak Akses</DialogTitle>
                     </DialogHeader>
@@ -357,7 +357,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                                 value={editData.nama}
                                 onChange={(e) => setEditData('nama', e.target.value)}
                                 placeholder="Masukkan nama role"
-                                className="border-2 border-black focus-visible:drop-shadow-[2px_2px_0_rgba(0,0,0,1)]"
+                                className="border-2 border-black focus-visible:shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all"
                                 disabled={editingRole.is_system}
                             />
                             {errorsEdit.nama && <p className="text-sm text-destructive font-semibold">{errorsEdit.nama}</p>}
@@ -371,7 +371,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                                 onChange={(e) => setEditData('keterangan', e.target.value)}
                                 placeholder="Masukkan keterangan (opsional)"
                                 rows={3}
-                                className="border-2 border-black focus-visible:drop-shadow-[2px_2px_0_rgba(0,0,0,1)]"
+                                className="border-2 border-black focus-visible:shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all"
                             />
                             {errorsEdit.keterangan && <p className="text-sm text-destructive font-semibold">{errorsEdit.keterangan}</p>}
                         </div>

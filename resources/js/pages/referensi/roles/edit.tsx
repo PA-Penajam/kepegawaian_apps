@@ -112,7 +112,7 @@ export default function EditAssign({
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-1 flex flex-col gap-4">
-                        <Card className="border-2 border-black drop-shadow-[4px_4px_0_rgba(0,0,0,1)] bg-muted/10">
+                        <Card className="border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-muted/10">
                             <CardHeader className="pb-4">
                                 <CardTitle className="flex items-center gap-2">
                                     <Shield className="w-5 h-5 text-primary" />
@@ -134,7 +134,7 @@ export default function EditAssign({
 
                     <div className="md:col-span-2">
                         <form onSubmit={handleSubmit}>
-                            <Card className="border-2 border-black drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                            <Card className="border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)]">
                                 <CardHeader className="pb-4 border-b-2 border-black/10 bg-muted/5">
                                     <CardTitle>Daftar Pegawai</CardTitle>
                                     <CardDescription>
@@ -148,7 +148,7 @@ export default function EditAssign({
                                             placeholder="Cari nama atau NIP pegawai (tekan enter/tunggu sejenak)..."
                                             value={searchPegawai}
                                             onChange={(e) => handleSearchPegawai(e.target.value)}
-                                            className="pl-10 border-2 border-black focus-visible:drop-shadow-[2px_2px_0_rgba(0,0,0,1)]"
+                                            className="pl-10 border-2 border-black focus-visible:shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all"
                                         />
                                     </div>
                                     
