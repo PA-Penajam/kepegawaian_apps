@@ -303,7 +303,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                         {(permissions || []).length > 0 && (
                             <div className="space-y-4">
                                 <Label className="font-bold">Permissions</Label>
-                                <div className="grid gap-4 md:grid-cols-2 max-h-[40vh] overflow-y-auto p-1">
+                                <div className="grid gap-4 md:grid-cols-2 p-1">
                                     {Object.entries(groupedPermissions).map(([group, perms]) => (
                                         <div key={group} className="space-y-2 rounded-xl border-2 border-black/20 bg-muted/10 p-3">
                                             <h3 className="text-sm font-black uppercase text-primary tracking-wider">{group}</h3>
@@ -379,7 +379,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                         {(permissions || []).length > 0 && (
                             <div className="space-y-4">
                                 <Label className="font-bold">Permissions</Label>
-                                <div className="grid gap-4 md:grid-cols-2 max-h-[40vh] overflow-y-auto p-1">
+                                <div className="grid gap-4 md:grid-cols-2 p-1">
                                     {Object.entries(groupedPermissions).map(([group, perms]) => (
                                         <div key={group} className="space-y-2 rounded-xl border-2 border-black/20 bg-muted/10 p-3">
                                             <h3 className="text-sm font-black uppercase text-primary tracking-wider">{group}</h3>
