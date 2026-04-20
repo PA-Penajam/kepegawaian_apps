@@ -12,24 +12,24 @@ export default function AuthSimpleLayout({
     return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-gradient-to-br from-background via-muted to-background p-6 md:p-10">
             <div className="w-full max-w-sm">
-                <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-8 rounded-xl border-2 border-foreground bg-card p-8 drop-shadow-[8px_8px_0_rgba(0,0,0,1)]">
                     <BlurFade delay={0.1} duration={0.4}>
                         <div className="flex flex-col items-center gap-4">
                             <Link
                                 href={home()}
                                 className="flex flex-col items-center gap-2 font-medium"
                             >
-                                <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                                    <AppLogoIcon className="size-5 fill-current text-white" />
+                                <div className="mb-1 flex h-12 w-12 items-center justify-center rounded-xl border-2 border-foreground bg-primary drop-shadow-[2px_2px_0_rgba(0,0,0,1)] text-primary-foreground">
+                                    <AppLogoIcon className="size-6 fill-current text-white" />
                                 </div>
                                 <span className="sr-only">{title}</span>
                             </Link>
 
                             <div className="space-y-2 text-center">
-                                <h1 className="text-xl font-medium">
+                                <h1 className="text-xl font-black">
                                     {title}
                                 </h1>
-                                <p className="text-center text-sm text-muted-foreground">
+                                <p className="text-center text-sm font-medium text-muted-foreground">
                                     {description}
                                 </p>
                             </div>

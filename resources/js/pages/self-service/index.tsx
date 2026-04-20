@@ -13,6 +13,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { detail as selfServiceDetail } from '@/routes/self-service';
+import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 import type { PegawaiDetail } from '@/types/pegawai-detail';
 
@@ -49,7 +50,7 @@ type Props = {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Data Saya', href: '/self-service' },
+    { title: 'Self Service', href: '/self-service' },
 ];
 
 const statusVariantMap: Record<
@@ -150,7 +151,7 @@ function getMasaKerja(tmtPns: string | null): string {
 export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Data Saya" />
+            <Head title="Self Service" />
 
             <div className="flex flex-col gap-6 p-4 sm:p-6">
                 <Card>
@@ -207,7 +208,7 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
                             </div>
 
                             <Button variant="outline" asChild>
-                                <Link href={selfServiceDetail()}>
+                                <Link href={toUrl(selfServiceDetail())}>
                                     <User className="mr-2 h-4 w-4" />
                                     Lihat Detail Lengkap
                                     <ChevronRight className="ml-1 h-4 w-4" />
@@ -378,28 +379,30 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
                     </Card>
                 </div>
 
-                <Card className="border-dashed">
-                    <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p className="font-medium">
-                                Butuh rincian lengkap?
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                                Lihat biodata, keluarga, riwayat pangkat, hingga
-                                dokumen pegawai Anda dalam mode baca saja.
-                            </p>
-                        </div>
-                        <Button asChild>
-                            <Link href={selfServiceDetail()}>
-                                Buka Detail Lengkap
-                            </Link>
-                        </Button>
-                    </CardContent>
-                </Card>
+                <div className="grid grid-cols-1 gap-4">
+                    <Card className="border-dashed shadow-sm">
+                        <CardContent className="flex h-full flex-col justify-between gap-4 pt-6">
+                            <div>
+                                <p className="font-medium">Detail Profile Pegawai</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Lihat rincian biodata, keluarga, riwayat pangkat, pendidikan, 
+                                    serta dokumen-dokumen terkait Anda.
+                                </p>
+                            </div>
+                            <div>
+                                <Button asChild className="w-full sm:w-auto">
+                                    <Link href={toUrl(selfServiceDetail())}>
+                                        Buka Detail Lengkap
+                                    </Link>
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <div className="flex justify-end">
                     <Button variant="ghost" asChild>
-                        <Link href={dashboard()}>Kembali ke Dashboard</Link>
+                        <Link href={toUrl(dashboard())}>Kembali ke Dashboard</Link>
                     </Button>
                 </div>
             </div>

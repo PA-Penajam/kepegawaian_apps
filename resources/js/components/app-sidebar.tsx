@@ -44,14 +44,9 @@ export function AppSidebar() {
             icon: LayoutGrid,
         },
         {
-            title: 'Data Saya',
+            title: 'Self Service',
             href: selfServiceIndex(),
             icon: User,
-        },
-        {
-            title: 'Pengajuan Saya',
-            href: '/self-service/pengajuan',
-            icon: FileText,
         },
         {
             title: 'Settings',

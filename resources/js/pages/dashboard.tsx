@@ -7,6 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import { DashboardDistribusiSkeleton } from '@/components/dashboard/DashboardDistribusiSkeleton';
 import { DashboardHeavySection } from '@/components/dashboard/DashboardHeavySection';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import type { FastDashboardStats } from '@/hooks/use-dashboard-stats';
 import type { BreadcrumbItem } from '@/types';
 import { AlertCircle, TrendingUp, UserPlus, Users } from 'lucide-react';
@@ -24,6 +25,8 @@ export default function Dashboard({ fastStats }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
+                <DashboardHeader />
+                
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

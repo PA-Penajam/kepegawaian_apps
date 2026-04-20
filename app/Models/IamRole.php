@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasActivityLogOptions;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Concerns\HasActivityLogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class IamRole extends Model
@@ -38,5 +38,20 @@ class IamRole extends Model
             'iam_role_id',
             'iam_permission_id'
         )->withTimestamps();
+    }
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Pegawai::class,
+            'iam_user_roles',
+            'iam_role_id',
+            'user_id'
+        )->withPivot('assigned_at');
+    }
+
+    public function pegawai(): BelongsToMany
+    {
+        return $this->users();
     }
 }

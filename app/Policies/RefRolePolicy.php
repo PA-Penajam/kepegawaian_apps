@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
+use App\Models\IamRole as RefRole;
 use App\Models\Pegawai;
-use App\Models\RefRole;
 
 class RefRolePolicy extends RefPolicy
 {

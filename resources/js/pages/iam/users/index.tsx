@@ -1,8 +1,9 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { Eye } from 'lucide-react';
-import { useMemo } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Eye, Search, ShieldCheck, Users } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Table,
     TableBody,
@@ -33,7 +34,20 @@ type Props = {
 };
 
 export default function Index() {
-    const { users } = usePage<Props>().props;
+    const { users, filters } = usePage<Props>().props;
+    const [search, setSearch] = useState((filters as any)?.search ?? '');
+
+    // Normalisasi meta paginasi — Laravel paginate() standar menyimpan di root,
+    // sedangkan API Resource membungkusnya di bawah .meta
+    const meta = useMemo(() => {
+        if (users.meta) return users.meta;
+        const raw = users as any;
+        return {
+            total: raw.total ?? 0,
+            current_page: raw.current_page ?? 1,
+            last_page: raw.last_page ?? 1,
+        };
+    }, [users]);
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -44,31 +58,63 @@ export default function Index() {
         [],
     );
 
+    // Debounced search — sesuai pola di halaman Roles
+    const performSearch = useCallback((value: string) => {
+        router.get('/iam/users', { search: value || undefined }, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    }, []);
+
+    const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearch(value);
+        const timeout = setTimeout(() => performSearch(value), 400);
+        return () => clearTimeout(timeout);
+    }, [performSearch]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="User Akses IAM" />
 
-            <div className="flex flex-col gap-4 p-4">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">User Akses IAM</h1>
-                    <p className="text-muted-foreground">
-                        Total: {users.meta.total} user
-                    </p>
+            <div className="flex flex-col gap-6 p-6">
+                {/* Header — gaya Retro Neo-Brutalism */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-black uppercase tracking-tight">User Akses</h1>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">
+                            Kelola hak akses role untuk setiap pengguna.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="border-2 border-black font-bold text-sm px-3 py-1 shadow-[2px_2px_0_rgba(0,0,0,1)]">
+                            <Users className="w-4 h-4 mr-1.5" />
+                            {meta.total} Pengguna
+                        </Badge>
+                    </div>
                 </div>
 
-                <div className="rounded-md border">
+                {/* Search Bar */}
+                <div className="flex items-center gap-2">
+                    <Input
+                        placeholder="Cari berdasarkan nama atau NIP..."
+                        value={search}
+                        onChange={handleSearchChange}
+                        className="max-w-md border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
+                    />
+                </div>
+
+                {/* Table — border tebal ala Neo-Brutalism */}
+                <div className="border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden">
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead>Nama</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead className="text-center">
-                                    Jumlah Akses
-                                </TableHead>
-                                <TableHead>Akses Aplikasi</TableHead>
-                                <TableHead className="text-center">
-                                    Aksi
-                                </TableHead>
+                            <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
+                                <TableHead className="font-black uppercase text-xs tracking-wider">Nama</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">NIP</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">Jumlah Akses</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">Akses Aplikasi</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -76,26 +122,35 @@ export default function Index() {
                                 <TableRow>
                                     <TableCell
                                         colSpan={5}
-                                        className="text-center"
+                                        className="text-center py-12 font-medium text-muted-foreground"
                                     >
-                                        Tidak ada data user
+                                        Tidak ada data pengguna ditemukan.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 users.data.map((user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell className="font-medium">
+                                    <TableRow key={user.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
+                                        <TableCell className="font-bold">
                                             {user.nama_lengkap}
                                         </TableCell>
-                                        <TableCell>{user.email}</TableCell>
+                                        <TableCell className="font-mono text-sm text-muted-foreground">
+                                            {(user as any).nip ?? '-'}
+                                        </TableCell>
                                         <TableCell className="text-center">
-                                            <Badge variant="outline">
-                                                {user.iam_roles_count ?? 0}{' '}
-                                                akses
+                                            <Badge
+                                                variant={(user.iam_roles_count ?? 0) > 0 ? 'default' : 'outline'}
+                                                className={`border-2 border-black font-bold shadow-[2px_2px_0_rgba(0,0,0,1)] ${
+                                                    (user.iam_roles_count ?? 0) > 0
+                                                        ? ''
+                                                        : 'bg-background text-muted-foreground'
+                                                }`}
+                                            >
+                                                <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                                                {user.iam_roles_count ?? 0} akses
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex flex-wrap gap-1">
+                                            <div className="flex flex-wrap gap-1.5">
                                                 {user.iam_roles &&
                                                 user.iam_roles.length > 0 ? (
                                                     user.iam_roles
@@ -104,33 +159,23 @@ export default function Index() {
                                                             <Badge
                                                                 key={role.id}
                                                                 variant="secondary"
-                                                                className="text-xs"
+                                                                className="text-xs border-2 border-black/30 font-semibold"
                                                             >
-                                                                {
-                                                                    role
-                                                                        .application
-                                                                        .nama
-                                                                }{' '}
-                                                                / {role.nama}
+                                                                {role.application.nama} / {role.nama}
                                                             </Badge>
                                                         ))
                                                 ) : (
-                                                    <span className="text-sm text-muted-foreground">
-                                                        Tidak ada akses
+                                                    <span className="text-sm text-muted-foreground italic">
+                                                        Belum ada akses
                                                     </span>
                                                 )}
                                                 {user.iam_roles &&
-                                                    user.iam_roles.length >
-                                                        3 && (
+                                                    user.iam_roles.length > 3 && (
                                                         <Badge
                                                             variant="outline"
-                                                            className="text-xs"
+                                                            className="text-xs border-2 border-black/30 font-semibold"
                                                         >
-                                                            +
-                                                            {user.iam_roles
-                                                                .length -
-                                                                3}{' '}
-                                                            lagi
+                                                            +{user.iam_roles.length - 3} lagi
                                                         </Badge>
                                                     )}
                                             </div>
@@ -138,18 +183,15 @@ export default function Index() {
                                         <TableCell>
                                             <div className="flex items-center justify-center gap-2">
                                                 <Button
-                                                    variant="ghost"
-                                                    size="icon"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="font-bold gap-1.5 border-2 border-black text-xs h-8"
                                                     aria-label={`Lihat akses ${user.nama_lengkap}`}
                                                     asChild
                                                 >
-                                                    <Link
-                                                        href={`/iam/users/${user.id}/akses`}
-                                                    >
-                                                        <Eye
-                                                            className="h-4 w-4"
-                                                            aria-hidden="true"
-                                                        />
+                                                    <Link href={`/iam/users/${user.id}/akses`}>
+                                                        <Eye className="h-3.5 w-3.5" />
+                                                        Detail
                                                     </Link>
                                                 </Button>
                                             </div>
@@ -161,27 +203,22 @@ export default function Index() {
                     </Table>
                 </div>
 
-                {/* Pagination */}
-                {users.meta.last_page > 1 && (
-                    <div className="flex justify-center gap-2">
-                        {users.meta.current_page > 1 && (
-                            <Button variant="outline" asChild>
-                                <Link
-                                    href={`?page=${users.meta.current_page - 1}`}
-                                >
+                {/* Pagination — gaya Retro */}
+                {meta.last_page > 1 && (
+                    <div className="flex items-center justify-center gap-3">
+                        {meta.current_page > 1 && (
+                            <Button variant="outline" className="font-bold border-2 border-black" asChild>
+                                <Link href={`?page=${meta.current_page - 1}${search ? `&search=${search}` : ''}`}>
                                     Sebelumnya
                                 </Link>
                             </Button>
                         )}
-                        <span className="flex items-center px-4 text-sm text-muted-foreground">
-                            Halaman {users.meta.current_page} dari{' '}
-                            {users.meta.last_page}
+                        <span className="flex items-center px-4 py-2 text-sm font-bold border-2 border-black bg-muted/30 shadow-[2px_2px_0_rgba(0,0,0,1)]">
+                            Halaman {meta.current_page} dari {meta.last_page}
                         </span>
-                        {users.meta.current_page < users.meta.last_page && (
-                            <Button variant="outline" asChild>
-                                <Link
-                                    href={`?page=${users.meta.current_page + 1}`}
-                                >
+                        {meta.current_page < meta.last_page && (
+                            <Button variant="outline" className="font-bold border-2 border-black" asChild>
+                                <Link href={`?page=${meta.current_page + 1}${search ? `&search=${search}` : ''}`}>
                                     Selanjutnya
                                 </Link>
                             </Button>
