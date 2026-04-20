@@ -20,27 +20,10 @@ export function DashboardHeavySection() {
     } = useDashboardStats(heavyStats);
 
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <BlurFade delay={0.1} className="col-span-1">
-                <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <UserCircle className="h-5 w-5 text-accent" />
-                            Distribusi Golongan
-                        </CardTitle>
-                        <CardDescription>Berdasarkan pangkat terakhir</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {golonganItems.length > 0 ? (
-                            <GolonganBarChart data={golonganItems} />
-                        ) : (
-                            <p className="py-4 text-center text-sm text-muted-foreground">Belum ada data golongan</p>
-                        )}
-                    </CardContent>
-                </Card>
-            </BlurFade>
-
-            <BlurFade delay={0.2} className="col-span-1 lg:col-span-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            
+            {/* ROW 1: TOP ITEMS */}
+            <BlurFade delay={0.1} className="col-span-1 lg:col-span-2">
                 <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -67,7 +50,7 @@ export function DashboardHeavySection() {
                 </Card>
             </BlurFade>
 
-            <BlurFade delay={0.3} className="col-span-1 lg:col-span-2">
+            <BlurFade delay={0.2} className="col-span-1 lg:col-span-2">
                 <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -94,7 +77,8 @@ export function DashboardHeavySection() {
                 </Card>
             </BlurFade>
 
-            <BlurFade delay={0.4} className="col-span-1 lg:col-span-2">
+            {/* ROW 2: DISTRIBUSi ITEMS */}
+            <BlurFade delay={0.3} className="col-span-1 md:col-span-2 lg:col-span-2">
                 <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -113,16 +97,36 @@ export function DashboardHeavySection() {
                 </Card>
             </BlurFade>
 
-            <BlurFade delay={0.5} className="col-span-1 md:col-span-2 lg:col-span-1">
+            <BlurFade delay={0.4} className="col-span-1 lg:col-span-1">
                 <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
                     <CardHeader>
-                        <CardTitle>Distribusi Jenis Kelamin</CardTitle>
+                        <CardTitle className="flex items-center gap-2 truncate text-base">
+                            <UserCircle className="h-5 w-5 text-accent shrink-0" />
+                            Golongan
+                        </CardTitle>
+                        <CardDescription className="truncate">Pangkat terakhir</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        {golonganItems.length > 0 ? (
+                            <GolonganBarChart data={golonganItems} />
+                        ) : (
+                            <p className="py-4 text-center text-sm text-muted-foreground">Belum ada data</p>
+                        )}
+                    </CardContent>
+                </Card>
+            </BlurFade>
+
+            <BlurFade delay={0.5} className="col-span-1 lg:col-span-1">
+                <Card className="h-full relative overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-md hover:border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="text-base truncate">Jenis Kelamin</CardTitle>
+                        <CardDescription className="truncate">Komposisi gender</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
                         {jenisKelaminItems.length > 0 ? (
                             <JenisKelaminPieChart data={jenisKelaminItems} />
                         ) : (
-                            <p className="py-4 text-center text-sm text-muted-foreground">Belum ada data jenis kelamin</p>
+                            <p className="py-4 text-center text-sm text-muted-foreground">Belum ada data</p>
                         )}
                     </CardContent>
                 </Card>
