@@ -29,6 +29,7 @@ class RefRoleController extends Controller
 
         $roles = RefRole::query()
             ->where('iam_application_id', $appId)
+            ->with(['permissions:id'])
             ->withCount(['permissions', 'pegawai'])
             ->when(request('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -40,28 +41,19 @@ class RefRoleController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render('referensi/roles/index', [
-            'roles' => $roles,
-            'filters' => request()->only(['search']),
-        ]);
-    }
-
-    public function create(): Response
-    {
-        $this->authorize('create', RefRole::class);
-
-        $appId = $this->getAppId();
-
         $permissions = RefPermission::query()
             ->where('iam_application_id', $appId)
             ->orderBy('group')
             ->orderBy('nama')
             ->get(['id', 'nama', 'group', 'keterangan']);
 
-        return Inertia::render('referensi/roles/create', [
+        return Inertia::render('referensi/roles/index', [
+            'roles' => $roles,
+            'filters' => request()->only(['search']),
             'permissions' => $permissions,
         ]);
     }
+
 
     public function store(StoreRefRoleRequest $request): RedirectResponse
     {
