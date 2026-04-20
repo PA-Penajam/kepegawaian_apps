@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers\SelfService;
 
+use App\Enums\AksiPengajuan;
+use App\Enums\DomainPengajuan;
+use App\Enums\HubunganKeluarga;
+use App\Enums\JenisKelamin;
+use App\Enums\StatusPerkawinan;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SelfService\StorePengajuanPerubahanDataRequest;
 use App\Models\PengajuanPerubahanData;
@@ -37,7 +42,29 @@ class PengajuanPerubahanDataController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('self-service/pengajuan/create');
+        return Inertia::render('self-service/pengajuan/create', [
+            'domains' => array_map(
+                fn (DomainPengajuan $d) => ['value' => $d->value, 'label' => str_replace('_', ' ', $d->name)],
+                DomainPengajuan::cases()
+            ),
+            'aksiList' => array_map(
+                fn (AksiPengajuan $a) => ['value' => $a->value, 'label' => ucfirst($a->value)],
+                AksiPengajuan::cases()
+            ),
+            'hubunganList' => array_map(
+                fn (HubunganKeluarga $h) => ['value' => $h->value, 'label' => $h->value],
+                HubunganKeluarga::cases()
+            ),
+            'jenisKelaminList' => array_map(
+                fn (JenisKelamin $j) => ['value' => $j->value, 'label' => $j === JenisKelamin::LakiLaki ? 'Laki-laki' : 'Perempuan'],
+                JenisKelamin::cases()
+            ),
+            'statusPerkawinanList' => array_map(
+                fn (StatusPerkawinan $s) => ['value' => $s->value, 'label' => str_replace('_', ' ', $s->name)],
+                StatusPerkawinan::cases()
+            ),
+            'currentUserId' => auth()->id(),
+        ]);
     }
 
     public function store(StorePengajuanPerubahanDataRequest $request, SubmitPengajuanPerubahanDataService $service): RedirectResponse

@@ -36,6 +36,7 @@ class KgbMonitoringService
             })
             ->with([
                 'pangkat',
+                'unitKerja',
                 'riwayatPangkat' => fn ($q) => $q->aktif()->latest('tmt'),
             ])
             ->whereIn('status_pegawai', [
@@ -90,6 +91,7 @@ class KgbMonitoringService
                     'id' => $pegawai->id,
                     'nip' => $pegawai->nip,
                     'nama_lengkap' => $pegawai->nama_lengkap,
+                    'unit_kerja' => $pegawai->unitKerja?->nama ?? '-',
                     'pangkat_gol' => $pegawai->nama_pangkat_lengkap,
                     'tmt_pangkat' => $riwayatPangkatAktif?->tmt?->toDateString(),
                     'tanggal_kgb_berikutnya' => $statusKgb['tanggal_kgb_berikutnya']->toDateString(),

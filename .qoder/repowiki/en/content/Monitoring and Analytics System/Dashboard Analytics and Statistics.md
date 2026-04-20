@@ -14,6 +14,7 @@
 - [dashboard.tsx](file://resources/js/pages/dashboard.tsx)
 - [DashboardHeavySection.tsx](file://resources/js/components/dashboard/DashboardHeavySection.tsx)
 - [DashboardDistribusiSkeleton.tsx](file://resources/js/components/dashboard/DashboardDistribusiSkeleton.tsx)
+- [JenisKelaminPieChart.tsx](file://resources/js/components/dashboard/JenisKelaminPieChart.tsx)
 - [PendidikanBarChart.tsx](file://resources/js/components/dashboard/PendidikanBarChart.tsx)
 - [GolonganBarChart.tsx](file://resources/js/components/dashboard/GolonganBarChart.tsx)
 - [MonitoringKgbController.php](file://app/Http/Controllers/Monitoring/MonitoringKgbController.php)
@@ -27,11 +28,11 @@
 
 ## Update Summary
 **Changes Made**
-- Added new interactive chart components using Recharts library for enhanced data visualization
-- Integrated Excel export functionality with comprehensive configuration management
-- Enhanced dashboard components with new bar chart visualizations for education and rank distributions
-- Updated monitoring controllers with export capabilities for KGB and KP reports
-- Implemented advanced Excel configuration through config/excel.php for performance optimization
+- **Enhanced Chart Components**: Replaced progress bars with Recharts-based visualizations for improved interactivity and data representation
+- **Added Gender Distribution Chart**: Introduced JenisKelaminPieChart component for specialized gender distribution visualization
+- **Modernized Dashboard Components**: Updated DashboardHeavySection to use dedicated chart components instead of generic progress bars
+- **Improved Data Visualization**: Transitioned from simple progress indicators to sophisticated Recharts-based charts with tooltips and legends
+- **Maintained Performance**: Preserved caching strategies and deferred loading patterns while enhancing visual appeal
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -39,7 +40,7 @@
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Interactive Chart Components](#interactive-chart-components)
+6. [Enhanced Interactive Chart Components](#enhanced-interactive-chart-components)
 7. [Excel Export Functionality](#excel-export-functionality)
 8. [Performance Optimizations](#performance-optimizations)
 9. [Dependency Analysis](#dependency-analysis)
@@ -48,14 +49,14 @@
 12. [Conclusion](#conclusion)
 
 ## Introduction
-This document explains the Dashboard Analytics and Statistics system that powers real-time organizational insights for the Kepegawaian application. The system has undergone significant enhancements featuring interactive chart visualizations using Recharts, comprehensive Excel export functionality, and advanced configuration management. The system now provides enhanced data visualization capabilities alongside its existing performance optimizations, including SQL-level aggregations, intelligent caching mechanisms, and deferred loading patterns.
+This document explains the Dashboard Analytics and Statistics system that powers real-time organizational insights for the Kepegawaian application. The system has undergone significant enhancements featuring modern Recharts-based visualizations, specialized chart components for different data types, and comprehensive Excel export functionality. The system now provides sophisticated data visualization capabilities alongside its existing performance optimizations, including SQL-level aggregations, intelligent caching mechanisms, and deferred loading patterns.
 
 ## Project Structure
-The dashboard analytics system now includes enhanced visualization components and export functionality:
+The dashboard analytics system now includes enhanced visualization components with specialized chart types:
 - Backend service layer aggregates statistics from employee and reference models using SQL-level aggregations.
 - Controllers expose the dashboard page with precomputed statistics using deferred loading.
 - Frontend hooks transform raw statistics into computed metrics with skeleton loading states.
-- Interactive chart components provide enhanced visualizations using Recharts library.
+- Specialized Recharts components provide enhanced visualizations for different data types.
 - Excel export functionality enables comprehensive data export with configurable settings.
 - Routes bind the dashboard page to the controller with intelligent caching.
 - Database abstraction ensures compatibility with both MySQL and SQLite.
@@ -81,6 +82,7 @@ Heavy["DashboardHeavySection.tsx"]
 Skeleton["DashboardDistribusiSkeleton.tsx"]
 PendidikanChart["PendidikanBarChart.tsx"]
 GolonganChart["GolonganBarChart.tsx"]
+GenderChart["JenisKelaminPieChart.tsx"]
 end
 subgraph "Performance Infrastructure"
 Deferred["Inertia::defer"]
@@ -105,11 +107,13 @@ Page --> Heavy
 Page --> Skeleton
 Page --> PendidikanChart
 Page --> GolonganChart
+Page --> GenderChart
 Hook --> DSS
 QueryLog --> DSS
 DBAbstraction --> SQL
 Recharts --> PendidikanChart
 Recharts --> GolonganChart
+Recharts --> GenderChart
 ```
 
 **Diagram sources**
@@ -121,13 +125,14 @@ Recharts --> GolonganChart
 - [RefUnitKerja.php:12-47](file://app/Models/RefUnitKerja.php#L12-L47)
 - [dashboard.tsx:38-342](file://resources/js/pages/dashboard.tsx#L38-L342)
 - [use-dashboard-stats.ts:63-152](file://resources/js/hooks/use-dashboard-stats.ts#L63-L152)
+- [JenisKelaminPieChart.tsx:1-82](file://resources/js/components/dashboard/JenisKelaminPieChart.tsx#L1-82)
 - [PendidikanBarChart.tsx:1-79](file://resources/js/components/dashboard/PendidikanBarChart.tsx#L1-79)
 - [GolonganBarChart.tsx:1-77](file://resources/js/components/dashboard/GolonganBarChart.tsx#L1-77)
 - [MonitoringKgbController.php:52-62](file://app/Http/Controllers/Monitoring/MonitoringKgbController.php#L52-L62)
 - [MonitoringKenaikanPangkatController.php:49-59](file://app/Http/Controllers/Monitoring/MonitoringKenaikanPangkatController.php#L49-L59)
 - [KgbMonitoringExport.php:1-117](file://app/Exports/KgbMonitoringExport.php#L1-117)
 - [KenaikanPangkatMonitoringExport.php:1-85](file://app/Exports/KenaikanPangkatMonitoringExport.php#L1-85)
-- [excel.php:1-381](file://config/excel.php#L1-381)
+- [excel.php:1-381](file://config/excel.php#L1-L381)
 - [web.php:31-33](file://routes/web.php#L31-L33)
 
 **Section sources**
@@ -143,7 +148,7 @@ Recharts --> GolonganChart
 - **KenaikanPangkatMonitoringService**: Computes KP (promotion) eligibility and period-based deadlines with database abstraction support.
 - **Frontend hook use-dashboard-stats**: Transforms raw statistics into computed metrics with skeleton loading states.
 - **Dashboard page**: Renders top cards with immediate loading and heavy distribution charts with deferred loading.
-- **Interactive chart components**: New Recharts-based visualizations for education and rank distributions.
+- **Specialized chart components**: New Recharts-based visualizations including bar charts for education/rank distributions and pie charts for gender distribution.
 - **Excel export services**: Comprehensive export functionality for monitoring reports with configurable settings.
 - **Excel configuration**: Advanced configuration management through config/excel.php for performance optimization.
 - **Deferred loading pattern**: Uses Inertia::defer to separate fast and heavy statistics loading.
@@ -152,7 +157,7 @@ Key statistics produced by the service include:
 - **Fast statistics** (cached for 5 minutes): Total active employees, upcoming KGB count, KP eligible count, new hires this month.
 - **Heavy statistics** (cached for 5 minutes): Distribution by rank (golongan), unit (top 6), gender, position (top 6), education level.
 - **Database abstraction**: Automatic MySQL/SQLite query optimization with driver-specific expressions.
-- **Interactive visualizations**: Enhanced chart components for better data representation.
+- **Specialized visualizations**: Enhanced chart components for different data types with tooltips and legends.
 
 **Section sources**
 - [DashboardStatService.php:16-42](file://app/Services/DashboardStatService.php#L16-L42)
@@ -160,20 +165,21 @@ Key statistics produced by the service include:
 - [KgbMonitoringService.php:14-52](file://app/Services/KgbMonitoringService.php#L14-L52)
 - [KenaikanPangkatMonitoringService.php:13-62](file://app/Services/KenaikanPangkatMonitoringService.php#L13-L62)
 - [use-dashboard-stats.ts:3-47](file://resources/js/hooks/use-dashboard-stats.ts#L3-L47)
-- [PendidikanBarChart.tsx:1-79](file://resources/js/components/dashboard/PendidikanBarChart.tsx#L1-79)
-- [GolonganBarChart.tsx:1-77](file://resources/js/components/dashboard/GolonganBarChart.tsx#L1-77)
+- [JenisKelaminPieChart.tsx:1-82](file://resources/js/components/dashboard/JenisKelaminPieChart.tsx#L1-L82)
+- [PendidikanBarChart.tsx:1-79](file://resources/js/components/dashboard/PendidikanBarChart.tsx#L1-L79)
+- [GolonganBarChart.tsx:1-77](file://resources/js/components/dashboard/GolonganBarChart.tsx#L1-L77)
 - [MonitoringKgbController.php:52-62](file://app/Http/Controllers/Monitoring/MonitoringKgbController.php#L52-L62)
 - [MonitoringKenaikanPangkatController.php:49-59](file://app/Http/Controllers/Monitoring/MonitoringKenaikanPangkatController.php#L49-L59)
 
 ## Architecture Overview
-The dashboard pipeline follows an enhanced server-rendered Inertia pattern with deferred loading, caching, and interactive visualizations:
+The dashboard pipeline follows an enhanced server-rendered Inertia pattern with deferred loading, caching, and specialized chart visualizations:
 - A route invokes the DashboardController.
 - The controller requests DashboardStatService to compute fast statistics immediately and heavy statistics with deferred loading.
 - The service uses SQL-level aggregations with caching for optimal performance.
 - The controller passes the stats payload to the dashboard page with deferred heavy statistics.
 - The page renders fast cards immediately and heavy distribution charts with skeleton loading.
 - The hook computes percentages and normalized bars for visualization.
-- Interactive chart components provide enhanced visual representations of the data.
+- Specialized chart components provide enhanced visual representations of the data with Recharts.
 
 ```mermaid
 sequenceDiagram
@@ -191,6 +197,7 @@ participant PG as "dashboard.tsx"
 participant HC as "DashboardHeavySection.tsx"
 participant PC as "PendidikanBarChart.tsx"
 participant GC as "GolonganBarChart.tsx"
+participant JC as "JenisKelaminPieChart.tsx"
 U->>RT : GET /dashboard
 RT->>DC : Invoke controller
 DC->>DSS : getFastStats()
@@ -217,10 +224,13 @@ DC-->>PG : Render page with fastStats + deferred heavyStats
 PG->>HC : Load heavyStats when visible
 HC->>PC : Render education distribution chart
 HC->>GC : Render rank distribution chart
+HC->>JC : Render gender distribution chart
 PC->>Hook : useDashboardStats(heavyStats)
 GC->>Hook : useDashboardStats(heavyStats)
+JC->>Hook : useDashboardStats(heavyStats)
 Hook-->>PC : Computed metrics (percentages, bars)
 Hook-->>GC : Computed metrics (percentages, bars)
+Hook-->>JC : Computed metrics (percentages, bars)
 ```
 
 **Diagram sources**
@@ -235,6 +245,7 @@ Hook-->>GC : Computed metrics (percentages, bars)
 - [use-dashboard-stats.ts:63-152](file://resources/js/hooks/use-dashboard-stats.ts#L63-L152)
 - [PendidikanBarChart.tsx:51-79](file://resources/js/components/dashboard/PendidikanBarChart.tsx#L51-L79)
 - [GolonganBarChart.tsx:53-77](file://resources/js/components/dashboard/GolonganBarChart.tsx#L53-L77)
+- [JenisKelaminPieChart.tsx:44-82](file://resources/js/components/dashboard/JenisKelaminPieChart.tsx#L44-L82)
 
 ## Detailed Component Analysis
 
@@ -396,34 +407,45 @@ Report generation:
 - [MonitoringKgbController.php:16-30](file://app/Http/Controllers/Monitoring/MonitoringKgbController.php#L16-L30)
 - [MonitoringKenaikanPangkatController.php:13-30](file://app/Http/Controllers/Monitoring/MonitoringKenaikanPangkatController.php#L13-L30)
 
-## Interactive Chart Components
+## Enhanced Interactive Chart Components
 
-### Enhanced Data Visualization with Recharts
-The dashboard now includes interactive chart components built with Recharts library for superior data visualization:
+### Modern Data Visualization with Recharts
+The dashboard now includes sophisticated chart components built with Recharts library for superior data visualization and user interaction:
 
-#### PendidikanBarChart Component
-Provides vertical bar chart visualization for education distribution data:
-- **Vertical layout**: Optimized for long education level names
-- **Custom tooltips**: Display count and percentage on hover
-- **Responsive design**: Automatically adjusts height based on data length
-- **Interactive elements**: Hover effects and custom styling
+#### Specialized Chart Components
+The system now features three distinct chart types optimized for different data characteristics:
+
+**JenisKelaminPieChart Component**
+- **Pie chart visualization**: Ideal for categorical data with clear proportional relationships
+- **Gender distribution**: Displays male vs female distribution with custom colors
+- **Interactive tooltips**: Shows precise counts and percentages on hover
+- **Responsive design**: Fixed 240px height with automatic width adaptation
+- **Custom styling**: Tailored color scheme with proper legend integration
+
+**PendidikanBarChart Component**
+- **Vertical bar chart**: Optimized for long education level names and categories
+- **Custom tooltips**: Display count and percentage with formatted labels
+- **Responsive height**: Dynamically adjusts height based on data length
+- **Professional styling**: Clean design with proper axis labeling
 - **Data format**: Accepts PendidikanItem array with pendidikan, count, and percentage fields
 
-#### GolonganBarChart Component
-Provides horizontal bar chart visualization for rank distribution data:
-- **Horizontal layout**: Optimized for rank codes (I, II, III, IV)
-- **Color coding**: Distinct colors for each rank category
+**GolonganBarChart Component**
+- **Horizontal bar chart**: Optimized for rank codes (I, II, III, IV) with clear categorization
+- **Color coding**: Distinct colors for each rank category with consistent palette
 - **Custom tooltips**: Display count and percentage with formatted labels
-- **Fixed height**: Consistent 200px height for uniform appearance
+- **Fixed dimensions**: Consistent 200px height for uniform appearance
 - **Dynamic coloring**: Automatic color assignment with modulo operation
 
-Both chart components feature:
+#### Enhanced User Experience Features
+All chart components share common enhancements:
 - **Custom tooltip implementation**: Enhanced user interaction with detailed information
-- **Responsive container**: Adapts to container width while maintaining aspect ratio
+- **Responsive containers**: Adapts to container width while maintaining aspect ratio
 - **Performance optimization**: Efficient rendering for large datasets
 - **Accessibility**: Proper labeling and semantic HTML structure
+- **Loading states**: Graceful handling of empty or loading data states
 
 **Section sources**
+- [JenisKelaminPieChart.tsx:1-82](file://resources/js/components/dashboard/JenisKelaminPieChart.tsx#L1-L82)
 - [PendidikanBarChart.tsx:1-79](file://resources/js/components/dashboard/PendidikanBarChart.tsx#L1-L79)
 - [GolonganBarChart.tsx:1-77](file://resources/js/components/dashboard/GolonganBarChart.tsx#L1-L77)
 - [use-dashboard-stats.ts:68-157](file://resources/js/hooks/use-dashboard-stats.ts#L68-L157)
@@ -532,8 +554,10 @@ Page["dashboard.tsx"] --> Hook["use-dashboard-stats.ts"]
 Hook --> DSS
 Page --> PendidikanChart["PendidikanBarChart.tsx"]
 Page --> GolonganChart["GolonganBarChart.tsx"]
+Page --> GenderChart["JenisKelaminPieChart.tsx"]
 PendidikanChart --> Recharts["Recharts Library"]
 GolonganChart --> Recharts
+GenderChart --> Recharts
 Hook --> Recharts
 Deferred["Inertia::defer"] --> DSS
 DBAbstraction["MySQL/SQLite Abstraction"] --> SQL
@@ -551,6 +575,7 @@ ExcelPackage --> ExcelConfig
 - [DashboardController.php:5-16](file://app/Http/Controllers/DashboardController.php#L5-L16)
 - [dashboard.tsx:14-45](file://resources/js/pages/dashboard.tsx#L14-L45)
 - [use-dashboard-stats.ts:1-152](file://resources/js/hooks/use-dashboard-stats.ts#L1-L152)
+- [JenisKelaminPieChart.tsx:1-9](file://resources/js/components/dashboard/JenisKelaminPieChart.tsx#L1-L9)
 - [PendidikanBarChart.tsx:1-9](file://resources/js/components/dashboard/PendidikanBarChart.tsx#L1-L9)
 - [GolonganBarChart.tsx:1-9](file://resources/js/components/dashboard/GolonganBarChart.tsx#L1-L9)
 - [MonitoringKgbController.php:13-14](file://app/Http/Controllers/Monitoring/MonitoringKgbController.php#L13-L14)
@@ -566,6 +591,7 @@ ExcelPackage --> ExcelConfig
 - [DashboardController.php:5-16](file://app/Http/Controllers/DashboardController.php#L5-L16)
 - [dashboard.tsx:14-45](file://resources/js/pages/dashboard.tsx#L14-L45)
 - [use-dashboard-stats.ts:1-152](file://resources/js/hooks/use-dashboard-stats.ts#L1-L152)
+- [JenisKelaminPieChart.tsx:1-9](file://resources/js/components/dashboard/JenisKelaminPieChart.tsx#L1-L9)
 - [PendidikanBarChart.tsx:1-9](file://resources/js/components/dashboard/PendidikanBarChart.tsx#L1-L9)
 - [GolonganBarChart.tsx:1-9](file://resources/js/components/dashboard/GolonganBarChart.tsx#L1-L9)
 - [MonitoringKgbController.php:13-14](file://app/Http/Controllers/Monitoring/MonitoringKgbController.php#L13-L14)
@@ -580,10 +606,10 @@ ExcelPackage --> ExcelConfig
 - **Query count validation**: Tests ensure only 1 query per distribution calculation.
 - **Skeleton loading**: Provides better user experience during data loading.
 - **Memory optimization**: Deferred loading prevents large datasets from blocking initial render.
-- **Indexing recommendations**: Ensure database indexes exist on frequently filtered columns (status, unit ID, join date, rank code).
 - **Chart performance**: Recharts components optimized for responsive design and efficient rendering.
 - **Excel export optimization**: Chunked processing and pagination prevent memory overflow for large datasets.
 - **Configuration management**: Advanced Excel settings enable performance tuning for different deployment scenarios.
+- **Specialized chart components**: Different chart types optimized for specific data characteristics improve user comprehension.
 
 ## Troubleshooting Guide
 Common issues and resolutions with performance improvements:
@@ -598,6 +624,7 @@ Common issues and resolutions with performance improvements:
 - **Chart rendering problems**: Verify Recharts library is properly installed and components receive correct data format.
 - **Excel export failures**: Check chunk size configuration and memory limits in config/excel.php.
 - **Large dataset handling**: Monitor memory usage during Excel exports and adjust chunk sizes as needed.
+- **Chart component issues**: Verify specialized chart components are properly imported and data formats match expected interfaces.
 
 **Section sources**
 - [DashboardStatService.php:36-60](file://app/Services/DashboardStatService.php#L36-L60)
@@ -605,9 +632,10 @@ Common issues and resolutions with performance improvements:
 - [KgbMonitoringService.php:54-70](file://app/Services/KgbMonitoringService.php#L54-L70)
 - [KenaikanPangkatMonitoringService.php:64-95](file://app/Services/KenaikanPangkatMonitoringService.php#L64-L95)
 - [DashboardTest.php:44-82](file://tests/Feature/DashboardTest.php#L44-L82)
+- [JenisKelaminPieChart.tsx:44-82](file://resources/js/components/dashboard/JenisKelaminPieChart.tsx#L44-L82)
 - [PendidikanBarChart.tsx:51-79](file://resources/js/components/dashboard/PendidikanBarChart.tsx#L51-L79)
 - [GolonganBarChart.tsx:53-77](file://resources/js/components/dashboard/GolonganBarChart.tsx#L53-L77)
 - [excel.php:18-292](file://config/excel.php#L18-L292)
 
 ## Conclusion
-The Dashboard Analytics and Statistics system has been significantly enhanced with interactive chart visualizations, comprehensive Excel export functionality, and advanced configuration management. The implementation features SQL-level aggregations, intelligent caching with 5-minute TTL, deferred loading patterns, and database abstraction support. These improvements provide enhanced data visualization capabilities through Recharts components, robust export functionality with configurable settings, and performance optimizations that ensure scalable performance for large datasets. The system now balances performance and responsiveness while maintaining its ability to aggregate employee data efficiently, integrate with monitoring services for upcoming milestones, and render intuitive widgets on the frontend with skeleton loading states and interactive chart components. The enhanced architecture ensures a superior user experience through deferred loading, caching strategies, and comprehensive export capabilities.
+The Dashboard Analytics and Statistics system has been significantly enhanced with modern Recharts-based visualizations, specialized chart components for different data types, and comprehensive Excel export functionality. The implementation features SQL-level aggregations, intelligent caching with 5-minute TTL, deferred loading patterns, and database abstraction support. These improvements provide sophisticated data visualization capabilities through specialized chart components including gender distribution pie charts, education distribution bar charts, and rank distribution bar charts, along with robust export functionality with configurable settings. The system now balances performance and responsiveness while maintaining its ability to aggregate employee data efficiently, integrate with monitoring services for upcoming milestones, and render intuitive widgets on the frontend with skeleton loading states and interactive chart components. The enhanced architecture ensures a superior user experience through deferred loading, caching strategies, and comprehensive export capabilities, while the specialized chart components provide clearer insights into different aspects of organizational demographics and structure.

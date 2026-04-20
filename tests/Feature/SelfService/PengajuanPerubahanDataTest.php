@@ -212,3 +212,21 @@ it('diff hanya menampilkan field yang berubah dan mengabaikan field tidak beruba
             ->where('diffItems.0.field', 'tempat_lahir')
         );
 });
+
+it('halaman create menampilkan form dengan data enum yang sesuai', function (): void {
+    $pegawai = Pegawai::factory()->viewer()->create();
+
+    actingAs($pegawai)
+        ->withoutVite()
+        ->get(route('self-service.pengajuan.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('self-service/pengajuan/create')
+            ->has('domains')
+            ->has('aksiList')
+            ->has('hubunganList')
+            ->has('jenisKelaminList')
+            ->has('statusPerkawinanList')
+            ->has('currentUserId')
+        );
+});
