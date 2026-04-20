@@ -66,7 +66,7 @@ export function JenisKelaminPieChart({ data }: Props) {
           innerRadius={60}
           outerRadius={100}
           dataKey="value"
-          label={({ percentage }) => `${percentage}%`}
+          label={(props: any) => `${props.percentage}%`}
           labelLine={false}
         >
           {chartData.map((entry, index) => (
