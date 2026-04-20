@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { toUrl } from '@/lib/utils';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,14 +37,14 @@ export default function Index({ roles, filters }: Props) {
         () => [
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Referensi', href: '#' },
-            { title: 'Roles', href: rolesIndex.url() },
+            { title: 'Roles', href: toUrl(rolesIndex()) },
         ],
         [],
     );
 
     const handleSearch = useCallback(() => {
         router.get(
-            rolesIndex.url(),
+            toUrl(rolesIndex()),
             { search },
             { preserveState: true, preserveScroll: true },
         );
@@ -58,7 +59,7 @@ export default function Index({ roles, filters }: Props) {
 
     const handleDelete = (id: string) => {
         if (confirm('Apakah Anda yakin ingin menghapus role ini?')) {
-            router.delete(destroy.url(id));
+            router.delete(toUrl(destroy(id)));
         }
     };
 
@@ -70,7 +71,7 @@ export default function Index({ roles, filters }: Props) {
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold">Roles</h1>
                     <Button asChild>
-                        <Link href={create()}>
+                        <Link href={toUrl(create())}>
                             <Plus className="mr-2 h-4 w-4" />
                             Tambah
                         </Link>
@@ -142,7 +143,7 @@ export default function Index({ roles, filters }: Props) {
                                                     size="icon"
                                                     asChild
                                                 >
-                                                    <Link href={edit(item.id)}>
+                                                    <Link href={toUrl(edit(item.id))}>
                                                         <Pencil className="h-4 w-4" />
                                                     </Link>
                                                 </Button>

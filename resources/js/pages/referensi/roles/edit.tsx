@@ -1,4 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
+import { toUrl } from '@/lib/utils';
 import { ArrowLeft, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -53,7 +54,7 @@ export default function Edit({
         () => [
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Referensi', href: '#' },
-            { title: 'Roles', href: rolesIndex() },
+            { title: 'Roles', href: toUrl(rolesIndex()) },
             { title: 'Edit', href: '#' },
         ],
         [],
@@ -98,15 +99,15 @@ export default function Edit({
     const handleSearchPegawai = (value: string) => {
         setSearchPegawai(value);
         router.get(
-            editRole.url(role.id),
+            toUrl(editRole(role.id)),
             { search_pegawai: value },
-            { preserveState: true, preserveScroll: true },
+            { preserveState: true, preserveScroll: true }
         );
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(updateRole.url(role.id));
+        put(toUrl(updateRole(role.id)));
     };
 
     return (
@@ -116,7 +117,7 @@ export default function Edit({
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" asChild>
-                        <Link href={rolesIndex()}>
+                        <Link href={toUrl(rolesIndex())}>
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -282,7 +283,7 @@ export default function Edit({
                             Simpan
                         </Button>
                         <Button variant="outline" asChild>
-                            <Link href={rolesIndex()}>Batal</Link>
+                            <Link href={toUrl(rolesIndex())}>Batal</Link>
                         </Button>
                     </div>
                 </form>

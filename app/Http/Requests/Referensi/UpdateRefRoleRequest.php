@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Referensi;
 
+use App\Models\IamApplication;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,17 +18,21 @@ class UpdateRefRoleRequest extends FormRequest
     public function rules(): array
     {
         $refRole = $this->route('role');
+        $appId = IamApplication::where('slug', 'kepegawaian')->value('id');
 
         return [
             'nama' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('ref_roles', 'nama')->ignore($refRole->id),
+                Rule::unique('iam_roles', 'nama')
+                    ->where('iam_application_id', $appId)
+                    ->whereNull('deleted_at')
+                    ->ignore($refRole->id),
             ],
             'keterangan' => ['nullable', 'string', 'max:1000'],
             'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['exists:ref_permissions,id'],
+            'permissions.*' => ['exists:iam_permissions,id'],
             'pegawai_ids' => ['nullable', 'array'],
             'pegawai_ids.*' => ['exists:pegawai,id'],
         ];
@@ -37,7 +42,7 @@ class UpdateRefRoleRequest extends FormRequest
     {
         return [
             'nama.required' => 'Nama role wajib diisi.',
-            'nama.unique' => 'Nama role sudah ada.',
+            'nama.unique' => 'Nama role sudah ada di aplikasi ini.',
             'nama.max' => 'Nama role maksimal 255 karakter.',
             'keterangan.max' => 'Keterangan maksimal 1000 karakter.',
         ];

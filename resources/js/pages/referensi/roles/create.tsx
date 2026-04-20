@@ -1,4 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
+import { toUrl } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +29,7 @@ export default function Create({ permissions }: Props) {
         () => [
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Referensi', href: '#' },
-            { title: 'Roles', href: rolesIndex() },
+            { title: 'Roles', href: toUrl(rolesIndex()) },
             { title: 'Tambah', href: '#' },
         ],
         [],
@@ -62,7 +63,7 @@ export default function Create({ permissions }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(storeRole.url());
+        post(toUrl(storeRole()));
     };
 
     return (
@@ -72,7 +73,7 @@ export default function Create({ permissions }: Props) {
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" asChild>
-                        <Link href={rolesIndex()}>
+                        <Link href={toUrl(rolesIndex())}>
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -177,7 +178,7 @@ export default function Create({ permissions }: Props) {
                             Simpan
                         </Button>
                         <Button variant="outline" asChild>
-                            <Link href={rolesIndex()}>Batal</Link>
+                            <Link href={toUrl(rolesIndex())}>Batal</Link>
                         </Button>
                     </div>
                 </form>
