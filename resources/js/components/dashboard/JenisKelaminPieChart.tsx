@@ -10,7 +10,8 @@ interface Props {
   data: JenisKelaminItem[];
 }
 
-const COLORS = ['#6366f1', '#f472b6'];
+// Gunakan warna yang konsisten dengan tema shadcn/ui
+const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))'];
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -29,9 +30,9 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
     const percentage = data.payload?.percentage ?? 0;
 
     return (
-      <div className="bg-white border border-gray-300 rounded px-3 py-2 shadow-sm">
+      <div className="bg-popover text-popover-foreground border border-border rounded-md px-3 py-2 shadow-sm">
         <p className="font-semibold">{data.name}</p>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           {data.value} pegawai ({percentage}%)
         </p>
       </div>
@@ -44,7 +45,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 export function JenisKelaminPieChart({ data }: Props) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[240px] text-gray-400">
+      <div className="flex items-center justify-center h-[240px] text-muted-foreground">
         Tidak ada data
       </div>
     );

@@ -36,9 +36,9 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         const percentage = data.payload?.pct ?? 0;
 
         return (
-            <div className="bg-white border border-gray-300 rounded px-3 py-2 shadow-sm">
+            <div className="bg-popover text-popover-foreground border border-border rounded-md px-3 py-2 shadow-sm">
                 <p className="font-semibold">{label}</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                     {data.value} pegawai ({percentage}%)
                 </p>
             </div>
@@ -71,7 +71,7 @@ export function PendidikanBarChart({ data }: Props) {
                     width={80}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#6366f1" radius={[0, 4, 4, 0]} label={{ position: 'right', fontSize: 12 }} />
+                <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} label={{ position: 'right', fontSize: 12 }} />
             </BarChart>
         </ResponsiveContainer>
     );
