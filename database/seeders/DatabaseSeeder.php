@@ -13,6 +13,7 @@ use App\Models\IamUserRole;
 use App\Models\Pegawai;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -62,7 +63,7 @@ class DatabaseSeeder extends Seeder
             'tanggal_masuk' => '2020-12-01',
             'email' => 'admin@pa-penajam.go.id',
             'email_verified_at' => now(),
-            'password' => env('SEEDER_ADMIN_PASSWORD', 'admin123'),
+            'password' => Hash::make(env('SEEDER_ADMIN_PASSWORD', 'admin123')),
         ]);
 
         $adminRole = IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'admin')->first();
@@ -88,7 +89,7 @@ class DatabaseSeeder extends Seeder
             'tanggal_masuk' => '2021-01-01',
             'email' => 'operator@pa-penajam.go.id',
             'email_verified_at' => now(),
-            'password' => env('SEEDER_OPERATOR_PASSWORD', 'operator123'),
+            'password' => Hash::make(env('SEEDER_OPERATOR_PASSWORD', 'operator123')),
         ]);
 
         $operatorRole = IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'operator')->first();
