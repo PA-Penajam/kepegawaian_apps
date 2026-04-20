@@ -1,12 +1,13 @@
 <?php
 
 use App\Models\Pegawai;
+use App\Services\DashboardStatService;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
 
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('dashboard'));
-    $response->assertRedirect(route('login'));
+    $response->assertRedirectContains(route('sso.login'));
 });
 
 test('authenticated users can visit the dashboard', function () {
@@ -45,7 +46,7 @@ test('distribusi golongan menggunakan query SQL bukan PHP collection', function 
     $user = Pegawai::factory()->admin()->create();
 
     DB::enableQueryLog();
-    $service = app(\App\Services\DashboardStatService::class);
+    $service = app(DashboardStatService::class);
     $result = $service->getDistribusiGolongan();
     $queries = DB::getQueryLog();
     DB::disableQueryLog();
@@ -59,7 +60,7 @@ test('distribusi jabatan menggunakan query SQL bukan PHP collection', function (
     $user = Pegawai::factory()->admin()->create();
 
     DB::enableQueryLog();
-    $service = app(\App\Services\DashboardStatService::class);
+    $service = app(DashboardStatService::class);
     $result = $service->getDistribusiJabatan();
     $queries = DB::getQueryLog();
     DB::disableQueryLog();
@@ -72,7 +73,7 @@ test('distribusi pendidikan menggunakan query SQL bukan PHP collection', functio
     $user = Pegawai::factory()->admin()->create();
 
     DB::enableQueryLog();
-    $service = app(\App\Services\DashboardStatService::class);
+    $service = app(DashboardStatService::class);
     $result = $service->getDistribusiPendidikan();
     $queries = DB::getQueryLog();
     DB::disableQueryLog();

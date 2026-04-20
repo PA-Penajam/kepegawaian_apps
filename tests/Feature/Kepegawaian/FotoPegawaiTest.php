@@ -29,6 +29,7 @@ test('foto_url is included in model serialization via appends', function () {
 });
 
 use Illuminate\Http\UploadedFile;
+
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\post;
 
@@ -36,7 +37,7 @@ test('guest tidak bisa upload foto pegawai', function () {
     $pegawai = Pegawai::factory()->create();
 
     post(route('kepegawaian.pegawai.foto.update', $pegawai))
-        ->assertRedirect(route('login'));
+        ->assertRedirectContains(route('sso.login'));
 });
 
 test('pegawai biasa tidak bisa upload foto pegawai lain', function () {

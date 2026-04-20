@@ -34,7 +34,7 @@ beforeEach(function () {
 });
 
 test('guest diredirect ke login', function () {
-    $this->get('/test-iam-perm')->assertRedirect(route('login'));
+    $this->get('/test-iam-perm')->assertRedirectContains(route('sso.login'));
 });
 
 test('user tanpa role di aplikasi ini mendapat 403', function () {
