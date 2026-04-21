@@ -28,8 +28,8 @@ export default function AuthCardLayout({
                         href={home()}
                         className="flex items-center gap-2 self-center font-medium"
                     >
-                        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                            <AppLogoIcon className="size-5 fill-current text-white" />
+                        <div className="flex items-center justify-center">
+                            <AppLogoIcon className="size-16" />
                         </div>
                     </Link>
                 </BlurFade>
