@@ -1,0 +1,465 @@
+openapi: 3.0.3
+
+info:
+  title: SSO API — kepegawaian-apps
+  description: |
+    API untuk integrasi SSO (Single Sign-On) dengan kepegawaian-apps sebagai IAM Hub
+    di ekosistem aplikasi PA Penajam.
+
+    ## Autentikasi
+
+    Semua endpoint API memerlukan **HMAC Signature** melalui tiga header:
+    - `X-App-Key` — API Key aplikasi Anda
+    - `X-Timestamp` — Unix timestamp saat ini (detik)
+    - `X-Signature` — HMAC-SHA256 dari payload `METHOD:PATH:SORTED_QUERY:BODY_SHA256:TIMESTAMP`
+
+    Endpoint yang memerlukan user login juga membutuhkan:
+    - `Authorization: Bearer {sanctum_token}`
+
+    Lihat [authentication.md](./authentication.md) untuk panduan lengkap cara menghitung signature.
+
+  version: "1.0.0"
+  contact:
+    name: PA Penajam — Tim Pengembang
+    email: dian.kuba13@gmail.com
+
+servers:
+  - url: https://kepegawaian.pa-penajam.go.id
+    description: Production server
+
+tags:
+  - name: SSO
+    description: Alur login SSO terpusat
+  - name: IAM
+    description: Validasi token dan manajemen sesi
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
+      description: Bearer token yang diperoleh dari endpoint `exchange-code`
+
+    hmacAuth:
+      type: apiKey
+      in: header
+      name: X-App-Key
+      description: |
+        Autentikasi HMAC memerlukan tiga header sekaligus:
+        - `X-App-Key`: API Key aplikasi
+        - `X-Timestamp`: Unix timestamp (detik)
+        - `X-Signature`: HMAC-SHA256 dari `METHOD:PATH:SORTED_QUERY:BODY_SHA256:TIMESTAMP`
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: ulid
+          example: "01JRXXXXXXXXXXXXXXXXXXXXXXXX"
+          description: ID unik pegawai (ULID)
+        name:
+          type: string
+          example: "Budi Santoso"
+        email:
+          type: string
+          format: email
+          example: "budi@pa-penajam.go.id"
+        nip:
+          type: string
+          example: "199107132020121003"
+          description: NIP 18 digit
+
+    ValidateResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        roles:
+          type: array
+          items:
+            type: string
+          example: ["operator"]
+          description: Slug role yang dimiliki user di aplikasi pemanggil
+        permissions:
+          type: array
+          items:
+            type: string
+          example: ["absensi:create", "rekap:read"]
+          description: Slug permission turunan dari role (format resource:action)
+        token_expires_at:
+          type: integer
+          nullable: true
+          example: 1745152256
+          description: Unix timestamp expired token; null jika token tanpa expiry
+
+    ExchangeCodeRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          minLength: 64
+          maxLength: 64
+          example: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+          description: One-time SSO code 64 karakter dari query parameter `?code=`
+
+    ExchangeCodeResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "1|AbCdEfGhIjKlMnOpQrStUvWxYz..."
+          description: Sanctum Bearer token — simpan di session server-side, jangan di localStorage
+        token_type:
+          type: string
+          example: "Bearer"
+        expires_at:
+          type: integer
+          example: 1745152256
+          description: Unix timestamp kapan token expired (default 8 jam dari sekarang)
+
+    CheckResponse:
+      type: object
+      properties:
+        allowed:
+          type: boolean
+          example: true
+          description: true jika user memiliki permission, false jika tidak
+        permission:
+          type: string
+          example: "absensi:create"
+          description: Echo dari query parameter yang diminta
+
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Token invalidated"
+
+    ErrorUnauthorized:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Invalid credentials"
+
+    ErrorUnauthenticated:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Unauthenticated."
+
+    ErrorInvalidCode:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Invalid or expired code"
+
+    ErrorValidation:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "The code field is required."
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+  parameters:
+    XAppKey:
+      name: X-App-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "iam_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      description: API Key aplikasi yang terdaftar di admin panel
+
+    XTimestamp:
+      name: X-Timestamp
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "1745123456"
+      description: Unix timestamp saat ini dalam detik
+
+    XSignature:
+      name: X-Signature
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "a1b2c3d4e5f6..."
+      description: HMAC-SHA256 dari payload METHOD:PATH:SORTED_QUERY:BODY_SHA256:TIMESTAMP
+
+paths:
+  /sso/login:
+    get:
+      tags:
+        - SSO
+      summary: Entry point SSO
+      description: |
+        Redirect browser user ke halaman login terpusat kepegawaian-apps.
+
+        **Ini adalah web route** — dibuka dari browser, bukan dipanggil server-to-server.
+
+        - Jika user belum login di kepegawaian-apps → tampilkan halaman login, lanjutkan SSO setelah berhasil
+        - Jika user sudah login → langsung generate one-time code dan redirect ke `redirect` URL
+
+        Setelah login berhasil, browser akan diredirect ke:
+        `{redirect}?code={64_char_one_time_code}`
+
+        One-time code berlaku selama **60 detik** dan hanya bisa digunakan **sekali**.
+      parameters:
+        - name: app
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "attendance"
+          description: Slug aplikasi yang terdaftar di admin panel IAM
+        - name: redirect
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+            example: "https://attendance.pa-penajam.go.id/sso/callback"
+          description: |
+            URL callback di aplikasi Anda. Harus memiliki domain yang sama
+            persis dengan URL yang terdaftar di admin panel.
+      responses:
+        "302":
+          description: Redirect ke halaman login atau ke `redirect` URL dengan code
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL tujuan redirect
+        "404":
+          description: Slug aplikasi tidak ditemukan atau tidak aktif
+        "422":
+          description: Parameter tidak valid atau host redirect tidak diizinkan
+
+  /api/v1/iam/exchange-code:
+    post:
+      tags:
+        - SSO
+      summary: Tukar one-time code menjadi Bearer token
+      description: |
+        Tukar SSO one-time code yang diterima dari query parameter `?code=` menjadi
+        Sanctum Bearer token. Dipanggil **server-to-server** — bukan dari browser.
+
+        Code hanya bisa digunakan **sekali** dan berlaku selama **60 detik**.
+
+        **Rate limit:** 10 request/menit per IP
+      parameters:
+        - $ref: "#/components/parameters/XAppKey"
+        - $ref: "#/components/parameters/XTimestamp"
+        - $ref: "#/components/parameters/XSignature"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExchangeCodeRequest"
+            example:
+              code: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+      responses:
+        "200":
+          description: Code valid — token berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExchangeCodeResponse"
+              example:
+                token: "1|AbCdEfGhIjKlMnOpQrStUvWxYz..."
+                token_type: "Bearer"
+                expires_at: 1745152256
+        "400":
+          description: Code tidak valid, sudah digunakan, expired, atau milik aplikasi lain
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorInvalidCode"
+        "401":
+          description: HMAC signature tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorUnauthorized"
+        "422":
+          description: Format code salah (bukan 64 karakter)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorValidation"
+        "429":
+          description: Rate limit terlampaui (10 req/menit)
+
+  /api/v1/iam/validate:
+    get:
+      tags:
+        - IAM
+      summary: Validasi token dan ambil data user + permissions
+      description: |
+        Validasi Sanctum Bearer token dan kembalikan informasi user beserta
+        roles & permissions untuk aplikasi pemanggil.
+
+        **Rekomendasi:** Cache response ini di sisi aplikasi klien selama **60 detik**
+        untuk mengurangi round-trip ke kepegawaian-apps.
+
+        Jika user tidak memiliki role di aplikasi pemanggil, `roles` dan `permissions`
+        akan berupa array kosong (bukan error 403). Keputusan akses ada di tangan
+        aplikasi klien.
+
+        **Rate limit:** 120 request/menit per IP
+      security:
+        - bearerAuth: []
+          hmacAuth: []
+      parameters:
+        - $ref: "#/components/parameters/XAppKey"
+        - $ref: "#/components/parameters/XTimestamp"
+        - $ref: "#/components/parameters/XSignature"
+      responses:
+        "200":
+          description: Token valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateResponse"
+              examples:
+                dengan_permission:
+                  summary: User dengan role dan permission
+                  value:
+                    user:
+                      id: "01JRXXXXXXXXXXXXXXXXXXXXXXXX"
+                      name: "Budi Santoso"
+                      email: "budi@pa-penajam.go.id"
+                      nip: "199107132020121003"
+                    roles: ["operator"]
+                    permissions: ["absensi:create", "rekap:read"]
+                    token_expires_at: 1745152256
+                tanpa_role:
+                  summary: User tanpa role di aplikasi ini
+                  value:
+                    user:
+                      id: "01JRXXXXXXXXXXXXXXXXXXXXXXXX"
+                      name: "Budi Santoso"
+                      email: "budi@pa-penajam.go.id"
+                      nip: "199107132020121003"
+                    roles: []
+                    permissions: []
+                    token_expires_at: 1745152256
+        "401":
+          description: Token tidak valid atau expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorUnauthenticated"
+        "429":
+          description: Rate limit terlampaui (120 req/menit)
+
+  /api/v1/iam/check:
+    get:
+      tags:
+        - IAM
+      summary: Cek satu permission
+      description: |
+        Cek apakah user yang terautentikasi memiliki permission tertentu
+        untuk aplikasi pemanggil.
+
+        Cocok untuk middleware sederhana yang tidak butuh semua data dari `/validate`.
+        Menggunakan cache yang sama dengan `/validate` — tidak ada round-trip database
+        tambahan jika dipanggil dalam window 60 detik setelah `/validate`.
+
+        **Rate limit:** 120 request/menit per IP
+      security:
+        - bearerAuth: []
+          hmacAuth: []
+      parameters:
+        - $ref: "#/components/parameters/XAppKey"
+        - $ref: "#/components/parameters/XTimestamp"
+        - $ref: "#/components/parameters/XSignature"
+        - name: permission
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "absensi:create"
+          description: Slug permission yang ingin dicek (format resource:action)
+      responses:
+        "200":
+          description: Hasil cek permission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckResponse"
+              examples:
+                diizinkan:
+                  summary: User memiliki permission
+                  value:
+                    allowed: true
+                    permission: "absensi:create"
+                ditolak:
+                  summary: User tidak memiliki permission
+                  value:
+                    allowed: false
+                    permission: "absensi:create"
+        "401":
+          description: Token tidak valid atau HMAC signature salah
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorUnauthenticated"
+        "429":
+          description: Rate limit terlampaui (120 req/menit)
+
+  /api/v1/iam/logout:
+    post:
+      tags:
+        - IAM
+      summary: Logout terpusat — invalidate token
+      description: |
+        Invalidate Sanctum Bearer token. Setelah dipanggil, token tidak bisa
+        digunakan lagi di endpoint manapun.
+
+        Aplikasi klien wajib menghapus token dari session server-side setelah
+        memanggil endpoint ini.
+
+        **Rate limit:** 120 request/menit per IP
+      security:
+        - bearerAuth: []
+          hmacAuth: []
+      parameters:
+        - $ref: "#/components/parameters/XAppKey"
+        - $ref: "#/components/parameters/XTimestamp"
+        - $ref: "#/components/parameters/XSignature"
+      responses:
+        "200":
+          description: Token berhasil diinvalidate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+              example:
+                message: "Token invalidated"
+        "401":
+          description: Token tidak valid atau HMAC signature salah
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorUnauthenticated"
+        "429":
+          description: Rate limit terlampaui (120 req/menit)
