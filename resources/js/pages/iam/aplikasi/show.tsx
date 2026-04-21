@@ -69,14 +69,41 @@ export default function Show() {
     // Form untuk tambah role
     const addRoleForm = useForm({
         nama: '',
-        deskripsi: '',
+        slug: '',
+        keterangan: '',
     });
+
+    // Auto-generate slug dari nama role (hanya huruf kecil, angka, dan strip)
+    useEffect(() => {
+        const generated = addRoleForm.data.nama
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+        addRoleForm.setData('slug', generated);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [addRoleForm.data.nama]);
 
     // Form untuk tambah permission
     const addPermissionForm = useForm({
         nama: '',
-        deskripsi: '',
+        slug: '',
+        group: '',
+        keterangan: '',
     });
+
+    // Auto-generate slug dari nama permission
+    useEffect(() => {
+        const generated = addPermissionForm.data.nama
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s\-.:]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+        addPermissionForm.setData('slug', generated);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [addPermissionForm.data.nama]);
 
     // Form untuk regenerate key
     const regenerateForm = useForm({});
@@ -275,30 +302,55 @@ export default function Show() {
                                                     )}
                                                 </div>
                                                 <div className="grid gap-2">
-                                                    <Label htmlFor="role-deskripsi">
-                                                        Deskripsi (Opsional)
+                                                    <Label htmlFor="role-slug">
+                                                        Slug
                                                     </Label>
                                                     <Input
-                                                        id="role-deskripsi"
+                                                        id="role-slug"
                                                         value={
-                                                            addRoleForm.data
-                                                                .deskripsi
+                                                            addRoleForm.data.slug
                                                         }
                                                         onChange={(e) =>
                                                             addRoleForm.setData(
-                                                                'deskripsi',
+                                                                'slug',
                                                                 e.target.value,
                                                             )
                                                         }
-                                                        placeholder="Deskripsi role"
+                                                        placeholder="Contoh: admin"
+                                                        className="font-mono"
+                                                        required
+                                                    />
+                                                    {addRoleForm.errors.slug && (
+                                                        <p className="text-sm text-destructive">
+                                                            {addRoleForm.errors.slug}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="role-keterangan">
+                                                        Keterangan (Opsional)
+                                                    </Label>
+                                                    <Input
+                                                        id="role-keterangan"
+                                                        value={
+                                                            addRoleForm.data
+                                                                .keterangan
+                                                        }
+                                                        onChange={(e) =>
+                                                            addRoleForm.setData(
+                                                                'keterangan',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        placeholder="Keterangan role"
                                                     />
                                                     {addRoleForm.errors
-                                                        .deskripsi && (
+                                                        .keterangan && (
                                                         <p className="text-sm text-destructive">
                                                             {
                                                                 addRoleForm
                                                                     .errors
-                                                                    .deskripsi
+                                                                    .keterangan
                                                             }
                                                         </p>
                                                     )}
@@ -551,32 +603,82 @@ export default function Show() {
                                                     )}
                                                 </div>
                                                 <div className="grid gap-2">
-                                                    <Label htmlFor="perm-deskripsi">
-                                                        Deskripsi (Opsional)
+                                                    <Label htmlFor="perm-slug">
+                                                        Slug
                                                     </Label>
                                                     <Input
-                                                        id="perm-deskripsi"
+                                                        id="perm-slug"
                                                         value={
                                                             addPermissionForm
-                                                                .data
-                                                                .deskripsi
+                                                                .data.slug
                                                         }
                                                         onChange={(e) =>
                                                             addPermissionForm.setData(
-                                                                'deskripsi',
-                                                                e.target
-                                                                    .value,
+                                                                'slug',
+                                                                e.target.value,
                                                             )
                                                         }
-                                                        placeholder="Deskripsi permission"
+                                                        placeholder="Contoh: post.create"
+                                                        className="font-mono"
+                                                        required
                                                     />
                                                     {addPermissionForm.errors
-                                                        .deskripsi && (
+                                                        .slug && (
                                                         <p className="text-sm text-destructive">
                                                             {
                                                                 addPermissionForm
                                                                     .errors
-                                                                    .deskripsi
+                                                                    .slug
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="perm-group">
+                                                        Group (Opsional)
+                                                    </Label>
+                                                    <Input
+                                                        id="perm-group"
+                                                        value={
+                                                            addPermissionForm
+                                                                .data.group
+                                                        }
+                                                        onChange={(e) =>
+                                                            addPermissionForm.setData(
+                                                                'group',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        placeholder="Contoh: post"
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label htmlFor="perm-keterangan">
+                                                        Keterangan (Opsional)
+                                                    </Label>
+                                                    <Input
+                                                        id="perm-keterangan"
+                                                        value={
+                                                            addPermissionForm
+                                                                .data
+                                                                .keterangan
+                                                        }
+                                                        onChange={(e) =>
+                                                            addPermissionForm.setData(
+                                                                'keterangan',
+                                                                e.target
+                                                                    .value,
+                                                            )
+                                                        }
+                                                        placeholder="Keterangan permission"
+                                                    />
+                                                    {addPermissionForm.errors
+                                                        .keterangan && (
+                                                        <p className="text-sm text-destructive">
+                                                            {
+                                                                addPermissionForm
+                                                                    .errors
+                                                                    .keterangan
                                                             }
                                                         </p>
                                                     )}

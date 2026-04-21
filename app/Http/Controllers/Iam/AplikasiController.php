@@ -20,6 +20,7 @@ class AplikasiController extends Controller
             ->map(function ($app) {
                 $app->api_key_display = $this->maskApiKey($app->api_key);
                 unset($app->api_key);
+
                 return $app;
             });
 
@@ -37,6 +38,15 @@ class AplikasiController extends Controller
 
         return inertia('iam/aplikasi/show', [
             'aplikasi' => $aplikasiArray,
+        ]);
+    }
+
+    public function edit(IamApplication $aplikasi): Response
+    {
+        abort_if($aplikasi->is_system, 403, 'Aplikasi sistem tidak dapat diubah');
+
+        return inertia('iam/aplikasi/edit', [
+            'aplikasi' => $aplikasi->only(['id', 'nama', 'slug', 'url', 'deskripsi', 'is_active']),
         ]);
     }
 
@@ -110,6 +120,6 @@ class AplikasiController extends Controller
         $suffix = substr($apiKey, -8);
         $maskedLength = $length - 12; // 4 prefix + 8 suffix
 
-        return $prefix . str_repeat('*', $maskedLength) . $suffix;
+        return $prefix.str_repeat('*', $maskedLength).$suffix;
     }
 }

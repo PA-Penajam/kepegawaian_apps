@@ -5,6 +5,18 @@ import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    server: {
+        watch: {
+            // Kecualikan folder yang tidak perlu dimonitor untuk menghindari ENOSPC
+            ignored: [
+                '**/vendor/**',
+                '**/.worktrees/**',
+                '**/node_modules/**',
+                '**/storage/**',
+                '**/bootstrap/cache/**',
+            ],
+        },
+    },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],

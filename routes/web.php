@@ -12,7 +12,6 @@ use App\Http\Controllers\Kepegawaian\HukumanDisiplinController;
 use App\Http\Controllers\Kepegawaian\KeluargaController;
 use App\Http\Controllers\Kepegawaian\PegawaiController;
 use App\Http\Controllers\Kepegawaian\PenghargaanController;
-
 use App\Http\Controllers\Kepegawaian\RiwayatJabatanController;
 use App\Http\Controllers\Kepegawaian\RiwayatPendidikanController;
 use App\Http\Controllers\Kepegawaian\SelfServiceController;
@@ -41,7 +40,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/', [SelfServiceController::class, 'index'])->name('index');
             Route::get('/detail', [SelfServiceController::class, 'detail'])->name('detail');
 
-
         });
 });
 
@@ -54,7 +52,7 @@ Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])->group(func
         ->name('iam.')
         ->group(function () {
             Route::resource('aplikasi', AplikasiController::class)
-                ->except(['create', 'edit']);
+                ->except(['create']);
             Route::post('aplikasi/{aplikasi}/regenerate-key', [AplikasiController::class, 'regenerateKey'])
                 ->name('aplikasi.regenerate-key');
 
