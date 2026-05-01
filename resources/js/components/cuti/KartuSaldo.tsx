@@ -15,7 +15,8 @@ export function KartuSaldo({ saldo }: Props) {
     // Hak awal diambil dari prop agar mendukung pro-rata (CPNS) dan carry-over
     const hakAwal = saldo.hak_awal;
     const tersedia = saldo.CT;
-    const terpakai = hakAwal - tersedia;
+    // Defensive: cegah angka negatif bila data inkonsisten (CT > hak_awal)
+    const terpakai = Math.max(0, hakAwal - tersedia);
     const persentase = hakAwal > 0 ? Math.round((tersedia / hakAwal) * 100) : 0;
 
     return (
