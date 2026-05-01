@@ -180,10 +180,7 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">
-                                                    {formatTanggalDateTime(item.created_at)
-                                                        dateStyle: 'medium',
-                                                        timeStyle: 'short',
-                                                    })}
+                                                    {formatTanggalDateTime(item.created_at)}
                                                 </TableCell>
                                                 <TableCell>
                                                     {item.causer ? (
