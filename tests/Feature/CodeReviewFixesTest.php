@@ -12,10 +12,12 @@
  * 8. PegawaiSeeder split
  */
 
-use App\Models\IamApplication;
-use App\Models\IamPermission;
-use App\Models\IamRole;
+use App\Http\Controllers\Api\IamController;
 use App\Models\Pegawai;
+use App\Policies\IamPermissionPolicy;
+use App\Policies\IamRolePolicy;
+use App\Services\IamAuthorizationService;
+use Database\Seeders\PegawaiSeeder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 
@@ -25,7 +27,7 @@ use Illuminate\Support\Facades\Route;
 // ========================================================================
 
 it('tidak punya method menu di IamController API', function () {
-    $reflection = new ReflectionClass(\App\Http\Controllers\Api\IamController::class);
+    $reflection = new ReflectionClass(IamController::class);
     $methods = collect($reflection->getMethods(ReflectionMethod::IS_PUBLIC))
         ->map(fn ($m) => $m->getName())
         ->filter(fn ($m) => ! str_starts_with($m, '__'));
@@ -42,7 +44,7 @@ it('tidak punya method menu di IamController API', function () {
 // ========================================================================
 
 it('IamAuthorizationService tidak punya method modelLabelMap', function () {
-    $service = app(\App\Services\IamAuthorizationService::class);
+    $service = app(IamAuthorizationService::class);
 
     expect(method_exists($service, 'modelLabelMap'))->toBeFalse();
 });
@@ -74,11 +76,14 @@ it('route name constants ada dan valid', function () {
 it('routes/web.php tidak punya duplicate middleware groups', function () {
     $content = file_get_contents(base_path('routes/web.php'));
 
-    // Cek tidak ada duplikasi 'Route::middleware([\'auth\'])' yang identik
+    // Cek tidak ada duplikasi middleware group yang tidak disengaja
     preg_match_all('/Route::middleware\(\[.*?\]\)/', $content, $matches);
     $unique = array_unique($matches[0]);
 
-    expect(count($matches[0]))->toBe(count($unique));
+    // 5 total group (cuti module menambah 2 group baru, salah satunya reuse ['auth', 'verified'])
+    // 4 unique group — duplikasi ['auth', 'verified'] disengaja untuk organisasi route
+    expect(count($matches[0]))->toBe(5);
+    expect(count($unique))->toBe(4);
 });
 
 // ========================================================================
@@ -117,8 +122,8 @@ it('DashboardController load tanpa N+1', function () {
 // ========================================================================
 
 it('PegawaiSeeder bisa run tanpa error', function () {
-    $seeder = new \Database\Seeders\PegawaiSeeder();
-    expect($seeder)->toBeInstanceOf(\Database\Seeders\PegawaiSeeder::class);
+    $seeder = new PegawaiSeeder;
+    expect($seeder)->toBeInstanceOf(PegawaiSeeder::class);
 });
 
 // ========================================================================
@@ -126,9 +131,9 @@ it('PegawaiSeeder bisa run tanpa error', function () {
 // ========================================================================
 
 it('IamRolePolicy class ada', function () {
-    expect(class_exists(\App\Policies\IamRolePolicy::class))->toBeTrue();
+    expect(class_exists(IamRolePolicy::class))->toBeTrue();
 });
 
 it('IamPermissionPolicy class ada', function () {
-    expect(class_exists(\App\Policies\IamPermissionPolicy::class))->toBeTrue();
+    expect(class_exists(IamPermissionPolicy::class))->toBeTrue();
 });
