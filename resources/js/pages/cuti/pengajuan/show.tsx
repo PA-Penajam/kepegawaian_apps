@@ -1,12 +1,14 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Ban, Download, FileText, Undo2 } from 'lucide-react';
 import { useState } from 'react';
+import { DialogCancel } from '@/components/cuti/DialogCancel';
 import { TimelineApproval } from '@/components/cuti/TimelineApproval';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
+import { formatTanggal, formatTanggalDateTime } from '@/lib/cuti-utils';
 import type { BreadcrumbItem } from '@/types';
 import type { CutiPengajuan, CutiState } from '@/types/cuti';
 import { CutiStateBadgeVariant, CutiStateLabels } from '@/types/cuti';
@@ -19,27 +21,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Cuti Saya', href: '/cuti/saya' },
     { title: 'Detail Pengajuan', href: '#' },
 ];
-
-/**
- * Format tanggal ke format Indonesia.
- */
-function formatTanggal(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
-}
-
-/**
- * Format datetime ke format Indonesia.
- */
-function formatDateTime(dateStr: string): string {
-    return new Date(dateStr).toLocaleString('id-ID', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    });
-}
 
 /**
  * Format ukuran file ke format yang mudah dibaca.
@@ -57,7 +38,9 @@ return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
 export default function PengajuanShow({ pengajuan }: Props) {
-    const [processing, setProcessing] = useState(false);
+    // Mode dialog: null = tertutup, 'cancel' = batalkan, 'revoke' = cabut cuti
+    const [cancelMode, setCancelMode] = useState<'cancel' | 'revoke' | null>(null);
+
     const state = pengajuan.state as CutiState;
     const stateLabel = CutiStateLabels[state] ?? state;
 
@@ -67,29 +50,11 @@ export default function PengajuanShow({ pengajuan }: Props) {
     // Cek apakah bisa dicabut (state DISETUJUI dan jenis boleh dicabut)
     const canRevoke = state === 'DISETUJUI';
 
-    // Handler untuk batalkan
-    const handleCancel = () => {
-        if (!confirm('Apakah Anda yakin ingin membatalkan pengajuan ini?')) {
-return;
-}
+    // Handler untuk batalkan — buka dialog konfirmasi
+    const handleCancel = () => setCancelMode('cancel');
 
-        setProcessing(true);
-        router.post(`/cuti/pengajuan/${pengajuan.id}/cancel`, {}, {
-            onFinish: () => setProcessing(false),
-        });
-    };
-
-    // Handler untuk cabut cuti
-    const handleRevoke = () => {
-        if (!confirm('Apakah Anda yakin ingin mencabut cuti yang sudah disetujui?')) {
-return;
-}
-
-        setProcessing(true);
-        router.post(`/cuti/pengajuan/${pengajuan.id}/cancel`, {}, {
-            onFinish: () => setProcessing(false),
-        });
-    };
+    // Handler untuk cabut cuti — buka dialog konfirmasi
+    const handleRevoke = () => setCancelMode('revoke');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -120,7 +85,6 @@ return;
                                 variant="destructive"
                                 size="sm"
                                 onClick={handleCancel}
-                                disabled={processing}
                             >
                                 <Ban className="h-4 w-4" />
                                 Batalkan
@@ -131,7 +95,6 @@ return;
                                 variant="destructive"
                                 size="sm"
                                 onClick={handleRevoke}
-                                disabled={processing}
                             >
                                 <Undo2 className="h-4 w-4" />
                                 Cabut Cuti
@@ -237,16 +200,16 @@ return;
                                 <Separator />
                                 <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                                     {pengajuan.submitted_at && (
-                                        <p>Diajukan: {formatDateTime(pengajuan.submitted_at)}</p>
+                                        <p>Diajukan: {formatTanggalDateTime(pengajuan.submitted_at)}</p>
                                     )}
                                     {pengajuan.approved_at && (
-                                        <p>Disetujui: {formatDateTime(pengajuan.approved_at)}</p>
+                                        <p>Disetujui: {formatTanggalDateTime(pengajuan.approved_at)}</p>
                                     )}
                                     {pengajuan.rejected_at && (
-                                        <p>Ditolak: {formatDateTime(pengajuan.rejected_at)}</p>
+                                        <p>Ditolak: {formatTanggalDateTime(pengajuan.rejected_at)}</p>
                                     )}
                                     {pengajuan.cancelled_at && (
-                                        <p>Dibatalkan: {formatDateTime(pengajuan.cancelled_at)}</p>
+                                        <p>Dibatalkan: {formatTanggalDateTime(pengajuan.cancelled_at)}</p>
                                     )}
                                 </div>
                             </CardContent>
@@ -300,6 +263,13 @@ return;
                     </div>
                 </div>
             </div>
+
+            {/* Dialog konfirmasi pembatalan / pencabutan cuti */}
+            <DialogCancel
+                pengajuan={pengajuan}
+                open={cancelMode !== null}
+                onClose={() => setCancelMode(null)}
+            />
         </AppLayout>
     );
 }
