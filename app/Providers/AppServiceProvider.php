@@ -2,10 +2,17 @@
 
 namespace App\Providers;
 
+use App\Models\Cuti\CutiPengajuan;
 use App\Models\Pegawai;
 use App\Models\PengajuanPerubahanData;
+use App\Policies\Cuti\CutiPengajuanPolicy;
 use App\Policies\PegawaiPolicy;
 use App\Policies\PengajuanPerubahanDataPolicy;
+use App\Services\Cuti\Rules\CutiAlasanPentingRule;
+use App\Services\Cuti\Rules\CutiRuleEngine;
+use App\Services\Cuti\Rules\CutiSakitTier1Rule;
+use App\Services\Cuti\Rules\CutiSakitTier2Rule;
+use App\Services\Cuti\Rules\CutiTahunanRule;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Date;
@@ -21,7 +28,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(CutiRuleEngine::class, fn () => new CutiRuleEngine([
+            app(CutiTahunanRule::class),
+            app(CutiSakitTier1Rule::class),
+            app(CutiSakitTier2Rule::class),
+            app(CutiAlasanPentingRule::class),
+        ]));
     }
 
     /**
@@ -29,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(CutiPengajuan::class, CutiPengajuanPolicy::class);
         Gate::policy(Pegawai::class, PegawaiPolicy::class);
         Gate::policy(PengajuanPerubahanData::class, PengajuanPerubahanDataPolicy::class);
 
@@ -77,7 +90,7 @@ class AppServiceProvider extends ServiceProvider
             if ($query->time >= $threshold) {
                 logger()->warning('[SLOW QUERY] '.$query->time.'ms | '.$query->sql, [
                     'bindings' => $query->bindings,
-                    'time_ms'  => $query->time,
+                    'time_ms' => $query->time,
                 ]);
             }
         });
