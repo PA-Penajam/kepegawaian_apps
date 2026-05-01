@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { CutiPengajuan, ApproverRole } from '@/types/cuti';
+import { formatTanggal } from '@/lib/cuti-utils';
 import { CutiStateLabels } from '@/types/cuti';
 
 type Props = {
@@ -50,20 +51,6 @@ function getActionLabel(role: ApproverRole): string {
     }
 }
 
-/**
- * Format tanggal ke format lokal Indonesia.
- */
-function formatDate(date: string | null): string {
-    if (!date) {
-return '-';
-}
-
-    return new Date(`${date}T00:00:00`).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-    });
-}
 
 export function DialogApprove({ pengajuan, role, open, onClose }: Props) {
     const { data, setData, post, processing, reset } = useForm({
@@ -111,7 +98,7 @@ export function DialogApprove({ pengajuan, role, open, onClose }: Props) {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Tanggal</span>
                         <span className="font-medium">
-                            {formatDate(pengajuan.tanggal_mulai)} — {formatDate(pengajuan.tanggal_selesai)}
+                            {formatTanggal(pengajuan.tanggal_mulai)} — {formatTanggal(pengajuan.tanggal_selesai)}
                         </span>
                     </div>
                     <div className="flex justify-between">

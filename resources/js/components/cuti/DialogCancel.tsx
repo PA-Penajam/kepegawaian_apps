@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { CutiPengajuan } from '@/types/cuti';
+import { formatTanggal } from '@/lib/cuti-utils';
 import { CutiStateLabels } from '@/types/cuti';
 
 type Props = {
@@ -22,20 +23,6 @@ type Props = {
     onClose: () => void;
 };
 
-/**
- * Format tanggal ke format lokal Indonesia.
- */
-function formatDate(date: string | null): string {
-    if (!date) {
-return '-';
-}
-
-    return new Date(`${date}T00:00:00`).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-    });
-}
 
 export function DialogCancel({ pengajuan, open, onClose }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -59,9 +46,11 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Batalkan Pengajuan Cuti</DialogTitle>
+                    <DialogTitle>{isSudahBerjalan ? 'Cabut Cuti yang Disetujui' : 'Batalkan Pengajuan Cuti'}</DialogTitle>
                     <DialogDescription>
-                        Anda akan membatalkan pengajuan cuti berikut.
+                        {isSudahBerjalan
+                            ? 'Anda akan mencabut cuti yang sudah disetujui. Saldo yang belum terpakai akan dikembalikan secara proporsional.'
+                            : 'Anda akan membatalkan pengajuan cuti berikut.'}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -86,7 +75,7 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Tanggal</span>
                         <span className="font-medium">
-                            {formatDate(pengajuan.tanggal_mulai)} — {formatDate(pengajuan.tanggal_selesai)}
+                            {formatTanggal(pengajuan.tanggal_mulai)} — {formatTanggal(pengajuan.tanggal_selesai)}
                         </span>
                     </div>
                     <div className="flex justify-between">
@@ -133,11 +122,11 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
                             onClick={onClose}
                             disabled={processing}
                         >
-                            Kembali
+                            Batal
                         </Button>
                         <Button type="submit" variant="destructive" disabled={processing}>
                             {processing && <Spinner className="mr-2" />}
-                            Batalkan Cuti
+                            {isSudahBerjalan ? 'Cabut Cuti' : 'Batalkan Cuti'}
                         </Button>
                     </DialogFooter>
                 </form>

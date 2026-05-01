@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { CutiPengajuan } from '@/types/cuti';
+import { formatTanggal } from '@/lib/cuti-utils';
 
 type Props = {
     pengajuan: CutiPengajuan;
@@ -23,20 +24,6 @@ type Props = {
 
 const MIN_ALASAN_LENGTH = 10;
 
-/**
- * Format tanggal ke format lokal Indonesia.
- */
-function formatDate(date: string | null): string {
-    if (!date) {
-return '-';
-}
-
-    return new Date(`${date}T00:00:00`).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-    });
-}
 
 export function DialogReject({ pengajuan, open, onClose }: Props) {
     const [localError, setLocalError] = useState('');
@@ -98,7 +85,7 @@ export function DialogReject({ pengajuan, open, onClose }: Props) {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Tanggal</span>
                         <span className="font-medium">
-                            {formatDate(pengajuan.tanggal_mulai)} — {formatDate(pengajuan.tanggal_selesai)}
+                            {formatTanggal(pengajuan.tanggal_mulai)} — {formatTanggal(pengajuan.tanggal_selesai)}
                         </span>
                     </div>
                     <div className="flex justify-between">
