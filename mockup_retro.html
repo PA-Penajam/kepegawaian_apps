@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup Neo-Brutalism Detail Pegawai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    boxShadow: {
+                        'retro': '4px 4px 0px 0px rgba(0,0,0,1)',
+                        'retro-active': '1px 1px 0px 0px rgba(0,0,0,1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f4f5; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto space-y-8">
+        
+        <h1 class="text-3xl font-black mb-6">Visualisasi UI: Neo-Brutalist Pegawai Tabs</h1>
+        <p class="mb-4 text-gray-700">Arahkan kursor (*hover*) ke kotak menu dan cobalah rasakan *vibe* mekanikalnya!</p>
+
+        <!-- Retro Tabs Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            
+            <!-- Active Tab -->
+            <button class="bg-[#facc15] border-2 border-black shadow-retro-active translate-x-[3px] translate-y-[3px] rounded-md px-4 py-6 flex flex-col items-center justify-center gap-2 font-bold text-lg cursor-default focus:outline-none">
+                <span class="text-2xl">👤</span>Biodata
+            </button>
+
+            <!-- Inactive Tabs -->
+            <button class="bg-white border-2 border-black shadow-retro hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-retro-active rounded-md px-4 py-6 flex flex-col items-center justify-center gap-2 transition-all font-bold text-lg focus:outline-none">
+                <span class="text-2xl">👨‍👩‍👧</span>Keluarga
+            </button>
+            <button class="bg-white border-2 border-black shadow-retro hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-retro-active rounded-md px-4 py-6 flex flex-col items-center justify-center gap-2 transition-all font-bold text-lg focus:outline-none">
+                <span class="text-2xl">💼</span>Riwayat Jabatan
+            </button>
+            <button class="bg-white border-2 border-black shadow-retro hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-retro-active rounded-md px-4 py-6 flex flex-col items-center justify-center gap-2 transition-all font-bold text-lg flex-1 focus:outline-none">
+                <span class="text-2xl">🎓</span>Riwayat Pendidikan
+            </button>
+
+        </div>
+
+        <!-- Content Card Wrapper -->
+        <div class="bg-white border-2 border-black shadow-retro rounded-xl p-6 mt-6">
+            <div class="flex items-center justify-between border-b-2 border-black pb-4 mb-4">
+                <h2 class="text-xl font-bold">Informasi Pribadi</h2>
+                <span class="px-2 py-1 bg-black text-white text-xs font-bold rounded">Active Tab</span>
+            </div>
+            
+            <!-- Shadcn-like inside Retro Wrapper -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-lg bg-[#e0e7ff] transition-transform hover:-translate-y-1">
+                    <div class="text-sm font-bold text-gray-700 uppercase tracking-wide">Nama Lengkap</div>
+                    <div class="text-lg font-black mt-1">Budi Santoso, S.Kom</div>
+                </div>
+                <div class="p-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-lg bg-[#fce7f3] transition-transform hover:-translate-y-1">
+                    <div class="text-sm font-bold text-gray-700 uppercase tracking-wide">NIP</div>
+                    <div class="text-lg font-black mt-1">19801231 200501 1 001</div>
+                </div>
+                <div class="col-span-1 md:col-span-2 p-6 border-2 border-dashed border-black rounded-lg bg-gray-50 mt-2">
+                    <p class="font-medium text-center text-gray-500">
+                       [ ... Elemen tabel Shadcn dan input forms akan ada di dalam kotak ini ... ]
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

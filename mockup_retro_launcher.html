@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup Neo-Brutalism Pegawai Launcher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    boxShadow: {
+                        'retro': '4px 4px 0px 0px rgba(0,0,0,1)',
+                        'retro-hover': '2px 2px 0px 0px rgba(0,0,0,1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f4f5; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto space-y-8">
+        
+        <!-- Header Pegawai Area -->
+        <div class="flex justify-between items-center bg-white p-6 border-2 border-black shadow-retro rounded-xl">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full border-2 border-black bg-yellow-400 flex items-center justify-center text-2xl font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">BS</div>
+                <div>
+                   <h1 class="text-2xl font-black">Budi Santoso, S.Kom</h1>
+                   <p class="text-gray-800 font-bold border-2 border-black bg-blue-100 rounded-md px-2 mt-1 inline-block text-sm">NIP: 19801231 2005 01 1 001</p>
+                </div>
+            </div>
+            <div>
+               <a href="#" class="px-4 py-2 bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-xl font-bold hover:bg-gray-100 transition-colors">Kembali</a>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-black mb-4 uppercase tracking-tighter border-b-4 border-black inline-block pb-1">Menu Pengelolaan Data</h2>
+
+        <!-- Retro Grid App Launcher (TIDAK ADA LAGI TAB) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <a href="javascript:alert('Akan pindah redirect ke /kepegawaian/pegawai/ID/edit');" class="group block bg-[#facc15] border-2 border-black shadow-retro hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-retro-hover rounded-xl p-6 transition-all focus:outline-none">
+                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">📝</div>
+                <h3 class="text-xl font-black mb-2 border-b-2 border-black pb-2 group-hover:text-black">Biodata Pribadi</h3>
+                <p class="text-sm font-semibold text-gray-800 leading-tight">Ubah data personal, kontak, dan sinkronisasi alamat domisili.</p>
+            </a>
+
+            <a href="javascript:alert('Akan pindah redirect ke /kepegawaian/keluarga');" class="group block bg-[#fce7f3] border-2 border-black shadow-retro hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-retro-hover rounded-xl p-6 transition-all focus:outline-none">
+                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">👨‍👩‍👧</div>
+                <h3 class="text-xl font-black mb-2 border-b-2 border-black pb-2">Keluarga</h3>
+                <p class="text-sm font-semibold text-gray-800 leading-tight">Pengajuan sinkronisasi data pasangan & anak tanggungan.</p>
+            </a>
+
+            <a href="javascript:alert('Akan pindah redirect ke /kepegawaian/riwayat-jabatan');" class="group block bg-[#dcfce3] border-2 border-black shadow-retro hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-retro-hover rounded-xl p-6 transition-all focus:outline-none">
+                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">💼</div>
+                <h3 class="text-xl font-black mb-2 border-b-2 border-black pb-2">Riwayat Jabatan</h3>
+                <p class="text-sm font-semibold text-gray-800 leading-tight">Kelola riwayat mutasi, fungsional, dan promosi jabatan.</p>
+            </a>
+
+            <a href="#" class="group block bg-[#e0e7ff] border-2 border-black shadow-retro hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-retro-hover rounded-xl p-6 transition-all focus:outline-none">
+                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">⭐</div>
+                <h3 class="text-xl font-black mb-2 border-b-2 border-black pb-2">Riwayat Pangkat</h3>
+                <p class="text-sm font-semibold text-gray-800 leading-tight">Update golongan dan kenaikan pangkat reguler/pilihan.</p>
+            </a>
+
+            <a href="#" class="group block bg-[#ffedd5] border-2 border-black shadow-retro hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-retro-hover rounded-xl p-6 transition-all focus:outline-none">
+                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">🎓</div>
+                <h3 class="text-xl font-black mb-2 border-b-2 border-black pb-2">Pendidikan</h3>
+                <p class="text-sm font-semibold text-gray-800 leading-tight">Pengajuan pencantuman gelar sarjana atau tugas belajar.</p>
+            </a>
+
+            <a href="#" class="group block bg-[#f3f4f6] border-2 border-black shadow-retro hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-retro-hover rounded-xl p-6 transition-all focus:outline-none">
+                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">📁</div>
+                <h3 class="text-xl font-black mb-2 border-b-2 border-black pb-2">Dokumen Digital</h3>
+                <p class="text-sm font-semibold text-gray-800 leading-tight">Arsip elektronik, PDF SK, dan pelaporan berkas fisik.</p>
+            </a>
+
+        </div>
+
+    </div>
+</body>
+</html>
