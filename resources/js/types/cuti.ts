@@ -126,6 +126,8 @@ export type CutiStateHistory = {
 export type SaldoBucketData = {
     CT: number;
     tahun: number;
+    /** Hak awal (alokasi asli dari cuti_alokasi_tahunan.hak_awal) untuk bucket tahun ini */
+    hak_awal: number;
 };
 
 export type AlokasiListItem = {

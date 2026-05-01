@@ -28,6 +28,12 @@ class SaldoController extends Controller
 
         $saldoCt = $this->saldoService->saldoBucket($user->nip, 'CT', $tahun);
 
+        // Ambil hak_awal dari tabel alokasi tahunan untuk bucket CT tahun ini
+        $alokasi = CutiAlokasiTahunan::where('pegawai_nip', $user->nip)
+            ->where('jenis_cuti_kode', 'CT')
+            ->where('tahun_hak', $tahun)
+            ->first();
+
         $pengajuanList = CutiPengajuan::where('pegawai_nip', $user->nip)
             ->with('jenisCuti:kode,nama')
             ->latest('submitted_at')
@@ -37,6 +43,7 @@ class SaldoController extends Controller
             'saldo' => [
                 'CT' => $saldoCt,
                 'tahun' => $tahun,
+                'hak_awal' => $alokasi?->hak_awal ?? 0,
             ],
             'pengajuanList' => $pengajuanList,
         ]);
