@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\Cuti\PengajuanController as CutiPengajuanController;
+use App\Http\Controllers\Api\Cuti\SaldoController as CutiSaldoController;
 use App\Http\Controllers\Api\IamController;
 use App\Http\Controllers\Api\PegawaiApiController;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +39,17 @@ Route::middleware(['auth:sanctum', 'iam.signature', 'throttle:120,1'])
         Route::get('validate', [IamController::class, 'validate']);
         Route::get('check', [IamController::class, 'check']);
         Route::post('logout', [IamController::class, 'logout']);
+    });
+
+// Cuti API — throttle 60 req/menit
+Route::middleware(['auth:sanctum', 'verify.hmac', 'throttle:60,1'])
+    ->prefix('cuti')
+    ->name('api.cuti.')
+    ->group(function () {
+        Route::get('/pengajuan', [CutiPengajuanController::class, 'index'])->name('pengajuan.index');
+        Route::get('/pengajuan/{id}', [CutiPengajuanController::class, 'show'])->name('pengajuan.show');
+        Route::get('/saldo/{nip}', [CutiSaldoController::class, 'show'])->name('saldo.show');
+        Route::get('/saldo/{nip}/ledger', [CutiSaldoController::class, 'ledger'])->name('saldo.ledger');
     });
 
 // Exchange code — throttle ketat 10 req/menit (endpoint sensitif SSO)
