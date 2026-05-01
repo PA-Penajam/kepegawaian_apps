@@ -1,4 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
+import { formatTanggal } from '@/lib/cuti-utils';
 import { Inbox as InboxIcon } from 'lucide-react';
 import { useState } from 'react';
 import { DialogApprove } from '@/components/cuti/DialogApprove';
@@ -49,17 +50,6 @@ function resolveRole(permissions: string[]): ApproverRole {
 /**
  * Format tanggal ke format singkat Indonesia.
  */
-function formatDate(date: string | null): string {
-    if (!date) {
-return '-';
-}
-
-    return new Date(`${date}T00:00:00`).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
-}
 
 /**
  * Label tombol aksi berdasarkan role.
@@ -104,11 +94,11 @@ export default function InboxPage({ pengajuanList }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Inbox Persetujuan Cuti" />
 
-            <div className="flex flex-col gap-6 p-4 sm:p-6">
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
                 <div>
-                    <h2 className="text-xl font-semibold tracking-tight">
+                    <h1 className="text-xl font-semibold tracking-tight">
                         Inbox Persetujuan Cuti
-                    </h2>
+                    </h1>
                     <p className="text-sm text-muted-foreground">
                         Daftar pengajuan cuti yang menunggu tindakan Anda.
                     </p>
@@ -149,7 +139,7 @@ export default function InboxPage({ pengajuanList }: Props) {
                                         </TableCell>
                                         <TableCell>
                                             <span className="text-sm">
-                                                {formatDate(item.tanggal_mulai)} — {formatDate(item.tanggal_selesai)}
+                                                {formatTanggal(item.tanggal_mulai)} — {formatTanggal(item.tanggal_selesai)}
                                             </span>
                                         </TableCell>
                                         <TableCell className="text-center">

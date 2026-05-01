@@ -1,7 +1,7 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { Settings2, Plus } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import { DialogAdjustSaldo } from '@/components/cuti/DialogAdjustSaldo';
+import { DialogSesuaikanSaldo } from '@/components/cuti/DialogSesuaikanSaldo';
 import InputError from '@/components/input-error';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,7 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
     const [filterTahun, setFilterTahun] = useState(tahun);
 
     // State untuk dialog adjust
-    const [adjustTarget, setAdjustTarget] = useState<{
+    const [adjustTarget, setSesuaikanTarget] = useState<{
         nip: string;
         nama: string;
         saldo: number;
@@ -70,8 +70,8 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
     }
 
     // Buka dialog adjust untuk satu pegawai
-    function openAdjustDialog(item: AlokasiListItem) {
-        setAdjustTarget({
+    function openSesuaikanDialog(item: AlokasiListItem) {
+        setSesuaikanTarget({
             nip: item.pegawai_nip,
             nama: item.pegawai?.nama_lengkap ?? item.pegawai_nip,
             saldo: item.saldo_saat_ini,
@@ -81,8 +81,14 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kelola Saldo Cuti" />
+            <div>
+                <h1 className="text-xl font-semibold tracking-tight">Kelola Saldo Cuti</h1>
+                <p className="text-sm text-muted-foreground">
+                    Kelola dan sesuaikan saldo cuti pegawai.
+                </p>
+            </div>
 
-            <div className="space-y-4 p-4">
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
                 {/* Filter Bar */}
                 <Card>
                     <CardHeader>
@@ -152,10 +158,10 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                                             <Button
                                                 variant="ghost"
                                                 size="xs"
-                                                onClick={() => openAdjustDialog(item)}
+                                                onClick={() => openSesuaikanDialog(item)}
                                             >
                                                 <Settings2 className="mr-1 h-3 w-3" />
-                                                Adjust
+                                                Sesuaikan
                                             </Button>
                                         </TableCell>
                                     </TableRow>
@@ -220,13 +226,13 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                 </Card>
             </div>
 
-            {/* Dialog Adjust Saldo */}
+            {/* Dialog Sesuaikan Saldo */}
             {adjustTarget && (
-                <DialogAdjustSaldo
+                <DialogSesuaikanSaldo
                     pegawai={{ nip: adjustTarget.nip, nama: adjustTarget.nama }}
                     currentSaldo={adjustTarget.saldo}
                     open={!!adjustTarget}
-                    onClose={() => setAdjustTarget(null)}
+                    onClose={() => setSesuaikanTarget(null)}
                 />
             )}
         </AppLayout>

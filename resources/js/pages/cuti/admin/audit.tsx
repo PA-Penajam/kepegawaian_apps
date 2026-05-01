@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { formatTanggalDateTime } from '@/lib/cuti-utils';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
@@ -81,9 +82,15 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
+            <div>
+                <h1 className="text-xl font-semibold tracking-tight">Audit Log Cuti</h1>
+                <p className="text-sm text-muted-foreground">
+                    Lacak semua perubahan pada modul cuti.
+                </p>
+            </div>
             <Head title="Audit Log Cuti" />
 
-            <div className="space-y-4 p-4">
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
                 {/* Filter Bar */}
                 <Card>
                     <CardHeader>
@@ -173,7 +180,7 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">
-                                                    {new Date(item.created_at).toLocaleString('id-ID', {
+                                                    {formatTanggalDateTime(item.created_at)
                                                         dateStyle: 'medium',
                                                         timeStyle: 'short',
                                                     })}
