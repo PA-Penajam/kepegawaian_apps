@@ -1,6 +1,11 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\Cuti\ApprovalController;
+use App\Http\Controllers\Cuti\AuditController;
+use App\Http\Controllers\Cuti\PdfController as CutiPdfController;
+use App\Http\Controllers\Cuti\PengajuanController;
+use App\Http\Controllers\Cuti\SaldoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Iam\AplikasiController;
 use App\Http\Controllers\Iam\PermissionController;
@@ -17,6 +22,7 @@ use App\Http\Controllers\Kepegawaian\RiwayatPendidikanController;
 use App\Http\Controllers\Kepegawaian\SelfServiceController;
 use App\Http\Controllers\Monitoring\MonitoringKenaikanPangkatController;
 use App\Http\Controllers\Monitoring\MonitoringKgbController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Referensi\RefJenisDokumenController;
 use App\Http\Controllers\Referensi\RefRoleController;
 use App\Http\Controllers\Referensi\RefStatusKepegawaianController;
@@ -33,6 +39,11 @@ Route::middleware('auth')->get('/sso/callback', [SsoController::class, 'callback
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
+    // Notification routes
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+
     // Self-service routes
     Route::prefix('self-service')
         ->name('self-service.')
@@ -41,6 +52,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/detail', [SelfServiceController::class, 'detail'])->name('detail');
 
         });
+
+    // Cuti PDF
+    Route::get('cuti/pengajuan/{id}/pdf', [CutiPdfController::class, 'show'])->name('cuti.pengajuan.pdf');
 });
 
 Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])->group(function () {
@@ -160,6 +174,29 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
                     Route::post('/{pengajuan}/reject', [ApprovalPengajuanPerubahanDataController::class, 'reject'])->name('reject');
                 });
         });
+});
+
+// === Cuti (Leave) routes ===
+Route::middleware(['auth', 'verified'])->prefix('cuti')->name('cuti.')->group(function () {
+    Route::get('/saya', [SaldoController::class, 'myDashboard'])->name('saya');
+    Route::get('/pengajuan/baru', [PengajuanController::class, 'create'])->name('pengajuan.create');
+    Route::post('/pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
+    Route::get('/pengajuan/{id}', [PengajuanController::class, 'show'])->name('pengajuan.show');
+    Route::get('/inbox', [ApprovalController::class, 'inbox'])->name('inbox');
+    Route::post('/pengajuan/{id}/verify', [ApprovalController::class, 'verify'])->name('pengajuan.verify');
+    Route::post('/pengajuan/{id}/approve-atasan', [ApprovalController::class, 'approveAtasan'])->name('pengajuan.approve-atasan');
+    Route::post('/pengajuan/{id}/approve-pejabat', [ApprovalController::class, 'approvePejabat'])->name('pengajuan.approve-pejabat');
+    Route::post('/pengajuan/{id}/reject', [ApprovalController::class, 'reject'])->name('pengajuan.reject');
+    Route::post('/pengajuan/{id}/cancel', [ApprovalController::class, 'cancel'])->name('pengajuan.cancel');
+    Route::post('/pengajuan/{id}/reassign-approver', [ApprovalController::class, 'reassign'])->middleware('can:cuti.pengajuan.reassign')->name('pengajuan.reassign');
+});
+
+Route::middleware(['auth', 'verified', 'can:cuti.saldo.view-all'])->prefix('admin/cuti')->name('admin.cuti.')->group(function () {
+    Route::get('/saldo', [SaldoController::class, 'adminIndex'])->name('saldo.index');
+    Route::get('/saldo/init', [SaldoController::class, 'adminInit'])->name('saldo.init');
+    Route::post('/saldo/init', [SaldoController::class, 'adminInitStore'])->name('saldo.init.store');
+    Route::post('/saldo/adjust', [SaldoController::class, 'adminAdjust'])->middleware('can:cuti.saldo.adjust')->name('saldo.adjust');
+    Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
 });
 
 require __DIR__.'/settings.php';
