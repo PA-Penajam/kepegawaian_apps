@@ -17,3 +17,9 @@ Schedule::command('kgb:notify')->dailyAt('07:00');
 
 // Notifikasi KP setiap hari jam 07:00
 Schedule::command('kp:notify')->dailyAt('07:00');
+
+// Carry-over saldo cuti tahunan setiap 1 Januari jam 00:05
+Schedule::command('cuti:carry-over')
+    ->yearlyOn(1, 1, '00:05')
+    ->withoutOverlapping()
+    ->onOneServer();
