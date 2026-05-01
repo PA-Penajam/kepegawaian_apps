@@ -12,8 +12,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import AppLayout from '@/layouts/app-layout';
-import { cn } from '@/lib/utils';
+import { formatTanggal } from '@/lib/cuti-utils';
 import type { BreadcrumbItem } from '@/types';
 import type {
     CutiPaginatedData,
@@ -31,17 +32,6 @@ type Props = {
     saldo: SaldoBucketData;
     pengajuanList: CutiPaginatedData<CutiPengajuan>;
 };
-
-/**
- * Format tanggal ke format Indonesia.
- */
-function formatTanggal(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
-}
 
 export default function MyDashboard({ saldo, pengajuanList }: Props) {
     return (
@@ -115,7 +105,12 @@ export default function MyDashboard({ saldo, pengajuanList }: Props) {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button variant="ghost" size="icon-xs" asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon-xs"
+                                                        asChild
+                                                        aria-label="Lihat detail pengajuan"
+                                                    >
                                                         <Link href={`/cuti/pengajuan/${p.id}`}>
                                                             <Eye className="h-4 w-4" />
                                                         </Link>
@@ -128,25 +123,7 @@ export default function MyDashboard({ saldo, pengajuanList }: Props) {
                             </Table>
                         )}
 
-                        {/* Pagination sederhana */}
-                        {pengajuanList.last_page > 1 && (
-                            <div className="mt-4 flex items-center justify-center gap-2">
-                                {pengajuanList.links.map((link: { url: string | null; label: string; active: boolean }, i: number) => (
-                                    <Link
-                                        key={i}
-                                        href={link.url ?? '#'}
-                                        className={cn(
-                                            'rounded-md border-2 border-foreground px-3 py-1 text-xs font-bold transition-all',
-                                            link.active
-                                                ? 'bg-primary text-primary-foreground shadow-[2px_2px_0_rgba(0,0,0,1)]'
-                                                : 'bg-background hover:bg-accent',
-                                            !link.url && 'pointer-events-none opacity-40',
-                                        )}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ))}
-                            </div>
-                        )}
+                        <PaginationWrapper links={pengajuanList.links} lastPage={pengajuanList.last_page} />
                     </CardContent>
                 </Card>
             </div>

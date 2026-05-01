@@ -9,11 +9,11 @@ type Props = {
 
 /**
  * Kartu saldo cuti tahunan (CT).
- * Menampilkan sisa saldo dan progress bar.
+ * Menampilkan sisa saldo berdasarkan hak awal dinamis dan progress bar.
  */
 export function KartuSaldo({ saldo }: Props) {
-    // Hak default CT biasanya 12 hari per tahun
-    const hakAwal = 12;
+    // Hak awal diambil dari prop agar mendukung pro-rata (CPNS) dan carry-over
+    const hakAwal = saldo.hak_awal;
     const tersedia = saldo.CT;
     const terpakai = hakAwal - tersedia;
     const persentase = hakAwal > 0 ? Math.round((tersedia / hakAwal) * 100) : 0;
