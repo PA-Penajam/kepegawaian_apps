@@ -39,7 +39,7 @@ class CutiPengajuanFactory extends Factory
     public function submitted(): static
     {
         return $this->state(fn () => [
-            'state' => 'SUBMITTED',
+            'state' => 'DIAJUKAN',
             'submitted_at' => now(),
         ]);
     }
@@ -47,7 +47,7 @@ class CutiPengajuanFactory extends Factory
     public function approved(): static
     {
         return $this->state(fn () => [
-            'state' => 'APPROVED',
+            'state' => 'DISETUJUI',
             'submitted_at' => now()->subDays(3),
             'approved_at' => now(),
         ]);

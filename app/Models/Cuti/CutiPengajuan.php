@@ -5,16 +5,18 @@ namespace App\Models\Cuti;
 use App\Models\Concerns\HasActivityLogOptions;
 use App\Models\Model;
 use App\Models\Pegawai;
+use App\States\Cuti\PengajuanState;
 use Database\Factories\Cuti\CutiPengajuanFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\ModelStates\HasStates;
 
 class CutiPengajuan extends Model
 {
-    use HasActivityLogOptions, HasFactory, HasUlids, LogsActivity {
+    use HasActivityLogOptions, HasFactory, HasStates, HasUlids, LogsActivity {
         HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
     }
 
@@ -54,6 +56,7 @@ class CutiPengajuan extends Model
             'approved_at' => 'datetime',
             'rejected_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'state' => PengajuanState::class,
         ];
     }
 
