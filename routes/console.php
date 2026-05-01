@@ -26,3 +26,6 @@ Schedule::command('cuti:carry-over')
 
 // Dispatch pending event cuti ke consumer webhook setiap menit
 Schedule::command('cuti:dispatch-events')->everyMinute()->withoutOverlapping();
+
+// Expire draft cuti yang sudah lebih dari 7 hari setiap hari jam 00:30
+Schedule::command('cuti:expire-drafts')->dailyAt('00:30')->withoutOverlapping();
