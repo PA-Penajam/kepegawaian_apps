@@ -35,6 +35,9 @@ class DatabaseSeeder extends Seeder
             // Seed data pegawai dari JSON terlebih dahulu sebagai sumber data utama
             PegawaiSeeder::class,
             IamSeeder::class,
+            CutiJenisMasterSeeder::class,
+            CutiJenisPerStatusPegawaiSeeder::class,
+            CutiPermissionSeeder::class,
         ]);
 
         // --- Assign password & IAM role ke pegawai berdasarkan data JSON ---
