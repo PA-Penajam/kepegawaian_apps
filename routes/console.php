@@ -23,3 +23,6 @@ Schedule::command('cuti:carry-over')
     ->yearlyOn(1, 1, '00:05')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Dispatch pending event cuti ke consumer webhook setiap menit
+Schedule::command('cuti:dispatch-events')->everyMinute()->withoutOverlapping();
