@@ -1,4 +1,5 @@
 import { CheckCircle2, Circle, Clock, XCircle } from 'lucide-react';
+import { formatTanggalDateTime } from '@/lib/cuti-utils';
 import { CutiStateLabels  } from '@/types/cuti';
 import type { CutiStateHistory } from '@/types/cuti';
 import type {CutiState} from '@/types/cuti';
@@ -12,22 +13,22 @@ type Props = {
  */
 function getStateIcon(stateTo: string) {
     if (stateTo.startsWith('DITOLAK') || stateTo === 'DIBATALKAN') {
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
     }
 
     if (stateTo === 'DISETUJUI') {
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+        return <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />;
     }
 
     if (stateTo === 'DICABUT_SETELAH_DISETUJUI') {
-        return <XCircle className="h-5 w-5 text-orange-500" />;
+        return <XCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />;
     }
 
     if (stateTo === 'DRAFT') {
-        return <Circle className="h-5 w-5 text-gray-400" />;
+        return <Circle className="h-5 w-5 text-muted-foreground" />;
     }
 
-    return <Clock className="h-5 w-5 text-blue-500" />;
+    return <Clock className="h-5 w-5 text-primary" />;
 }
 
 /**
@@ -70,10 +71,7 @@ export function TimelineApproval({ stateHistory }: Props) {
                                 </p>
                             )}
                             <p className="text-xs text-muted-foreground">
-                                {new Date(entry.created_at).toLocaleString('id-ID', {
-                                    dateStyle: 'medium',
-                                    timeStyle: 'short',
-                                })}
+                                {formatTanggalDateTime(entry.created_at)}
                             </p>
                         </div>
                     </div>
