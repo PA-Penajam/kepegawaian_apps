@@ -63,9 +63,14 @@ class RiwayatPendidikanController extends Controller
     {
         Gate::authorize('update', $pegawai);
 
-        $pegawai->riwayatPendidikan()->create($request->validated());
+        try {
+            $pegawai->riwayatPendidikan()->create($request->validated());
 
-        return to_route('kepegawaian.pegawai.riwayat-pendidikan.index', $pegawai);
+            return to_route('kepegawaian.pegawai.riwayat-pendidikan.index', $pegawai)
+                ->with('success', 'Riwayat pendidikan berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menambahkan riwayat pendidikan. Silakan coba lagi.');
+        }
     }
 
     public function update(UpdateRiwayatPendidikanRequest $request, Pegawai $pegawai, RiwayatPendidikan $riwayatPendidikan): RedirectResponse
@@ -74,9 +79,14 @@ class RiwayatPendidikanController extends Controller
 
         abort_unless($riwayatPendidikan->pegawai_id === $pegawai->id, 404);
 
-        $riwayatPendidikan->update($request->validated());
+        try {
+            $riwayatPendidikan->update($request->validated());
 
-        return to_route('kepegawaian.pegawai.riwayat-pendidikan.index', $pegawai);
+            return to_route('kepegawaian.pegawai.riwayat-pendidikan.index', $pegawai)
+                ->with('success', 'Riwayat pendidikan berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui riwayat pendidikan. Silakan coba lagi.');
+        }
     }
 
     public function destroy(Pegawai $pegawai, RiwayatPendidikan $riwayatPendidikan): RedirectResponse
@@ -85,8 +95,13 @@ class RiwayatPendidikanController extends Controller
 
         abort_unless($riwayatPendidikan->pegawai_id === $pegawai->id, 404);
 
-        $riwayatPendidikan->delete();
+        try {
+            $riwayatPendidikan->delete();
 
-        return to_route('kepegawaian.pegawai.riwayat-pendidikan.index', $pegawai);
+            return to_route('kepegawaian.pegawai.riwayat-pendidikan.index', $pegawai)
+                ->with('success', 'Riwayat pendidikan berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menghapus riwayat pendidikan. Silakan coba lagi.');
+        }
     }
 }

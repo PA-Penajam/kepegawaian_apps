@@ -62,37 +62,42 @@ class KeluargaController extends Controller
     {
         Gate::authorize('update', $pegawai);
 
-        // Intersepsi operator: jadikan pending request alih-alih store langsung
-        if ($request->user()?->isOperator()) {
-            $hubungan = $request->validated('hubungan');
-            $domain = match ($hubungan) {
-                'Suami', 'Istri' => 'pasangan',
-                'Anak' => 'anak',
-                'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
-                default => 'keluarga_lain',
-            };
+        try {
+            // Intersepsi operator: jadikan pending request alih-alih store langsung
+            if ($request->user()?->isOperator()) {
+                $hubungan = $request->validated('hubungan');
+                $domain = match ($hubungan) {
+                    'Suami', 'Istri' => 'pasangan',
+                    'Anak' => 'anak',
+                    'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
+                    default => 'keluarga_lain',
+                };
 
-            $this->submitPengajuanPerubahanData->handle(
-                $request->user(),
-                [
-                    'domain' => $domain,
-                    'aksi' => 'create',
-                    'target_type' => 'keluarga',
-                    'target_id' => null,
-                    'subject_pegawai_id' => $pegawai->id,
-                    'after_payload' => $request->validated(),
-                    'lampiran' => [],
-                ],
-                'operator',
-            );
+                $this->submitPengajuanPerubahanData->handle(
+                    $request->user(),
+                    [
+                        'domain' => $domain,
+                        'aksi' => 'create',
+                        'target_type' => 'keluarga',
+                        'target_id' => null,
+                        'subject_pegawai_id' => $pegawai->id,
+                        'after_payload' => $request->validated(),
+                        'lampiran' => [],
+                    ],
+                    'operator',
+                );
+
+                return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
+                    ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
+            }
+
+            $pegawai->keluarga()->create($request->validated());
 
             return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
-                ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
+                ->with('success', 'Data keluarga berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menambahkan data keluarga. Silakan coba lagi.');
         }
-
-        $pegawai->keluarga()->create($request->validated());
-
-        return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
     }
 
     public function update(UpdateKeluargaRequest $request, Pegawai $pegawai, Keluarga $keluarga): RedirectResponse
@@ -101,37 +106,42 @@ class KeluargaController extends Controller
 
         $this->ensureBelongsToPegawai($pegawai, $keluarga);
 
-        // Intersepsi operator: jadikan pending request alih-alih update langsung
-        if ($request->user()?->isOperator()) {
-            $hubungan = $request->validated('hubungan') ?? $keluarga->getRawOriginal('hubungan');
-            $domain = match ($hubungan) {
-                'Suami', 'Istri' => 'pasangan',
-                'Anak' => 'anak',
-                'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
-                default => 'keluarga_lain',
-            };
+        try {
+            // Intersepsi operator: jadikan pending request alih-alih update langsung
+            if ($request->user()?->isOperator()) {
+                $hubungan = $request->validated('hubungan') ?? $keluarga->getRawOriginal('hubungan');
+                $domain = match ($hubungan) {
+                    'Suami', 'Istri' => 'pasangan',
+                    'Anak' => 'anak',
+                    'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
+                    default => 'keluarga_lain',
+                };
 
-            $this->submitPengajuanPerubahanData->handle(
-                $request->user(),
-                [
-                    'domain' => $domain,
-                    'aksi' => 'update',
-                    'target_type' => 'keluarga',
-                    'target_id' => $keluarga->id,
-                    'subject_pegawai_id' => $pegawai->id,
-                    'after_payload' => $request->safe()->except(['_token', '_method']),
-                    'lampiran' => [],
-                ],
-                'operator',
-            );
+                $this->submitPengajuanPerubahanData->handle(
+                    $request->user(),
+                    [
+                        'domain' => $domain,
+                        'aksi' => 'update',
+                        'target_type' => 'keluarga',
+                        'target_id' => $keluarga->id,
+                        'subject_pegawai_id' => $pegawai->id,
+                        'after_payload' => $request->safe()->except(['_token', '_method']),
+                        'lampiran' => [],
+                    ],
+                    'operator',
+                );
+
+                return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
+                    ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
+            }
+
+            $keluarga->update($request->validated());
 
             return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
-                ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
+                ->with('success', 'Data keluarga berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui data keluarga. Silakan coba lagi.');
         }
-
-        $keluarga->update($request->validated());
-
-        return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
     }
 
     public function destroy(Request $request, Pegawai $pegawai, Keluarga $keluarga): RedirectResponse
@@ -140,37 +150,42 @@ class KeluargaController extends Controller
 
         $this->ensureBelongsToPegawai($pegawai, $keluarga);
 
-        // Intersepsi operator: jadikan pending request alih-alih delete langsung
-        if ($request->user()?->isOperator()) {
-            $hubungan = $keluarga->getRawOriginal('hubungan');
-            $domain = match ($hubungan) {
-                'Suami', 'Istri' => 'pasangan',
-                'Anak' => 'anak',
-                'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
-                default => 'keluarga_lain',
-            };
+        try {
+            // Intersepsi operator: jadikan pending request alih-alih delete langsung
+            if ($request->user()?->isOperator()) {
+                $hubungan = $keluarga->getRawOriginal('hubungan');
+                $domain = match ($hubungan) {
+                    'Suami', 'Istri' => 'pasangan',
+                    'Anak' => 'anak',
+                    'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
+                    default => 'keluarga_lain',
+                };
 
-            $this->submitPengajuanPerubahanData->handle(
-                $request->user(),
-                [
-                    'domain' => $domain,
-                    'aksi' => 'delete',
-                    'target_type' => 'keluarga',
-                    'target_id' => $keluarga->id,
-                    'subject_pegawai_id' => $pegawai->id,
-                    'after_payload' => [],
-                    'lampiran' => [],
-                ],
-                'operator',
-            );
+                $this->submitPengajuanPerubahanData->handle(
+                    $request->user(),
+                    [
+                        'domain' => $domain,
+                        'aksi' => 'delete',
+                        'target_type' => 'keluarga',
+                        'target_id' => $keluarga->id,
+                        'subject_pegawai_id' => $pegawai->id,
+                        'after_payload' => [],
+                        'lampiran' => [],
+                    ],
+                    'operator',
+                );
+
+                return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
+                    ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
+            }
+
+            $keluarga->delete();
 
             return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
-                ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
+                ->with('success', 'Data keluarga berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menghapus data keluarga. Silakan coba lagi.');
         }
-
-        $keluarga->delete();
-
-        return to_route('kepegawaian.pegawai.keluarga.index', $pegawai);
     }
 
     private function ensureBelongsToPegawai(Pegawai $pegawai, Keluarga $keluarga): void

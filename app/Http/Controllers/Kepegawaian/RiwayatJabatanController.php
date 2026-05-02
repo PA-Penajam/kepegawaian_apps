@@ -77,9 +77,14 @@ class RiwayatJabatanController extends Controller
     {
         Gate::authorize('update', $pegawai);
 
-        $service->store($pegawai, $request->validated());
+        try {
+            $service->store($pegawai, $request->validated());
 
-        return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai);
+            return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai)
+                ->with('success', 'Riwayat jabatan berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menambahkan riwayat jabatan. Silakan coba lagi.');
+        }
     }
 
     public function update(UpdateRiwayatJabatanRequest $request, Pegawai $pegawai, RiwayatJabatan $riwayatJabatan, RiwayatJabatanService $service): RedirectResponse
@@ -87,9 +92,15 @@ class RiwayatJabatanController extends Controller
         Gate::authorize('update', $pegawai);
 
         abort_unless($riwayatJabatan->pegawai_id === $pegawai->id, 404);
-        $service->update($riwayatJabatan, $pegawai, $request->validated());
 
-        return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai);
+        try {
+            $service->update($riwayatJabatan, $pegawai, $request->validated());
+
+            return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai)
+                ->with('success', 'Riwayat jabatan berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui riwayat jabatan. Silakan coba lagi.');
+        }
     }
 
     public function destroy(Pegawai $pegawai, RiwayatJabatan $riwayatJabatan): RedirectResponse
@@ -98,8 +109,13 @@ class RiwayatJabatanController extends Controller
 
         abort_unless($riwayatJabatan->pegawai_id === $pegawai->id, 404);
 
-        $riwayatJabatan->delete();
+        try {
+            $riwayatJabatan->delete();
 
-        return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai);
+            return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai)
+                ->with('success', 'Riwayat jabatan berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menghapus riwayat jabatan. Silakan coba lagi.');
+        }
     }
 }

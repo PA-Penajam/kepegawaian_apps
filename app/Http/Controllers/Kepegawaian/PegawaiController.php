@@ -152,9 +152,14 @@ class PegawaiController extends Controller
     {
         Gate::authorize('create', Pegawai::class);
 
-        $pegawai = Pegawai::query()->create($request->validated());
+        try {
+            $pegawai = Pegawai::query()->create($request->validated());
 
-        return to_route('kepegawaian.pegawai.show', $pegawai);
+            return to_route('kepegawaian.pegawai.show', $pegawai)
+                ->with('success', 'Data pegawai berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menambahkan data pegawai. Silakan coba lagi.');
+        }
     }
 
     /**
@@ -210,36 +215,41 @@ class PegawaiController extends Controller
     {
         Gate::authorize('update', $pegawai);
 
-        // Intersepsi operator: jadikan pending request alih-alih update langsung
-        if ($request->user()?->isOperator()) {
-            $this->submitPengajuanPerubahanData->handle(
-                $request->user(),
-                [
-                    'domain' => 'profil_pribadi',
-                    'aksi' => 'update',
-                    'target_type' => 'pegawai',
-                    'target_id' => $pegawai->id,
-                    'subject_pegawai_id' => $pegawai->id,
-                    'after_payload' => Arr::only(
-                        $request->safe()->except(['password', 'password_confirmation']),
-                        ['nama_lengkap', 'tempat_lahir', 'tanggal_lahir', 'status_perkawinan', 'alamat', 'no_telepon', 'email']
-                    ),
-                    'lampiran' => [],
-                ],
-                'operator',
-            );
+        try {
+            // Intersepsi operator: jadikan pending request alih-alih update langsung
+            if ($request->user()?->isOperator()) {
+                $this->submitPengajuanPerubahanData->handle(
+                    $request->user(),
+                    [
+                        'domain' => 'profil_pribadi',
+                        'aksi' => 'update',
+                        'target_type' => 'pegawai',
+                        'target_id' => $pegawai->id,
+                        'subject_pegawai_id' => $pegawai->id,
+                        'after_payload' => Arr::only(
+                            $request->safe()->except(['password', 'password_confirmation']),
+                            ['nama_lengkap', 'tempat_lahir', 'tanggal_lahir', 'status_perkawinan', 'alamat', 'no_telepon', 'email']
+                        ),
+                        'lampiran' => [],
+                    ],
+                    'operator',
+                );
+
+                return to_route('kepegawaian.pegawai.show', $pegawai)
+                    ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
+            }
+
+            $pegawai->update($request->safe()->except(['password', 'password_confirmation']));
+
+            if ($request->filled('password')) {
+                $pegawai->update(['password' => bcrypt($request->validated('password'))]);
+            }
 
             return to_route('kepegawaian.pegawai.show', $pegawai)
-                ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
+                ->with('success', 'Data pegawai berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui data pegawai. Silakan coba lagi.');
         }
-
-        $pegawai->update($request->safe()->except(['password', 'password_confirmation']));
-
-        if ($request->filled('password')) {
-            $pegawai->update(['password' => bcrypt($request->validated('password'))]);
-        }
-
-        return to_route('kepegawaian.pegawai.show', $pegawai);
     }
 
     /**
@@ -249,9 +259,14 @@ class PegawaiController extends Controller
     {
         Gate::authorize('delete', $pegawai);
 
-        $pegawai->delete();
+        try {
+            $pegawai->delete();
 
-        return to_route('kepegawaian.pegawai.index');
+            return to_route('kepegawaian.pegawai.index')
+                ->with('success', 'Data pegawai berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menghapus data pegawai. Silakan coba lagi.');
+        }
     }
 
     /**
@@ -259,17 +274,21 @@ class PegawaiController extends Controller
      */
     public function updateFoto(UpdateFotoPegawaiRequest $request, Pegawai $pegawai): RedirectResponse
     {
-        $path = "fotos/{$pegawai->id}.webp";
+        try {
+            $path = "fotos/{$pegawai->id}.webp";
 
-        $manager = new ImageManager(new Driver);
-        $image = $manager->read($request->file('foto')->getRealPath());
-        $image->coverDown(400, 400, 'center');
-        $encoded = $image->toWebp(quality: 80);
+            $manager = new ImageManager(new Driver);
+            $image = $manager->read($request->file('foto')->getRealPath());
+            $image->coverDown(400, 400, 'center');
+            $encoded = $image->toWebp(quality: 80);
 
-        Storage::disk('public')->put($path, $encoded->toString());
+            Storage::disk('public')->put($path, $encoded->toString());
 
-        $pegawai->update(['foto' => $path]);
+            $pegawai->update(['foto' => $path]);
 
-        return back();
+            return back()->with('success', 'Foto pegawai berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat mengunggah foto. Pastikan file gambar valid dan silakan coba lagi.');
+        }
     }
 }
