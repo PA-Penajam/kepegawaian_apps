@@ -4,9 +4,6 @@ use App\Exceptions\Cuti\CancelTidakDiizinkanException;
 use App\Exceptions\Cuti\TransitionTidakValidException;
 use App\Models\Cuti\CutiPengajuan;
 use App\Models\Cuti\CutiSaldoLedger;
-use App\Models\IamApplication;
-use App\Models\IamPermission;
-use App\Models\IamRole;
 use App\Models\Pegawai;
 use App\Services\Cuti\SaldoLedgerService;
 use App\Services\Cuti\WorkflowService;
@@ -17,14 +14,6 @@ use Illuminate\Auth\Access\AuthorizationException;
 beforeEach(function () {
     $this->seed(CutiJenisMasterSeeder::class);
     $this->seed(CutiPermissionSeeder::class);
-
-    // Berikan semua permission cuti ke admin role
-    $app = IamApplication::where('slug', 'kepegawaian')->first();
-    $adminRole = IamRole::where('iam_application_id', $app->id)->where('slug', 'admin')->first();
-    $cutiPermissions = IamPermission::where('iam_application_id', $app->id)
-        ->where('group', 'cuti')
-        ->pluck('id');
-    $adminRole->permissions()->syncWithoutDetaching($cutiPermissions);
 });
 
 /**

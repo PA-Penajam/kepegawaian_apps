@@ -1,6 +1,7 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -11,7 +12,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import AlertError from '@/components/alert-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -118,6 +118,7 @@ export default function Akses() {
             return;
         }
 
+        addRoleForm.setData('iam_role_id', selectedRoleId);
         addRoleForm.post(`/iam/users/${user.id}/akses`, {
             onSuccess: () => {
                 addRoleForm.reset();
@@ -135,7 +136,10 @@ export default function Akses() {
     );
 
     const confirmRevoke = useCallback(() => {
-        if (!revokeConfirm) return;
+        if (!revokeConfirm) {
+return;
+}
+
         deleteForm.delete(
             `/iam/users/${user.id}/akses/${revokeConfirm.roleId}`,
             {

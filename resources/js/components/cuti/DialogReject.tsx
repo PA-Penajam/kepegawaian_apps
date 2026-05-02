@@ -13,8 +13,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import type { CutiPengajuan } from '@/types/cuti';
 import { formatTanggal } from '@/lib/cuti-utils';
+import type { CutiPengajuan } from '@/types/cuti';
 
 type Props = {
     pengajuan: CutiPengajuan;
@@ -134,8 +134,7 @@ setLocalError('');
                         >
                             Batal
                         </Button>
-                        <Button type="submit" variant="destructive" disabled={processing}>
-                            {processing && <Spinner className="mr-2" />}
+                        <Button type="submit" variant="destructive" processing={processing}>
                             Tolak Pengajuan
                         </Button>
                     </DialogFooter>

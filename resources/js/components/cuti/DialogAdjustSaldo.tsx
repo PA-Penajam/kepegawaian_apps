@@ -119,9 +119,10 @@ export function DialogAdjustSaldo({ pegawai, currentSaldo, open, onClose }: Prop
                         </Button>
                         <Button
                             type="submit"
-                            disabled={processing || data.jumlah_hari === 0 || data.keterangan.length < 10}
+                            processing={processing}
+                            disabled={data.jumlah_hari === 0 || data.keterangan.length < 10}
                         >
-                            {processing ? 'Menyimpan...' : 'Simpan Penyesuaian'}
+                            Simpan Penyesuaian
                         </Button>
                     </DialogFooter>
                 </form>

@@ -1,5 +1,14 @@
 import { Head, Link } from '@inertiajs/react';
 import { Award, Briefcase, Building, Edit } from 'lucide-react';
+import DokumenPegawaiController from '@/actions/App/Http/Controllers/Kepegawaian/DokumenPegawaiController';
+import HukumanDisiplinController from '@/actions/App/Http/Controllers/Kepegawaian/HukumanDisiplinController';
+import KeluargaController from '@/actions/App/Http/Controllers/Kepegawaian/KeluargaController';
+import PegawaiController from '@/actions/App/Http/Controllers/Kepegawaian/PegawaiController';
+import PenghargaanController from '@/actions/App/Http/Controllers/Kepegawaian/PenghargaanController';
+import RiwayatDiklatController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatDiklatController';
+import RiwayatJabatanController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatJabatanController';
+import RiwayatPangkatController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatPangkatController';
+import RiwayatPendidikanController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatPendidikanController';
 import { FotoUpload } from '@/components/pegawai/FotoUpload';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,15 +18,6 @@ import type { BreadcrumbItem } from '@/types';
 import type { PegawaiDetail } from '@/types/pegawai-detail';
 
 // Controller Actions untuk redirect
-import PegawaiController from '@/actions/App/Http/Controllers/Kepegawaian/PegawaiController';
-import KeluargaController from '@/actions/App/Http/Controllers/Kepegawaian/KeluargaController';
-import RiwayatJabatanController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatJabatanController';
-import RiwayatPangkatController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatPangkatController';
-import RiwayatPendidikanController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatPendidikanController';
-import RiwayatDiklatController from '@/actions/App/Http/Controllers/Kepegawaian/RiwayatDiklatController';
-import PenghargaanController from '@/actions/App/Http/Controllers/Kepegawaian/PenghargaanController';
-import HukumanDisiplinController from '@/actions/App/Http/Controllers/Kepegawaian/HukumanDisiplinController';
-import DokumenPegawaiController from '@/actions/App/Http/Controllers/Kepegawaian/DokumenPegawaiController';
 
 export default function PegawaiShow({ pegawai }: { pegawai: PegawaiDetail }) {
     const breadcrumbs: BreadcrumbItem[] = [

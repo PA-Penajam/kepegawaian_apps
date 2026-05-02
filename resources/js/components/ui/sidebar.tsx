@@ -389,6 +389,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
 function SidebarGroupLabel({
   className,
   asChild = false,
+  children,
   ...props
 }: React.ComponentProps<"div"> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "div"
@@ -403,13 +404,16 @@ function SidebarGroupLabel({
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </Comp>
   )
 }
 
 function SidebarGroupAction({
   className,
   asChild = false,
+  children,
   ...props
 }: React.ComponentProps<"button"> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "button"
@@ -426,7 +430,9 @@ function SidebarGroupAction({
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </Comp>
   )
 }
 
@@ -495,6 +501,7 @@ function SidebarMenuButton({
   size = "default",
   tooltip,
   className,
+  children,
   ...props
 }: React.ComponentProps<"button"> & {
   asChild?: boolean
@@ -512,7 +519,9 @@ function SidebarMenuButton({
       data-active={isActive}
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
       {...props}
-    />
+    >
+      {children}
+    </Comp>
   )
 
   if (!tooltip) {
@@ -542,6 +551,7 @@ function SidebarMenuAction({
   className,
   asChild = false,
   showOnHover = false,
+  children,
   ...props
 }: React.ComponentProps<"button"> & {
   asChild?: boolean
@@ -566,7 +576,9 @@ function SidebarMenuAction({
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </Comp>
   )
 }
 
@@ -664,6 +676,7 @@ function SidebarMenuSubButton({
   size = "md",
   isActive = false,
   className,
+  children,
   ...props
 }: React.ComponentProps<"a"> & {
   asChild?: boolean
@@ -687,7 +700,9 @@ function SidebarMenuSubButton({
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </Comp>
   )
 }
 

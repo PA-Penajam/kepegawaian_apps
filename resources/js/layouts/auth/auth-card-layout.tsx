@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { BlurFade } from '@/components/ui/blur-fade';
 import {
     Card,
     CardContent,
@@ -9,7 +10,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { home } from '@/routes';
-import { BlurFade } from '@/components/ui/blur-fade';
 
 export default function AuthCardLayout({
     children,

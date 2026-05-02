@@ -41,8 +41,8 @@ export function CrudFormCard({
                 <form className="space-y-4" onSubmit={onSubmit}>
                     {children}
                     <div className="flex gap-2 pt-2">
-                        <Button type="submit" disabled={processing}>
-                            {processing ? 'Menyimpan...' : submitLabel}
+                        <Button type="submit" processing={processing}>
+                            {submitLabel}
                         </Button>
                         {isEditing && onCancel && (
                             <Button

@@ -6,9 +6,9 @@ import {
     GraduationCap,
     Building2,
 } from 'lucide-react';
-import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { BlurFade } from '@/components/ui/blur-fade';
 import { Particles } from '@/components/ui/particles';
+import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { dashboard, login } from '@/routes';
 
 export default function Welcome() {

@@ -1,6 +1,8 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Copy, Key, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
+import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -11,7 +13,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import AlertError from '@/components/alert-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,7 +35,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
 import AppLayout from '@/layouts/app-layout';
 import { errorsToArray } from '@/lib/form-errors';
 import type {
@@ -169,7 +169,10 @@ export default function Show() {
 
     // Hapus role
     const handleDeleteRole = useCallback(() => {
-        if (!deleteRoleConfirm) return;
+        if (!deleteRoleConfirm) {
+return;
+}
+
         deleteForm.delete(
             `/iam/aplikasi/${aplikasi.id}/roles/${deleteRoleConfirm.id}`,
             {
@@ -195,7 +198,10 @@ export default function Show() {
 
     // Hapus permission
     const handleDeletePermission = useCallback(() => {
-        if (!deletePermissionConfirm) return;
+        if (!deletePermissionConfirm) {
+return;
+}
+
         deleteForm.delete(
             `/iam/aplikasi/${aplikasi.id}/permissions/${deletePermissionConfirm.id}`,
             {

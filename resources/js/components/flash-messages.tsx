@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
 import { Check, X, AlertCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import React, { useEffect, useState, useRef } from 'react';
 
 export function FlashMessages() {
     const { flash } = usePage<any>().props;
@@ -11,6 +11,7 @@ export function FlashMessages() {
         if (flash?.success) {
             addMessage('success', flash.success);
         }
+
         if (flash?.error) {
             addMessage('error', flash.error);
         }
@@ -20,6 +21,7 @@ export function FlashMessages() {
 
     const addMessage = (type: string, text: string) => {
         const now = Date.now();
+
         if (
             lastAddedRef.current &&
             lastAddedRef.current.text === text &&
@@ -27,6 +29,7 @@ export function FlashMessages() {
         ) {
             return; // Cegah duplikasi karena React Strict Mode
         }
+
         lastAddedRef.current = { time: now, text };
 
         const id = now + Math.random();
@@ -60,7 +63,7 @@ export function FlashMessages() {
                                 <AlertCircle className="w-5 h-5 stroke-[3]" />
                             </div>
                         )}
-                        <p className="text-sm font-bold flex-1 leading-snug">{message.text}</p>
+                        <p className="text-sm font-bold flex-1 leading-snug text-foreground">{message.text}</p>
                         <button
                             onClick={() => removeMessage(message.id)}
                             className="text-foreground/50 hover:text-foreground transition-colors p-1"

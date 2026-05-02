@@ -170,7 +170,11 @@ export function NotificationBell() {
     };
 
     return (
-        <DropdownMenu onOpenChange={(open) => { if (open) fetchNotifications(); }}>
+        <DropdownMenu onOpenChange={(open) => {
+ if (open) {
+fetchNotifications();
+} 
+}}>
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"

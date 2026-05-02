@@ -1,7 +1,7 @@
 import { usePage } from '@inertiajs/react';
-import { BlurFade } from '@/components/ui/blur-fade';
-import { Badge } from '@/components/ui/badge';
 import { Calendar, User } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { BlurFade } from '@/components/ui/blur-fade';
 
 // You might need to define or import the PageProps type
 interface PageProps {
@@ -20,9 +20,19 @@ export function DashboardHeader() {
 
     const getGreeting = () => {
         const hour = new Date().getHours();
-        if (hour < 11) return 'Selamat Pagi';
-        if (hour < 15) return 'Selamat Siang';
-        if (hour < 18) return 'Selamat Sore';
+
+        if (hour < 11) {
+return 'Selamat Pagi';
+}
+
+        if (hour < 15) {
+return 'Selamat Siang';
+}
+
+        if (hour < 18) {
+return 'Selamat Sore';
+}
+
         return 'Selamat Malam';
     };
 

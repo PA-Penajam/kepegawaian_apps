@@ -40,8 +40,12 @@ export default function Index() {
     // Normalisasi meta paginasi — Laravel paginate() standar menyimpan di root,
     // sedangkan API Resource membungkusnya di bawah .meta
     const meta = useMemo(() => {
-        if (users.meta) return users.meta;
+        if (users.meta) {
+return users.meta;
+}
+
         const raw = users as any;
+
         return {
             total: raw.total ?? 0,
             current_page: raw.current_page ?? 1,
@@ -71,6 +75,7 @@ export default function Index() {
         const value = e.target.value;
         setSearch(value);
         const timeout = setTimeout(() => performSearch(value), 400);
+
         return () => clearTimeout(timeout);
     }, [performSearch]);
 

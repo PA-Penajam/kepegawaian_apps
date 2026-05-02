@@ -35,9 +35,13 @@ interface PaginationWrapperProps {
 }
 
 function defaultBuildHref(page: number): string {
-    if (typeof window === 'undefined') return `?page=${page}`;
+    if (typeof window === 'undefined') {
+return `?page=${page}`;
+}
+
     const params = new URLSearchParams(window.location.search);
     params.set('page', String(page));
+
     return `?${params.toString()}`;
 }
 

@@ -1,16 +1,16 @@
 import { Deferred, Head, Link } from '@inertiajs/react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertCircle, TrendingUp, UserPlus, Users } from 'lucide-react';
+import { DashboardDistribusiSkeleton } from '@/components/dashboard/DashboardDistribusiSkeleton';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { DashboardHeavySection } from '@/components/dashboard/DashboardHeavySection';
 import { Badge } from '@/components/ui/badge';
-import { NumberTicker } from '@/components/ui/number-ticker';
 import { BorderBeam } from '@/components/ui/border-beam';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { NumberTicker } from '@/components/ui/number-ticker';
+import type { FastDashboardStats } from '@/hooks/use-dashboard-stats';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-import { DashboardDistribusiSkeleton } from '@/components/dashboard/DashboardDistribusiSkeleton';
-import { DashboardHeavySection } from '@/components/dashboard/DashboardHeavySection';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import type { FastDashboardStats } from '@/hooks/use-dashboard-stats';
 import type { BreadcrumbItem } from '@/types';
-import { AlertCircle, TrendingUp, UserPlus, Users } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard() },

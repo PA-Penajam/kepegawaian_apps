@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { CalendarPlus, Eye } from 'lucide-react';
 import { KartuSaldo } from '@/components/cuti/KartuSaldo';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +13,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { PaginationWrapper } from '@/components/pagination-wrapper';
 import AppLayout from '@/layouts/app-layout';
 import { formatTanggal } from '@/lib/cuti-utils';
 import type { BreadcrumbItem } from '@/types';

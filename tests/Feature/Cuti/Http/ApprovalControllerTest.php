@@ -1,9 +1,6 @@
 <?php
 
 use App\Models\Cuti\CutiPengajuan;
-use App\Models\IamApplication;
-use App\Models\IamPermission;
-use App\Models\IamRole;
 use App\Models\Pegawai;
 use Database\Seeders\CutiJenisMasterSeeder;
 use Database\Seeders\CutiPermissionSeeder;
@@ -14,14 +11,6 @@ use function Pest\Laravel\post;
 beforeEach(function () {
     $this->seed(CutiJenisMasterSeeder::class);
     $this->seed(CutiPermissionSeeder::class);
-
-    // Berikan semua permission cuti ke admin role
-    $app = IamApplication::where('slug', 'kepegawaian')->first();
-    $adminRole = IamRole::where('iam_application_id', $app->id)->where('slug', 'admin')->first();
-    $cutiPermissions = IamPermission::where('iam_application_id', $app->id)
-        ->where('group', 'cuti')
-        ->pluck('id');
-    $adminRole->permissions()->syncWithoutDetaching($cutiPermissions);
 });
 
 function buatPengajuanUntukApproval(string $state, Pegawai $approver, ?Pegawai $pemohon = null): CutiPengajuan

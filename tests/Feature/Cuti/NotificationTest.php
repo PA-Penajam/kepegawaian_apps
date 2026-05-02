@@ -16,13 +16,6 @@ use Illuminate\Support\Facades\Notification;
 beforeEach(function () {
     $this->seed(CutiJenisMasterSeeder::class);
     $this->seed(CutiPermissionSeeder::class);
-
-    $app = IamApplication::where('slug', 'kepegawaian')->first();
-    $adminRole = IamRole::where('iam_application_id', $app->id)->where('slug', 'admin')->first();
-    $cutiPermissions = IamPermission::where('iam_application_id', $app->id)
-        ->where('group', 'cuti')
-        ->pluck('id');
-    $adminRole->permissions()->syncWithoutDetaching($cutiPermissions);
 });
 
 /**

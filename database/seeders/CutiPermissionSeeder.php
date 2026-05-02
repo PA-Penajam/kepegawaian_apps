@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\IamApplication;
 use App\Models\IamPermission;
+use App\Models\IamRole;
 use Illuminate\Database\Seeder;
 
 class CutiPermissionSeeder extends Seeder
@@ -35,8 +36,9 @@ class CutiPermissionSeeder extends Seeder
             ['slug' => 'cuti.audit.view', 'nama' => 'Lihat Audit Log Cuti', 'group' => 'cuti', 'keterangan' => 'Melihat log audit modul cuti'],
         ];
 
+        $permissionIds = [];
         foreach ($permissions as $perm) {
-            IamPermission::firstOrCreate(
+            $p = IamPermission::firstOrCreate(
                 [
                     'iam_application_id' => $kepegawaian->id,
                     'slug' => $perm['slug'],
@@ -47,6 +49,17 @@ class CutiPermissionSeeder extends Seeder
                     'keterangan' => $perm['keterangan'],
                 ],
             );
+            $permissionIds[] = $p->id;
+        }
+
+        // Assign semua permission cuti ke role admin
+        $adminRole = IamRole::where('iam_application_id', $kepegawaian->id)
+            ->where('slug', 'admin')
+            ->first();
+
+        if ($adminRole) {
+            $adminRole->permissions()->syncWithoutDetaching($permissionIds);
+            $this->command?->info('Cuti permissions assigned ke admin role.');
         }
     }
 }

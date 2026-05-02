@@ -179,7 +179,6 @@ function TwoFactorVerificationStep({
                                 name="code"
                                 maxLength={OTP_MAX_LENGTH}
                                 onChange={setCode}
-                                disabled={processing}
                                 pattern={REGEXP_ONLY_DIGITS}
                             >
                                 <InputOTPGroup>
@@ -207,16 +206,14 @@ function TwoFactorVerificationStep({
                                 variant="outline"
                                 className="flex-1"
                                 onClick={onBack}
-                                disabled={processing}
                             >
                                 Back
                             </Button>
                             <Button
                                 type="submit"
                                 className="flex-1"
-                                disabled={
-                                    processing || code.length < OTP_MAX_LENGTH
-                                }
+                                processing={processing}
+                                disabled={code.length < OTP_MAX_LENGTH}
                             >
                                 Confirm
                             </Button>

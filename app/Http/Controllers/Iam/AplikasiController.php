@@ -52,13 +52,15 @@ class AplikasiController extends Controller
 
     public function store(StoreAplikasiRequest $request): RedirectResponse
     {
-        ['key' => $key, 'secret' => $secret, 'hash' => $hash] = IamApplication::generateApiCredentials();
+        // Buat aplikasi dengan data validasi (api_key & api_secret_hash tidak fillable)
+        $app = IamApplication::create($request->validated());
 
-        $app = IamApplication::create([
-            ...$request->validated(),
-            'api_key' => $key,
-            'api_secret_hash' => $hash,
-        ]);
+        // Generate & set credentials secara manual setelah create
+        // (sama dengan approach di regenerateKey())
+        ['key' => $key, 'secret' => $secret, 'hash' => $hash] = IamApplication::generateApiCredentials();
+        $app->api_key = $key;
+        $app->api_secret_hash = $hash;
+        $app->save();
 
         return redirect()
             ->route('iam.aplikasi.show', $app)

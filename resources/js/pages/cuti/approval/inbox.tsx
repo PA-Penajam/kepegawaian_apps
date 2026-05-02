@@ -1,5 +1,4 @@
 import { Head, usePage } from '@inertiajs/react';
-import { formatTanggal } from '@/lib/cuti-utils';
 import { Inbox as InboxIcon } from 'lucide-react';
 import { useState } from 'react';
 import { DialogApprove } from '@/components/cuti/DialogApprove';
@@ -16,6 +15,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { formatTanggal } from '@/lib/cuti-utils';
 import { toUrl } from '@/lib/utils';
 import { inbox as inboxRoute } from '@/routes/cuti';
 import type { BreadcrumbItem, Auth } from '@/types';

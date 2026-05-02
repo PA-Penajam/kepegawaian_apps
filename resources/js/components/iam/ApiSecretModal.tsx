@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -6,7 +7,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { useState } from 'react';
 
 interface ApiSecretModalProps {
     apiSecret?: string;
@@ -21,7 +21,9 @@ export function ApiSecretModal({
 }: ApiSecretModalProps) {
     const [copied, setCopied] = useState(false);
 
-    if (!apiSecret) return null;
+    if (!apiSecret) {
+return null;
+}
 
     const handleCopy = async () => {
         await navigator.clipboard.writeText(apiSecret);

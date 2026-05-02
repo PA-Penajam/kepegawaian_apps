@@ -1,6 +1,8 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
+import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -11,7 +13,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import AlertError from '@/components/alert-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,7 +35,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
 import AppLayout from '@/layouts/app-layout';
 import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem, IamApplication } from '@/types';
@@ -89,7 +89,10 @@ export default function Index() {
     }, []);
 
     const confirmDelete = useCallback(() => {
-        if (!deleteConfirm) return;
+        if (!deleteConfirm) {
+return;
+}
+
         deleteForm.delete(`/iam/aplikasi/${deleteConfirm.id}`, {
             onSuccess: () => {
                 setDeleteConfirm(null);

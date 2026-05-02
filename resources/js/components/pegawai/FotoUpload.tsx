@@ -19,14 +19,21 @@ export function FotoUpload({ pegawaiId, currentFotoUrl, initials, canUpdate }: P
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
-        if (!file) return;
+
+        if (!file) {
+return;
+}
+
         setSelectedFile(file);
         setPreviewUrl(URL.createObjectURL(file));
     }
 
     function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (!selectedFile) return;
+
+        if (!selectedFile) {
+return;
+}
 
         const formData = new FormData();
         formData.append('foto', selectedFile);
@@ -70,8 +77,8 @@ export function FotoUpload({ pegawaiId, currentFotoUrl, initials, canUpdate }: P
                 onChange={handleFileChange}
             />
             {selectedFile !== null && (
-                <Button type="submit" size="sm" disabled={processing}>
-                    {processing ? 'Menyimpan...' : 'Simpan Foto'}
+                <Button type="submit" size="sm" processing={processing}>
+                    Simpan Foto
                 </Button>
             )}
         </form>

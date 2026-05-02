@@ -11,9 +11,9 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { detail as selfServiceDetail } from '@/routes/self-service';
-import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 import type { PegawaiDetail } from '@/types/pegawai-detail';
 

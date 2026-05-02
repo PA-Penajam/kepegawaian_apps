@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
 import { Download } from 'lucide-react';
+import { useState } from 'react';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +20,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { PaginationWrapper } from '@/components/pagination-wrapper';
 import type { BreadcrumbItem } from '@/types';
 import type { KepegawaianPaginatedData } from '@/types/kepegawaian';
 
@@ -73,8 +73,12 @@ const statusBadgeClass: Record<KgbStatus, string> = {
 };
 
 function formatDate(date: string | null): string {
-    if (date === null) return '-';
+    if (date === null) {
+return '-';
+}
+
     const parsed = new Date(date);
+
     return Number.isNaN(parsed.getTime())
         ? '-'
         : new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(parsed);
@@ -83,9 +87,19 @@ function formatDate(date: string | null): string {
 function applyFilter(newFilters: Partial<Filters>) {
     const params: Record<string, string> = {};
     const merged = { ...newFilters };
-    if (merged.unit_kerja) params.unit_kerja = merged.unit_kerja;
-    if (merged.golongan) params.golongan = merged.golongan;
-    if (merged.status) params.status = merged.status;
+
+    if (merged.unit_kerja) {
+params.unit_kerja = merged.unit_kerja;
+}
+
+    if (merged.golongan) {
+params.golongan = merged.golongan;
+}
+
+    if (merged.status) {
+params.status = merged.status;
+}
+
     router.get('/kepegawaian/monitoring/kgb', params, { preserveState: true, replace: true });
 }
 
@@ -100,9 +114,19 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats, filters, fil
 
     function handleExport() {
         const params = new URLSearchParams();
-        if (localFilters.unit_kerja) params.set('unit_kerja', localFilters.unit_kerja);
-        if (localFilters.golongan) params.set('golongan', localFilters.golongan);
-        if (localFilters.status) params.set('status', localFilters.status);
+
+        if (localFilters.unit_kerja) {
+params.set('unit_kerja', localFilters.unit_kerja);
+}
+
+        if (localFilters.golongan) {
+params.set('golongan', localFilters.golongan);
+}
+
+        if (localFilters.status) {
+params.set('status', localFilters.status);
+}
+
         window.location.href = `/kepegawaian/monitoring/kgb/export?${params.toString()}`;
     }
 

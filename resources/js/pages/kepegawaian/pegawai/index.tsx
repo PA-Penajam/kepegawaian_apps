@@ -3,10 +3,10 @@ import { Eye, Pencil, Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DataTableToolbar } from '@/components/kepegawaian/data-table-toolbar';
 import type { DataTableToolbarFilter } from '@/components/kepegawaian/data-table-toolbar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,

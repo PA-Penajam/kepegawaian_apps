@@ -2,16 +2,16 @@ import { usePage } from '@inertiajs/react';
 import {
     Briefcase, Building2, GraduationCap, UserCircle,
 } from 'lucide-react';
+import { BlurFade } from '@/components/ui/blur-fade';
 import {
     Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { BlurFade } from '@/components/ui/blur-fade';
 import { useDashboardStats } from '@/hooks/use-dashboard-stats';
 import type { HeavyDashboardStats } from '@/hooks/use-dashboard-stats';
 import { GolonganBarChart } from './GolonganBarChart';
-import { PendidikanBarChart } from './PendidikanBarChart';
 import { JenisKelaminPieChart } from './JenisKelaminPieChart';
+import { PendidikanBarChart } from './PendidikanBarChart';
 
 export function DashboardHeavySection() {
     const { heavyStats } = usePage<{ heavyStats: HeavyDashboardStats }>().props;

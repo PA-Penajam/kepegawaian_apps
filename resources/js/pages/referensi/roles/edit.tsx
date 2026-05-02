@@ -1,11 +1,8 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { toUrl } from '@/lib/utils';
 import { ArrowLeft, Search, Save, Shield } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import AlertError from '@/components/alert-error';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Card,
     CardContent,
@@ -14,15 +11,18 @@ import {
     CardTitle,
     CardFooter,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { errorsToArray } from '@/lib/form-errors';
-import type { BreadcrumbItem, RefRole } from '@/types';
+import { toUrl } from '@/lib/utils';
 import {
     edit as editRole,
     index as rolesIndex,
     update as updateRole,
 } from '@/routes/referensi/roles';
-import { useMemo, useState } from 'react';
+import type { BreadcrumbItem, RefRole } from '@/types';
 
 type PegawaiItem = {
     id: string;
@@ -69,6 +69,7 @@ export default function EditAssign({
 
     const togglePegawai = (pegawaiId: string) => {
         const current = data.pegawai_ids;
+
         if (current.includes(pegawaiId)) {
             setData(
                 'pegawai_ids',
@@ -104,6 +105,7 @@ export default function EditAssign({
                 }
             });
         }
+
         setData('pegawai_ids', newIds);
     };
 
@@ -235,7 +237,10 @@ export default function EditAssign({
                                                         onClick={(e) => { 
                                                             e.preventDefault(); 
                                                             const url = pegawaiList.links[0]?.url;
-                                                            if (url) router.get(url, {}, { preserveState: true, preserveScroll: true });
+
+                                                            if (url) {
+router.get(url, {}, { preserveState: true, preserveScroll: true });
+}
                                                         }}
                                                     >
                                                         Prev
@@ -248,7 +253,10 @@ export default function EditAssign({
                                                         onClick={(e) => { 
                                                             e.preventDefault(); 
                                                             const url = pegawaiList.links[pegawaiList.links.length - 1]?.url;
-                                                            if (url) router.get(url, {}, { preserveState: true, preserveScroll: true });
+
+                                                            if (url) {
+router.get(url, {}, { preserveState: true, preserveScroll: true });
+}
                                                         }}
                                                     >
                                                         Next

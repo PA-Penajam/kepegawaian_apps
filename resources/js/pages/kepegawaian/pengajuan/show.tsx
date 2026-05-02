@@ -1,6 +1,6 @@
-import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import AlertError from '@/components/alert-error';
+import AppLayout from '@/layouts/app-layout';
 import { errorsToArray } from '@/lib/form-errors';
 import type { DiffItem, PengajuanDetail } from '@/types/pengajuan';
 

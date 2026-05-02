@@ -12,8 +12,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import type { CutiPengajuan, ApproverRole } from '@/types/cuti';
 import { formatTanggal } from '@/lib/cuti-utils';
+import type { CutiPengajuan, ApproverRole } from '@/types/cuti';
 import { CutiStateLabels } from '@/types/cuti';
 
 type Props = {
@@ -134,8 +134,7 @@ export function DialogApprove({ pengajuan, role, open, onClose }: Props) {
                         >
                             Batal
                         </Button>
-                        <Button type="submit" disabled={processing}>
-                            {processing && <Spinner className="mr-2" />}
+                        <Button type="submit" processing={processing}>
                             {getActionLabel(role)}
                         </Button>
                     </DialogFooter>

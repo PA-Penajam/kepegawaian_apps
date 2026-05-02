@@ -1,14 +1,9 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { toUrl } from '@/lib/utils';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2, Users, ShieldCheck, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -17,6 +12,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -24,8 +20,11 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, RefRole, RefPermission, PaginatedData } from '@/types';
+import { toUrl } from '@/lib/utils';
 import {
     index as rolesIndex,
     update,
@@ -33,6 +32,7 @@ import {
     destroy,
     edit,
 } from '@/routes/referensi/roles';
+import type { BreadcrumbItem, RefRole, RefPermission, PaginatedData } from '@/types';
 
 type Props = {
     roles: PaginatedData<RefRole>;
@@ -76,8 +76,13 @@ export default function Index({ roles, permissions, filters }: Props) {
         return (permissions || []).reduce(
             (acc, p) => {
                 const group = p.group ?? 'lainnya';
-                if (!acc[group]) acc[group] = [];
+
+                if (!acc[group]) {
+acc[group] = [];
+}
+
                 acc[group].push(p);
+
                 return acc;
             },
             {} as Record<string, RefPermission[]>,
@@ -96,6 +101,7 @@ export default function Index({ roles, permissions, filters }: Props) {
         const timeout = setTimeout(() => {
             handleSearch();
         }, 300);
+
         return () => clearTimeout(timeout);
     }, [search, handleSearch]);
 
@@ -139,7 +145,11 @@ export default function Index({ roles, permissions, filters }: Props) {
 
     const submitEdit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingRole) return;
+
+        if (!editingRole) {
+return;
+}
+
         putEdit(toUrl(update(editingRole.id)), {
             onSuccess: () => closeEditModal()
         });

@@ -1,7 +1,8 @@
 import { Head, router } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
 import { Download } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import Heading from '@/components/heading';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +14,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { PaginationWrapper } from '@/components/pagination-wrapper';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, IamPaginatedData } from '@/types';
 
@@ -117,9 +117,19 @@ export default function MonitoringKenaikanPangkatPage({
             periode: periodeFilter !== 'semua' ? periodeFilter : '',
             ...newParams,
         };
-        if (resolved.unit_kerja) params.unit_kerja = resolved.unit_kerja;
-        if (resolved.golongan) params.golongan = resolved.golongan;
-        if (resolved.periode) params.periode = resolved.periode;
+
+        if (resolved.unit_kerja) {
+params.unit_kerja = resolved.unit_kerja;
+}
+
+        if (resolved.golongan) {
+params.golongan = resolved.golongan;
+}
+
+        if (resolved.periode) {
+params.periode = resolved.periode;
+}
+
         router.get('/kepegawaian/monitoring/kenaikan-pangkat', params, {
             preserveState: true,
             replace: true,
@@ -128,11 +138,19 @@ export default function MonitoringKenaikanPangkatPage({
 
     function handleExport() {
         const params = new URLSearchParams();
-        if (unitKerjaFilter) params.set('unit_kerja', unitKerjaFilter);
-        if (golonganFilter) params.set('golongan', golonganFilter);
+
+        if (unitKerjaFilter) {
+params.set('unit_kerja', unitKerjaFilter);
+}
+
+        if (golonganFilter) {
+params.set('golongan', golonganFilter);
+}
+
         if (periodeFilter !== 'semua') {
             params.set('periode', periodeFilter);
         }
+
         window.location.href = `/kepegawaian/monitoring/kenaikan-pangkat/export?${params.toString()}`;
     }
 
@@ -149,67 +167,67 @@ export default function MonitoringKenaikanPangkatPage({
             <Head title="Monitoring Kenaikan Pangkat" />
 
             <div className="flex flex-1 flex-col gap-6 p-4">
-                <Heading
-                    title="Monitoring kenaikan pangkat"
-                    description="Pantau jadwal KP reguler, periode usul, dan status eligibility pegawai."
-                />
+                <div>
+                    <h1 className="text-2xl font-bold uppercase tracking-tight">Monitoring Kenaikan Pangkat</h1>
+                    <p className="text-sm text-muted-foreground mt-1 font-medium">Pantau jadwal KP reguler, periode usul, dan status eligibility pegawai.</p>
+                </div>
 
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <Card>
+                    <Card className="border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">
+                            <CardTitle className="text-sm font-bold uppercase text-muted-foreground">
                                 Total pegawai terpantau
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold">
+                            <p className="text-3xl font-black">
                                 {kpStats.total}
                             </p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">
+                            <CardTitle className="text-sm font-bold uppercase text-muted-foreground">
                                 Sudah eligible
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-emerald-700">
+                            <p className="text-3xl font-black text-emerald-700">
                                 {kpStats.sudahEligible}
                             </p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">
+                            <CardTitle className="text-sm font-bold uppercase text-muted-foreground">
                                 Mendekati eligible
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-amber-700">
+                            <p className="text-3xl font-black text-amber-700">
                                 {kpStats.mendekatiEligible}
                             </p>
                         </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)]">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">
+                            <CardTitle className="text-sm font-bold uppercase text-muted-foreground">
                                 Belum eligible
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-slate-700">
+                            <p className="text-3xl font-black text-slate-700">
                                 {kpStats.belumEligible}
                             </p>
                         </CardContent>
                     </Card>
                 </div>
 
-                <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 md:flex-row md:items-end">
+                <div className="flex flex-col gap-3 rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-card p-4 md:flex-row md:items-end">
                     <div className="grid gap-2">
                         <label
                             htmlFor="periode"
-                            className="text-sm font-medium"
+                            className="text-sm font-bold"
                         >
                             Filter periode
                         </label>
@@ -226,7 +244,7 @@ export default function MonitoringKenaikanPangkatPage({
                                     periode: value === 'semua' ? '' : value,
                                 });
                             }}
-                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                            className="h-9 border-2 border-black bg-background px-3 text-sm font-medium shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
                         >
                             <option value="semua">Semua</option>
                             <option value="april">April</option>
@@ -235,7 +253,7 @@ export default function MonitoringKenaikanPangkatPage({
                     </div>
 
                     <div className="grid gap-2">
-                        <label htmlFor="unit-kerja" className="text-sm font-medium">
+                        <label htmlFor="unit-kerja" className="text-sm font-bold">
                             Unit Kerja
                         </label>
                         <select
@@ -247,7 +265,7 @@ export default function MonitoringKenaikanPangkatPage({
                                     unit_kerja: e.target.value,
                                 });
                             }}
-                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                            className="h-9 border-2 border-black bg-background px-3 text-sm font-medium shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
                         >
                             <option value="">Semua Unit</option>
                             {filterOptions.unitKerja.map((uk) => (
@@ -259,7 +277,7 @@ export default function MonitoringKenaikanPangkatPage({
                     </div>
 
                     <div className="grid gap-2">
-                        <label htmlFor="golongan" className="text-sm font-medium">
+                        <label htmlFor="golongan" className="text-sm font-bold">
                             Golongan
                         </label>
                         <select
@@ -271,7 +289,7 @@ export default function MonitoringKenaikanPangkatPage({
                                     golongan: e.target.value,
                                 });
                             }}
-                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                            className="h-9 border-2 border-black bg-background px-3 text-sm font-medium shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
                         >
                             <option value="">Semua Gol</option>
                             {filterOptions.golongan.map((gol) => (
@@ -283,7 +301,7 @@ export default function MonitoringKenaikanPangkatPage({
                     </div>
 
                     <div className="grid gap-2">
-                        <label htmlFor="status" className="text-sm font-medium">
+                        <label htmlFor="status" className="text-sm font-bold">
                             Filter status
                         </label>
                         <select
@@ -294,7 +312,7 @@ export default function MonitoringKenaikanPangkatPage({
                                     event.target.value as 'semua' | StatusKp,
                                 )
                             }
-                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                            className="h-9 border-2 border-black bg-background px-3 text-sm font-medium shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
                         >
                             <option value="semua">Semua</option>
                             <option value="Sudah Eligible">
@@ -313,25 +331,25 @@ export default function MonitoringKenaikanPangkatPage({
                         variant="outline"
                         size="sm"
                         onClick={handleExport}
-                        className="mb-0.5"
+                        className="mb-0.5 border-2 border-black font-bold shadow-[2px_2px_0_rgba(0,0,0,1)]"
                     >
                         <Download className="mr-2 h-4 w-4" />
                         Export Excel
                     </Button>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border bg-card">
+                <div className="rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden">
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead>NIP</TableHead>
-                                <TableHead>Nama</TableHead>
-                                <TableHead>Pangkat Saat Ini</TableHead>
-                                <TableHead>TMT Pangkat</TableHead>
-                                <TableHead>TMT KP Berikutnya</TableHead>
-                                <TableHead>Periode Usul</TableHead>
-                                <TableHead>Batas Usul</TableHead>
-                                <TableHead>Status</TableHead>
+                            <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
+                                <TableHead className="font-black uppercase text-xs tracking-wider">NIP</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">Nama</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">Pangkat Saat Ini</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">TMT Pangkat</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">TMT KP Berikutnya</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">Periode Usul</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">Batas Usul</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">Status</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -339,18 +357,18 @@ export default function MonitoringKenaikanPangkatPage({
                                 <TableRow>
                                     <TableCell
                                         colSpan={8}
-                                        className="py-8 text-center text-muted-foreground"
+                                        className="py-12 text-center font-medium text-muted-foreground"
                                     >
                                         Tidak ada data monitoring yang sesuai.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 filteredList.map((pegawai) => (
-                                    <TableRow key={pegawai.id}>
-                                        <TableCell>
+                                    <TableRow key={pegawai.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
+                                        <TableCell className="font-mono text-sm">
                                             {pegawai.nip ?? '-'}
                                         </TableCell>
-                                        <TableCell className="font-medium">
+                                        <TableCell className="font-bold">
                                             {pegawai.nama_lengkap}
                                         </TableCell>
                                         <TableCell>

@@ -109,15 +109,15 @@ export function MultiStepForm({
                     <Button
                         type="button"
                         onClick={onSubmit}
-                        disabled={processing}
+                        processing={processing}
                     >
-                        {processing ? 'Menyimpan...' : 'Simpan'}
+                        Simpan
                     </Button>
                 ) : (
                     <Button
                         type="button"
                         onClick={onNext}
-                        disabled={processing}
+                        processing={processing}
                     >
                         Selanjutnya
                     </Button>

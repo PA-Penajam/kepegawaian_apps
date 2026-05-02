@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import { useCallback, useState } from 'react';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,8 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import type { IamPaginatedData } from '@/types';
-import { router } from '@inertiajs/react';
-import { useCallback, useState } from 'react';
 
 type ActivityItem = {
     id: number;

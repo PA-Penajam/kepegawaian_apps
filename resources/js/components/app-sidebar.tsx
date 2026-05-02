@@ -1,7 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     Calendar,
+    CalendarDays,
     FileText,
+    Inbox,
     LayoutGrid,
     ScrollText,
     Settings,
@@ -119,6 +121,53 @@ export function AppSidebar() {
           ]
         : [];
 
+    const cutiNavItems: NavItem[] = hasAnyPermission(
+        'cuti.pengajuan.view-own',
+        'cuti.pengajuan.verify',
+        'cuti.pengajuan.approve-langsung',
+        'cuti.pengajuan.approve-pejabat',
+        'cuti.saldo.view-all',
+    )
+        ? [
+              ...(hasPermission('cuti.pengajuan.view-own')
+                  ? [
+                        {
+                            title: 'Cuti Saya',
+                            href: '/cuti/saya',
+                            icon: CalendarDays,
+                        },
+                    ]
+                  : []),
+              ...(hasAnyPermission(
+                  'cuti.pengajuan.verify',
+                  'cuti.pengajuan.approve-langsung',
+                  'cuti.pengajuan.approve-pejabat',
+              )
+                  ? [
+                        {
+                            title: 'Inbox Persetujuan Cuti',
+                            href: '/cuti/inbox',
+                            icon: Inbox,
+                        },
+                    ]
+                  : []),
+              ...(hasPermission('cuti.saldo.view-all')
+                  ? [
+                        {
+                            title: 'Kelola Saldo Cuti',
+                            href: '/admin/cuti/saldo',
+                            icon: Settings,
+                        },
+                        {
+                            title: 'Audit Cuti',
+                            href: '/admin/cuti/audit',
+                            icon: ScrollText,
+                        },
+                    ]
+                  : []),
+          ]
+        : [];
+
     const iamNavItems: NavItem[] = hasPermission('iam-manage')
         ? [
               {
@@ -161,6 +210,9 @@ export function AppSidebar() {
                 ) : null}
                 {referensiNavItems.length > 0 ? (
                     <NavMain items={referensiNavItems} title="Referensi" />
+                ) : null}
+                {cutiNavItems.length > 0 ? (
+                    <NavMain items={cutiNavItems} title="Cuti" />
                 ) : null}
                 {iamNavItems.length > 0 ? (
                     <NavMain items={iamNavItems} title="IAM" />

@@ -1,8 +1,8 @@
 import { Link } from '@inertiajs/react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { BlurFade } from '@/components/ui/blur-fade';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
-import { BlurFade } from '@/components/ui/blur-fade';
 
 export default function AuthSimpleLayout({
     children,

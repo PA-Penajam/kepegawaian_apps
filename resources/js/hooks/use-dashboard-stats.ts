@@ -60,8 +60,14 @@ function barPct(value: number, max: number): number {
 }
 
 function jkLabel(code: string): string {
-    if (code === 'L') return 'Laki-laki';
-    if (code === 'P') return 'Perempuan';
+    if (code === 'L') {
+return 'Laki-laki';
+}
+
+    if (code === 'P') {
+return 'Perempuan';
+}
+
     return code;
 }
 
@@ -107,6 +113,7 @@ export function useDashboardStats(
         const golonganItems: GolonganItem[] = ['I', 'II', 'III', 'IV'].map(
             (gol) => {
                 const count = stats.distribusi_golongan[gol] || 0;
+
                 return {
                     golongan: gol,
                     count,

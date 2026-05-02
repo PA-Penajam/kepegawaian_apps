@@ -34,6 +34,7 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
 function BreadcrumbLink({
   asChild,
   className,
+  children,
   ...props
 }: React.ComponentProps<"a"> & {
   asChild?: boolean
@@ -45,7 +46,9 @@ function BreadcrumbLink({
       data-slot="breadcrumb-link"
       className={cn("hover:text-foreground transition-colors", className)}
       {...props}
-    />
+    >
+      {children}
+    </Comp>
   )
 }
 
