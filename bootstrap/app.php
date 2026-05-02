@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\Handler;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -51,4 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ])
             );
         });
+
+        // Daftarkan global exception handler untuk pesan user-friendly
+        (new Handler)($exceptions);
     })->create();
