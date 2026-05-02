@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Cuti;
 
+use App\Exceptions\Cuti\CancelTidakDiizinkanException;
+use App\Exceptions\Cuti\TransitionTidakValidException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cuti\ApproveRequest;
 use App\Http\Requests\Cuti\ReassignApproverRequest;
 use App\Http\Requests\Cuti\RejectRequest;
 use App\Models\Cuti\CutiPengajuan;
 use App\Services\Cuti\WorkflowService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -60,14 +63,22 @@ class ApprovalController extends Controller
      */
     public function verify(ApproveRequest $request, string $id): RedirectResponse
     {
-        $this->workflowService->verify(
-            $id,
-            $request->user(),
-            $request->validated('catatan')
-        );
+        try {
+            $this->workflowService->verify(
+                $id,
+                $request->user(),
+                $request->validated('catatan')
+            );
 
-        return to_route('cuti.pengajuan.show', $id)
-            ->with('success', 'Pengajuan berhasil diverifikasi.');
+            return to_route('cuti.pengajuan.show', $id)
+                ->with('success', 'Pengajuan berhasil diverifikasi.');
+        } catch (AuthorizationException $e) {
+            return back()->with('error', 'Anda tidak memiliki izin untuk memverifikasi pengajuan ini.');
+        } catch (TransitionTidakValidException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat memverifikasi pengajuan. Silakan coba lagi.');
+        }
     }
 
     /**
@@ -75,14 +86,22 @@ class ApprovalController extends Controller
      */
     public function approveAtasan(ApproveRequest $request, string $id): RedirectResponse
     {
-        $this->workflowService->approveAtasan(
-            $id,
-            $request->user(),
-            $request->validated('catatan')
-        );
+        try {
+            $this->workflowService->approveAtasan(
+                $id,
+                $request->user(),
+                $request->validated('catatan')
+            );
 
-        return to_route('cuti.pengajuan.show', $id)
-            ->with('success', 'Pengajuan berhasil disetujui oleh atasan langsung.');
+            return to_route('cuti.pengajuan.show', $id)
+                ->with('success', 'Pengajuan berhasil disetujui oleh atasan langsung.');
+        } catch (AuthorizationException $e) {
+            return back()->with('error', 'Anda tidak memiliki izin untuk menyetujui pengajuan ini.');
+        } catch (TransitionTidakValidException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menyetujui pengajuan. Silakan coba lagi.');
+        }
     }
 
     /**
@@ -90,14 +109,22 @@ class ApprovalController extends Controller
      */
     public function approvePejabat(ApproveRequest $request, string $id): RedirectResponse
     {
-        $this->workflowService->approvePejabat(
-            $id,
-            $request->user(),
-            $request->validated('catatan')
-        );
+        try {
+            $this->workflowService->approvePejabat(
+                $id,
+                $request->user(),
+                $request->validated('catatan')
+            );
 
-        return to_route('cuti.pengajuan.show', $id)
-            ->with('success', 'Pengajuan berhasil disetujui oleh pejabat berwenang.');
+            return to_route('cuti.pengajuan.show', $id)
+                ->with('success', 'Pengajuan berhasil disetujui oleh pejabat berwenang.');
+        } catch (AuthorizationException $e) {
+            return back()->with('error', 'Anda tidak memiliki izin untuk menyetujui pengajuan ini.');
+        } catch (TransitionTidakValidException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menyetujui pengajuan. Silakan coba lagi.');
+        }
     }
 
     /**
@@ -105,24 +132,32 @@ class ApprovalController extends Controller
      */
     public function reject(RejectRequest $request, string $id): RedirectResponse
     {
-        $user = $request->user();
+        try {
+            $user = $request->user();
 
-        // Tentukan role berdasarkan permission user
-        $role = match (true) {
-            $user->hasPermission('cuti.pengajuan.approve-pejabat') => 'pejabat_berwenang',
-            $user->hasPermission('cuti.pengajuan.approve-langsung') => 'atasan_langsung',
-            default => 'petugas_kepegawaian',
-        };
+            // Tentukan role berdasarkan permission user
+            $role = match (true) {
+                $user->hasPermission('cuti.pengajuan.approve-pejabat') => 'pejabat_berwenang',
+                $user->hasPermission('cuti.pengajuan.approve-langsung') => 'atasan_langsung',
+                default => 'petugas_kepegawaian',
+            };
 
-        $this->workflowService->rejectByRole(
-            $id,
-            $user,
-            $role,
-            $request->validated('alasan')
-        );
+            $this->workflowService->rejectByRole(
+                $id,
+                $user,
+                $role,
+                $request->validated('alasan')
+            );
 
-        return to_route('cuti.pengajuan.show', $id)
-            ->with('success', 'Pengajuan telah ditolak.');
+            return to_route('cuti.pengajuan.show', $id)
+                ->with('success', 'Pengajuan telah ditolak.');
+        } catch (AuthorizationException $e) {
+            return back()->with('error', 'Anda tidak memiliki izin untuk menolak pengajuan ini.');
+        } catch (TransitionTidakValidException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menolak pengajuan. Silakan coba lagi.');
+        }
     }
 
     /**
@@ -130,20 +165,30 @@ class ApprovalController extends Controller
      */
     public function cancel(Request $request, string $id): RedirectResponse
     {
-        $user = $request->user();
-        $pengajuan = CutiPengajuan::findOrFail($id);
+        try {
+            $user = $request->user();
+            $pengajuan = CutiPengajuan::findOrFail($id);
 
-        if ($pengajuan->state->name() === 'DISETUJUI') {
-            $this->workflowService->cancelAfterApproved($id, $user);
+            if ($pengajuan->state->name() === 'DISETUJUI') {
+                $this->workflowService->cancelAfterApproved($id, $user);
+
+                return to_route('cuti.pengajuan.show', $id)
+                    ->with('success', 'Cuti yang sudah disetujui berhasil dicabut.');
+            }
+
+            $this->workflowService->cancelDraft($id, $user);
 
             return to_route('cuti.pengajuan.show', $id)
-                ->with('success', 'Cuti yang sudah disetujui berhasil dicabut.');
+                ->with('success', 'Pengajuan berhasil dibatalkan.');
+        } catch (AuthorizationException $e) {
+            return back()->with('error', 'Anda tidak memiliki izin untuk membatalkan pengajuan ini.');
+        } catch (TransitionTidakValidException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (CancelTidakDiizinkanException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat membatalkan pengajuan. Silakan coba lagi.');
         }
-
-        $this->workflowService->cancelDraft($id, $user);
-
-        return to_route('cuti.pengajuan.show', $id)
-            ->with('success', 'Pengajuan berhasil dibatalkan.');
     }
 
     /**
@@ -151,15 +196,21 @@ class ApprovalController extends Controller
      */
     public function reassign(ReassignApproverRequest $request, string $id): RedirectResponse
     {
-        $this->workflowService->reassignApprover(
-            $id,
-            $request->validated('role'),
-            $request->validated('new_nip'),
-            $request->user(),
-            $request->validated('alasan')
-        );
+        try {
+            $this->workflowService->reassignApprover(
+                $id,
+                $request->validated('role'),
+                $request->validated('new_nip'),
+                $request->user(),
+                $request->validated('alasan')
+            );
 
-        return to_route('cuti.pengajuan.show', $id)
-            ->with('success', 'Approver berhasil di-reassign.');
+            return to_route('cuti.pengajuan.show', $id)
+                ->with('success', 'Approver berhasil di-reassign.');
+        } catch (AuthorizationException $e) {
+            return back()->with('error', 'Anda tidak memiliki izin untuk melakukan reassign approver.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat melakukan reassign approver. Silakan coba lagi.');
+        }
     }
 }

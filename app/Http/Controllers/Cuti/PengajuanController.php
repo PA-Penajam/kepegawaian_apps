@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Cuti;
 
+use App\Exceptions\Cuti\AlokasiTidakAdaException;
+use App\Exceptions\Cuti\CrossYearLeaveException;
+use App\Exceptions\Cuti\OverlapPengajuanException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cuti\SubmitPengajuanRequest;
 use App\Models\Cuti\CutiJenisMaster;
@@ -55,38 +58,48 @@ class PengajuanController extends Controller
      */
     public function store(SubmitPengajuanRequest $request): RedirectResponse
     {
-        $user = $request->user();
+        try {
+            $user = $request->user();
 
-        $pengajuan = $this->pengajuanService->submit([
-            'pegawai_nip' => $user->nip,
-            'jenis_cuti_kode' => $request->validated('jenis_cuti_kode'),
-            'tanggal_mulai' => $request->validated('tanggal_mulai'),
-            'tanggal_selesai' => $request->validated('tanggal_selesai'),
-            'alasan' => $request->validated('alasan'),
-            'alamat_selama_cuti' => $request->validated('alamat_selama_cuti'),
-            'nomor_telp_selama_cuti' => $request->validated('nomor_telp_selama_cuti'),
-        ]);
+            $pengajuan = $this->pengajuanService->submit([
+                'pegawai_nip' => $user->nip,
+                'jenis_cuti_kode' => $request->validated('jenis_cuti_kode'),
+                'tanggal_mulai' => $request->validated('tanggal_mulai'),
+                'tanggal_selesai' => $request->validated('tanggal_selesai'),
+                'alasan' => $request->validated('alasan'),
+                'alamat_selama_cuti' => $request->validated('alamat_selama_cuti'),
+                'nomor_telp_selama_cuti' => $request->validated('nomor_telp_selama_cuti'),
+            ]);
 
-        // Simpan lampiran jika ada
-        if ($request->hasFile('lampiran')) {
-            foreach ($request->file('lampiran') as $file) {
-                $path = $file->store("cuti/lampiran/{$pengajuan->id}", 'local');
+            // Simpan lampiran jika ada
+            if ($request->hasFile('lampiran')) {
+                foreach ($request->file('lampiran') as $file) {
+                    $path = $file->store("cuti/lampiran/{$pengajuan->id}", 'local');
 
-                CutiPengajuanLampiran::create([
-                    'pengajuan_id' => $pengajuan->id,
-                    'jenis_lampiran' => 'pendukung',
-                    'nama_file_asli' => $file->getClientOriginalName(),
-                    'path_file' => $path,
-                    'mime_type' => $file->getMimeType(),
-                    'size_bytes' => $file->getSize(),
-                    'checksum_sha256' => hash_file('sha256', $file->getRealPath()),
-                    'uploaded_by_nip' => $user->nip,
-                ]);
+                    CutiPengajuanLampiran::create([
+                        'pengajuan_id' => $pengajuan->id,
+                        'jenis_lampiran' => 'pendukung',
+                        'nama_file_asli' => $file->getClientOriginalName(),
+                        'path_file' => $path,
+                        'mime_type' => $file->getMimeType(),
+                        'size_bytes' => $file->getSize(),
+                        'checksum_sha256' => hash_file('sha256', $file->getRealPath()),
+                        'uploaded_by_nip' => $user->nip,
+                    ]);
+                }
             }
-        }
 
-        return to_route('cuti.pengajuan.show', $pengajuan->id)
-            ->with('success', 'Pengajuan cuti berhasil diajukan.');
+            return to_route('cuti.pengajuan.show', $pengajuan->id)
+                ->with('success', 'Pengajuan cuti berhasil diajukan.');
+        } catch (CrossYearLeaveException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (AlokasiTidakAdaException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (OverlapPengajuanException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menyimpan pengajuan cuti. Silakan coba lagi.');
+        }
     }
 
     /**
