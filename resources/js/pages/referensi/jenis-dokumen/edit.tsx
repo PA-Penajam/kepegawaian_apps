@@ -1,11 +1,13 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { useMemo } from 'react';
+import AlertError from '@/components/alert-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import {
     index as jenisDokumenIndex,
     update as updateJenisDokumen,
@@ -54,6 +56,12 @@ export default function Edit({ jenisDokumen }: Props) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="max-w-md space-y-4">
+                    {Object.keys(errors).length > 0 && (
+                        <AlertError
+                            errors={errorsToArray(errors)}
+                            title="Gagal memperbarui data"
+                        />
+                    )}
                     <div className="space-y-2">
                         <Label htmlFor="nama">
                             Nama <span className="text-destructive">*</span>
@@ -90,7 +98,7 @@ export default function Edit({ jenisDokumen }: Props) {
                     </div>
 
                     <div className="flex gap-2">
-                        <Button type="submit" disabled={processing}>
+                        <Button type="submit" processing={processing}>
                             Simpan
                         </Button>
                         <Button variant="outline" asChild>

@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import type { FormEventHandler} from 'react';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { errorsToArray } from '@/lib/form-errors';
 import type { CutiJenisMaster } from '@/types/cuti';
 
 type SaldoData = Record<string, number>;
@@ -131,6 +133,15 @@ return;
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
+            {(Object.keys(errors).length > 0 || Object.keys(clientErrors).length > 0) && (
+                <AlertError
+                    errors={[
+                        ...errorsToArray(errors),
+                        ...errorsToArray(clientErrors),
+                    ]}
+                    title="Gagal mengajukan cuti"
+                />
+            )}
             {/* Jenis Cuti */}
             <div className="space-y-2">
                 <Label htmlFor="jenis_cuti_kode">Jenis Cuti</Label>
@@ -252,8 +263,8 @@ return;
 
             {/* Tombol Submit */}
             <div className="flex justify-end gap-3">
-                <Button type="submit" disabled={processing}>
-                    {processing ? 'Mengirim...' : 'Ajukan Cuti'}
+                <Button type="submit" processing={processing}>
+                    Ajukan Cuti
                 </Button>
             </div>
         </form>

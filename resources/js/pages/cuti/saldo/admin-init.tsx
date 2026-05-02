@@ -1,5 +1,6 @@
 import { Head, useForm, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -52,6 +54,12 @@ export default function AdminSaldoInit({ tahun }: Props) {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
+                            {Object.keys(errors).length > 0 && (
+                                <AlertError
+                                    errors={errorsToArray(errors)}
+                                    title="Gagal menginisialisasi saldo"
+                                />
+                            )}
                             {/* NIP Pegawai */}
                             <div className="space-y-2">
                                 <Label htmlFor="pegawai_nip">NIP Pegawai</Label>
@@ -113,8 +121,8 @@ export default function AdminSaldoInit({ tahun }: Props) {
                                 <InputError message={errors.keterangan} />
                             </div>
 
-                            <Button type="submit" disabled={processing} className="w-full">
-                                {processing ? 'Menyimpan...' : 'Inisialisasi Saldo'}
+                            <Button type="submit" processing={processing} className="w-full">
+                                Inisialisasi Saldo
                             </Button>
                         </form>
                     </CardContent>

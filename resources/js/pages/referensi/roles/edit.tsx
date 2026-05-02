@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { toUrl } from '@/lib/utils';
 import { ArrowLeft, Search, Save, Shield } from 'lucide-react';
+import AlertError from '@/components/alert-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ import {
     CardFooter,
 } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem, RefRole } from '@/types';
 import {
     edit as editRole,
@@ -46,7 +48,7 @@ export default function EditAssign({
     pegawaiList,
     assignedPegawaiIds,
 }: Props) {
-    const { data, setData, put, processing } = useForm({
+    const { data, setData, put, processing, errors } = useForm({
         // Minimal data needed for update. We MUST pass nama and keterangan to bypass the validation rule requiring them.
         nama: role.nama,
         keterangan: role.keterangan || '',
@@ -152,6 +154,12 @@ export default function EditAssign({
                     </div>
 
                     <div className="md:col-span-2">
+                        {Object.keys(errors).length > 0 && (
+                            <AlertError
+                                errors={errorsToArray(errors)}
+                                title="Gagal menyimpan penugasan"
+                            />
+                        )}
                         <form onSubmit={handleSubmit}>
                             <Card className="border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)]">
                                 <CardHeader className="pb-4 border-b-2 border-black/10 bg-muted/5">
@@ -260,7 +268,7 @@ export default function EditAssign({
                                     <Button variant="outline" asChild className="border-2 border-black font-bold">
                                         <Link href={toUrl(rolesIndex())}>Batal</Link>
                                     </Button>
-                                    <Button type="submit" disabled={processing} className="font-bold border-2 border-black gap-2">
+                                    <Button type="submit" processing={processing} className="font-bold border-2 border-black gap-2">
                                         <Save className="w-4 h-4" />
                                         Simpan Penugasan
                                     </Button>

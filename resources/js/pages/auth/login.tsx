@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -8,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 
@@ -31,6 +33,12 @@ export default function Login({ status, canResetPassword }: Props) {
             >
                 {({ processing, errors }) => (
                     <>
+                        {Object.keys(errors).length > 0 && (
+                            <AlertError
+                                errors={errorsToArray(errors)}
+                                title="Login gagal"
+                            />
+                        )}
                         <div className="grid gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="nip">NIP</Label>
@@ -84,10 +92,9 @@ export default function Login({ status, canResetPassword }: Props) {
                                 type="submit"
                                 className="mt-4 w-full"
                                 tabIndex={4}
-                                disabled={processing}
+                                processing={processing}
                                 data-test="login-button"
                             >
-                                {processing && <Spinner />}
                                 Masuk
                             </Button>
                         </div>

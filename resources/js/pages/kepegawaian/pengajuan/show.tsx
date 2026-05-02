@@ -1,5 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
+import AlertError from '@/components/alert-error';
+import { errorsToArray } from '@/lib/form-errors';
 import type { DiffItem, PengajuanDetail } from '@/types/pengajuan';
 
 type Props = {
@@ -43,8 +45,16 @@ export default function ValidatorPengajuanShow({ pengajuan, diffItems }: Props) 
                                 e.preventDefault();
                                 rejectForm.post(`/kepegawaian/pengajuan/${pengajuan.id}/reject`);
                             }}
-                            className="flex gap-2"
+                            className="flex flex-wrap items-center gap-2"
                         >
+                            {Object.keys(rejectForm.errors).length > 0 && (
+                                <div className="w-full">
+                                    <AlertError
+                                        errors={errorsToArray(rejectForm.errors)}
+                                        title="Gagal menolak pengajuan"
+                                    />
+                                </div>
+                            )}
                             <input
                                 value={rejectForm.data.alasan_penolakan}
                                 onChange={(e) => rejectForm.setData('alasan_penolakan', e.target.value)}

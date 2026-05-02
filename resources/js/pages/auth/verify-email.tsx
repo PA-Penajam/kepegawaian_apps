@@ -1,9 +1,11 @@
 // Components
 import { Form, Head } from '@inertiajs/react';
+import AlertError from '@/components/alert-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
 
@@ -23,10 +25,15 @@ export default function VerifyEmail({ status }: { status?: string }) {
             )}
 
             <Form {...send.form()} className="space-y-6 text-center">
-                {({ processing }) => (
+                {({ processing, errors }) => (
                     <>
-                        <Button disabled={processing} variant="secondary">
-                            {processing && <Spinner />}
+                        {Object.keys(errors).length > 0 && (
+                            <AlertError
+                                errors={errorsToArray(errors)}
+                                title="Gagal mengirim ulang email verifikasi"
+                            />
+                        )}
+                        <Button processing={processing} variant="secondary">
                             Resend verification email
                         </Button>
 

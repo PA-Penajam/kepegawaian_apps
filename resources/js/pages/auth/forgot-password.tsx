@@ -1,12 +1,14 @@
 // Components
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
+import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 
@@ -28,6 +30,12 @@ export default function ForgotPassword({ status }: { status?: string }) {
                 <Form {...email.form()}>
                     {({ processing, errors }) => (
                         <>
+                            {Object.keys(errors).length > 0 && (
+                                <AlertError
+                                    errors={errorsToArray(errors)}
+                                    title="Reset password gagal"
+                                />
+                            )}
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>
                                 <Input
@@ -45,12 +53,9 @@ export default function ForgotPassword({ status }: { status?: string }) {
                             <div className="my-6 flex items-center justify-start">
                                 <Button
                                     className="w-full"
-                                    disabled={processing}
+                                    processing={processing}
                                     data-test="email-password-reset-link-button"
                                 >
-                                    {processing && (
-                                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                                    )}
                                     Email password reset link
                                 </Button>
                             </div>

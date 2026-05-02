@@ -11,6 +11,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import AlertError from '@/components/alert-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +30,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem, IamAvailableApp, IamUserAkses } from '@/types';
 
 type Props = {
@@ -163,6 +165,12 @@ export default function Akses() {
                     <h2 className="mb-4 text-lg font-medium">
                         Tambah Akses Baru
                     </h2>
+                    {Object.keys(addRoleForm.errors).length > 0 && (
+                        <AlertError
+                            errors={errorsToArray(addRoleForm.errors)}
+                            title="Gagal menambahkan akses"
+                        />
+                    )}
                     <div className="flex flex-wrap items-end gap-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-sm font-medium">

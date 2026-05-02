@@ -1,6 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import {
 } from '@/components/ui/input-otp';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
 import AuthLayout from '@/layouts/auth-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import { store } from '@/routes/two-factor/login';
 
 export default function TwoFactorChallenge() {
@@ -61,6 +63,12 @@ export default function TwoFactorChallenge() {
                 >
                     {({ errors, processing, clearErrors }) => (
                         <>
+                            {Object.keys(errors).length > 0 && (
+                                <AlertError
+                                    errors={errorsToArray(errors)}
+                                    title="Verifikasi gagal"
+                                />
+                            )}
                             {showRecoveryInput ? (
                                 <>
                                     <Input
@@ -105,7 +113,7 @@ export default function TwoFactorChallenge() {
                             <Button
                                 type="submit"
                                 className="w-full"
-                                disabled={processing}
+                                processing={processing}
                             >
                                 Continue
                             </Button>

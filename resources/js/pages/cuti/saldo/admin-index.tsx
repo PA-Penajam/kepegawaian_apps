@@ -2,6 +2,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { Settings2, Plus } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { DialogAdjustSaldo } from '@/components/cuti/DialogAdjustSaldo';
+import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem } from '@/types';
 import type { AlokasiPaginated, AlokasiListItem } from '@/types/cuti';
 
@@ -183,6 +185,14 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleBulkInit} className="flex flex-wrap items-end gap-3">
+                            {Object.keys(bulkForm.errors).length > 0 && (
+                                <div className="w-full">
+                                    <AlertError
+                                        errors={errorsToArray(bulkForm.errors)}
+                                        title="Gagal menginisialisasi saldo"
+                                    />
+                                </div>
+                            )}
                             <div className="space-y-1">
                                 <Label htmlFor="init-nip">NIP Pegawai</Label>
                                 <Input
@@ -217,9 +227,9 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                                 />
                                 <InputError message={bulkForm.errors.jumlah_hari} />
                             </div>
-                            <Button type="submit" disabled={bulkForm.processing}>
+                            <Button type="submit" processing={bulkForm.processing}>
                                 <Plus className="mr-1 h-4 w-4" />
-                                {bulkForm.processing ? 'Menyimpan...' : 'Inisialisasi'}
+                                Inisialisasi
                             </Button>
                         </form>
                     </CardContent>

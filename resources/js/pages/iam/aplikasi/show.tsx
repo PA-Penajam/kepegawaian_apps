@@ -11,6 +11,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import AlertError from '@/components/alert-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +36,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type {
     BreadcrumbItem,
     IamApplication,
@@ -273,6 +275,12 @@ export default function Show() {
                                                 handleAddRole();
                                             }}
                                         >
+                                            {Object.keys(addRoleForm.errors).length > 0 && (
+                                                <AlertError
+                                                    errors={errorsToArray(addRoleForm.errors)}
+                                                    title="Gagal menambahkan role"
+                                                />
+                                            )}
                                             <div className="grid gap-4 py-4">
                                                 <div className="grid gap-2">
                                                     <Label htmlFor="role-nama">
@@ -570,6 +578,12 @@ export default function Show() {
                                                 handleAddPermission();
                                             }}
                                         >
+                                            {Object.keys(addPermissionForm.errors).length > 0 && (
+                                                <AlertError
+                                                    errors={errorsToArray(addPermissionForm.errors)}
+                                                    title="Gagal menambahkan permission"
+                                                />
+                                            )}
                                             <div className="grid gap-4 py-4">
                                                 <div className="grid gap-2">
                                                     <Label htmlFor="perm-nama">

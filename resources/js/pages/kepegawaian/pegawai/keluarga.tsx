@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -106,6 +107,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<KeluargaItem | null>(null);
     const [form, setForm] = useState<KeluargaForm>(emptyForm);
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     const breadcrumbs = useMemo<BreadcrumbItem[]>(
         () => [
@@ -146,7 +148,13 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
     const submitForm = () => {
         const requestOptions = {
             preserveScroll: true,
-            onSuccess: () => closeDialog(),
+            onSuccess: () => {
+                setFormErrors({});
+                closeDialog();
+            },
+            onError: (errors: Record<string, string>) => {
+                setFormErrors(errors);
+            },
         };
 
         if (editingItem !== null) {
@@ -316,6 +324,13 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                             Isi data lengkap anggota keluarga pegawai.
                         </DialogDescription>
                     </DialogHeader>
+
+                    {Object.keys(formErrors).length > 0 && (
+                        <AlertError
+                            errors={errorsToArray(formErrors)}
+                            title="Gagal menyimpan data keluarga"
+                        />
+                    )}
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">

@@ -1,5 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import React, { useState } from 'react';
+import AlertError from '@/components/alert-error';
 import { EnumSelect } from '@/components/kepegawaian/enum-select';
 import { MultiStepForm } from '@/components/kepegawaian/multi-step-form';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem } from '@/types';
 
 interface EditProps {
@@ -140,6 +142,12 @@ export default function PegawaiEdit({
             <Head title={`Ubah ${pegawai.nama_lengkap}`} />
 
             <div className="mx-auto flex h-full w-full max-w-4xl flex-1 flex-col gap-6 rounded-xl p-4">
+                {Object.keys(errors).length > 0 && (
+                    <AlertError
+                        errors={errorsToArray(errors)}
+                        title="Gagal memperbarui data pegawai"
+                    />
+                )}
                 <MultiStepForm
                     steps={steps}
                     currentStep={currentStep}

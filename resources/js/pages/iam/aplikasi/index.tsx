@@ -11,6 +11,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import AlertError from '@/components/alert-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +36,7 @@ import {
 } from '@/components/ui/table';
 import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem, IamApplication } from '@/types';
 
 type Props = {
@@ -52,6 +54,7 @@ export default function Index() {
         id: number;
         nama: string;
     } | null>(null);
+    const [showCreateDialog, setShowCreateDialog] = useState(false);
 
     // Form untuk create aplikasi
     const createForm = useForm({
@@ -103,7 +106,7 @@ export default function Index() {
                     <h1 className="text-2xl font-semibold">
                         Kelola Aplikasi IAM
                     </h1>
-                    <Dialog>
+                    <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                         <DialogTrigger asChild>
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" />
@@ -126,10 +129,17 @@ export default function Index() {
                                     createForm.post('/iam/aplikasi', {
                                         onSuccess: () => {
                                             createForm.reset();
+                                            setShowCreateDialog(false);
                                         },
                                     });
                                 }}
                             >
+                                {Object.keys(createForm.errors).length > 0 && (
+                                    <AlertError
+                                        errors={errorsToArray(createForm.errors)}
+                                        title="Gagal mendaftarkan aplikasi"
+                                    />
+                                )}
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="nama">Nama Aplikasi</Label>

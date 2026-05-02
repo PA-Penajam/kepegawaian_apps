@@ -3,6 +3,7 @@ import { Form, Head } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
 import { useRef, useState } from 'react';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
+import AlertError from '@/components/alert-error';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -13,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { errorsToArray } from '@/lib/form-errors';
 import { edit } from '@/routes/security';
 import { disable, enable } from '@/routes/two-factor';
 import type { BreadcrumbItem } from '@/types';
@@ -88,6 +90,12 @@ export default function Security({
                     >
                         {({ errors, processing, recentlySuccessful }) => (
                             <>
+                                {Object.keys(errors).length > 0 && (
+                                    <AlertError
+                                        errors={errorsToArray(errors)}
+                                        title="Gagal memperbarui password"
+                                    />
+                                )}
                                 <div className="grid gap-2">
                                     <Label htmlFor="current_password">
                                         Current password
@@ -143,12 +151,12 @@ export default function Security({
                                 </div>
 
                                 <div className="flex items-center gap-4">
-                                    <Button
-                                        disabled={processing}
-                                        data-test="update-password-button"
-                                    >
-                                        Save password
-                                    </Button>
+                                <Button
+                                    processing={processing}
+                                    data-test="update-password-button"
+                                >
+                                    Save password
+                                </Button>
 
                                     <Transition
                                         show={recentlySuccessful}
@@ -189,7 +197,7 @@ export default function Security({
                                             <Button
                                                 variant="destructive"
                                                 type="submit"
-                                                disabled={processing}
+                                                processing={processing}
                                             >
                                                 Disable 2FA
                                             </Button>
@@ -230,12 +238,12 @@ export default function Security({
                                             }
                                         >
                                             {({ processing }) => (
-                                                <Button
-                                                    type="submit"
-                                                    disabled={processing}
-                                                >
-                                                    Enable 2FA
-                                                </Button>
+                                            <Button
+                                                type="submit"
+                                                processing={processing}
+                                            >
+                                                Enable 2FA
+                                            </Button>
                                             )}
                                         </Form>
                                     )}

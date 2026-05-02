@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import { update } from '@/routes/password';
 
 type Props = {
@@ -28,6 +30,12 @@ export default function ResetPassword({ token, email }: Props) {
             >
                 {({ processing, errors }) => (
                     <div className="grid gap-6">
+                        {Object.keys(errors).length > 0 && (
+                            <AlertError
+                                errors={errorsToArray(errors)}
+                                title="Reset password gagal"
+                            />
+                        )}
                         <div className="grid gap-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
@@ -78,10 +86,9 @@ export default function ResetPassword({ token, email }: Props) {
                         <Button
                             type="submit"
                             className="mt-4 w-full"
-                            disabled={processing}
+                            processing={processing}
                             data-test="reset-password-button"
                         >
-                            {processing && <Spinner />}
                             Reset password
                         </Button>
                     </div>

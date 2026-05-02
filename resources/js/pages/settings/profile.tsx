@@ -1,6 +1,7 @@
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import AlertError from '@/components/alert-error';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -9,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { errorsToArray } from '@/lib/form-errors';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import type { BreadcrumbItem } from '@/types';
@@ -52,6 +54,12 @@ export default function Profile({
                     >
                         {({ processing, recentlySuccessful, errors }) => (
                             <>
+                                {Object.keys(errors).length > 0 && (
+                                    <AlertError
+                                        errors={errorsToArray(errors)}
+                                        title="Gagal memperbarui profil"
+                                    />
+                                )}
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Name</Label>
 
@@ -119,12 +127,12 @@ export default function Profile({
                                     )}
 
                                 <div className="flex items-center gap-4">
-                                    <Button
-                                        disabled={processing}
-                                        data-test="update-profile-button"
-                                    >
-                                        Save
-                                    </Button>
+                                <Button
+                                    processing={processing}
+                                    data-test="update-profile-button"
+                                >
+                                    Save
+                                </Button>
 
                                     <Transition
                                         show={recentlySuccessful}
