@@ -3,10 +3,11 @@
 namespace App\Services\Cuti\Rules;
 
 use App\Models\Cuti\CutiPengajuan;
-use Carbon\Carbon;
 
 class CutiBesarRule implements CutiRule
 {
+    use HasMasaKerjaValidation;
+
     /**
      * Durasi wajib cuti besar dalam hari kerja.
      */
@@ -52,25 +53,11 @@ class CutiBesarRule implements CutiRule
     }
 
     /**
-     * Validasi minimal masa kerja 5 tahun dari tanggal pengangkatan (TMT CPNS).
+     * Validasi minimal masa kerja 5 tahun dari TMT CPNS.
      */
     private function validateMasaKerja(CutiPengajuan $pengajuan): void
     {
-        $tmtCpns = $pengajuan->pegawai->tmt_cpns;
-
-        if (! $tmtCpns instanceof Carbon) {
-            throw new \DomainException(
-                'Data TMT CPNS pegawai tidak ditemukan. Silakan hubungi petugas kepegawaian.'
-            );
-        }
-
-        $masaKerja = now()->diffInYears($tmtCpns);
-
-        if ($masaKerja < self::MIN_MASA_KERJA) {
-            throw new \DomainException(
-                'Cuti besar memerlukan minimal '.self::MIN_MASA_KERJA.' tahun masa kerja. Masa kerja saat ini: '.$masaKerja.' tahun.'
-            );
-        }
+        $this->validateMasaKerjaMinimum($pengajuan, self::MIN_MASA_KERJA);
     }
 
     /**
