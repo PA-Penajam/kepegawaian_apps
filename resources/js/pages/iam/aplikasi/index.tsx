@@ -99,7 +99,7 @@ export default function Index() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold uppercase tracking-tight">
-                            KELOLA APLIKASI IAM
+                            Kelola Aplikasi IAM
                         </h1>
                         <p className="text-sm text-muted-foreground mt-1 font-medium">
                             Daftarkan dan kelola aplikasi yang terintegrasi dengan sistem IAM.
@@ -249,11 +249,11 @@ export default function Index() {
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
-                                <TableHead className="font-black uppercase text-xs tracking-wider">NAMA</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">Nama</TableHead>
                                 <TableHead className="font-black uppercase text-xs tracking-wider">URL</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">JUMLAH ROLE</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">STATUS</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">AKSI</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">Jumlah Role</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">Status</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
