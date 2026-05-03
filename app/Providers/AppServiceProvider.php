@@ -9,6 +9,9 @@ use App\Policies\Cuti\CutiPengajuanPolicy;
 use App\Policies\PegawaiPolicy;
 use App\Policies\PengajuanPerubahanDataPolicy;
 use App\Services\Cuti\Rules\CutiAlasanPentingRule;
+use App\Services\Cuti\Rules\CutiBesarRule;
+use App\Services\Cuti\Rules\CutiLtnRule;
+use App\Services\Cuti\Rules\CutiMelahirkanRule;
 use App\Services\Cuti\Rules\CutiRuleEngine;
 use App\Services\Cuti\Rules\CutiSakitTier1Rule;
 use App\Services\Cuti\Rules\CutiSakitTier2Rule;
@@ -33,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
             app(CutiSakitTier1Rule::class),
             app(CutiSakitTier2Rule::class),
             app(CutiAlasanPentingRule::class),
+            app(CutiBesarRule::class),
+            app(CutiMelahirkanRule::class),
+            app(CutiLtnRule::class),
         ]));
     }
 
