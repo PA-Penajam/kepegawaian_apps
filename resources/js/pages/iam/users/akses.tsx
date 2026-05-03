@@ -2,16 +2,7 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import AlertError from '@/components/alert-error';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,7 +40,7 @@ export default function Akses() {
     const [selectedRoleId, setSelectedRoleId] = useState<string>('');
 
     // State untuk delete confirmation
-    const [revokeConfirm, setRevokeConfirm] = useState<{
+    const [revokeTarget, setRevokeTarget] = useState<{
         roleId: number;
         roleName: string;
     } | null>(null);
@@ -130,37 +121,37 @@ export default function Akses() {
 
     const handleRevokeAkses = useCallback(
         (roleId: number, roleName: string) => {
-            setRevokeConfirm({ roleId, roleName });
+            setRevokeTarget({ roleId, roleName });
         },
         [],
     );
 
     const confirmRevoke = useCallback(() => {
-        if (!revokeConfirm) {
-return;
-}
+        if (!revokeTarget) {
+            return;
+        }
 
         deleteForm.delete(
-            `/iam/users/${user.id}/akses/${revokeConfirm.roleId}`,
+            `/iam/users/${user.id}/akses/${revokeTarget.roleId}`,
             {
                 onSuccess: () => {
-                    setRevokeConfirm(null);
+                    setRevokeTarget(null);
                 },
             },
         );
-    }, [revokeConfirm, user.id, deleteForm]);
+    }, [revokeTarget, user.id, deleteForm]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Akses ${user.name}`} />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold">
+                        <h1 className="text-2xl font-bold uppercase tracking-tight">
                             Akses User: {user.name}
                         </h1>
-                        <p className="text-muted-foreground">{user.email}</p>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">{user.email}</p>
                     </div>
                 </div>
 
@@ -241,7 +232,7 @@ return;
 
                 {/* Daftar Akses by Application */}
                 {groupedAkses.length === 0 ? (
-                    <div className="py-12 text-center text-muted-foreground">
+                    <div className="text-center py-12 font-medium text-muted-foreground">
                         User ini belum memiliki akses IAM.
                     </div>
                 ) : (
@@ -258,26 +249,20 @@ return;
                                     </Badge>
                                 </div>
 
-                                <div className="rounded-md border">
+                                <div className="rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden">
                                     <Table>
                                         <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Role</TableHead>
-                                                <TableHead>
-                                                    Permissions
-                                                </TableHead>
-                                                <TableHead>
-                                                    Diberikan Oleh
-                                                </TableHead>
-                                                <TableHead>Tanggal</TableHead>
-                                                <TableHead className="w-[100px] text-center">
-                                                    Aksi
-                                                </TableHead>
+                                            <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
+                                                <TableHead className="font-black uppercase text-xs tracking-wider">Role</TableHead>
+                                                <TableHead className="font-black uppercase text-xs tracking-wider">Permissions</TableHead>
+                                                <TableHead className="font-black uppercase text-xs tracking-wider">Diberikan Oleh</TableHead>
+                                                <TableHead className="font-black uppercase text-xs tracking-wider">Tanggal</TableHead>
+                                                <TableHead className="font-black uppercase text-xs tracking-wider text-center w-[100px]">Aksi</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {appAkses.map((a) => (
-                                                <TableRow key={a.id}>
+                                                <TableRow key={a.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
                                                     <TableCell className="font-medium">
                                                         {a.role.nama}
                                                     </TableCell>
@@ -364,67 +349,6 @@ return;
                                                                     aria-hidden="true"
                                                                 />
                                                             </Button>
-                                                            <AlertDialog
-                                                                open={
-                                                                    revokeConfirm?.roleId ===
-                                                                    a.role.id
-                                                                }
-                                                                onOpenChange={(
-                                                                    open: boolean,
-                                                                ) =>
-                                                                    !open &&
-                                                                    setRevokeConfirm(
-                                                                        null,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>
-                                                                            Cabut
-                                                                            Akses
-                                                                        </AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            Apakah
-                                                                            Anda
-                                                                            yakin
-                                                                            ingin
-                                                                            mencabut
-                                                                            akses
-                                                                            "
-                                                                            {
-                                                                                revokeConfirm?.roleName
-                                                                            }
-                                                                            "
-                                                                            dari
-                                                                            user
-                                                                            ini?
-                                                                            Tindakan
-                                                                            ini
-                                                                            tidak
-                                                                            dapat
-                                                                            dibatalkan.
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>
-                                                                            Batal
-                                                                        </AlertDialogCancel>
-                                                                        <AlertDialogAction
-                                                                            onClick={
-                                                                                confirmRevoke
-                                                                            }
-                                                                            disabled={
-                                                                                deleteForm.processing
-                                                                            }
-                                                                        >
-                                                                            {deleteForm.processing
-                                                                                ? 'Mencabut...'
-                                                                                : 'Cabut'}
-                                                                        </AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
@@ -437,6 +361,17 @@ return;
                     </div>
                 )}
             </div>
+
+            <ConfirmDeleteDialog
+                open={!!revokeTarget}
+                onOpenChange={(open) => !open && setRevokeTarget(null)}
+                title="Cabut Akses"
+                description="Apakah Anda yakin ingin mencabut akses"
+                itemName={revokeTarget?.roleName}
+                onConfirm={confirmRevoke}
+                processing={deleteForm.processing}
+                confirmLabel="Cabut"
+            />
         </AppLayout>
     );
 }
