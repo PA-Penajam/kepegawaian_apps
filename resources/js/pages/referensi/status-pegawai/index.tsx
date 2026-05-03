@@ -1,6 +1,7 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +31,11 @@ type Props = {
 
 export default function Index({ statusPegawai, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
+    const [deleteTarget, setDeleteTarget] = useState<{
+        id: string;
+        nama: string;
+    } | null>(null);
+    const deleteForm = useForm({});
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -56,17 +62,22 @@ export default function Index({ statusPegawai, filters }: Props) {
         return () => clearTimeout(timeout);
     }, [search, handleSearch]);
 
-    const handleDelete = (id: string) => {
-        if (confirm('Apakah Anda yakin ingin menghapus status pegawai ini?')) {
-            router.delete(destroy.url(id));
-        }
+    const handleDelete = (id: string, nama: string) => {
+        setDeleteTarget({ id, nama });
+    };
+
+    const confirmDelete = () => {
+        if (!deleteTarget) return;
+        deleteForm.delete(destroy.url(deleteTarget.id), {
+            onSuccess: () => setDeleteTarget(null),
+        });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Status Pegawai" />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold uppercase tracking-tight">Status Pegawai</h1>
@@ -138,7 +149,7 @@ export default function Index({ statusPegawai, filters }: Props) {
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() =>
-                                                        handleDelete(item.id)
+                                                        handleDelete(item.id, item.nama)
                                                     }
                                                 >
                                                     <Trash2 className="h-4 w-4 text-destructive" />
@@ -154,6 +165,16 @@ export default function Index({ statusPegawai, filters }: Props) {
 
                 <PaginationWrapper meta={statusPegawai.meta} />
             </div>
+
+            <ConfirmDeleteDialog
+                open={!!deleteTarget}
+                onOpenChange={(open) => !open && setDeleteTarget(null)}
+                title="Hapus Status Pegawai"
+                description="Apakah Anda yakin ingin menghapus status pegawai"
+                itemName={deleteTarget?.nama}
+                onConfirm={confirmDelete}
+                processing={deleteForm.processing}
+            />
         </AppLayout>
     );
 }
