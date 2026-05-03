@@ -20,12 +20,13 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { errorsToArray } from '@/lib/form-errors';
+import adminCuti from '@/routes/admin/cuti';
 import type { BreadcrumbItem } from '@/types';
 import type { AlokasiPaginated, AlokasiListItem } from '@/types/cuti';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Cuti', href: '#' },
-    { title: 'Kelola Saldo', href: route('admin.cuti.saldo.index') },
+    { title: 'Kelola Saldo', href: adminCuti.saldo.index().url },
 ];
 
 type Props = {
@@ -56,7 +57,7 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
     // Terapkan filter tahun
     const applyFilter = useCallback(() => {
         router.get(
-            route('admin.cuti.saldo.index'),
+            adminCuti.saldo.index(),
             { tahun: filterTahun },
             { preserveState: true, replace: true },
         );
@@ -65,7 +66,7 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
     // Submit bulk init
     function handleBulkInit(e: React.FormEvent) {
         e.preventDefault();
-        bulkForm.post(route('admin.cuti.saldo.init.store'), {
+        bulkForm.post(adminCuti.saldo.init.store(), {
             preserveScroll: true,
             onSuccess: () => bulkForm.reset(),
         });
@@ -83,14 +84,14 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kelola Saldo Cuti" />
-            <div>
-                <h1 className="text-xl font-semibold tracking-tight">Kelola Saldo Cuti</h1>
-                <p className="text-sm text-muted-foreground">
-                    Kelola dan sesuaikan saldo cuti pegawai.
-                </p>
-            </div>
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
+                <div>
+                    <h1 className="text-2xl font-bold uppercase tracking-tight">Kelola Saldo Cuti</h1>
+                    <p className="text-sm text-muted-foreground mt-1 font-medium">
+                        Kelola dan sesuaikan saldo cuti pegawai.
+                    </p>
+                </div>
                 {/* Filter Bar */}
                 <Card>
                     <CardHeader>
@@ -124,25 +125,25 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead>NIP</TableHead>
-                                    <TableHead>Nama Pegawai</TableHead>
-                                    <TableHead>Jenis</TableHead>
-                                    <TableHead className="text-right">Hak Awal</TableHead>
-                                    <TableHead className="text-right">Saldo Saat Ini</TableHead>
-                                    <TableHead className="text-right">Aksi</TableHead>
+                                <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
+                                    <TableHead className="font-black uppercase text-xs tracking-wider">NIP</TableHead>
+                                    <TableHead className="font-black uppercase text-xs tracking-wider">Nama Pegawai</TableHead>
+                                    <TableHead className="font-black uppercase text-xs tracking-wider">Jenis</TableHead>
+                                    <TableHead className="font-black uppercase text-xs tracking-wider text-right">Hak Awal</TableHead>
+                                    <TableHead className="font-black uppercase text-xs tracking-wider text-right">Saldo Saat Ini</TableHead>
+                                    <TableHead className="font-black uppercase text-xs tracking-wider text-right">Aksi</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {alokasiList.data.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                                        <TableCell colSpan={6} className="text-center py-12 font-medium text-muted-foreground">
                                             Belum ada data alokasi untuk tahun {tahun}
                                         </TableCell>
                                     </TableRow>
                                 )}
                                 {alokasiList.data.map((item) => (
-                                    <TableRow key={item.id}>
+                                    <TableRow key={item.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
                                         <TableCell className="font-mono text-sm">
                                             {item.pegawai_nip}
                                         </TableCell>
