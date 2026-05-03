@@ -17,13 +17,14 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { formatTanggalDateTime } from '@/lib/cuti-utils';
+import adminCuti from '@/routes/admin/cuti';
 import type { BreadcrumbItem } from '@/types';
 import type { ActivityLogEntry } from '@/types/cuti';
 import type { KepegawaianPaginatedData } from '@/types/kepegawaian';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Cuti', href: '#' },
-    { title: 'Audit Log', href: route('admin.cuti.audit.index') },
+    { title: 'Audit Log', href: adminCuti.audit.index().url },
 ];
 
 type Props = {
@@ -43,7 +44,7 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
 
     const applyFilters = useCallback(() => {
         router.get(
-            route('admin.cuti.audit.index'),
+            adminCuti.audit.index(),
             Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '')),
             { preserveState: true, replace: true },
         );
@@ -82,15 +83,15 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <div>
-                <h1 className="text-xl font-semibold tracking-tight">Audit Log Cuti</h1>
-                <p className="text-sm text-muted-foreground">
-                    Lacak semua perubahan pada modul cuti.
-                </p>
-            </div>
             <Head title="Audit Log Cuti" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
+                <div>
+                    <h1 className="text-2xl font-bold uppercase tracking-tight">Audit Log Cuti</h1>
+                    <p className="text-sm text-muted-foreground mt-1 font-medium">
+                        Lacak semua perubahan pada modul cuti.
+                    </p>
+                </div>
                 {/* Filter Bar */}
                 <Card>
                     <CardHeader>
@@ -142,19 +143,19 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
-                                <TableRow>
+                                <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
                                     <TableHead className="w-8" />
-                                    <TableHead className="w-44">Waktu</TableHead>
-                                    <TableHead>Aktor</TableHead>
-                                    <TableHead>Aktivitas</TableHead>
-                                    <TableHead>Subjek</TableHead>
-                                    <TableHead>Perubahan</TableHead>
+                                    <TableHead className="font-black uppercase text-xs tracking-wider w-44">Waktu</TableHead>
+                                    <TableHead className="font-black uppercase text-xs tracking-wider">Aktor</TableHead>
+                                    <TableHead className="font-black uppercase text-xs tracking-wider">Aktivitas</TableHead>
+                                    <TableHead className="font-black uppercase text-xs tracking-wider">Subjek</TableHead>
+                                    <TableHead className="font-black uppercase text-xs tracking-wider">Perubahan</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {activities.data.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                                        <TableCell colSpan={6} className="text-center py-12 font-medium text-muted-foreground">
                                             Tidak ada aktivitas
                                         </TableCell>
                                     </TableRow>
@@ -169,7 +170,7 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
                                         <>
                                             <TableRow
                                                 key={item.id}
-                                                className={hasChanges ? 'cursor-pointer' : ''}
+                                                className={`border-b border-black/10 hover:bg-muted/20 transition-colors ${hasChanges ? 'cursor-pointer' : ''}`}
                                                 onClick={() => hasChanges && toggleRow(item.id)}
                                             >
                                                 <TableCell>
