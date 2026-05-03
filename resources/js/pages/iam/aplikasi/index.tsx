@@ -3,16 +3,7 @@ import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AlertError from '@/components/alert-error';
 import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,7 +41,7 @@ export default function Index() {
     const { aplikasi, flash } = usePage<Props>().props;
     const [showApiSecretModal, setShowApiSecretModal] = useState(false);
     const [apiSecret, setApiSecret] = useState<string | null>(null);
-    const [deleteConfirm, setDeleteConfirm] = useState<{
+    const [deleteTarget, setDeleteTarget] = useState<{
         id: number;
         nama: string;
     } | null>(null);
@@ -85,30 +76,35 @@ export default function Index() {
     );
 
     const handleDelete = useCallback((id: number, nama: string) => {
-        setDeleteConfirm({ id, nama });
+        setDeleteTarget({ id, nama });
     }, []);
 
     const confirmDelete = useCallback(() => {
-        if (!deleteConfirm) {
-return;
-}
+        if (!deleteTarget) {
+            return;
+        }
 
-        deleteForm.delete(`/iam/aplikasi/${deleteConfirm.id}`, {
+        deleteForm.delete(`/iam/aplikasi/${deleteTarget.id}`, {
             onSuccess: () => {
-                setDeleteConfirm(null);
+                setDeleteTarget(null);
             },
         });
-    }, [deleteConfirm, deleteForm]);
+    }, [deleteTarget, deleteForm]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kelola Aplikasi IAM" />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">
-                        Kelola Aplikasi IAM
-                    </h1>
+                    <div>
+                        <h1 className="text-2xl font-bold uppercase tracking-tight">
+                            KELOLA APLIKASI IAM
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">
+                            Daftarkan dan kelola aplikasi yang terintegrasi dengan sistem IAM.
+                        </p>
+                    </div>
                     <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                         <DialogTrigger asChild>
                             <Button>
@@ -249,21 +245,15 @@ return;
                     </Dialog>
                 </div>
 
-                <div className="rounded-md border">
+                <div className="rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden">
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead>Nama</TableHead>
-                                <TableHead>URL</TableHead>
-                                <TableHead className="text-center">
-                                    Jumlah Role
-                                </TableHead>
-                                <TableHead className="text-center">
-                                    Status
-                                </TableHead>
-                                <TableHead className="text-center">
-                                    Aksi
-                                </TableHead>
+                            <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
+                                <TableHead className="font-black uppercase text-xs tracking-wider">NAMA</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">URL</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">JUMLAH ROLE</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">STATUS</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">AKSI</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -271,15 +261,15 @@ return;
                                 <TableRow>
                                     <TableCell
                                         colSpan={5}
-                                        className="text-center"
+                                        className="text-center py-12 font-medium text-muted-foreground"
                                     >
-                                        Tidak ada aplikasi yang terdaftar
+                                        Tidak ada aplikasi yang terdaftar.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 aplikasi.map((app) => (
-                                    <TableRow key={app.id}>
-                                        <TableCell className="font-medium">
+                                    <TableRow key={app.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
+                                        <TableCell className="font-bold">
                                             <div className="flex items-center gap-2">
                                                 {app.nama}
                                                 {app.is_system && (
@@ -365,63 +355,6 @@ return;
                                                                 aria-hidden="true"
                                                             />
                                                         </Button>
-                                                        <AlertDialog
-                                                            open={
-                                                                deleteConfirm?.id ===
-                                                                    app.id ||
-                                                                false
-                                                            }
-                                                            onOpenChange={(
-                                                                open: boolean,
-                                                            ) =>
-                                                                !open &&
-                                                                setDeleteConfirm(
-                                                                    null,
-                                                                )
-                                                            }
-                                                        >
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>
-                                                                        Hapus Aplikasi
-                                                                    </AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        Apakah
-                                                                        Anda
-                                                                        yakin
-                                                                        ingin
-                                                                        menghapus
-                                                                        aplikasi
-                                                                        "
-                                                                        {
-                                                                            deleteConfirm?.nama
-                                                                        }
-                                                                        "? Tindakan
-                                                                        ini
-                                                                        tidak
-                                                                        dapat
-                                                                        dibatalkan.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>
-                                                                        Batal
-                                                                    </AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        onClick={
-                                                                            confirmDelete
-                                                                        }
-                                                                        disabled={
-                                                                            deleteForm.processing
-                                                                        }
-                                                                    >
-                                                                        {deleteForm.processing
-                                                                            ? 'Menghapus...'
-                                                                            : 'Hapus'}
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
                                                     </>
                                                 )}
                                             </div>
@@ -433,6 +366,16 @@ return;
                     </Table>
                 </div>
             </div>
+
+            <ConfirmDeleteDialog
+                open={!!deleteTarget}
+                onOpenChange={(open) => !open && setDeleteTarget(null)}
+                title="Hapus Aplikasi"
+                description="Apakah Anda yakin ingin menghapus aplikasi"
+                itemName={deleteTarget?.nama}
+                onConfirm={confirmDelete}
+                processing={deleteForm.processing}
+            />
 
             {/* Modal API Secret — gunakan komponen shared */}
             <ApiSecretModal
