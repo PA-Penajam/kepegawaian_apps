@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Eye, Search, ShieldCheck, Users } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { Eye, ShieldCheck, Users } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +36,7 @@ type Props = {
 
 export default function Index() {
     const { users, filters } = usePage<Props>().props;
-    const [search, setSearch] = useState((filters as any)?.search ?? '');
+    const [search, setSearch] = useState(filters?.search ?? '');
 
     // Normalisasi meta paginasi — Laravel paginate() standar menyimpan di root,
     // sedangkan API Resource membungkusnya di bawah .meta
@@ -71,23 +72,20 @@ return users.meta;
         });
     }, []);
 
-    const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setSearch(value);
-        const timeout = setTimeout(() => performSearch(value), 400);
-
+    useEffect(() => {
+        const timeout = setTimeout(() => performSearch(search), 400);
         return () => clearTimeout(timeout);
-    }, [performSearch]);
+    }, [search, performSearch]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="User Akses IAM" />
 
-            <div className="flex flex-col gap-6 p-6">
+            <div className="flex flex-col gap-6 p-4 md:p-6">
                 {/* Header — gaya Retro Neo-Brutalism */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-black uppercase tracking-tight">User Akses</h1>
+                        <h1 className="text-2xl font-bold uppercase tracking-tight">User Akses</h1>
                         <p className="text-sm text-muted-foreground mt-1 font-medium">
                             Kelola hak akses role untuk setiap pengguna.
                         </p>
@@ -105,13 +103,13 @@ return users.meta;
                     <Input
                         placeholder="Cari berdasarkan nama atau NIP..."
                         value={search}
-                        onChange={handleSearchChange}
+                        onChange={(e) => setSearch(e.target.value)}
                         className="max-w-md border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
                     />
                 </div>
 
                 {/* Table — border tebal ala Neo-Brutalism */}
-                <div className="border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden">
+                <div className="rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden">
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
@@ -139,7 +137,7 @@ return users.meta;
                                             {user.nama_lengkap}
                                         </TableCell>
                                         <TableCell className="font-mono text-sm text-muted-foreground">
-                                            {(user as any).nip ?? '-'}
+                                            {user.nip ?? '-'}
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <Badge
@@ -208,28 +206,7 @@ return users.meta;
                     </Table>
                 </div>
 
-                {/* Pagination — gaya Retro */}
-                {meta.last_page > 1 && (
-                    <div className="flex items-center justify-center gap-3">
-                        {meta.current_page > 1 && (
-                            <Button variant="outline" className="font-bold border-2 border-black" asChild>
-                                <Link href={`?page=${meta.current_page - 1}${search ? `&search=${search}` : ''}`}>
-                                    Sebelumnya
-                                </Link>
-                            </Button>
-                        )}
-                        <span className="flex items-center px-4 py-2 text-sm font-bold border-2 border-black bg-muted/30 shadow-[2px_2px_0_rgba(0,0,0,1)]">
-                            Halaman {meta.current_page} dari {meta.last_page}
-                        </span>
-                        {meta.current_page < meta.last_page && (
-                            <Button variant="outline" className="font-bold border-2 border-black" asChild>
-                                <Link href={`?page=${meta.current_page + 1}${search ? `&search=${search}` : ''}`}>
-                                    Selanjutnya
-                                </Link>
-                            </Button>
-                        )}
-                    </div>
-                )}
+                <PaginationWrapper meta={meta} />
             </div>
         </AppLayout>
     );
