@@ -188,14 +188,14 @@ Route::middleware(['auth', 'verified'])->prefix('cuti')->name('cuti.')->group(fu
     Route::post('/pengajuan/{id}/approve-pejabat', [ApprovalController::class, 'approvePejabat'])->name('pengajuan.approve-pejabat');
     Route::post('/pengajuan/{id}/reject', [ApprovalController::class, 'reject'])->name('pengajuan.reject');
     Route::post('/pengajuan/{id}/cancel', [ApprovalController::class, 'cancel'])->name('pengajuan.cancel');
-    Route::post('/pengajuan/{id}/reassign-approver', [ApprovalController::class, 'reassign'])->middleware('can:cuti.pengajuan.reassign')->name('pengajuan.reassign');
+    Route::post('/pengajuan/{id}/reassign-approver', [ApprovalController::class, 'reassign'])->middleware('permission:cuti.pengajuan.reassign')->name('pengajuan.reassign');
 });
 
-Route::middleware(['auth', 'verified', 'can:cuti.saldo.view-all'])->prefix('admin/cuti')->name('admin.cuti.')->group(function () {
+Route::middleware(['auth', 'verified', 'permission:cuti.saldo.view-all'])->prefix('admin/cuti')->name('admin.cuti.')->group(function () {
     Route::get('/saldo', [SaldoController::class, 'adminIndex'])->name('saldo.index');
     Route::get('/saldo/init', [SaldoController::class, 'adminInit'])->name('saldo.init');
     Route::post('/saldo/init', [SaldoController::class, 'adminInitStore'])->name('saldo.init.store');
-    Route::post('/saldo/adjust', [SaldoController::class, 'adminAdjust'])->middleware('can:cuti.saldo.adjust')->name('saldo.adjust');
+    Route::post('/saldo/adjust', [SaldoController::class, 'adminAdjust'])->middleware('permission:cuti.saldo.adjust')->name('saldo.adjust');
     Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
 });
 
