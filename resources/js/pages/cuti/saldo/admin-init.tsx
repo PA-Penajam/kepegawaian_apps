@@ -9,11 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { errorsToArray } from '@/lib/form-errors';
+import adminCuti from '@/routes/admin/cuti';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Cuti', href: '#' },
-    { title: 'Kelola Saldo', href: route('admin.cuti.saldo.index') },
+    { title: 'Kelola Saldo', href: adminCuti.saldo.index().url },
     { title: 'Inisialisasi', href: '#' },
 ];
 
@@ -32,25 +33,29 @@ export default function AdminSaldoInit({ tahun }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(route('admin.cuti.saldo.init.store'));
+        post(adminCuti.saldo.init.store());
     }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Inisialisasi Saldo Cuti" />
 
-            <div className="mx-auto max-w-xl space-y-4 p-4">
-                <Link
-                    href={route('admin.cuti.saldo.index')}
-                    className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                    Kembali ke Kelola Saldo
-                </Link>
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
+                <div className="flex items-center gap-3">
+                    <Button variant="outline" size="icon-sm" asChild>
+                        <Link href={adminCuti.saldo.index().url}>
+                            <ArrowLeft className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                    <div>
+                        <h1 className="text-xl font-semibold tracking-tight">Inisialisasi Saldo Cuti</h1>
+                        <p className="text-sm text-muted-foreground">Tambahkan saldo cuti tahunan untuk pegawai.</p>
+                    </div>
+                </div>
 
-                <Card>
+                <Card className="max-w-xl">
                     <CardHeader>
-                        <CardTitle>Inisialisasi Saldo Cuti</CardTitle>
+                        <CardTitle className="text-base">Formulir Inisialisasi Saldo</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">

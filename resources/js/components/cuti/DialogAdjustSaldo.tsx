@@ -12,6 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import adminCuti from '@/routes/admin/cuti';
 
 type Props = {
     pegawai: { nip: string; nama: string };
@@ -31,7 +32,7 @@ export function DialogAdjustSaldo({ pegawai, currentSaldo, open, onClose }: Prop
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(route('admin.cuti.saldo.adjust'), {
+        post(adminCuti.saldo.adjust(), {
             onSuccess: () => {
                 reset();
                 onClose();
@@ -55,7 +56,7 @@ export function DialogAdjustSaldo({ pegawai, currentSaldo, open, onClose }: Prop
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Informasi saldo saat ini */}
-                    <div className="rounded-lg border bg-muted/50 p-3">
+                    <div className="space-y-2 rounded-lg border bg-muted/50 p-3">
                         <p className="text-sm text-muted-foreground">Saldo saat ini</p>
                         <p className="text-2xl font-bold">{currentSaldo} hari</p>
                     </div>

@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { Pencil, Plus, Trash2, Users, ShieldCheck, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,8 @@ export default function Index({ roles, permissions, filters }: Props) {
     // State for Modals
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingRole, setEditingRole] = useState<RefRole | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<RefRole | null>(null);
+    const deleteForm = useForm({});
 
     // Form logic for Create
     const { data: createData, setData: setCreateData, post: postCreate, processing: processingCreate, errors: errorsCreate, reset: resetCreate, clearErrors: clearErrorsCreate } = useForm({
@@ -105,10 +108,15 @@ acc[group] = [];
         return () => clearTimeout(timeout);
     }, [search, handleSearch]);
 
-    const handleDelete = (id: string) => {
-        if (confirm('Apakah Anda yakin ingin menghapus role ini?')) {
-            router.delete(toUrl(destroy(id)));
-        }
+    const handleDelete = (role: RefRole) => {
+        setDeleteTarget(role);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteTarget) return;
+        deleteForm.delete(toUrl(destroy(deleteTarget.id)), {
+            onSuccess: () => setDeleteTarget(null),
+        });
     };
 
     // Dialog Handlers
@@ -249,10 +257,10 @@ return;
                                         </Link>
                                     </Button>
                                     {!item.is_system && (
-                                        <Button 
-                                            variant="destructive" 
-                                            className="px-3" 
-                                            onClick={() => handleDelete(item.id)}
+                                        <Button
+                                            variant="destructive"
+                                            className="px-3"
+                                            onClick={() => handleDelete(item)}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
@@ -281,6 +289,16 @@ return;
 
                 {roles.data.length > 0 && <PaginationWrapper meta={roles.meta} />}
             </div>
+
+            <ConfirmDeleteDialog
+                open={!!deleteTarget}
+                onOpenChange={(open) => !open && setDeleteTarget(null)}
+                title="Hapus Role"
+                description="Apakah Anda yakin ingin menghapus role"
+                itemName={deleteTarget?.nama}
+                onConfirm={confirmDelete}
+                processing={deleteForm.processing}
+            />
 
             {/* Modal Tambah Role */}
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>

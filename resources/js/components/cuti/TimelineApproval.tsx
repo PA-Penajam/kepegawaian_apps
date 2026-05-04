@@ -46,7 +46,7 @@ export function TimelineApproval({ stateHistory }: Props) {
                 const label = CutiStateLabels[entry.state_to as CutiState] ?? entry.state_to;
 
                 return (
-                    <div key={entry.id} className="relative flex gap-4 pb-6">
+                    <div key={entry.id} className={`relative flex gap-4 ${!isLast ? 'pb-6' : ''}`}>
                         {/* Garis vertikal penghubung */}
                         {!isLast && (
                             <div className="absolute left-[9px] top-6 h-full w-0.5 bg-border" />
