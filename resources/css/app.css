@@ -2,6 +2,16 @@
 
 @import 'tw-animate-css';
 
+/* Utility untuk menyembunyikan scrollbar tapi tetap bisa scroll */
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
