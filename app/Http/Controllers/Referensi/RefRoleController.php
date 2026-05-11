@@ -54,7 +54,6 @@ class RefRoleController extends Controller
         ]);
     }
 
-
     public function store(StoreRefRoleRequest $request): RedirectResponse
     {
         $data = $request->safe()->only(['nama', 'keterangan']);

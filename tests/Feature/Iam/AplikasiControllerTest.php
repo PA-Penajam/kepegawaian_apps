@@ -6,6 +6,7 @@ use App\Models\IamRole;
 use App\Models\IamUserRole;
 use App\Models\Pegawai;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 
 beforeEach(function () {
     // Gunakan data dari IamSeeder (sudah di-seed oleh Pest.php beforeEach)
@@ -67,7 +68,7 @@ test('admin dapat meregenerasi api key aplikasi', function () {
         'url' => 'http://x.local',
     ]);
     $app->api_key = 'old-key';
-    $app->api_secret_hash = \Illuminate\Support\Facades\Crypt::encryptString('old-secret');
+    $app->api_secret_hash = Crypt::encryptString('old-secret');
     $app->is_system = false;
     $app->save();
 
@@ -88,11 +89,11 @@ it('menghapus cache iam_app saat aplikasi diupdate', function () {
 
     $this->actingAs($admin)
         ->put("/iam/aplikasi/{$app->id}", [
-            'nama'        => 'Updated App',
-            'slug'        => 'test-app',
-            'url'         => 'https://example.com',
-            'is_active'   => true,
-            'deskripsi'   => null,
+            'nama' => 'Updated App',
+            'slug' => 'test-app',
+            'url' => 'https://example.com',
+            'is_active' => true,
+            'deskripsi' => null,
         ]);
 
     expect(Cache::has('iam_app:test-app'))->toBeFalse();
@@ -117,7 +118,7 @@ it('viewer tidak bisa mendaftarkan aplikasi baru', function () {
     $response = $this->actingAs($viewer)->post('/iam/aplikasi', [
         'nama' => 'Test App',
         'slug' => 'test-app',
-        'url'  => 'http://test.local',
+        'url' => 'http://test.local',
     ]);
 
     $response->assertForbidden();
@@ -128,8 +129,8 @@ it('viewer tidak bisa mengupdate aplikasi', function () {
     $app = IamApplication::factory()->create(['is_system' => false]);
 
     $response = $this->actingAs($viewer)->put("/iam/aplikasi/{$app->id}", [
-        'nama'      => 'Updated',
-        'url'       => 'http://test.local',
+        'nama' => 'Updated',
+        'url' => 'http://test.local',
         'is_active' => true,
     ]);
 

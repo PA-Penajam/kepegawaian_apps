@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasActivityLogOptions;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
-use App\Models\Concerns\HasActivityLogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class IamApplication extends Model
@@ -47,7 +47,7 @@ class IamApplication extends Model
             }
 
             // Default is_system = false jika belum set
-            if (!isset($app->is_system)) {
+            if (! isset($app->is_system)) {
                 $app->is_system = false;
             }
         });
@@ -90,6 +90,7 @@ class IamApplication extends Model
     {
         try {
             $storedSecret = Crypt::decryptString($this->api_secret_hash);
+
             // hash_equals memastikan perbandingan constant-time (anti timing attack)
             return hash_equals($storedSecret, $secret);
         } catch (\Exception) {

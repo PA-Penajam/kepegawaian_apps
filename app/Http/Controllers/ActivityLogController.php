@@ -24,14 +24,14 @@ class ActivityLogController extends Controller
             ->latest()
             ->paginate(20)
             ->through(fn (Activity $activity): array => [
-                'id'           => $activity->id,
-                'waktu'        => $activity->created_at->format('d M Y H:i'),
-                'oleh'         => $activity->causer?->nama_lengkap ?? 'Sistem',
-                'aksi'         => $activity->description,
-                'model'        => class_basename($activity->subject_type ?? ''),
-                'subject_id'   => $activity->subject_id,
-                'old'          => $activity->attribute_changes?->get('old', []),
-                'new'          => $activity->attribute_changes?->get('attributes', []),
+                'id' => $activity->id,
+                'waktu' => $activity->created_at->format('d M Y H:i'),
+                'oleh' => $activity->causer?->nama_lengkap ?? 'Sistem',
+                'aksi' => $activity->description,
+                'model' => class_basename($activity->subject_type ?? ''),
+                'subject_id' => $activity->subject_id,
+                'old' => $activity->attribute_changes?->get('old', []),
+                'new' => $activity->attribute_changes?->get('attributes', []),
             ]);
 
         $subjectTypes = Activity::distinct()
@@ -53,6 +53,6 @@ class ActivityLogController extends Controller
             return $type;
         }
 
-        return self::MODEL_NAMESPACE . $type;
+        return self::MODEL_NAMESPACE.$type;
     }
 }

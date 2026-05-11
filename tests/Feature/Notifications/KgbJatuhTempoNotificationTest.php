@@ -5,7 +5,6 @@ use App\Models\Pegawai;
 use App\Models\RiwayatPangkat;
 use App\Notifications\KgbJatuhTempoNotification;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Notification;
 
 function createPegawaiWithKgb(string $nextKgbDate): Pegawai
 {

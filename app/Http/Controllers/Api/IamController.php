@@ -17,7 +17,7 @@ class IamController extends Controller
     public function validate(Request $request): JsonResponse
     {
         $user = $request->user();
-        $app  = $request->attributes->get('iam_app'); // diinjek oleh VerifyIamSignature via attributes
+        $app = $request->attributes->get('iam_app'); // diinjek oleh VerifyIamSignature via attributes
         $token = $user->currentAccessToken();
 
         return response()->json([
@@ -30,8 +30,8 @@ class IamController extends Controller
 
     public function check(Request $request): JsonResponse
     {
-        $user       = $request->user();
-        $app        = $request->attributes->get('iam_app');
+        $user = $request->user();
+        $app = $request->attributes->get('iam_app');
         $permission = $request->query('permission', '');
 
         $allowed = in_array(
@@ -69,8 +69,8 @@ class IamController extends Controller
             }
 
             // Ambil ssoCode setelah atomic update (dalam transaksi yang sama)
-            $ssoCode  = IamSsoCode::where('code', $request->code)->first();
-            $user     = $ssoCode->user;
+            $ssoCode = IamSsoCode::where('code', $request->code)->first();
+            $user = $ssoCode->user;
             $ttlHours = (int) config('iam.token_ttl_hours', 8);
 
             // Scope token per aplikasi — bukan ['*'] yang terlalu luas
@@ -81,7 +81,7 @@ class IamController extends Controller
             );
 
             return response()->json([
-                'token'      => $token->plainTextToken,
+                'token' => $token->plainTextToken,
                 'token_type' => 'Bearer',
                 'expires_at' => $token->accessToken->expires_at->timestamp,
             ]);

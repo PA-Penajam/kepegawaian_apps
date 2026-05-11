@@ -23,9 +23,9 @@ class DashboardStatService
     public function getFastStats(): array
     {
         return Cache::remember('dashboard_stats_fast', 300, fn () => [
-            'total_pegawai_aktif'    => $this->getTotalPegawaiAktif(),
-            'kgb_segera_count'       => $this->getKgbSegeraCount(),
-            'kp_eligible_count'      => $this->getKpEligibleCount(),
+            'total_pegawai_aktif' => $this->getTotalPegawaiAktif(),
+            'kgb_segera_count' => $this->getKgbSegeraCount(),
+            'kp_eligible_count' => $this->getKpEligibleCount(),
             'pegawai_baru_bulan_ini' => $this->getPegawaiBaruBulanIni(),
         ]);
     }
@@ -33,11 +33,11 @@ class DashboardStatService
     public function getHeavyStats(): array
     {
         return Cache::remember('dashboard_stats_heavy', 300, fn () => [
-            'distribusi_golongan'     => $this->getDistribusiGolongan(),
-            'distribusi_unit_kerja'   => $this->getDistribusiUnitKerja(),
-            'distribusi_jenis_kelamin'=> $this->getDistribusiJenisKelamin(),
-            'distribusi_jabatan'      => $this->getDistribusiJabatan(),
-            'distribusi_pendidikan'   => $this->getDistribusiPendidikan(),
+            'distribusi_golongan' => $this->getDistribusiGolongan(),
+            'distribusi_unit_kerja' => $this->getDistribusiUnitKerja(),
+            'distribusi_jenis_kelamin' => $this->getDistribusiJenisKelamin(),
+            'distribusi_jabatan' => $this->getDistribusiJabatan(),
+            'distribusi_pendidikan' => $this->getDistribusiPendidikan(),
         ]);
     }
 
@@ -63,10 +63,10 @@ class DashboardStatService
             ->pluck('total', 'golongan');
 
         return [
-            'I'   => (int) ($rows['I'] ?? 0),
-            'II'  => (int) ($rows['II'] ?? 0),
+            'I' => (int) ($rows['I'] ?? 0),
+            'II' => (int) ($rows['II'] ?? 0),
             'III' => (int) ($rows['III'] ?? 0),
-            'IV'  => (int) ($rows['IV'] ?? 0),
+            'IV' => (int) ($rows['IV'] ?? 0),
         ];
     }
 
@@ -116,8 +116,8 @@ class DashboardStatService
             ->limit(6)
             ->get()
             ->map(fn ($row) => [
-                'nama'         => $row->nama,
-                'pegawai_count'=> (int) $row->pegawai_count,
+                'nama' => $row->nama,
+                'pegawai_count' => (int) $row->pegawai_count,
             ]);
     }
 
@@ -134,8 +134,8 @@ class DashboardStatService
                     ?? strtoupper($row->pendidikan_terakhir);
 
                 return [
-                    'pendidikan'   => $label,
-                    'pegawai_count'=> (int) $row->pegawai_count,
+                    'pendidikan' => $label,
+                    'pegawai_count' => (int) $row->pegawai_count,
                 ];
             });
     }

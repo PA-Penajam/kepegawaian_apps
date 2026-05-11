@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Enums\JenjangPendidikan;
+use App\Models\Concerns\HasActivityLogOptions;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Concerns\HasActivityLogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class RiwayatPendidikan extends Model

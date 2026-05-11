@@ -5,12 +5,12 @@ use App\Enums\JenisKelamin;
 use App\Enums\StatusKepegawaian;
 use App\Enums\StatusPegawai;
 use App\Enums\StatusPerkawinan;
-use App\Models\Pegawai;
-use App\Models\RefJabatan;
-use App\Models\RefPangkat;
 use App\Models\IamApplication;
 use App\Models\IamRole;
 use App\Models\IamUserRole;
+use App\Models\Pegawai;
+use App\Models\RefJabatan;
+use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
 
 describe('Pegawai', function () {

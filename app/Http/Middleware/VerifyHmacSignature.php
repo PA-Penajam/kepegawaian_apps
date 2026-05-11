@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -39,14 +40,15 @@ class VerifyHmacSignature
 
         $secret = config('kepegawaian.secret_key');
         if (empty($secret)) {
-            \Illuminate\Support\Facades\Log::critical('ATTENDANCE_HMAC_SECRET tidak dikonfigurasi');
+            Log::critical('ATTENDANCE_HMAC_SECRET tidak dikonfigurasi');
+
             return response()->json(['message' => 'Service configuration error'], 500);
         }
 
         // Rekonstruksi payload: METHOD:PATH:SORTED_QUERY:BODY_SHA256:TIMESTAMP
         $queryString = http_build_query(collect($request->query())->sortKeys()->all());
-        $bodyHash    = hash('sha256', $request->getContent());
-        $payload     = strtoupper($request->method())
+        $bodyHash = hash('sha256', $request->getContent());
+        $payload = strtoupper($request->method())
             .':'.$request->getPathInfo()
             .':'.$queryString
             .':'.$bodyHash

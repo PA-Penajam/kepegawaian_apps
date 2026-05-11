@@ -4,13 +4,13 @@ use App\Models\IamApplication;
 use App\Models\Pegawai;
 
 it('callback redirect ke dashboard jika tidak ada SSO session', function () {
-    $user     = Pegawai::factory()->create();
+    $user = Pegawai::factory()->create();
     $response = $this->actingAs($user)->get('/sso/callback');
     $response->assertRedirect(route('dashboard'));
 });
 
 it('callback generate SSO code dan redirect ke URL yang valid', function () {
-    $app  = IamApplication::factory()->create(['is_active' => true, 'url' => 'http://att.local']);
+    $app = IamApplication::factory()->create(['is_active' => true, 'url' => 'http://att.local']);
     $user = Pegawai::factory()->create();
 
     session(['sso_app' => $app->slug, 'sso_redirect' => 'http://att.local/callback']);
@@ -25,7 +25,7 @@ it('callback generate SSO code dan redirect ke URL yang valid', function () {
 });
 
 it('callback redirect ke dashboard jika aplikasi tidak aktif', function () {
-    $app  = IamApplication::factory()->create(['is_active' => false, 'url' => 'http://att.local']);
+    $app = IamApplication::factory()->create(['is_active' => false, 'url' => 'http://att.local']);
     $user = Pegawai::factory()->create();
 
     session(['sso_app' => $app->slug, 'sso_redirect' => 'http://att.local/callback']);
@@ -35,7 +35,7 @@ it('callback redirect ke dashboard jika aplikasi tidak aktif', function () {
 });
 
 it('callback membersihkan session setelah digunakan', function () {
-    $app  = IamApplication::factory()->create(['is_active' => true, 'url' => 'http://att.local']);
+    $app = IamApplication::factory()->create(['is_active' => true, 'url' => 'http://att.local']);
     $user = Pegawai::factory()->create();
 
     session(['sso_app' => $app->slug, 'sso_redirect' => 'http://att.local/callback']);

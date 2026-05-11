@@ -67,7 +67,7 @@ class PegawaiApiController extends Controller
     {
         // Validasi input NIP: array, max 50 items, dan setiap item harus 18 digit
         $validated = $request->validate([
-            'nip'   => 'required|array|max:50',
+            'nip' => 'required|array|max:50',
             'nip.*' => 'required|string|digits:18',
         ]);
 

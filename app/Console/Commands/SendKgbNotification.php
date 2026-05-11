@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 class SendKgbNotification extends Command
 {
     protected $signature = 'kgb:notify';
+
     protected $description = 'Kirim notifikasi email ke pegawai yang KGB-nya sudah/mendekati jatuh tempo';
 
     public function handle(KgbMonitoringService $service): int

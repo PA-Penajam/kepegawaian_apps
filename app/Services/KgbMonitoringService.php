@@ -7,8 +7,8 @@ use App\Models\Pegawai;
 use App\Models\RiwayatPangkat;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
-use InvalidArgumentException;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class KgbMonitoringService
 {
@@ -18,8 +18,7 @@ class KgbMonitoringService
         ?string $unitKerjaId = null,
         ?string $golongan = null,
         ?string $status = null,
-    ): LengthAwarePaginator
-    {
+    ): LengthAwarePaginator {
         $maxSisaHari = $months * 30;
         $driver = DB::connection()->getDriverName();
         $isMySQL = $driver === 'mysql';
@@ -60,18 +59,18 @@ class KgbMonitoringService
 
             match ($status) {
                 'jatuh-tempo' => $query->whereRaw("{$kgbDateExpr} <= ?", [$today]),
-                'segera'      => $query->whereRaw("{$kgbDateExpr} > ? AND {$kgbDateExpr} <= ?", [
-                                    $today,
-                                    Carbon::today()->addDays(60)->toDateString(),
-                                 ]),
-                'mendekati'   => $query->whereRaw("{$kgbDateExpr} > ? AND {$kgbDateExpr} <= ?", [
-                                    Carbon::today()->addDays(60)->toDateString(),
-                                    Carbon::today()->addDays(90)->toDateString(),
-                                 ]),
-                'aman'        => $query->whereRaw("{$kgbDateExpr} > ?", [
-                                    Carbon::today()->addDays(90)->toDateString(),
-                                 ]),
-                default       => $query->whereRaw("{$kgbDateExpr} <= ?", [$maxKgbDate]),
+                'segera' => $query->whereRaw("{$kgbDateExpr} > ? AND {$kgbDateExpr} <= ?", [
+                    $today,
+                    Carbon::today()->addDays(60)->toDateString(),
+                ]),
+                'mendekati' => $query->whereRaw("{$kgbDateExpr} > ? AND {$kgbDateExpr} <= ?", [
+                    Carbon::today()->addDays(60)->toDateString(),
+                    Carbon::today()->addDays(90)->toDateString(),
+                ]),
+                'aman' => $query->whereRaw("{$kgbDateExpr} > ?", [
+                    Carbon::today()->addDays(90)->toDateString(),
+                ]),
+                default => $query->whereRaw("{$kgbDateExpr} <= ?", [$maxKgbDate]),
             };
         }
 
@@ -83,7 +82,7 @@ class KgbMonitoringService
         }
 
         return $query->paginate($perPage)
-            ->through(function (Pegawai $pegawai) use ($isMySQL): array {
+            ->through(function (Pegawai $pegawai): array {
                 $riwayatPangkatAktif = $this->getRiwayatPangkatAktif($pegawai);
                 $statusKgb = $this->getKgbStatus($pegawai);
 
@@ -105,8 +104,7 @@ class KgbMonitoringService
         int $months = 3,
         ?string $unitKerjaId = null,
         ?string $golongan = null,
-    ): array
-    {
+    ): array {
         $maxSisaHari = $months * 30;
         $driver = DB::connection()->getDriverName();
         $isMySQL = $driver === 'mysql';
@@ -152,11 +150,11 @@ class KgbMonitoringService
             ->first();
 
         return [
-            'total'      => (int) ($row?->total ?? 0),
+            'total' => (int) ($row?->total ?? 0),
             'jatuhTempo' => (int) ($row?->jatuh_tempo ?? 0),
-            'segera'     => (int) ($row?->segera ?? 0),
-            'mendekati'  => (int) ($row?->mendekati ?? 0),
-            'aman'       => (int) ($row?->aman ?? 0),
+            'segera' => (int) ($row?->segera ?? 0),
+            'mendekati' => (int) ($row?->mendekati ?? 0),
+            'aman' => (int) ($row?->aman ?? 0),
         ];
     }
 
@@ -173,8 +171,8 @@ class KgbMonitoringService
 
         return [
             'tanggal_kgb_berikutnya' => $tanggalKgbBerikutnya,
-            'sisa_hari'              => $sisaHari,
-            'status'                 => $this->resolveStatusLabel($sisaHari),
+            'sisa_hari' => $sisaHari,
+            'status' => $this->resolveStatusLabel($sisaHari),
         ];
     }
 

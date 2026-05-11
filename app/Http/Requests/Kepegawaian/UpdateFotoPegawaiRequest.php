@@ -23,9 +23,9 @@ class UpdateFotoPegawaiRequest extends FormRequest
     {
         return [
             'foto.required' => 'File foto wajib diunggah.',
-            'foto.image'    => 'File harus berupa gambar.',
-            'foto.mimes'    => 'Format foto harus JPG, PNG, atau WebP.',
-            'foto.max'      => 'Ukuran foto maksimal 2MB.',
+            'foto.image' => 'File harus berupa gambar.',
+            'foto.mimes' => 'Format foto harus JPG, PNG, atau WebP.',
+            'foto.max' => 'Ukuran foto maksimal 2MB.',
         ];
     }
 }

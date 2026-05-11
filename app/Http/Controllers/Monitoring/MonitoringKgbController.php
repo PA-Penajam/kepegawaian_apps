@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Monitoring;
 
+use App\Exports\KgbMonitoringExport;
 use App\Http\Controllers\Controller;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
 use App\Services\KgbMonitoringService;
-use App\Exports\KgbMonitoringExport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,18 +21,18 @@ class MonitoringKgbController extends Controller
 
     public function index(Request $request): Response
     {
-        $perPage    = $request->integer('per_page', 15);
-        $unitKerja  = $request->string('unit_kerja')->value() ?: null;
-        $golongan   = $request->string('golongan')->value() ?: null;
-        $status     = $request->string('status')->value() ?: null;
+        $perPage = $request->integer('per_page', 15);
+        $unitKerja = $request->string('unit_kerja')->value() ?: null;
+        $golongan = $request->string('golongan')->value() ?: null;
+        $status = $request->string('status')->value() ?: null;
 
         return Inertia::render('kepegawaian/monitoring/kgb/index', [
             'pegawaiList' => $this->kgbMonitoringService->getUpcomingKgb(3, $perPage, $unitKerja, $golongan, $status),
-            'kgbStats'    => $this->kgbMonitoringService->getKgbStats(3, $unitKerja, $golongan),
-            'filters'     => [
+            'kgbStats' => $this->kgbMonitoringService->getKgbStats(3, $unitKerja, $golongan),
+            'filters' => [
                 'unit_kerja' => $unitKerja,
-                'golongan'   => $golongan,
-                'status'     => $status,
+                'golongan' => $golongan,
+                'status' => $status,
             ],
             'filterOptions' => [
                 'unitKerja' => RefUnitKerja::query()
@@ -52,8 +52,8 @@ class MonitoringKgbController extends Controller
     public function export(Request $request): BinaryFileResponse
     {
         $unitKerja = $request->string('unit_kerja')->value() ?: null;
-        $golongan  = $request->string('golongan')->value() ?: null;
-        $status    = $request->string('status')->value() ?: null;
+        $golongan = $request->string('golongan')->value() ?: null;
+        $status = $request->string('status')->value() ?: null;
 
         return Excel::download(
             new KgbMonitoringExport($unitKerja, $golongan, $status),

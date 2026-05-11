@@ -22,7 +22,7 @@ class StoreUserAksesRequest extends FormRequest
     {
         return [
             'iam_role_id.required' => 'Role wajib dipilih.',
-            'iam_role_id.exists'   => 'Role yang dipilih tidak valid.',
+            'iam_role_id.exists' => 'Role yang dipilih tidak valid.',
         ];
     }
 }

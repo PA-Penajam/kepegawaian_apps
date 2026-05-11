@@ -2510,7 +2510,7 @@ Max Concurrent: 7 (Wave 1)
 
 <!-- WAVE 5: INTEGRATION & POLISH -->
 
-- [ ] 22. Auto-Update `riwayat_pangkat` + `pegawai.ref_pangkat_id` saat `SelesaiSKTerbit` + E2E Test
+- [x] 22. Auto-Update `riwayat_pangkat` + `pegawai.ref_pangkat_id` saat `SelesaiSKTerbit` + E2E Test
 
   **What to do**:
   - Tambah migration baru untuk **invariant DB constraint**: unique partial index pada `riwayat_pangkat` — hanya 1 row dengan `is_aktif = true` per `pegawai_id`:
@@ -2630,7 +2630,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `app/Events/UsulanKenaikanPangkat/UsulanKpSkTerbit.php`, `app/Listeners/UsulanKenaikanPangkat/SinkronkanRiwayatPangkat.php`, `app/Providers/AppServiceProvider.php` (update `boot()`), `database/migrations/*add_unique_aktif_riwayat_pangkat.php`, `app/Services/UsulanKenaikanPangkat/UsulanKenaikanPangkatService.php` (update), `tests/Feature/Integration/UsulanKpE2ETest.php`
   - Pre-commit: `php artisan test --compact --filter=UsulanKp && vendor/bin/pint --dirty --format agent`
 
-- [ ] 23. Console Command Notifikasi Deadline Usulan KP
+- [x] 23. Console Command Notifikasi Deadline Usulan KP
 
   **What to do**:
   - Buat console command `app/Console/Commands/NotifikasiDeadlineUsulanKp.php`:
@@ -2708,7 +2708,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `app/Console/Commands/NotifikasiDeadlineUsulanKp.php`, `app/Notifications/KenaikanPangkatDeadlineNotification.php`, `routes/console.php`, `tests/Feature/Commands/*`
   - Pre-commit: `php artisan schedule:list && php artisan test --compact --filter=NotifikasiDeadline && vendor/bin/pint --dirty --format agent`
 
-- [ ] 24. Audit Trail Verification + Integration Tests
+- [x] 24. Audit Trail Verification + Integration Tests
 
   **What to do**:
   - Verify `LogsActivity` trait aktif di SEMUA model baru: `UsulanKenaikanPangkat`, `UsulanKpApprovalStep`, `UsulanKpLampiran`, `BerkasChecklistTemplate`, `BerkasChecklistItem`, `BerkasChecklistSubmission`, `BerkasChecklistSubmissionItem`

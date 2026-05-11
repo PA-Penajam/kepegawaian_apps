@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Services\KgbMonitoringService;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -10,8 +11,11 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 class KgbMonitoringExport implements FromCollection, WithHeadings, WithMapping
 {
     protected ?string $unitKerjaId;
+
     protected ?string $golongan;
+
     protected ?string $status;
+
     protected int $months;
 
     public function __construct(
@@ -27,12 +31,12 @@ class KgbMonitoringExport implements FromCollection, WithHeadings, WithMapping
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function collection()
     {
-        $service = new KgbMonitoringService();
-        
+        $service = new KgbMonitoringService;
+
         // Get paginated data first
         $paginatedData = $service->getUpcomingKgb(
             $this->months,
@@ -41,7 +45,7 @@ class KgbMonitoringExport implements FromCollection, WithHeadings, WithMapping
             $this->golongan,
             $this->status
         );
-        
+
         // Convert to simple collection for export
         return collect($paginatedData->items())->map(function ($item) {
             return (object) [
@@ -57,9 +61,6 @@ class KgbMonitoringExport implements FromCollection, WithHeadings, WithMapping
         });
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
         return [
@@ -74,14 +75,13 @@ class KgbMonitoringExport implements FromCollection, WithHeadings, WithMapping
     }
 
     /**
-     * @param mixed $row
-     * @return array
+     * @param  mixed  $row
      */
     public function map($row): array
     {
         // Konversi sisa_hari ke format "X hari" atau "X bulan Y hari"
         $sisaWaktu = $this->formatSisaWaktu($row->sisa_hari ?? 0);
-        
+
         return [
             $row->nip ?? '',
             $row->nama_lengkap ?? '',
@@ -92,7 +92,7 @@ class KgbMonitoringExport implements FromCollection, WithHeadings, WithMapping
             $sisaWaktu,
         ];
     }
-    
+
     /**
      * Format sisa waktu dari hari ke format yang lebih mudah dibaca
      */
@@ -101,18 +101,18 @@ class KgbMonitoringExport implements FromCollection, WithHeadings, WithMapping
         if ($sisaHari <= 0) {
             return 'Sudah jatuh tempo';
         }
-        
+
         if ($sisaHari < 30) {
             return "{$sisaHari} hari";
         }
-        
+
         $bulan = floor($sisaHari / 30);
         $hari = $sisaHari % 30;
-        
+
         if ($hari === 0) {
             return "{$bulan} bulan";
         }
-        
+
         return "{$bulan} bulan {$hari} hari";
     }
 }

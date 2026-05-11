@@ -71,7 +71,7 @@ return new class extends Migration
                         'tanggal_masuk' => now()->toDateString(),
                         'email' => $user->email,
                         'email_verified_at' => $user->email_verified_at,
-                        'nip' => 'TEMP-' . $user->id,
+                        'nip' => 'TEMP-'.$user->id,
                         'password' => $user->password,
                         'remember_token' => $user->remember_token,
                         'two_factor_secret' => $user->two_factor_secret ?? null,

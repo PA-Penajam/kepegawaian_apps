@@ -29,7 +29,7 @@ class IamApplicationFactory extends Factory
             }
 
             // Default is_system = false jika belum set
-            if (!isset($app->is_system)) {
+            if (! isset($app->is_system)) {
                 $app->is_system = false;
             }
         });

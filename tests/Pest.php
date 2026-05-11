@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/Helpers/IamTestHelper.php';
+require_once __DIR__.'/Helpers/IamTestHelper.php';
 
 use Database\Seeders\IamSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

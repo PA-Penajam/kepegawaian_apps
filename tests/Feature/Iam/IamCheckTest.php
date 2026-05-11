@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\IamApplication;
 use App\Models\IamUserRole;
 use App\Models\Pegawai;
 use Illuminate\Support\Facades\Crypt;
@@ -7,7 +8,7 @@ use Laravel\Sanctum\Sanctum;
 
 it('mengembalikan allowed:true untuk user dengan permission yang diminta', function () {
     $user = Pegawai::factory()->create();
-    $app = \App\Models\IamApplication::factory()->create(['is_active' => true]);
+    $app = IamApplication::factory()->create(['is_active' => true]);
 
     $permission = $app->permissions()->create(['nama' => 'Manage Pegawai', 'slug' => 'manage-pegawai']);
     $role = $app->roles()->create(['nama' => 'Admin', 'slug' => 'admin-check-test']);
@@ -35,7 +36,7 @@ it('mengembalikan allowed:true untuk user dengan permission yang diminta', funct
 
 it('mengembalikan allowed:false untuk user tanpa permission', function () {
     $user = Pegawai::factory()->create();
-    $app = \App\Models\IamApplication::factory()->create(['is_active' => true]);
+    $app = IamApplication::factory()->create(['is_active' => true]);
 
     Sanctum::actingAs($user, ['*']);
 
@@ -56,7 +57,7 @@ it('mengembalikan allowed:false untuk user tanpa permission', function () {
 });
 
 it('menolak request tanpa token auth (401)', function () {
-    $app = \App\Models\IamApplication::factory()->create(['is_active' => true]);
+    $app = IamApplication::factory()->create(['is_active' => true]);
 
     $ts = now()->timestamp;
     $bodyHash = hash('sha256', '[]');

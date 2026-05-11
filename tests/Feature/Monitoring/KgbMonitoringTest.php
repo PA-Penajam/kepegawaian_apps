@@ -183,7 +183,7 @@ test('filter unit_kerja_id hanya menampilkan pegawai dari unit kerja tersebut', 
         'is_aktif' => true,
     ]);
 
-    $service = app(\App\Services\KgbMonitoringService::class);
+    $service = app(KgbMonitoringService::class);
     $result = $service->getUpcomingKgb(3, 15, $unitKerja1->id);
 
     $ids = collect($result->items())->pluck('id')->toArray();
@@ -222,7 +222,7 @@ test('filter status jatuh-tempo hanya menampilkan KGB yang sudah lewat', functio
         'is_aktif' => true,
     ]);
 
-    $service = app(\App\Services\KgbMonitoringService::class);
+    $service = app(KgbMonitoringService::class);
     $result = $service->getUpcomingKgb(3, 15, null, null, 'jatuh-tempo');
 
     $ids = collect($result->items())->pluck('id')->toArray();
@@ -260,7 +260,7 @@ test('filter golongan hanya menampilkan pegawai dengan golongan tersebut', funct
         'is_aktif' => true,
     ]);
 
-    $service = app(\App\Services\KgbMonitoringService::class);
+    $service = app(KgbMonitoringService::class);
     $result = $service->getUpcomingKgb(3, 15, null, 'III');
 
     $ids = collect($result->items())->pluck('id')->toArray();

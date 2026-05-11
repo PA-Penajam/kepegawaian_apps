@@ -22,7 +22,7 @@ class AttendanceAppSeeder extends Seeder
         } else {
             $secret = Str::random(64);
 
-            $app = new IamApplication();
+            $app = new IamApplication;
             $app->nama = 'Attendance QR System';
             $app->slug = $slug;
             $app->url = env('ATTENDANCE_APP_URL', 'http://localhost:8001');

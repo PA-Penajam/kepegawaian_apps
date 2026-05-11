@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Concerns\HasActivityLogOptions;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class IamUserRole extends Model
@@ -11,6 +11,7 @@ class IamUserRole extends Model
     use HasActivityLogOptions, LogsActivity {
         HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
     }
+
     protected $fillable = [
         'user_id', 'iam_role_id', 'assigned_at', 'assigned_by',
     ];

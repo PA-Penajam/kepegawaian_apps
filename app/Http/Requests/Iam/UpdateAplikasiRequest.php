@@ -14,8 +14,8 @@ class UpdateAplikasiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama'      => ['required', 'string', 'max:100'],
-            'url'       => ['required', 'url'],
+            'nama' => ['required', 'string', 'max:100'],
+            'url' => ['required', 'url'],
             'deskripsi' => ['nullable', 'string'],
             'is_active' => ['boolean'],
         ];
@@ -25,8 +25,8 @@ class UpdateAplikasiRequest extends FormRequest
     {
         return [
             'nama.required' => 'Nama aplikasi wajib diisi.',
-            'url.required'  => 'URL aplikasi wajib diisi.',
-            'url.url'       => 'URL aplikasi harus berupa URL yang valid.',
+            'url.required' => 'URL aplikasi wajib diisi.',
+            'url.url' => 'URL aplikasi harus berupa URL yang valid.',
         ];
     }
 }
