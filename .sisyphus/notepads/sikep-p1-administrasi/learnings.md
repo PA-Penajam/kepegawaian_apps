@@ -62,3 +62,13 @@
 - `UsulanKenaikanPangkatService::createDraft()` auto-attach template dari `config('sikep.kp.checklist_template_kode')`, bukan hardcode.
 - `submit()` memakai `ChecklistBerkasService::isComplete()` dan melempar `BerkasBelumLengkapException` jika checklist null/incomplete.
 - `ChecklistBerkasService::recalculatePersentase()` dispatch `ChecklistKelengkapanBerubah` hanya saat `status_kelengkapan` berubah.
+
+## [2026-05-12] Admin SK KP controller
+- Test controller Inertia tanpa route production memakai route sementara di test; gunakan `actingAs($user)->withoutVite()->get(...)` agar Vite manifest tidak dibutuhkan.
+- Upload SK final web controller cukup delegasi ke `UsulanKenaikanPangkatService::uploadSkFinal()`; test mock service agar tidak mengulang business logic service.
+- File download lokal aman untuk Intelephense via `Response::download(Storage::disk('local')->path($path), $filename)`.
+
+## [2026-05-12] UsulanKenaikanPangkatController web
+- Controller web KP memakai route name `usulan-kenaikan-pangkat.*`; test task ini mendaftarkan route sementara `_test/usulan-kenaikan-pangkat` tanpa menyentuh `routes/web.php` karena route ditangani task lain.
+- `StoreUsulanKenaikanPangkatRequest` mensyaratkan `pegawai_id` UUID, jadi test store perlu membuat `Pegawai` dengan UUID eksplisit bila factory default menghasilkan ULID.
+- Inertia feature test untuk page yang belum punya entry Vite perlu `withoutVite()` agar fokus tetap pada response Inertia controller.
