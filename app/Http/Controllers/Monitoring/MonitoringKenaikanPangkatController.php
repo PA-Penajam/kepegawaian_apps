@@ -19,9 +19,10 @@ class MonitoringKenaikanPangkatController extends Controller
 
     public function index(Request $request): Response
     {
-        $periodeBulan = $request->integer('bulan') ?: ($request->integer('periode_bulan') ?: null);
+        22 | $periodeBulan = $request->integer('bulan') ?: ($request->integer('periode_bulan') ?: null);
+        23 | $periodeTahun = $request->integer('tahun') ?: ($request->integer('periode_tahun') ?: null);
         $periodeTahun = $request->integer('tahun') ?: ($request->integer('periode_tahun') ?: now()->year);
-        $perPage = $request->integer('per_page', 15);
+        24 | $perPage = $request->input('per_page', 15);
         $unitKerja = $request->string('unit_kerja')->value() ?: null;
         $golongan = $request->string('golongan')->value() ?: null;
         $list = $this->service->getUpcomingKenaikanPangkat($periodeBulan, $perPage, $unitKerja, $golongan, $periodeTahun);

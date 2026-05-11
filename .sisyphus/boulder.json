@@ -13,7 +13,16 @@
     "ses_1e7c1f65affeYOcMDpdCqO01c4",
     "ses_1e7c241b6ffeqTLDDi1nipm4rY",
     "ses_1e7c397afffeD27ontM0k98qBh",
-    "ses_1e7bc8887ffeWXN5J4IRu65mKL"
+    "ses_1e7bc8887ffeWXN5J4IRu65mKL",
+    "ses_1e7b48db8ffedWrV1qBRa22DPB",
+    "ses_1e7b527ffffeQFueBtHNvPOjxK",
+    "ses_1e7b43260ffecYboW5B3ncFjru",
+    "ses_1e7b4e5f9ffeQeSpRwuONDQZ1U",
+    "ses_1e7b583f8ffebUc98qsvFKTZX8",
+    "ses_1e7b35881ffeACKXe3ZL2XfeoW",
+    "ses_1e7ace4f9ffeBxm4P24NVHjFyR",
+    "ses_1e7b3a994ffefufa0T1VhTsgir",
+    "ses_1e7a956feffeSioxQYB37ECBJP"
   ],
   "plan_name": "sikep-p1-administrasi",
   "agent": "atlas",
@@ -26,6 +35,15 @@
       "agent": "Sisyphus-Junior",
       "category": "quick",
       "updated_at": "2026-05-11T18:22:34.083Z"
+    },
+    "todo:8": {
+      "task_key": "todo:8",
+      "task_label": "8",
+      "task_title": "Model `UsulanKenaikanPangkat` + 11 State Classes",
+      "session_id": "ses_1e7a956feffeSioxQYB37ECBJP",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-05-11T18:45:43.489Z"
     }
   }
 }

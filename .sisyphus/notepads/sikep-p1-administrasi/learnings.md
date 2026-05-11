@@ -36,6 +36,13 @@
 - `status_kepegawaian = 'pppk'` wajib dikecualikan dari monitoring KP karena scope P1 hanya PNS.
 - Hukuman disiplin aktif tersedia via relasi `Pegawai::hukumanDisiplin()` dan scope `HukumanDisiplin::aktif()`.
 
+## [2026-05-12] Berkas checklist polimorfik
+- Schema aktual checklist memakai `jenis` untuk domain template dan `wajib` untuk flag item wajib; service/test menyesuaikan schema ini.
+- `validated_by` pada `berkas_checklist_submission_items` harus refer ke `pegawai`, bukan `users`, karena auth provider aplikasi memakai `App\Models\Pegawai` dan tidak ada tabel `users`.
+- Test upload checklist memakai `Storage::fake('local')` + `UploadedFile::fake()->create()` lalu assert via `Storage::disk('local')->exists($path)`.
+- Monitoring KP frontend kini memakai query `bulan`/`tahun`; controller tetap menerima alias legacy `periode_bulan`/`periode_tahun` untuk export/backward compatibility.
+- `php artisan test --compact --filter=MonitoringKenaikanPangkat` hanya menangkap test yang namanya memuat `MonitoringKenaikanPangkat`; nama test controller KP perlu prefix tersebut.
+
 ## [2026-05-12] Surat pengantar KP PDF
 - Generator PDF KP memakai `Spatie\LaravelPdf\Facades\Pdf::view(...)->withBrowsershot(...)->save($absolutePath)`; lingkungan Linux ini perlu arg Chromium `--no-sandbox`, `--disable-setuid-sandbox`, dan `--disable-dev-shm-usage`.
 - Path file surat pengantar KP: `storage/app/usulan-kp/surat-pengantar/{usulan_id}.pdf`; metadata disimpan ke `usulan_kp_pdf` dengan `jenis_pdf = surat_pengantar`.

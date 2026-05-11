@@ -68,7 +68,7 @@ it('mempertahankan metadata pagination untuk dataset kp besar', function (): voi
     $user = Pegawai::factory()->operator()->create();
 
     foreach (range(1, 31) as $index) {
-        makeKpPegawai('2021-04-01', ['nama_lengkap' => "Pegawai KP {$index}"]);
+        makeKpPegawai('2022-04-01', ['nama_lengkap' => "Pegawai KP {$index}"]);
     }
 
     actingAs($user)

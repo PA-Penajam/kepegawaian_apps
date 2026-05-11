@@ -293,7 +293,7 @@ Max Concurrent: 7 (Wave 1)
 
 <!-- WAVE 1: FOUNDATION -->
 
-- [ ] 1. Audit Verifikasi Modul Cuti CUTI-01..CUTI-10
+- [x] 1. Audit Verifikasi Modul Cuti CUTI-01..CUTI-10
 
   **What to do**:
   - Verifikasi setiap requirement CUTI-01 sampai CUTI-10 dari dokumen spec terhadap implementasi existing
@@ -392,7 +392,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `.sisyphus/evidence/cuti-audit/cuti-audit-report.md`
   - Pre-commit: `php artisan test --compact --filter=Cuti`
 
-- [ ] 2. Migrasi `berkas_checklist_*` (4 Tabel Polimorfik)
+- [x] 2. Migrasi `berkas_checklist_*` (4 Tabel Polimorfik)
 
   **What to do**:
   - Generate 4 migration via `php artisan make:migration --no-interaction`:
@@ -484,7 +484,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `database/migrations/*berkas_checklist*`, `tests/Feature/Migrations/BerkasChecklistMigrationTest.php`
   - Pre-commit: `php artisan migrate:fresh && php artisan test --compact --filter=BerkasChecklistMigration && vendor/bin/pint --dirty --format agent`
 
-- [ ] 3. Migrasi `usulan_kenaikan_pangkat_*` (6 Tabel + Indices)
+- [x] 3. Migrasi `usulan_kenaikan_pangkat_*` (6 Tabel + Indices)
 
   **What to do**:
   - Generate 6 migration via `php artisan make:migration --no-interaction`:
@@ -575,7 +575,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `database/migrations/*usulan_kenaikan_pangkat*`, `database/migrations/*usulan_kp_*`, `tests/Feature/Migrations/UsulanKenaikanPangkatMigrationTest.php`
   - Pre-commit: `php artisan migrate:fresh && php artisan test --compact --filter=UsulanKenaikanPangkatMigration && vendor/bin/pint --dirty --format agent`
 
-- [ ] 4. `NomorSuratService` Interface + Placeholder Implementation
+- [x] 4. `NomorSuratService` Interface + Placeholder Implementation
 
   **What to do**:
   - Buat interface `app/Services/NomorSurat/NomorSuratService.php` dengan method:
@@ -713,7 +713,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `app/Services/NomorSurat/*`, `config/sikep.php`, `database/migrations/*nomor_surat*`, `tests/Unit/Services/NomorSurat/*`
   - Pre-commit: `php artisan test --compact --filter=NomorSurat && vendor/bin/pint --dirty --format agent`
 
-- [ ] 5. `SikepAdapter` Interface + Null Implementation
+- [x] 5. `SikepAdapter` Interface + Null Implementation
 
   **What to do**:
   - Buat interface `app/Services/Sikep/SikepAdapter.php` dengan method minimal (semua return nullable/union tipe):
@@ -801,7 +801,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `app/Services/Sikep/*`, `config/sikep.php`, `tests/Unit/Services/Sikep/*`
   - Pre-commit: `php artisan test --compact --filter=NullSikepAdapter && vendor/bin/pint --dirty --format agent`
 
-- [ ] 6. Seed IAM Permissions P1 (KP Usulan + Checklist)
+- [x] 6. Seed IAM Permissions P1 (KP Usulan + Checklist)
 
   **What to do**:
   - Buat seeder `database/seeders/PermissionSikepP1Seeder.php` yang insert/update permissions ke table `iam_permissions` (model `App\Models\IamPermission`). Catatan: table lama `ref_permissions` sudah di-drop di migrasi `2026_03_21_000003_drop_old_rbac_tables.php`, jadi hanya target `iam_permissions`.
@@ -915,7 +915,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `database/seeders/PermissionSikepP1Seeder.php`, `database/seeders/DatabaseSeeder.php`, `tests/Feature/Seeders/PermissionSikepP1SeederTest.php`
   - Pre-commit: `php artisan db:seed --class=PermissionSikepP1Seeder && php artisan test --compact --filter=PermissionSikepP1Seeder && vendor/bin/pint --dirty --format agent`
 
-- [ ] 7. Refactor `KenaikanPangkatMonitoringService` ke 12 Periode Bulanan (BKN 4/2025)
+- [x] 7. Refactor `KenaikanPangkatMonitoringService` ke 12 Periode Bulanan (BKN 4/2025)
 
   **What to do**:
   - Refactor `app/Services/KenaikanPangkatMonitoringService.php`:

@@ -34,7 +34,7 @@ class SendKenaikanPangkatNotification extends Command
                 }
 
                 $pegawai = Pegawai::find($row['id']);
-                if ($pegawai === null || $pegawai->pegawai_id === null) {
+                if ($pegawai === null) {
                     continue;
                 }
 
