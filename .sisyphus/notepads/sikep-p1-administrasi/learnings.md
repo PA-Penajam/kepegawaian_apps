@@ -96,3 +96,8 @@
 - Route Wayfinder usulan KP tersedia di `@/routes/kenaikan-pangkat/usulan` dengan helper `index/create/store/show/edit/update` setelah `php artisan wayfinder:generate --no-interaction`.
 - `npm run build` memicu plugin Wayfinder ikut generate types/actions/routes sebelum Vite build.
 - Ikon timeline tidak di-hardcode per state; komponen membaca `timelineIcons` dari props dan hanya memetakan nama ikon generik ke komponen Lucide.
+
+## [2026-05-12] Sinkronisasi riwayat pangkat dari SK KP
+- Event SK terbit memakai `App\Events\UsulanKenaikanPangkat\UsulanKpSkTerbit` dan listener didaftarkan di `AppServiceProvider::registerEventListeners()`.
+- Listener wajib menonaktifkan semua `riwayat_pangkat` lama pegawai sebelum insert row aktif baru agar invariant unique partial index tidak gagal.
+- `UsulanKenaikanPangkatService::uploadSkFinal()` aman dispatch event setelah `transition()` berhasil; transition gagal dari state salah tidak mendispatch event.

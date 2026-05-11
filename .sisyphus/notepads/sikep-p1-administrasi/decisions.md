@@ -25,6 +25,7 @@
 - Hanya 1 row `is_aktif=true` per pegawai_id
 - Unique partial index (sqlite: WHERE clause, mysql: generated column)
 - Deactivate old SEBELUM insert new
+- Invariant ditegakkan di migration `riwayat_pangkat_aktif_unique`; MySQL memakai generated column nullable `aktif_unique`, SQLite memakai partial unique index langsung.
 
 ### Scope P1
 - Hanya KP reguler (bukan pilihan/prestasi)

@@ -5,6 +5,7 @@ namespace App\Services\UsulanKenaikanPangkat;
 use App\Actions\UsulanKenaikanPangkat\GenerateSuratPengantarPdf;
 use App\Enums\StatusKepegawaian;
 use App\Enums\StatusPegawai;
+use App\Events\UsulanKenaikanPangkat\UsulanKpSkTerbit;
 use App\Exceptions\UsulanKenaikanPangkat\BerkasBelumLengkapException;
 use App\Exceptions\UsulanKenaikanPangkat\DuplicateUsulanException;
 use App\Exceptions\UsulanKenaikanPangkat\PegawaiTidakEligibleException;
@@ -135,6 +136,7 @@ class UsulanKenaikanPangkatService
             Storage::disk('local')->put($path, $skFile->getContent());
             $usulan->forceFill(['nomor_sk' => $nomorSk, 'tanggal_sk' => $tanggalSk, 'sk_file_path' => $path, 'sk_file_original_name' => $skFile->getClientOriginalName(), 'finalized_at' => now()])->save();
             $this->transition($usulan, SelesaiSkTerbitState::class, $actor, 'upload_sk_final', 3);
+            event(new UsulanKpSkTerbit($usulan->refresh()));
         });
     }
 

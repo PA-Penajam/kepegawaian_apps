@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Events\ChecklistKelengkapanBerubah;
+use App\Events\UsulanKenaikanPangkat\UsulanKpSkTerbit;
+use App\Listeners\UsulanKenaikanPangkat\SinkronkanRiwayatPangkat;
 use App\Models\BerkasChecklist\BerkasChecklistTemplate;
 use App\Models\Cuti\CutiPengajuan;
 use App\Models\Pegawai;
@@ -121,6 +123,8 @@ class AppServiceProvider extends ServiceProvider
 
     private function registerEventListeners(): void
     {
+        Event::listen(UsulanKpSkTerbit::class, SinkronkanRiwayatPangkat::class);
+
         Event::listen(ChecklistKelengkapanBerubah::class, function (ChecklistKelengkapanBerubah $event): void {
             unset($event);
         });
