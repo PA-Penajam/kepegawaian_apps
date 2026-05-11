@@ -1,11 +1,17 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Download } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import Heading from '@/components/heading';
+import { useState } from 'react';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -37,7 +43,8 @@ type UnitKerjaOption = { id: string; nama: string };
 type KpFilters = {
     unit_kerja: string | null;
     golongan: string | null;
-    periode: string | null;
+    bulan: number | null;
+    tahun: number | null;
 };
 type KpFilterOptions = {
     unitKerja: UnitKerjaOption[];
@@ -46,13 +53,14 @@ type KpFilterOptions = {
 
 type Props = {
     pegawaiList: IamPaginatedData<PegawaiMonitoringRow>;
-    selectedPeriode: string | null;
-    kpStats: {
+    stats: {
         total: number;
         sudahEligible: number;
         mendekatiEligible: number;
         belumEligible: number;
     };
+    bulanOptions: { value: number; label: string }[];
+    tahunOptions: number[];
     filters: KpFilters;
     filterOptions: KpFilterOptions;
 };
@@ -87,20 +95,21 @@ function formatTanggal(tanggal: string | null): string {
 
 export default function MonitoringKenaikanPangkatPage({
     pegawaiList,
-    selectedPeriode,
-    kpStats,
+    stats,
+    bulanOptions,
+    tahunOptions,
     filters,
     filterOptions,
 }: Props) {
-    const [statusFilter, setStatusFilter] = useState<'semua' | StatusKp>(
-        'semua',
+    const { auth } = usePage().props;
+    const canCreateUsulan = (auth.user.permissions ?? []).includes(
+        'kenaikan-pangkat.usulan.create',
     );
-    const [periodeFilter, setPeriodeFilter] = useState<
-        'semua' | 'april' | 'oktober'
-    >(
-        selectedPeriode === 'april' || selectedPeriode === 'oktober'
-            ? selectedPeriode
-            : 'semua',
+    const [bulanFilter, setBulanFilter] = useState(
+        filters.bulan?.toString() ?? '',
+    );
+    const [tahunFilter, setTahunFilter] = useState(
+        filters.tahun?.toString() ?? '',
     );
     const [unitKerjaFilter, setUnitKerjaFilter] = useState(
         filters.unit_kerja ?? '',
@@ -109,12 +118,13 @@ export default function MonitoringKenaikanPangkatPage({
         filters.golongan ?? '',
     );
 
-    function handleFilterChange(newParams: Record<string, string>) {
+    function handleFilterChange(newParams: Record<string, string | null>) {
         const params: Record<string, string> = {};
         const resolved = {
             unit_kerja: unitKerjaFilter,
             golongan: golonganFilter,
-            periode: periodeFilter !== 'semua' ? periodeFilter : '',
+            bulan: bulanFilter,
+            tahun: tahunFilter,
             ...newParams,
         };
 
@@ -126,9 +136,13 @@ params.unit_kerja = resolved.unit_kerja;
 params.golongan = resolved.golongan;
 }
 
-        if (resolved.periode) {
-params.periode = resolved.periode;
-}
+        if (resolved.bulan) {
+            params.bulan = resolved.bulan;
+        }
+
+        if (resolved.tahun) {
+            params.tahun = resolved.tahun;
+        }
 
         router.get('/kepegawaian/monitoring/kenaikan-pangkat', params, {
             preserveState: true,
@@ -147,26 +161,22 @@ params.set('unit_kerja', unitKerjaFilter);
 params.set('golongan', golonganFilter);
 }
 
-        if (periodeFilter !== 'semua') {
-            params.set('periode', periodeFilter);
+        if (bulanFilter) {
+            params.set('bulan', bulanFilter);
+        }
+
+        if (tahunFilter) {
+            params.set('tahun', tahunFilter);
         }
 
         window.location.href = `/kepegawaian/monitoring/kenaikan-pangkat/export?${params.toString()}`;
     }
 
-    const filteredList = useMemo(() => {
-        if (statusFilter === 'semua') {
-            return pegawaiList.data;
-        }
-
-        return pegawaiList.data.filter((item: PegawaiMonitoringRow) => item.status === statusFilter);
-    }, [pegawaiList.data, statusFilter]);
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Monitoring Kenaikan Pangkat" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <div className="flex flex-1 flex-col gap-6 bg-background p-4">
                 <div>
                     <h1 className="text-2xl font-bold uppercase tracking-tight">Monitoring Kenaikan Pangkat</h1>
                     <p className="text-sm text-muted-foreground mt-1 font-medium">Pantau jadwal KP reguler, periode usul, dan status eligibility pegawai.</p>
@@ -181,7 +191,7 @@ params.set('golongan', golonganFilter);
                         </CardHeader>
                         <CardContent>
                             <p className="text-3xl font-black">
-                                {kpStats.total}
+                                {stats.total}
                             </p>
                         </CardContent>
                     </Card>
@@ -193,7 +203,7 @@ params.set('golongan', golonganFilter);
                         </CardHeader>
                         <CardContent>
                             <p className="text-3xl font-black text-emerald-700">
-                                {kpStats.sudahEligible}
+                                {stats.sudahEligible}
                             </p>
                         </CardContent>
                     </Card>
@@ -205,7 +215,7 @@ params.set('golongan', golonganFilter);
                         </CardHeader>
                         <CardContent>
                             <p className="text-3xl font-black text-amber-700">
-                                {kpStats.mendekatiEligible}
+                                {stats.mendekatiEligible}
                             </p>
                         </CardContent>
                     </Card>
@@ -217,7 +227,7 @@ params.set('golongan', golonganFilter);
                         </CardHeader>
                         <CardContent>
                             <p className="text-3xl font-black text-slate-700">
-                                {kpStats.belumEligible}
+                                {stats.belumEligible}
                             </p>
                         </CardContent>
                     </Card>
@@ -225,31 +235,51 @@ params.set('golongan', golonganFilter);
 
                 <div className="flex flex-col gap-3 rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-card p-4 md:flex-row md:items-end">
                     <div className="grid gap-2">
-                        <label
-                            htmlFor="periode"
-                            className="text-sm font-bold"
-                        >
-                            Filter periode
-                        </label>
-                        <select
-                            id="periode"
-                            value={periodeFilter}
-                            onChange={(event) => {
-                                const value = event.target.value as
-                                    | 'semua'
-                                    | 'april'
-                                    | 'oktober';
-                                setPeriodeFilter(value);
-                                handleFilterChange({
-                                    periode: value === 'semua' ? '' : value,
-                                });
+                        <label className="text-sm font-bold">Bulan</label>
+                        <Select
+                            value={bulanFilter || 'semua'}
+                            onValueChange={(value) => {
+                                const normalized = value === 'semua' ? '' : value;
+                                setBulanFilter(normalized);
+                                handleFilterChange({ bulan: normalized });
                             }}
-                            className="h-9 border-2 border-black bg-background px-3 text-sm font-medium shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
                         >
-                            <option value="semua">Semua</option>
-                            <option value="april">April</option>
-                            <option value="oktober">Oktober</option>
-                        </select>
+                            <SelectTrigger className="w-40">
+                                <SelectValue placeholder="Pilih bulan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="semua">Semua Bulan</SelectItem>
+                                {bulanOptions.map((bulan) => (
+                                    <SelectItem key={bulan.value} value={bulan.value.toString()}>
+                                        {bulan.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <label className="text-sm font-bold">Tahun</label>
+                        <Select
+                            value={tahunFilter || 'semua'}
+                            onValueChange={(value) => {
+                                const normalized = value === 'semua' ? '' : value;
+                                setTahunFilter(normalized);
+                                handleFilterChange({ tahun: normalized });
+                            }}
+                        >
+                            <SelectTrigger className="w-32">
+                                <SelectValue placeholder="Pilih tahun" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="semua">Tahun Berjalan</SelectItem>
+                                {tahunOptions.map((tahun) => (
+                                    <SelectItem key={tahun} value={tahun.toString()}>
+                                        {tahun}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="grid gap-2">
@@ -300,33 +330,6 @@ params.set('golongan', golonganFilter);
                         </select>
                     </div>
 
-                    <div className="grid gap-2">
-                        <label htmlFor="status" className="text-sm font-bold">
-                            Filter status
-                        </label>
-                        <select
-                            id="status"
-                            value={statusFilter}
-                            onChange={(event) =>
-                                setStatusFilter(
-                                    event.target.value as 'semua' | StatusKp,
-                                )
-                            }
-                            className="h-9 border-2 border-black bg-background px-3 text-sm font-medium shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
-                        >
-                            <option value="semua">Semua</option>
-                            <option value="Sudah Eligible">
-                                Sudah Eligible
-                            </option>
-                            <option value="Mendekati Eligible">
-                                Mendekati Eligible
-                            </option>
-                            <option value="Belum Eligible">
-                                Belum Eligible
-                            </option>
-                        </select>
-                    </div>
-
                     <Button
                         variant="outline"
                         size="sm"
@@ -350,20 +353,21 @@ params.set('golongan', golonganFilter);
                                 <TableHead className="font-black uppercase text-xs tracking-wider">Periode Usul</TableHead>
                                 <TableHead className="font-black uppercase text-xs tracking-wider">Batas Usul</TableHead>
                                 <TableHead className="font-black uppercase text-xs tracking-wider">Status</TableHead>
+                                <TableHead className="font-black uppercase text-xs tracking-wider">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredList.length === 0 ? (
+                            {pegawaiList.data.length === 0 ? (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={8}
+                                        colSpan={9}
                                         className="py-12 text-center font-medium text-muted-foreground"
                                     >
                                         Tidak ada data monitoring yang sesuai.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredList.map((pegawai) => (
+                                pegawaiList.data.map((pegawai) => (
                                     <TableRow key={pegawai.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
                                         <TableCell className="font-mono text-sm">
                                             {pegawai.nip ?? '-'}
@@ -412,6 +416,17 @@ params.set('golongan', golonganFilter);
                                             >
                                                 {pegawai.status}
                                             </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            {pegawai.status === 'Sudah Eligible' && canCreateUsulan ? (
+                                                <Button asChild size="sm" variant="outline">
+                                                    <Link href={`/kenaikan-pangkat/usulan/create?pegawai_id=${pegawai.id}&bulan=${filters.bulan ?? ''}&tahun=${filters.tahun ?? ''}`}>
+                                                        Buat Usulan
+                                                    </Link>
+                                                </Button>
+                                            ) : (
+                                                <span className="text-sm text-muted-foreground">-</span>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ))

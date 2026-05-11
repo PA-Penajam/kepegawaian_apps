@@ -117,7 +117,7 @@ test('controller mengembalikan data kp dalam format paginasi', function () {
         ]);
         RiwayatPangkat::factory()->create([
             'pegawai_id' => $pegawai->id,
-            'tmt' => Carbon::now()->subYears(5)->toDateString(),
+            'tmt' => Carbon::now()->subYears(4)->toDateString(),
             'is_aktif' => true,
         ]);
     }
@@ -138,7 +138,7 @@ test('controller mengembalikan data kp dalam format paginasi', function () {
     Carbon::setTestNow();
 });
 
-test('monitoring index returns inertia response', function () {
+test('MonitoringKenaikanPangkat index returns inertia response', function () {
     $user = Pegawai::factory()->admin()->create();
     createPegawaiDenganPangkatAktif('2022-04-01');
 
@@ -154,6 +154,44 @@ test('monitoring index returns inertia response', function () {
             ->has('kpStats.mendekatiEligible')
             ->has('kpStats.belumEligible'),
         );
+});
+
+test('MonitoringKenaikanPangkat index menerima filter bulan dan tahun', function () {
+    Carbon::setTestNow('2026-01-15');
+
+    $user = Pegawai::factory()->admin()->create();
+    createPegawaiDenganPangkatAktif('2022-05-01', ['nama_lengkap' => 'Pegawai Mei']);
+    createPegawaiDenganPangkatAktif('2022-06-01', ['nama_lengkap' => 'Pegawai Juni']);
+
+    actingAs($user);
+
+    get(route('monitoring.kenaikan-pangkat.index', ['bulan' => 5, 'tahun' => 2026]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('kepegawaian/monitoring/kenaikan-pangkat/index')
+            ->has('pegawaiList.data', 1)
+            ->where('pegawaiList.data.0.nama_lengkap', 'Pegawai Mei')
+            ->where('pegawaiList.data.0.periode_usul', 'Mei 2026')
+            ->where('filters.bulan', 5)
+            ->where('filters.tahun', 2026)
+            ->where('stats.total', 1)
+            ->has('bulanOptions', 12)
+            ->where('bulanOptions.4.value', 5)
+            ->where('bulanOptions.4.label', 'Mei')
+            ->where('tahunOptions.0', 2026),
+        );
+
+    Carbon::setTestNow();
+});
+
+test('MonitoringKenaikanPangkat index ditolak tanpa permission aplikasi', function () {
+    $user = Pegawai::factory()->create();
+    assert($user instanceof Pegawai);
+    $user->iamRoles()->detach();
+
+    actingAs($user);
+
+    get(route('monitoring.kenaikan-pangkat.index'))->assertForbidden();
 });
 
 test('filter unit_kerja_id hanya menampilkan pegawai KP dari unit kerja tersebut', function () {
