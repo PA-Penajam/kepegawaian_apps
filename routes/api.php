@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Cuti\PengajuanController as CutiPengajuanController
 use App\Http\Controllers\Api\Cuti\SaldoController as CutiSaldoController;
 use App\Http\Controllers\Api\IamController;
 use App\Http\Controllers\Api\PegawaiApiController;
+use App\Http\Controllers\Api\UsulanKenaikanPangkat\UsulanKenaikanPangkatApiController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -51,6 +52,12 @@ Route::middleware(['auth:sanctum', 'verify.hmac', 'throttle:60,1'])
         Route::get('/saldo/{nip}', [CutiSaldoController::class, 'show'])->name('saldo.show');
         Route::get('/saldo/{nip}/ledger', [CutiSaldoController::class, 'ledger'])->name('saldo.ledger');
     });
+
+Route::prefix('kenaikan-pangkat')->name('api.kenaikan-pangkat.')->middleware('auth:sanctum')->group(function () {
+    Route::get('usulan', [UsulanKenaikanPangkatApiController::class, 'index'])->name('usulan.index');
+    Route::get('usulan/{usulan}', [UsulanKenaikanPangkatApiController::class, 'show'])->name('usulan.show');
+    Route::get('stats', [UsulanKenaikanPangkatApiController::class, 'stats'])->name('stats');
+});
 
 // Exchange code — throttle ketat 10 req/menit (endpoint sensitif SSO)
 Route::middleware(['iam.signature', 'throttle:10,1'])

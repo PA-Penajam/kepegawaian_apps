@@ -28,6 +28,9 @@ use App\Http\Controllers\Referensi\RefRoleController;
 use App\Http\Controllers\Referensi\RefStatusKepegawaianController;
 use App\Http\Controllers\Referensi\RefStatusPegawaiController;
 use App\Http\Controllers\SsoController;
+use App\Http\Controllers\UsulanKenaikanPangkat\ApprovalController as KenaikanPangkatApprovalController;
+use App\Http\Controllers\UsulanKenaikanPangkat\SkAdminController as KenaikanPangkatSkAdminController;
+use App\Http\Controllers\UsulanKenaikanPangkat\UsulanKenaikanPangkatController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -189,6 +192,23 @@ Route::middleware(['auth', 'verified'])->prefix('cuti')->name('cuti.')->group(fu
     Route::post('/pengajuan/{id}/reject', [ApprovalController::class, 'reject'])->name('pengajuan.reject');
     Route::post('/pengajuan/{id}/cancel', [ApprovalController::class, 'cancel'])->name('pengajuan.cancel');
     Route::post('/pengajuan/{id}/reassign-approver', [ApprovalController::class, 'reassign'])->middleware('permission:cuti.pengajuan.reassign')->name('pengajuan.reassign');
+});
+
+Route::middleware(['auth', 'verified'])->prefix('kenaikan-pangkat')->name('kenaikan-pangkat.')->group(function () {
+    Route::resource('usulan', UsulanKenaikanPangkatController::class);
+    Route::post('usulan/{usulan}/submit', [UsulanKenaikanPangkatController::class, 'submit'])->name('usulan.submit');
+    Route::post('usulan/{usulan}/batalkan', [UsulanKenaikanPangkatController::class, 'batalkan'])->name('usulan.batalkan');
+    Route::get('approval/inbox', [KenaikanPangkatApprovalController::class, 'inbox'])->name('approval.inbox');
+    Route::post('approval/{usulan}/verifikasi-kasubbag', [KenaikanPangkatApprovalController::class, 'verifikasiKasubbag'])->name('approval.verifikasi-kasubbag');
+    Route::post('approval/{usulan}/verifikasi-sekretaris', [KenaikanPangkatApprovalController::class, 'verifikasiSekretaris'])->name('approval.verifikasi-sekretaris');
+    Route::post('approval/{usulan}/tanda-tangan-ketua', [KenaikanPangkatApprovalController::class, 'tandaTanganKetua'])->name('approval.tanda-tangan-ketua');
+    Route::post('approval/{usulan}/kirim-biro', [KenaikanPangkatApprovalController::class, 'kirimBiro'])->name('approval.kirim-biro');
+    Route::post('approval/{usulan}/minta-perbaikan', [KenaikanPangkatApprovalController::class, 'mintaPerbaikan'])->name('approval.minta-perbaikan');
+    Route::post('approval/{usulan}/tolak', [KenaikanPangkatApprovalController::class, 'tolak'])->name('approval.tolak');
+    Route::get('admin-sk', [KenaikanPangkatSkAdminController::class, 'index'])->name('admin-sk.index');
+    Route::post('admin-sk/{usulan}/upload-sk', [KenaikanPangkatSkAdminController::class, 'uploadSk'])->name('admin-sk.upload-sk');
+    Route::get('admin-sk/{usulan}/download-sk', [KenaikanPangkatSkAdminController::class, 'downloadSk'])->name('admin-sk.download-sk');
+    Route::get('admin-sk/pdf/{pdf}/download', [KenaikanPangkatSkAdminController::class, 'downloadSuratPengantar'])->name('admin-sk.download-surat-pengantar');
 });
 
 Route::middleware(['auth', 'verified', 'permission:cuti.saldo.view-all'])->prefix('admin/cuti')->name('admin.cuti.')->group(function () {
