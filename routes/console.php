@@ -12,11 +12,11 @@ Artisan::command('inspire', function () {
 // Jadwalkan pruning untuk SSO codes yang sudah expired
 Schedule::command('model:prune', ['--model' => IamSsoCode::class])->hourly();
 
-// Notifikasi KGB setiap hari jam 07:00
-Schedule::command('kgb:notify')->dailyAt('07:00');
+// Notifikasi deadline usulan KP setiap hari jam 07:00
+Schedule::command('sikep:notifikasi-deadline-kp')->dailyAt('07:00');
 
-// Notifikasi KP setiap hari jam 07:00
-Schedule::command('kp:notify')->dailyAt('07:00');
+// Notifikasi KP setiap hari jam 07:30
+Schedule::command('sikep:notifikasi-kp')->dailyAt('07:30');
 
 // Carry-over saldo cuti tahunan setiap 1 Januari jam 00:05
 Schedule::command('cuti:carry-over')
