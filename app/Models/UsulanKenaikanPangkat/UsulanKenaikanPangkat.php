@@ -2,7 +2,7 @@
 
 namespace App\Models\UsulanKenaikanPangkat;
 
-use App\Models\BerkasChecklistSubmission;
+use App\Models\BerkasChecklist\BerkasChecklistSubmission;
 use App\Models\Model;
 use App\Models\Pegawai;
 use App\Models\RefPangkat;

@@ -2,6 +2,7 @@
 
 namespace App\Services\BerkasChecklist;
 
+use App\Events\ChecklistKelengkapanBerubah;
 use App\Models\BerkasChecklist\BerkasChecklistSubmission;
 use App\Models\BerkasChecklist\BerkasChecklistSubmissionItem;
 use App\Models\BerkasChecklist\BerkasChecklistTemplate;
@@ -74,6 +75,7 @@ class ChecklistBerkasService
 
     public function recalculatePersentase(BerkasChecklistSubmission $submission): void
     {
+        $previousStatus = $submission->status_kelengkapan;
         $requiredItemIds = $submission->template->items()->wajib()->pluck('id');
         $requiredCount = $requiredItemIds->count();
 
@@ -88,6 +90,12 @@ class ChecklistBerkasService
             'persentase' => $percentage,
             'status_kelengkapan' => $percentage === 100 ? 'lengkap' : 'belum_lengkap',
         ]);
+
+        $freshSubmission = $submission->fresh();
+
+        if ($previousStatus !== $freshSubmission->status_kelengkapan) {
+            ChecklistKelengkapanBerubah::dispatch($freshSubmission);
+        }
     }
 
     public function isComplete(BerkasChecklistSubmission $submission): bool
