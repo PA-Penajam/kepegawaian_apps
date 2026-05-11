@@ -42,6 +42,7 @@ class DatabaseSeeder extends Seeder
             CutiJenisMasterSeeder::class,
             CutiJenisPerStatusPegawaiSeeder::class,
             CutiPermissionSeeder::class,
+            ChecklistKenaikanPangkatSeeder::class,
         ]);
 
         // --- Assign password & IAM role ke pegawai berdasarkan data JSON ---

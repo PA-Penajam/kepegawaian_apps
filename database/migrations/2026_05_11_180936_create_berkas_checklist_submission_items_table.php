@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('file_original_name')->nullable();
             $table->string('file_mime', 100)->nullable();
             $table->unsignedInteger('file_size')->nullable();
-            $table->foreignUlid('validated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUlid('validated_by')->nullable()->constrained('pegawai')->nullOnDelete();
             $table->timestamp('validated_at')->nullable();
             $table->timestamps();
 
