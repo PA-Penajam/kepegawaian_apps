@@ -7,10 +7,12 @@ use App\Models\Pegawai;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class BerkasChecklistSubmissionItem extends Model
 {
-    use HasFactory, HasUlids;
+    use HasFactory, HasUlids, LogsActivity;
 
     public const STATUS_BELUM_ADA = 'belum_ada';
 
@@ -46,6 +48,15 @@ class BerkasChecklistSubmissionItem extends Model
             'file_size' => 'integer',
             'validated_at' => 'datetime',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->useLogName('berkas_checklist_submission_item');
     }
 
     public function submission(): BelongsTo

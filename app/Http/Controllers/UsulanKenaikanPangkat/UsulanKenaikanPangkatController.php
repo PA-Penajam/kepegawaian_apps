@@ -9,10 +9,13 @@ use App\Http\Requests\UsulanKenaikanPangkat\SubmitUsulanKenaikanPangkatRequest;
 use App\Models\RefPangkat;
 use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
 use App\Services\UsulanKenaikanPangkat\UsulanKenaikanPangkatService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Activitylog\Models\Activity;
 
 class UsulanKenaikanPangkatController extends Controller
 {
@@ -87,6 +90,72 @@ class UsulanKenaikanPangkatController extends Controller
             'timeline' => $usulan->stateHistory()->latest()->get(),
             'lampiran' => $usulan->lampiran()->latest()->get(),
             'checklist' => $usulan->checklistSubmission()->with('items')->first(),
+        ]);
+    }
+
+    public function activity(UsulanKenaikanPangkat $usulan): JsonResponse
+    {
+        $this->authorize('view', $usulan);
+
+        $activityLog = Activity::query()
+            ->where(function ($query) use ($usulan): void {
+                $query->where(function ($query) use ($usulan): void {
+                    $query->where('subject_type', UsulanKenaikanPangkat::class)
+                        ->where('subject_id', $usulan->id);
+                })
+                    ->orWhere(function ($query) use ($usulan): void {
+                        $query->where('subject_type', $usulan->getMorphClass())
+                            ->where('subject_id', $usulan->id);
+                    });
+            })
+            ->latest()
+            ->get()
+            ->map(fn (Activity $activity): array => [
+                'id' => (string) $activity->id,
+                'source' => 'activity_log',
+                'event' => $activity->event,
+                'description' => $activity->description,
+                'subject_type' => $activity->subject_type,
+                'attribute_changes' => $activity->attribute_changes,
+                'timestamp' => $activity->created_at?->toISOString(),
+            ]);
+
+        $stateHistory = $usulan->stateHistory()
+            ->latest()
+            ->get()
+            ->map(fn ($history): array => [
+                'id' => $history->id,
+                'source' => 'state_history',
+                'event' => 'state_transition',
+                'from_state' => $history->from_state,
+                'to_state' => $history->to_state,
+                'catatan' => $history->catatan,
+                'actor_id' => $history->transitioned_by,
+                'timestamp' => $history->created_at?->toISOString(),
+            ]);
+
+        $approverHistory = $usulan->approverHistory()
+            ->latest()
+            ->get()
+            ->map(fn ($history): array => [
+                'id' => $history->id,
+                'source' => 'approver_history',
+                'event' => $history->action,
+                'step_urutan' => $history->step_urutan,
+                'catatan' => $history->catatan,
+                'actor_id' => $history->user_id,
+                'timestamp' => $history->created_at?->toISOString(),
+            ]);
+
+        $timeline = Collection::make()
+            ->merge($activityLog)
+            ->merge($stateHistory)
+            ->merge($approverHistory)
+            ->sortByDesc('timestamp')
+            ->values();
+
+        return response()->json([
+            'data' => $timeline,
         ]);
     }
 

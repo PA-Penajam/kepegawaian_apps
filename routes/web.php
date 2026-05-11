@@ -201,6 +201,7 @@ Route::middleware(['auth', 'verified'])->prefix('cuti')->name('cuti.')->group(fu
 });
 
 Route::middleware(['auth', 'verified'])->prefix('kenaikan-pangkat')->name('kenaikan-pangkat.')->group(function () {
+    Route::get('usulan/{usulan}/activity', [UsulanKenaikanPangkatController::class, 'activity'])->name('usulan.activity');
     Route::resource('usulan', UsulanKenaikanPangkatController::class);
     Route::post('usulan/{usulan}/submit', [UsulanKenaikanPangkatController::class, 'submit'])->name('usulan.submit');
     Route::post('usulan/{usulan}/batalkan', [UsulanKenaikanPangkatController::class, 'batalkan'])->name('usulan.batalkan');
