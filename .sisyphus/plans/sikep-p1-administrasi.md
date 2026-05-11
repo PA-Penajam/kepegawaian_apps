@@ -2126,7 +2126,7 @@ Max Concurrent: 7 (Wave 1)
 
 <!-- WAVE 4: UI PAGES (PARALLEL) -->
 
-- [ ] 17. UI Eligible List + Form Usulan KP
+- [x] 17. UI Eligible List + Form Usulan KP
 
   **What to do**:
   - Buat page `resources/js/pages/kenaikan-pangkat/eligible/index.tsx`:
@@ -2209,7 +2209,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `resources/js/pages/kenaikan-pangkat/{eligible,usulan}/*.tsx`, `resources/js/components/app-sidebar.tsx`
   - Pre-commit: `npm run build`
 
-- [ ] 18. UI Inbox Approval + Aksi Approve/Reject
+- [x] 18. UI Inbox Approval + Aksi Approve/Reject
 
   **What to do**:
   - Page `resources/js/pages/kenaikan-pangkat/approval/inbox.tsx`:
@@ -2282,7 +2282,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `resources/js/pages/kenaikan-pangkat/approval/*.tsx`
   - Pre-commit: `npm run build`
 
-- [ ] 19. UI Detail Usulan + Timeline State + Checklist Panel
+- [x] 19. UI Detail Usulan + Timeline State + Checklist Panel
 
   **What to do**:
   - Page `resources/js/pages/kenaikan-pangkat/usulan/show.tsx`:
@@ -2355,7 +2355,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `resources/js/pages/kenaikan-pangkat/usulan/show.tsx`, komponen terkait
   - Pre-commit: `npm run build`
 
-- [ ] 20. UI Admin Daftar SK + Upload SK Form
+- [x] 20. UI Admin Daftar SK + Upload SK Form
 
   **What to do**:
   - Page `resources/js/pages/kenaikan-pangkat/admin-sk/index.tsx`:
