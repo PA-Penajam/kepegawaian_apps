@@ -1969,7 +1969,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `app/Http/Requests/UsulanKenaikanPangkat/*`, `app/Policies/UsulanKenaikanPangkatPolicy.php`, `tests/Feature/Policies/*`
   - Pre-commit: `php artisan test --compact --filter=UsulanKenaikanPangkatPolicy && vendor/bin/pint --dirty --format agent`
 
-- [ ] 16. Controllers Web + API `UsulanKenaikanPangkat`
+- [x] 16. Controllers Web + API `UsulanKenaikanPangkat`
 
   **Sub-task granularity** (4 parallel sub-agents, split untuk reduce bottleneck):
 

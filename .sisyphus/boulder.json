@@ -30,7 +30,12 @@
     "ses_1e78e1e48ffefr01l8ciP6UUd1",
     "ses_1e78dd45fffexZM8Lv2H98Q9u4",
     "ses_1e78df88dffehNdbQpWlEhd906",
-    "ses_1e78689d3ffecLXdD2rQpPk2X1"
+    "ses_1e78689d3ffecLXdD2rQpPk2X1",
+    "ses_1e7801f96ffebZqhQtS4pTrQ6O",
+    "ses_1e7807458ffeQ2BrgcMWv83eGM",
+    "ses_1e780574cffe9ttQTe1J7tBqTU",
+    "ses_1e7809d96ffeLFquofJ1bMcqEO",
+    "ses_1e780bf49ffe0TRdWYRP5boFxv"
   ],
   "plan_name": "sikep-p1-administrasi",
   "agent": "atlas",
@@ -70,6 +75,15 @@
       "agent": "Sisyphus-Junior",
       "category": "unspecified-high",
       "updated_at": "2026-05-11T19:20:42.659Z"
+    },
+    "todo:17": {
+      "task_key": "todo:17",
+      "task_label": "17",
+      "task_title": "UI Eligible List + Form Usulan KP",
+      "session_id": "ses_1e7801f96ffebZqhQtS4pTrQ6O",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-05-11T19:30:08.249Z"
     }
   }
 }

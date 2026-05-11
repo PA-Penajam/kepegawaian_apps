@@ -72,3 +72,22 @@
 - Controller web KP memakai route name `usulan-kenaikan-pangkat.*`; test task ini mendaftarkan route sementara `_test/usulan-kenaikan-pangkat` tanpa menyentuh `routes/web.php` karena route ditangani task lain.
 - `StoreUsulanKenaikanPangkatRequest` mensyaratkan `pegawai_id` UUID, jadi test store perlu membuat `Pegawai` dengan UUID eksplisit bila factory default menghasilkan ULID.
 - Inertia feature test untuk page yang belum punya entry Vite perlu `withoutVite()` agar fokus tetap pada response Inertia controller.
+
+## [2026-05-12] Inbox approval KP frontend
+- Wayfinder route KP approval tersedia di `@/routes/kenaikan-pangkat/approval` setelah `php artisan wayfinder:generate --no-interaction`.
+- `ApprovalController::inbox()` mengirim props `usulan` dan `current_role`; state per role: `DIAJUKAN`, `DIVERIFIKASI_KASUBBAG`, `DIVERIFIKASI_SEKRETARIS`, `DITANDATANGANI_KETUA`.
+- Action minta perbaikan memakai payload `catatan`; action tolak memakai payload `alasan`; verifikasi kasubbag/sekretaris memakai `setuju` + `catatan`.
+
+## [2026-05-12] Admin SK KP frontend
+- Wayfinder route frontend untuk admin SK tersedia di `@/routes/kenaikan-pangkat/admin-sk` dengan method `index`, `uploadSk`, dan `downloadSk`.
+- Halaman Inertia `kenaikan-pangkat/admin-sk/index` menerima paginated prop `usulan`; frontend memecah baris berdasarkan `state` `MENUNGGU_SK` dan `SELESAI_SK_TERBIT`.
+
+## [2026-05-12] Halaman detail usulan KP
+- `resources/js/pages/kenaikan-pangkat/usulan/show.tsx` mengikuti pola detail Cuti: `AppLayout`, `Head`, `Card`, `Badge`, dan helper format lokal.
+- Timeline detail KP menggabungkan `state_history` + `approver_history` dari props Inertia, lalu sort kronologis di frontend tanpa fetch API tambahan.
+
+## [2026-05-12] Frontend KP pages
+- Halaman KP baru berada di `resources/js/pages/kenaikan-pangkat/*` dan aman memakai Inertia props langsung; filter list cukup `router.get(index.url(), params, { preserveState, preserveScroll, replace })`.
+- Route Wayfinder usulan KP tersedia di `@/routes/kenaikan-pangkat/usulan` dengan helper `index/create/store/show/edit/update` setelah `php artisan wayfinder:generate --no-interaction`.
+- `npm run build` memicu plugin Wayfinder ikut generate types/actions/routes sebelum Vite build.
+- Ikon timeline tidak di-hardcode per state; komponen membaca `timelineIcons` dari props dan hanya memetakan nama ikon generik ke komponen Lucide.
