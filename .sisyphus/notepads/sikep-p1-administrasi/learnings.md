@@ -35,3 +35,8 @@
 - `KenaikanPangkatMonitoringService` sekarang pakai filter `periode_bulan`/`periode_tahun` numerik dan tetap format output `{NamaBulan} {YYYY}`.
 - `status_kepegawaian = 'pppk'` wajib dikecualikan dari monitoring KP karena scope P1 hanya PNS.
 - Hukuman disiplin aktif tersedia via relasi `Pegawai::hukumanDisiplin()` dan scope `HukumanDisiplin::aktif()`.
+
+## [2026-05-12] Usulan Kenaikan Pangkat model/state
+- Model KP memakai `spatie/laravel-model-states` dengan 11 concrete state suffix `State` dan `$name` UPPERCASE.
+- `users` table sudah tidak ada setelah migrasi auth ke `pegawai`; FK audit KP perlu mengarah ke `pegawai` agar SQLite test tidak gagal `no such table: main.users`.
+- Placeholder nomor surat migrations perlu kolom sequence/reservation nyata karena test PDF KP mengakses `klasifikasi`, `tahun`, `next_number`, dan `nomor_lengkap`.

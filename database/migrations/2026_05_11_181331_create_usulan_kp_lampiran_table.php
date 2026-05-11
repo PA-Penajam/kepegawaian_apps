@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('file_original_name');
             $table->string('file_mime', 100);
             $table->unsignedInteger('file_size');
-            $table->foreignUlid('uploaded_by')->constrained('users')->restrictOnDelete();
+            $table->foreignUlid('uploaded_by')->constrained('pegawai')->restrictOnDelete();
             $table->text('catatan')->nullable();
             $table->timestamps();
 

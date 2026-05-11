@@ -14,7 +14,7 @@ return new class extends Migration
                 ->constrained('usulan_kenaikan_pangkat')->cascadeOnDelete();
             $table->string('from_state', 50)->nullable();
             $table->string('to_state', 50);
-            $table->foreignUlid('transitioned_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUlid('transitioned_by')->nullable()->constrained('pegawai')->nullOnDelete();
             $table->text('catatan')->nullable();
             $table->timestamp('created_at')->useCurrent();
 

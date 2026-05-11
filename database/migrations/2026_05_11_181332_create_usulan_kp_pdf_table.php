@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('jenis_pdf', 50);
             $table->string('nomor_surat');
             $table->string('file_path', 500);
-            $table->foreignUlid('generated_by')->constrained('users')->restrictOnDelete();
+            $table->foreignUlid('generated_by')->constrained('pegawai')->restrictOnDelete();
             $table->timestamp('generated_at')->useCurrent();
             $table->timestamps();
 

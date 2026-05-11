@@ -12,8 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('nomor_surat_sequences', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
+            $table->string('klasifikasi', 50);
+            $table->unsignedSmallInteger('tahun');
+            $table->unsignedInteger('next_number')->default(1);
             $table->timestamps();
+
+            $table->unique(['klasifikasi', 'tahun']);
         });
     }
 

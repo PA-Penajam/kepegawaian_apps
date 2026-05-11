@@ -2,58 +2,63 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
 use App\Notifications\KenaikanPangkatEligibleNotification;
 use App\Services\KenaikanPangkatMonitoringService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class SendKenaikanPangkatNotification extends Command
 {
-    protected $signature = 'kp:notify';
-    protected $description = 'Kirim notifikasi email ke pegawai yang kenaikan pangkatnya sudah/mendekati eligible';
+    protected $signature = 'sikep:notifikasi-kp {--bulan=} {--tahun=}';
+
+    protected $description = 'Kirim notifikasi KP ke pegawai mendekati eligible untuk periode bulanan';
 
     public function handle(KenaikanPangkatMonitoringService $service): int
     {
-        $driver = DB::connection()->getDriverName();
-        $tmtPlus4Year = $driver === 'mysql'
-            ? 'DATE_ADD(rp_kp.tmt, INTERVAL 4 YEAR)'
-            : "date(rp_kp.tmt, '+4 years')";
-
-        $today = Carbon::today()->toDateString();
-        $sixMonthsLater = Carbon::today()->addMonths(6)->toDateString();
-
-        $pegawaiList = Pegawai::query()
-            ->join('riwayat_pangkat as rp_kp', function ($join) {
-                $join->on('rp_kp.pegawai_id', '=', 'pegawai.id')
-                    ->where('rp_kp.is_aktif', true);
-            })
-            ->with(['riwayatPangkat' => fn ($q) => $q->aktif()->with('pangkat')->latest('tmt')])
-            ->whereNotIn('status_pegawai', [
-                StatusPegawai::Pensiun->value,
-                StatusPegawai::Meninggal->value,
-                StatusPegawai::Diberhentikan->value,
-            ])
-            ->whereNotNull('pegawai.email')
-            ->whereRaw("{$tmtPlus4Year} <= ?", [$sixMonthsLater])
-            ->get();
+        $bulan = (int) ($this->option('bulan') ?? Carbon::today()->month);
+        $tahun = (int) ($this->option('tahun') ?? Carbon::today()->year);
+        $lookahead = (int) config('sikep.kp.lookahead_months', 6);
 
         $count = 0;
-        foreach ($pegawaiList as $pegawai) {
-            try {
-                $kpStatus = $service->getKpStatus($pegawai);
-                $pegawai->notify(new KenaikanPangkatEligibleNotification(
-                    tmtKpBerikutnya: $kpStatus['tmt_kp_berikutnya'],
-                    periodeUsul: $kpStatus['periode_usul'],
-                    batasUsul: $kpStatus['batas_usul'],
-                    sisaHariUsul: $kpStatus['sisa_hari_usul'],
-                    status: $kpStatus['status'],
-                ));
-                $count++;
-            } catch (\Exception $e) {
-                $this->error("Gagal kirim notifikasi ke pegawai ID {$pegawai->id}: {$e->getMessage()}");
+
+        for ($i = 0; $i < $lookahead; $i++) {
+            $targetBulan = (($bulan + $i - 1) % 12) + 1;
+            $targetTahun = $tahun + intdiv($bulan + $i - 1, 12);
+
+            $data = $service->getUpcomingKenaikanPangkat($targetBulan, 1000, null, null, $targetTahun);
+
+            foreach ($data->items() as $row) {
+                if ($row['status'] !== 'Mendekati Eligible') {
+                    continue;
+                }
+
+                $pegawai = Pegawai::find($row['id']);
+                if ($pegawai === null || $pegawai->pegawai_id === null) {
+                    continue;
+                }
+
+                $sudahAda = $pegawai->notifications()
+                    ->where('type', KenaikanPangkatEligibleNotification::class)
+                    ->whereJsonContains('data->periode_bulan', $targetBulan)
+                    ->whereJsonContains('data->periode_tahun', $targetTahun)
+                    ->exists();
+
+                if ($sudahAda) {
+                    continue;
+                }
+
+                try {
+                    $batasUsulFormatted = Carbon::parse($row['batas_usul'])->translatedFormat('d F Y');
+                    $pegawai->notify(new KenaikanPangkatEligibleNotification(
+                        periodeBulan: $targetBulan,
+                        periodeTahun: $targetTahun,
+                        batasUsul: $batasUsulFormatted,
+                    ));
+                    $count++;
+                } catch (\Exception $e) {
+                    $this->error("Gagal kirim ke pegawai ID {$pegawai->id}: {$e->getMessage()}");
+                }
             }
         }
 

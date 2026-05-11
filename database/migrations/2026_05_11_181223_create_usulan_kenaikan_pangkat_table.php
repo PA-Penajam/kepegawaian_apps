@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('sk_file_original_name', 255)->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('finalized_at')->nullable();
-            $table->foreignUlid('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUlid('created_by')->nullable()->constrained('pegawai')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
 

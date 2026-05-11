@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignUlid('usulan_kenaikan_pangkat_id')
                 ->constrained('usulan_kenaikan_pangkat')->cascadeOnDelete();
             $table->unsignedTinyInteger('step_urutan');
-            $table->foreignUlid('user_id')->constrained('users')->restrictOnDelete();
+            $table->foreignUlid('user_id')->constrained('pegawai')->restrictOnDelete();
             $table->string('action', 30);
             $table->text('catatan')->nullable();
             $table->json('meta')->nullable();

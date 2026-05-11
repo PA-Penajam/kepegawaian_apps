@@ -15,7 +15,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('urutan');
             $table->string('role_required', 50);
             $table->foreignUlid('approver_user_id')->nullable()
-                ->constrained('users')->nullOnDelete();
+                ->constrained('pegawai')->nullOnDelete();
             $table->string('status', 30)->default('menunggu');
             $table->text('catatan')->nullable();
             $table->timestamp('acted_at')->nullable();

@@ -2,11 +2,10 @@
 
 use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
-use App\Models\RefPangkat;
 use App\Models\RiwayatPangkat;
 use App\Notifications\KenaikanPangkatEligibleNotification;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Notification;
+use Tests\TestCase;
 
 function createPegawaiWithKp(string $tmtPangkat, bool $isAktif = true): Pegawai
 {
@@ -23,91 +22,50 @@ function createPegawaiWithKp(string $tmtPangkat, bool $isAktif = true): Pegawai
     return $pegawai;
 }
 
-test('notification contains correct subject for sudah eligible', function () {
-    Carbon::setTestNow('2026-01-01');
+test('notification signature uses periode bulan + tahun', function () {
+    $notif = new KenaikanPangkatEligibleNotification(4, 2026, '15 April 2026');
 
-    $tmtKp = Carbon::parse('2024-01-01');
-    $batasUsul = Carbon::parse('2025-10-01');
-    $notification = new KenaikanPangkatEligibleNotification(
-        tmtKpBerikutnya: $tmtKp,
-        periodeUsul: 'Oktober 2026',
-        batasUsul: $batasUsul,
-        sisaHariUsul: 100,
-        status: 'Sudah Eligible',
-    );
-
-    $mailData = $notification->toMail(createPegawaiWithKp('2024-01-01'));
-
-    expect($mailData->subject)->toBe('Kenaikan Pangkat Eligible — Periode Oktober 2026');
-
-    Carbon::setTestNow();
+    expect($notif->periodeBulan)->toBe(4)
+        ->and($notif->periodeTahun)->toBe(2026)
+        ->and($notif->batasUsul)->toBe('15 April 2026');
 });
 
-test('notification contains correct subject for mendekati eligible', function () {
-    Carbon::setTestNow('2026-01-01');
+test('notification sends to database + mail channel', function () {
+    $notif = new KenaikanPangkatEligibleNotification(4, 2026, '15 April 2026');
 
-    $tmtKp = Carbon::parse('2026-04-01');
-    $batasUsul = Carbon::parse('2026-04-01');
-    $notification = new KenaikanPangkatEligibleNotification(
-        tmtKpBerikutnya: $tmtKp,
-        periodeUsul: 'April 2026',
-        batasUsul: $batasUsul,
-        sisaHariUsul: 45,
-        status: 'Mendekati Eligible',
-    );
+    $channels = $notif->via(createPegawaiWithKp('2022-04-01'));
 
-    $mailData = $notification->toMail(createPegawaiWithKp('2022-04-01'));
-
-    expect($mailData->subject)->toBe('Pengingat Kenaikan Pangkat Mendekati Eligible — Periode April 2026');
-
-    Carbon::setTestNow();
+    expect($channels)->toContain('database')
+        ->and($channels)->toContain('mail');
 });
 
-test('notification via method returns mail channel', function () {
+test('command kp:notify supports --bulan --tahun', function () {
+    /** @var TestCase $this */
     Carbon::setTestNow('2026-01-01');
-
-    $tmtKp = Carbon::parse('2026-04-01');
-    $batasUsul = Carbon::parse('2026-04-01');
-    $notification = new KenaikanPangkatEligibleNotification(
-        tmtKpBerikutnya: $tmtKp,
-        periodeUsul: 'April 2026',
-        batasUsul: $batasUsul,
-        sisaHariUsul: 45,
-        status: 'Mendekati Eligible',
-    );
 
     $pegawai = createPegawaiWithKp('2022-04-01');
 
-    expect($notification->via($pegawai))->toContain('mail');
-
-    Carbon::setTestNow();
-});
-
-test('notification to array returns correct data', function () {
-    Carbon::setTestNow('2026-01-01');
-
-    $tmtKp = Carbon::parse('2026-04-01');
-    $batasUsul = Carbon::parse('2026-04-01');
-    $notification = new KenaikanPangkatEligibleNotification(
-        tmtKpBerikutnya: $tmtKp,
-        periodeUsul: 'April 2026',
-        batasUsul: $batasUsul,
-        sisaHariUsul: 45,
-        status: 'Mendekati Eligible',
-    );
-
-    $pegawai = createPegawaiWithKp('2022-04-01');
-    $array = $notification->toArray($pegawai);
-
-    expect($array)->toHaveKeys(['tmt_kp_berikutnya', 'periode_usul', 'batas_usul', 'sisa_hari_usul', 'status'])
-        ->and($array['periode_usul'])->toBe('April 2026')
-        ->and($array['sisa_hari_usul'])->toBe(45)
-        ->and($array['status'])->toBe('Mendekati Eligible');
-
-    Carbon::setTestNow();
-});
-
-test('command runs successfully without errors', function () {
-    $this->artisan('kp:notify')
+    $this->artisan('sikep:notifikasi-kp --bulan=4 --tahun=2026')
         ->assertSuccessful();
+
+    expect($pegawai->notifications()->count())->toBeGreaterThan(0);
+
+    Carbon::setTestNow();
+});
+
+test('command kp:notify does not send duplicate notifications', function () {
+    /** @var TestCase $this */
+    Carbon::setTestNow('2026-01-01');
+
+    $pegawai = createPegawaiWithKp('2022-04-01');
+
+    $this->artisan('sikep:notifikasi-kp --bulan=4 --tahun=2026')
+        ->assertSuccessful();
+
+    $this->artisan('sikep:notifikasi-kp --bulan=4 --tahun=2026')
+        ->assertSuccessful();
+
+    expect($pegawai->notifications()->count())->toBe(1);
+
+    Carbon::setTestNow();
 });

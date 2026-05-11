@@ -31,3 +31,7 @@
 - Hanya PNS (bukan PPPK)
 - Hanya KP struktural (bukan JF/DUPAK)
 - Cuti: audit saja, tidak modifikasi
+
+## [2026-05-12] Usulan Kenaikan Pangkat Eloquent Layer
+- `created_by`, `approver_user_id`, `user_id`, `transitioned_by`, `uploaded_by`, dan `generated_by` pada domain KP diputuskan mereferensikan `pegawai`, bukan `users`, mengikuti keputusan migrasi auth ke `Pegawai`.
+- `checklistSubmission` dibuat sebagai `morphOne` langsung ke `BerkasChecklistSubmission` agar subject polimorfik bisa resolve dari model usulan.
