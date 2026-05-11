@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Events\ChecklistKelengkapanBerubah;
 use App\Models\Cuti\CutiPengajuan;
 use App\Models\Pegawai;
 use App\Models\PengajuanPerubahanData;
+use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
 use App\Policies\Cuti\CutiPengajuanPolicy;
 use App\Policies\PegawaiPolicy;
 use App\Policies\PengajuanPerubahanDataPolicy;
+use App\Policies\UsulanKenaikanPangkatPolicy;
 use App\Services\Cuti\Rules\CutiAlasanPentingRule;
 use App\Services\Cuti\Rules\CutiBesarRule;
 use App\Services\Cuti\Rules\CutiLtnRule;
@@ -24,6 +27,7 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -58,8 +62,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(CutiPengajuan::class, CutiPengajuanPolicy::class);
         Gate::policy(Pegawai::class, PegawaiPolicy::class);
         Gate::policy(PengajuanPerubahanData::class, PengajuanPerubahanDataPolicy::class);
+        Gate::policy(UsulanKenaikanPangkat::class, UsulanKenaikanPangkatPolicy::class);
 
         $this->configureDefaults();
+        $this->registerEventListeners();
         $this->registerSlowQueryLogger();
     }
 
@@ -107,6 +113,13 @@ class AppServiceProvider extends ServiceProvider
                     'time_ms' => $query->time,
                 ]);
             }
+        });
+    }
+
+    private function registerEventListeners(): void
+    {
+        Event::listen(ChecklistKelengkapanBerubah::class, function (ChecklistKelengkapanBerubah $event): void {
+            unset($event);
         });
     }
 }
