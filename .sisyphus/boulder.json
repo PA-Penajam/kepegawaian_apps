@@ -26,7 +26,11 @@
     "ses_1e79f8c83ffeSjODOaLX52iOOQ",
     "ses_1e79f13deffefBvmQ9oRR369Hw",
     "ses_1e79fe189ffe5Zb6Fh1feHDEDm",
-    "ses_1e796c639ffe0j1lff0ubU4Kgm"
+    "ses_1e796c639ffe0j1lff0ubU4Kgm",
+    "ses_1e78e1e48ffefr01l8ciP6UUd1",
+    "ses_1e78dd45fffexZM8Lv2H98Q9u4",
+    "ses_1e78df88dffehNdbQpWlEhd906",
+    "ses_1e78689d3ffecLXdD2rQpPk2X1"
   ],
   "plan_name": "sikep-p1-administrasi",
   "agent": "atlas",
@@ -57,6 +61,15 @@
       "agent": "Sisyphus-Junior",
       "category": "quick",
       "updated_at": "2026-05-11T19:03:24.814Z"
+    },
+    "todo:16": {
+      "task_key": "todo:16",
+      "task_label": "16",
+      "task_title": "Controllers Web + API `UsulanKenaikanPangkat`",
+      "session_id": "ses_1e78689d3ffecLXdD2rQpPk2X1",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-05-11T19:20:42.659Z"
     }
   }
 }

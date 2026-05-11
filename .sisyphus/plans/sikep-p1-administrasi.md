@@ -1654,7 +1654,7 @@ Max Concurrent: 7 (Wave 1)
 
 <!-- WAVE 3: BUSINESS LOGIC & API -->
 
-- [ ] 13. `UsulanKenaikanPangkatService` (CRUD + State Transitions)
+- [x] 13. `UsulanKenaikanPangkatService` (CRUD + State Transitions)
 
   **What to do**:
   - Buat service `app/Services/UsulanKenaikanPangkat/UsulanKenaikanPangkatService.php`:
@@ -1776,7 +1776,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `app/Services/UsulanKenaikanPangkat/*`, `app/Exceptions/UsulanKenaikanPangkat/*`, `tests/Feature/Services/UsulanKenaikanPangkat/*`
   - Pre-commit: `php artisan test --compact --filter=UsulanKenaikanPangkatService && vendor/bin/pint --dirty --format agent`
 
-- [ ] 14. Integrasi Checklist ke Usulan KP + Gate Validation
+- [x] 14. Integrasi Checklist ke Usulan KP + Gate Validation
 
   **What to do**:
   - Tambah method di `UsulanKenaikanPangkatService`:
@@ -1859,7 +1859,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `app/Services/UsulanKenaikanPangkat/UsulanKenaikanPangkatService.php` (update), `app/Events/ChecklistKelengkapanBerubah.php`, `app/Services/BerkasChecklist/ChecklistBerkasService.php` (update untuk fire event), `config/sikep.php` (add kp.checklist_template_kode), `tests/Feature/Integration/UsulanKpChecklistIntegrationTest.php`
   - Pre-commit: `php artisan test --compact --filter=UsulanKpChecklist && vendor/bin/pint --dirty --format agent`
 
-- [ ] 15. Form Requests + Policy `UsulanKenaikanPangkat`
+- [x] 15. Form Requests + Policy `UsulanKenaikanPangkat`
 
   **What to do**:
   - Buat Form Requests di `app/Http/Requests/UsulanKenaikanPangkat/`:
