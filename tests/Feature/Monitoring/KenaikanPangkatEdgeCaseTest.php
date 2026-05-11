@@ -110,7 +110,7 @@ it('menerapkan kombinasi filter periode, unit kerja, dan golongan pada kp', func
     actingAs($admin);
 
     $result = app(KenaikanPangkatMonitoringService::class)
-        ->getUpcomingKenaikanPangkat('april', 15, $unitCocok->id, 'III');
+        ->getUpcomingKenaikanPangkat(1, 15, $unitCocok->id, 'III', 2027);
 
     expect(collect($result->items())->pluck('nama_lengkap')->all())->toBe(['Target KP']);
 });

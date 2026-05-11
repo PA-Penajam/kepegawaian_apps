@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\StatusKepegawaian;
 use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
 use Carbon\Carbon;
@@ -12,13 +13,12 @@ use Illuminate\Support\Facades\DB;
 class KenaikanPangkatMonitoringService
 {
     public function getUpcomingKenaikanPangkat(
-        ?string $periode = null,
+        ?int $periodeBulan = null,
         int $perPage = 15,
         ?string $unitKerjaId = null,
         ?string $golongan = null,
+        ?int $periodeTahun = null,
     ): LengthAwarePaginator {
-        $normalizedPeriode = $periode !== null ? strtolower($periode) : null;
-
         $query = Pegawai::query()
             ->select('pegawai.*')
             ->join('riwayat_pangkat as rp_kp', function ($join) {
@@ -34,16 +34,13 @@ class KenaikanPangkatMonitoringService
                 StatusPegawai::Meninggal->value,
                 StatusPegawai::Diberhentikan->value,
             ])
+            ->where('status_kepegawaian', '!=', StatusKepegawaian::PPPK->value)
+            ->whereDoesntHave('hukumanDisiplin', fn ($q) => $q->aktif())
             ->when($unitKerjaId !== null, fn ($q) => $q->where('pegawai.ref_unit_kerja_id', $unitKerjaId))
             ->when($golongan !== null, fn ($q) => $q->byGolongan($golongan))
             ->orderBy('nama_lengkap');
 
-        // Filter periode di level query (April = bulan 1-4, Oktober = bulan 5-10)
-        if ($normalizedPeriode === 'april') {
-            $query->whereRaw($this->getPeriodeFilterSql('april'), [4]);
-        } elseif ($normalizedPeriode === 'oktober') {
-            $query->whereRaw($this->getPeriodeFilterSql('oktober'));
-        }
+        $this->applyPeriodeBulananFilter($query, $periodeBulan, $periodeTahun);
 
         return $query
             ->paginate($perPage)
@@ -57,27 +54,27 @@ class KenaikanPangkatMonitoringService
                 $status = $this->getKpStatus($pegawai);
 
                 return [
-                    'id'               => $pegawai->id,
-                    'nip'              => $pegawai->nip,
-                    'nama_lengkap'     => $pegawai->nama_lengkap,
+                    'id' => $pegawai->id,
+                    'nip' => $pegawai->nip,
+                    'nama_lengkap' => $pegawai->nama_lengkap,
                     'pangkat_saat_ini' => $riwayatPangkatAktif->pangkat?->nama ?? $pegawai->pangkat?->nama,
-                    'pangkat_kode'     => $riwayatPangkatAktif->pangkat?->kode ?? $pegawai->pangkat?->kode,
-                    'tmt_pangkat'      => $riwayatPangkatAktif->tmt?->toDateString(),
-                    'tmt_kp_berikutnya'=> $status['tmt_kp_berikutnya']->toDateString(),
-                    'periode_usul'     => $status['periode_usul'],
-                    'batas_usul'       => $status['batas_usul']->toDateString(),
-                    'sisa_hari_usul'   => $status['sisa_hari_usul'],
-                    'status'           => $status['status'],
+                    'pangkat_kode' => $riwayatPangkatAktif->pangkat?->kode ?? $pegawai->pangkat?->kode,
+                    'tmt_pangkat' => $riwayatPangkatAktif->tmt?->toDateString(),
+                    'tmt_kp_berikutnya' => $status['tmt_kp_berikutnya']->toDateString(),
+                    'periode_usul' => $status['periode_usul'],
+                    'batas_usul' => $status['batas_usul']->toDateString(),
+                    'sisa_hari_usul' => $status['sisa_hari_usul'],
+                    'status' => $status['status'],
                 ];
             });
     }
 
     public function getKpStats(
-        ?string $periode = null,
+        ?int $periodeBulan = null,
+        ?int $periodeTahun = null,
         ?string $unitKerjaId = null,
         ?string $golongan = null,
     ): array {
-        $normalizedPeriode = $periode !== null ? strtolower($periode) : null;
         $today = Carbon::today()->toDateString();
 
         $driver = DB::connection()->getDriverName();
@@ -110,43 +107,53 @@ class KenaikanPangkatMonitoringService
                 StatusPegawai::Meninggal->value,
                 StatusPegawai::Diberhentikan->value,
             ])
+            ->where('status_kepegawaian', '!=', StatusKepegawaian::PPPK->value)
+            ->whereDoesntHave('hukumanDisiplin', fn ($q) => $q->aktif())
             ->when($unitKerjaId !== null, fn ($q) => $q->where('pegawai.ref_unit_kerja_id', $unitKerjaId))
             ->when($golongan !== null, fn ($q) => $q->byGolongan($golongan));
 
-        if ($normalizedPeriode === 'april') {
-            $query->whereRaw($this->getPeriodeFilterSql('april'), [4]);
-        } elseif ($normalizedPeriode === 'oktober') {
-            $query->whereRaw($this->getPeriodeFilterSql('oktober'));
-        }
+        $this->applyPeriodeBulananFilter($query, $periodeBulan, $periodeTahun);
 
         $row = $query->first();
 
         return [
-            'total'             => (int) ($row?->total ?? 0),
-            'sudahEligible'     => (int) ($row?->sudah_eligible ?? 0),
+            'total' => (int) ($row?->total ?? 0),
+            'sudahEligible' => (int) ($row?->sudah_eligible ?? 0),
             'mendekatiEligible' => (int) ($row?->mendekati_eligible ?? 0),
-            'belumEligible'     => (int) ($row?->belum_eligible ?? 0),
+            'belumEligible' => (int) ($row?->belum_eligible ?? 0),
         ];
     }
 
-    private function getPeriodeFilterSql(string $periode): string
+    public function getAllPeriodeBulanan(int $tahun): array
     {
-        $driver = DB::connection()->getDriverName();
+        return array_map(fn (int $bulan): array => [
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+            'periode_usul' => sprintf('%s %d', $this->getNamaBulan($bulan), $tahun),
+            'stats' => $this->getKpStats($bulan, $tahun),
+        ], range(1, 12));
+    }
 
+    private function applyPeriodeBulananFilter($query, ?int $periodeBulan, ?int $periodeTahun): void
+    {
+        if ($periodeBulan === null && $periodeTahun === null) {
+            return;
+        }
+
+        $driver = DB::connection()->getDriverName();
         if ($driver === 'sqlite') {
             $tmtPlus4Year = "date(rp_kp.tmt, '+4 years')";
             $month = "CAST(strftime('%m', {$tmtPlus4Year}) AS INTEGER)";
+            $year = "CAST(strftime('%Y', {$tmtPlus4Year}) AS INTEGER)";
         } else {
             $tmtPlus4Year = 'DATE_ADD(rp_kp.tmt, INTERVAL 4 YEAR)';
             $month = "MONTH({$tmtPlus4Year})";
+            $year = "YEAR({$tmtPlus4Year})";
         }
 
-        if ($periode === 'april') {
-            return "{$month} <= ?";
-        }
-
-        // oktober
-        return "{$month} BETWEEN 5 AND 10";
+        $query
+            ->when($periodeBulan !== null, fn ($q) => $q->whereRaw("{$month} = ?", [$periodeBulan]))
+            ->when($periodeTahun !== null, fn ($q) => $q->whereRaw("{$year} = ?", [$periodeTahun]));
     }
 
     public function getKpStatus(Pegawai $pegawai): array
@@ -165,45 +172,52 @@ class KenaikanPangkatMonitoringService
         $today = Carbon::today();
         $tmtKpBerikutnya = $riwayatPangkatAktif->tmt->copy()->addYears(4)->startOfDay();
 
-        ['periode_usul' => $periodeUsul, 'batas_usul' => $batasUsul] = $this->resolvePeriodeUsulDanBatas($tmtKpBerikutnya);
+        ['periode_usul' => $periodeUsul, 'batas_usul' => $batasUsul] = $this->resolvePeriodeBulanan($tmtKpBerikutnya);
 
         $isEligible = $tmtKpBerikutnya->lessThanOrEqualTo($today);
         $isNearEligible = $tmtKpBerikutnya->lessThanOrEqualTo($today->copy()->addMonthsNoOverflow(6));
 
         return [
-            'eligible'        => $isEligible,
-            'tmt_kp_berikutnya'=> $tmtKpBerikutnya,
-            'periode_usul'    => $periodeUsul,
-            'batas_usul'      => $batasUsul,
-            'sisa_hari_usul'  => $today->diffInDays($batasUsul, false),
-            'status'          => $isEligible
+            'eligible' => $isEligible,
+            'tmt_kp_berikutnya' => $tmtKpBerikutnya,
+            'periode_usul' => $periodeUsul,
+            'batas_usul' => $batasUsul,
+            'sisa_hari_usul' => $today->diffInDays($batasUsul, false),
+            'status' => $isEligible
                 ? 'Sudah Eligible'
                 : ($isNearEligible ? 'Mendekati Eligible' : 'Belum Eligible'),
         ];
     }
 
-    private function resolvePeriodeUsulDanBatas(CarbonInterface $tmtKpBerikutnya): array
+    /**
+     * Menentukan periode usul bulanan dari TMT pangkat aktif + 4 tahun.
+     * Carbon::addYears(4) dipakai agar kasus leap year seperti 29 Februari mengikuti kebijakan Carbon.
+     *
+     * @return array{periode_usul: string, batas_usul: CarbonInterface}
+     */
+    private function resolvePeriodeBulanan(CarbonInterface $tmtKpBerikutnya): array
     {
-        $year = $tmtKpBerikutnya->year;
-        $month = $tmtKpBerikutnya->month;
-
-        if ($month <= 4) {
-            return [
-                'periode_usul' => sprintf('April %d', $year),
-                'batas_usul' => Carbon::create($year - 1, 10, 1)->startOfDay(),
-            ];
-        }
-
-        if ($month <= 10) {
-            return [
-                'periode_usul' => sprintf('Oktober %d', $year),
-                'batas_usul' => Carbon::create($year, 4, 1)->startOfDay(),
-            ];
-        }
-
         return [
-            'periode_usul' => sprintf('April %d', $year + 1),
-            'batas_usul' => Carbon::create($year, 10, 1)->startOfDay(),
+            'periode_usul' => sprintf('%s %d', $this->getNamaBulan($tmtKpBerikutnya->month), $tmtKpBerikutnya->year),
+            'batas_usul' => $tmtKpBerikutnya->copy()->subMonthNoOverflow()->startOfMonth()->startOfDay(),
         ];
+    }
+
+    private function getNamaBulan(int $bulan): string
+    {
+        return [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'Apr'.'il',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Okto'.'ber',
+            11 => 'November',
+            12 => 'Desember',
+        ][$bulan];
     }
 }

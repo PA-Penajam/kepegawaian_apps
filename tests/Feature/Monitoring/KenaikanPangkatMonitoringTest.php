@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\StatusPegawai;
+use App\Models\HukumanDisiplin;
 use App\Models\Pegawai;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
@@ -46,7 +47,7 @@ test('it calculates next regular promotion date from active rank tmt', function 
     Carbon::setTestNow();
 });
 
-test('it calculates proposal period and deadline for april promotion period', function () {
+test('it calculates proposal period and deadline for monthly promotion period', function () {
     Carbon::setTestNow('2026-01-15');
 
     $service = app(KenaikanPangkatMonitoringService::class);
@@ -55,7 +56,7 @@ test('it calculates proposal period and deadline for april promotion period', fu
     $status = $service->getKpStatus($pegawai->fresh(['riwayatPangkat' => fn ($query) => $query->aktif()]));
 
     expect($status['periode_usul'])->toBe('April 2027')
-        ->and($status['batas_usul']->toDateString())->toBe('2026-10-01');
+        ->and($status['batas_usul']->toDateString())->toBe('2027-03-01');
 
     Carbon::setTestNow();
 });
@@ -86,7 +87,7 @@ test('it excludes retired employees from monitoring list', function () {
     expect($result)->toHaveCount(0);
 });
 
-test('it filters monitoring list by april promotion period', function () {
+test('it filters monitoring list by monthly promotion period', function () {
     Carbon::setTestNow('2026-01-15');
 
     $service = app(KenaikanPangkatMonitoringService::class);
@@ -94,7 +95,7 @@ test('it filters monitoring list by april promotion period', function () {
     createPegawaiDenganPangkatAktif('2023-04-01');
     createPegawaiDenganPangkatAktif('2022-10-01');
 
-    $result = $service->getUpcomingKenaikanPangkat('april');
+    $result = $service->getUpcomingKenaikanPangkat(4, periodeTahun: 2027);
 
     expect($result)
         ->toHaveCount(1)
@@ -188,7 +189,7 @@ test('filter unit_kerja_id hanya menampilkan pegawai KP dari unit kerja tersebut
         'is_aktif' => true,
     ]);
 
-    $service = app(\App\Services\KenaikanPangkatMonitoringService::class);
+    $service = app(KenaikanPangkatMonitoringService::class);
     $result = $service->getUpcomingKenaikanPangkat(null, 15, $unitKerja1->id);
 
     $ids = collect($result->items())->pluck('id')->toArray();
@@ -226,13 +227,97 @@ test('filter golongan hanya menampilkan pegawai KP dengan golongan tersebut', fu
         'is_aktif' => true,
     ]);
 
-    $service = app(\App\Services\KenaikanPangkatMonitoringService::class);
+    $service = app(KenaikanPangkatMonitoringService::class);
     $result = $service->getUpcomingKenaikanPangkat(null, 15, null, 'III');
 
     $ids = collect($result->items())->pluck('id')->toArray();
 
     expect($ids)->toContain($pegawaiIII->id)
         ->and($ids)->not->toContain($pegawaiIV->id);
+});
+
+it('returns twelve monthly period statistics for selected year', function (): void {
+    Carbon::setTestNow('2026-01-15');
+
+    foreach (range(1, 12) as $month) {
+        createPegawaiDenganPangkatAktif(Carbon::create(2022, $month, 1)->toDateString());
+    }
+
+    $periods = app(KenaikanPangkatMonitoringService::class)->getAllPeriodeBulanan(2026);
+
+    expect($periods)->toHaveCount(12)
+        ->and($periods[0]['bulan'])->toBe(1)
+        ->and($periods[0]['periode_usul'])->toBe('Januari 2026')
+        ->and($periods[11]['bulan'])->toBe(12)
+        ->and($periods[11]['periode_usul'])->toBe('Desember 2026');
+
+    foreach ($periods as $period) {
+        expect($period['stats']['total'])->toBe(1);
+    }
+
+    Carbon::setTestNow();
+});
+
+it('calculates stats for each monthly period without exception', function (): void {
+    Carbon::setTestNow('2026-01-15');
+
+    foreach (range(1, 12) as $month) {
+        createPegawaiDenganPangkatAktif(Carbon::create(2022, $month, 15)->toDateString());
+    }
+
+    foreach (range(1, 12) as $month) {
+        $stats = app(KenaikanPangkatMonitoringService::class)->getKpStats($month, 2026);
+
+        expect($stats['total'])->toBe(1);
+    }
+
+    Carbon::setTestNow();
+});
+
+it('calculates december period and previous month deadline', function (): void {
+    $pegawai = createPegawaiDenganPangkatAktif('2022-12-01');
+
+    $status = app(KenaikanPangkatMonitoringService::class)
+        ->getKpStatus($pegawai->fresh(['riwayatPangkat' => fn ($query) => $query->aktif()]));
+
+    expect($status['periode_usul'])->toBe('Desember 2026')
+        ->and($status['batas_usul']->toDateString())->toBe('2026-11-01');
+});
+
+it('keeps leap year promotion in february period', function (): void {
+    $pegawai = createPegawaiDenganPangkatAktif('2020-02-29');
+
+    $status = app(KenaikanPangkatMonitoringService::class)
+        ->getKpStatus($pegawai->fresh(['riwayatPangkat' => fn ($query) => $query->aktif()]));
+
+    expect($status['periode_usul'])->toBe('Februari 2024');
+});
+
+it('excludes pppk employees from monitoring list', function (): void {
+    $pns = createPegawaiDenganPangkatAktif('2022-05-01', ['nama_lengkap' => 'PNS KP']);
+    createPegawaiDenganPangkatAktif('2022-05-01', [
+        'nama_lengkap' => 'PPPK KP',
+        'status_kepegawaian' => 'pppk',
+    ]);
+
+    $result = app(KenaikanPangkatMonitoringService::class)->getUpcomingKenaikanPangkat(5, periodeTahun: 2026);
+
+    expect(collect($result->items())->pluck('id')->all())->toBe([$pns->id]);
+});
+
+it('excludes employees with active disciplinary punishment from monitoring list', function (): void {
+    $eligible = createPegawaiDenganPangkatAktif('2022-06-01', ['nama_lengkap' => 'Bersih KP']);
+    $blocked = createPegawaiDenganPangkatAktif('2022-06-01', ['nama_lengkap' => 'Hukdis KP']);
+
+    HukumanDisiplin::factory()->create([
+        'pegawai_id' => $blocked->id,
+        'tmt_berlaku' => now()->subMonth()->toDateString(),
+        'tmt_selesai' => now()->addMonth()->toDateString(),
+    ]);
+
+    $result = app(KenaikanPangkatMonitoringService::class)->getUpcomingKenaikanPangkat(6, periodeTahun: 2026);
+
+    expect(collect($result->items())->pluck('id')->all())->toBe([$eligible->id]);
 });
 
 test('controller kp meneruskan filter dan filterOptions ke view', function () {

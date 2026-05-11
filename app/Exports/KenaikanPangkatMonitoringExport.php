@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Enums\StatusKepegawaian;
 use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
 use App\Services\KenaikanPangkatMonitoringService;
@@ -16,7 +17,8 @@ class KenaikanPangkatMonitoringExport implements FromCollection, WithHeadings, W
     use Exportable;
 
     public function __construct(
-        private readonly ?string $periode = null,
+        private readonly ?int $periodeBulan = null,
+        private readonly ?int $periodeTahun = null,
         private readonly ?string $unitKerjaId = null,
         private readonly ?string $golongan = null,
     ) {}
@@ -39,9 +41,17 @@ class KenaikanPangkatMonitoringExport implements FromCollection, WithHeadings, W
                 StatusPegawai::Meninggal->value,
                 StatusPegawai::Diberhentikan->value,
             ])
+            ->where('status_kepegawaian', '!=', StatusKepegawaian::PPPK->value)
+            ->whereDoesntHave('hukumanDisiplin', fn ($q) => $q->aktif())
             ->when($this->unitKerjaId !== null, fn ($q) => $q->where('pegawai.ref_unit_kerja_id', $this->unitKerjaId))
             ->when($this->golongan !== null, fn ($q) => $q->byGolongan($this->golongan))
             ->orderBy('nama_lengkap');
+
+        if ($this->periodeBulan !== null || $this->periodeTahun !== null) {
+            $query->whereIn('pegawai.id', $service
+                ->getUpcomingKenaikanPangkat($this->periodeBulan, PHP_INT_MAX, $this->unitKerjaId, $this->golongan, $this->periodeTahun)
+                ->pluck('id'));
+        }
 
         return $query->get()
             ->filter(fn (Pegawai $p) => $p->riwayatPangkat->isNotEmpty())
@@ -50,15 +60,15 @@ class KenaikanPangkatMonitoringExport implements FromCollection, WithHeadings, W
                 $status = $service->getKpStatus($pegawai);
 
                 return [
-                    'nip'                => $pegawai->nip ?? '-',
-                    'nama_lengkap'       => $pegawai->nama_lengkap,
-                    'pangkat_saat_ini'   => $riwayatAktif->pangkat?->nama ?? '-',
-                    'tmt_pangkat'        => $riwayatAktif->tmt?->toDateString() ?? '-',
-                    'tmt_kp_berikutnya'  => $status['tmt_kp_berikutnya']->toDateString(),
-                    'periode_usul'       => $status['periode_usul'],
-                    'batas_usul'         => $status['batas_usul']->toDateString(),
-                    'sisa_hari_usul'     => $status['sisa_hari_usul'],
-                    'status'             => $status['status'],
+                    'nip' => $pegawai->nip ?? '-',
+                    'nama_lengkap' => $pegawai->nama_lengkap,
+                    'pangkat_saat_ini' => $riwayatAktif->pangkat?->nama ?? '-',
+                    'tmt_pangkat' => $riwayatAktif->tmt?->toDateString() ?? '-',
+                    'tmt_kp_berikutnya' => $status['tmt_kp_berikutnya']->toDateString(),
+                    'periode_usul' => $status['periode_usul'],
+                    'batas_usul' => $status['batas_usul']->toDateString(),
+                    'sisa_hari_usul' => $status['sisa_hari_usul'],
+                    'status' => $status['status'],
                 ];
             });
     }
