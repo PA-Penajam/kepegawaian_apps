@@ -52,3 +52,13 @@
 - Model KP memakai `spatie/laravel-model-states` dengan 11 concrete state suffix `State` dan `$name` UPPERCASE.
 - `users` table sudah tidak ada setelah migrasi auth ke `pegawai`; FK audit KP perlu mengarah ke `pegawai` agar SQLite test tidak gagal `no such table: main.users`.
 - Placeholder nomor surat migrations perlu kolom sequence/reservation nyata karena test PDF KP mengakses `klasifikasi`, `tahun`, `next_number`, dan `nomor_lengkap`.
+
+## [2026-05-12] UsulanKenaikanPangkatService
+- Service KP memakai `Pegawai` eksplisit sebagai actor untuk semua transisi; tidak memakai `auth()`.
+- Transisi service wajib buat `state_history` dan `approver_history` dalam transaksi yang sama sebelum `state->transitionTo()`.
+- Upload SK final menyimpan file ke disk `local` path `usulan-kp/sk/{usulan_id}.pdf` dan metadata SK tetap berasal dari input user.
+
+## [2026-05-12] Integrasi checklist KP ke usulan
+- `UsulanKenaikanPangkatService::createDraft()` auto-attach template dari `config('sikep.kp.checklist_template_kode')`, bukan hardcode.
+- `submit()` memakai `ChecklistBerkasService::isComplete()` dan melempar `BerkasBelumLengkapException` jika checklist null/incomplete.
+- `ChecklistBerkasService::recalculatePersentase()` dispatch `ChecklistKelengkapanBerubah` hanya saat `status_kelengkapan` berubah.

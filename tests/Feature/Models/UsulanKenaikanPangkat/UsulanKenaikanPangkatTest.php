@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\BerkasChecklistSubmission;
-use App\Models\BerkasChecklistTemplate;
+use App\Models\BerkasChecklist\BerkasChecklistSubmission;
+use App\Models\BerkasChecklist\BerkasChecklistTemplate;
 use App\Models\Pegawai;
 use App\Models\RefPangkat;
 use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
@@ -21,11 +21,14 @@ use App\States\UsulanKenaikanPangkat\DraftState;
 use App\States\UsulanKenaikanPangkat\MenungguSkState;
 use App\States\UsulanKenaikanPangkat\PerluPerbaikanState;
 use App\States\UsulanKenaikanPangkat\SelesaiSkTerbitState;
+use Database\Seeders\ChecklistKenaikanPangkatSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\ModelStates\Exceptions\CouldNotPerformTransition;
 
 uses(RefreshDatabase::class);
+beforeEach(fn () => Artisan::call('db:seed', ['--class' => ChecklistKenaikanPangkatSeeder::class, '--force' => true]));
 
 function createUsulanKenaikanPangkat(): UsulanKenaikanPangkat
 {
@@ -168,11 +171,10 @@ it('memuat relasi pdf', function () {
 
 it('me-resolve checklistSubmission morphOne', function () {
     $usulan = createUsulanKenaikanPangkat();
-    $template = BerkasChecklistTemplate::query()->create([
-        'jenis' => 'kenaikan_pangkat',
-        'kode' => 'checklist-kp-reguler',
-        'nama' => 'Checklist KP Reguler',
-    ]);
+    $template = BerkasChecklistTemplate::query()->firstOrCreate(
+        ['jenis' => 'kenaikan_pangkat', 'kode' => 'checklist-kp-reguler'],
+        ['nama' => 'Checklist KP Reguler']
+    );
 
     $submission = BerkasChecklistSubmission::query()->create([
         'berkas_checklist_template_id' => $template->id,

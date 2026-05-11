@@ -22,7 +22,11 @@
     "ses_1e7b35881ffeACKXe3ZL2XfeoW",
     "ses_1e7ace4f9ffeBxm4P24NVHjFyR",
     "ses_1e7b3a994ffefufa0T1VhTsgir",
-    "ses_1e7a956feffeSioxQYB37ECBJP"
+    "ses_1e7a956feffeSioxQYB37ECBJP",
+    "ses_1e79f8c83ffeSjODOaLX52iOOQ",
+    "ses_1e79f13deffefBvmQ9oRR369Hw",
+    "ses_1e79fe189ffe5Zb6Fh1feHDEDm",
+    "ses_1e796c639ffe0j1lff0ubU4Kgm"
   ],
   "plan_name": "sikep-p1-administrasi",
   "agent": "atlas",
@@ -44,6 +48,15 @@
       "agent": "Sisyphus-Junior",
       "category": "quick",
       "updated_at": "2026-05-11T18:45:43.489Z"
+    },
+    "todo:13": {
+      "task_key": "todo:13",
+      "task_label": "13",
+      "task_title": "`UsulanKenaikanPangkatService` (CRUD + State Transitions)",
+      "session_id": "ses_1e796c639ffe0j1lff0ubU4Kgm",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-05-11T19:03:24.814Z"
     }
   }
 }

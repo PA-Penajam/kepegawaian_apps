@@ -1079,7 +1079,7 @@ Max Concurrent: 7 (Wave 1)
 
 <!-- WAVE 2: DOMAIN LOGIC -->
 
-- [ ] 8. Model `UsulanKenaikanPangkat` + 11 State Classes
+- [x] 8. Model `UsulanKenaikanPangkat` + 11 State Classes
 
   **What to do**:
   - Buat 6 model di `app/Models/UsulanKenaikanPangkat/`:
@@ -1233,7 +1233,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `app/Models/UsulanKenaikanPangkat/*`, `app/States/UsulanKenaikanPangkat/*`, `database/factories/UsulanKenaikanPangkat/*`, `tests/Feature/Models/UsulanKenaikanPangkat/*`
   - Pre-commit: `php artisan test --compact --filter=UsulanKenaikanPangkat && vendor/bin/pint --dirty --format agent`
 
-- [ ] 9. Model Checklist Polimorfik + `ChecklistBerkasService`
+- [x] 9. Model Checklist Polimorfik + `ChecklistBerkasService`
 
   **What to do**:
   - Buat 4 model di `app/Models/BerkasChecklist/`:
@@ -1352,7 +1352,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `app/Models/BerkasChecklist/*`, `app/Services/BerkasChecklist/*`, `database/factories/BerkasChecklist/*`, `database/seeders/ChecklistKenaikanPangkatSeeder.php`, `tests/Feature/Services/BerkasChecklist/*`
   - Pre-commit: `php artisan test --compact --filter=ChecklistBerkas && vendor/bin/pint --dirty --format agent`
 
-- [ ] 10. Refactor Notification + Command `KenaikanPangkatEligible` untuk 12 Periode
+- [x] 10. Refactor Notification + Command `KenaikanPangkatEligible` untuk 12 Periode
 
   **What to do**:
   - Update `app/Notifications/KenaikanPangkatEligibleNotification.php`:
@@ -1438,7 +1438,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `app/Notifications/KenaikanPangkatEligibleNotification.php`, `app/Console/Commands/SendKenaikanPangkatNotification.php`, `config/sikep.php`, `tests/Feature/Notifications/KenaikanPangkatEligibleNotificationTest.php`
   - Pre-commit: `php artisan test --compact --filter=KenaikanPangkat && vendor/bin/pint --dirty --format agent`
 
-- [ ] 11. UI Monitoring KP: Filter 12 Bulan + Link ke Form Usulan
+- [x] 11. UI Monitoring KP: Filter 12 Bulan + Link ke Form Usulan
 
   **What to do**:
   - Update page `resources/js/pages/kepegawaian/monitoring/kenaikan-pangkat/index.tsx`:
@@ -1553,7 +1553,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `resources/js/pages/kepegawaian/monitoring/kenaikan-pangkat/index.tsx`, `app/Http/Controllers/Monitoring/MonitoringKenaikanPangkatController.php`, `tests/Feature/Http/Controllers/Monitoring/*`
   - Pre-commit: `npm run build && php artisan test --compact --filter=MonitoringKenaikanPangkat && vendor/bin/pint --dirty --format agent`
 
-- [ ] 12. Template PDF Surat Pengantar Usulan Kenaikan Pangkat
+- [x] 12. Template PDF Surat Pengantar Usulan Kenaikan Pangkat
 
   **What to do**:
   - Buat template Blade `resources/views/pdf/kenaikan-pangkat/surat-pengantar.blade.php`:

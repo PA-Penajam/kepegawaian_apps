@@ -1,5 +1,3 @@
-<?php
-
 use App\Actions\UsulanKenaikanPangkat\GenerateSuratPengantarPdf;
 use App\Enums\StatusKepegawaian;
 use App\Enums\StatusPegawai;
@@ -24,6 +22,34 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
 
+use App\Actions\UsulanKenaikanPangkat\GenerateSuratPengantarPdf;
+use App\Enums\StatusKepegawaian;
+use App\Enums\StatusPegawai;
+use App\Exceptions\UsulanKenaikanPangkat\BerkasBelumLengkapException;
+use App\Exceptions\UsulanKenaikanPangkat\DuplicateUsulanException;
+use App\Exceptions\UsulanKenaikanPangkat\PegawaiTidakEligibleException;
+use App\Models\BerkasChecklist\BerkasChecklistItem;
+use App\Models\BerkasChecklist\BerkasChecklistSubmission;
+use App\Models\BerkasChecklist\BerkasChecklistSubmissionItem;
+use App\Models\BerkasChecklist\BerkasChecklistTemplate;
+use App\Models\Pegawai;
+use App\Models\RefPangkat;
+use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
+use App\Models\UsulanKenaikanPangkat\UsulanKpApproverHistory;
+use App\Models\UsulanKenaikanPangkat\UsulanKpPdf;
+use App\Models\UsulanKenaikanPangkat\UsulanKpStateHistory;
+use App\Services\BerkasChecklist\ChecklistBerkasService;
+use App\Services\Sikep\SikepAdapter;
+use App\Services\UsulanKenaikanPangkat\UsulanKenaikanPangkatService;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Mockery\MockInterface;
+use Database\Seeders\ChecklistKenaikanPangkatSeeder;
+use Illuminate\Support\Facades\Artisan;
+
+uses(RefreshDatabase::class);
+beforeEach(fn () => Artisan::call('db:seed', ['--class' => ChecklistKenaikanPangkatSeeder::class, '--force' => true]));
 function makePegawaiKp(array $attributes = []): Pegawai
 {
     $pangkat = RefPangkat::factory()->create();
