@@ -1,0 +1,90 @@
+<h2>Inkonsistensi Table Container Style</h2>
+<p class="subtitle">Perbedaan gaya container tabel di setiap halaman</p>
+
+<div class="section">
+  <h3>Perbandingan Container Saat Ini</h3>
+
+  <div class="split" style="margin-top:16px;">
+    <div class="mockup">
+      <div class="mockup-header" style="background:var(--primary); color:var(--primary-foreground);">Jenis Dokumen / Status Pegawai</div>
+      <div class="mockup-body" style="padding:16px;">
+        <div style="border-radius:12px; border:2px solid black; box-shadow:4px 4px 0 rgba(0,0,0,1); background:var(--background); overflow:hidden; padding:16px;">
+          <div style="font-weight:900; text-transform:uppercase; font-size:12px; letter-spacing:0.05em; padding:8px; background:var(--muted)/30; border-bottom:2px solid black;">
+            HEADER TABEL
+          </div>
+          <div style="padding:12px; color:var(--muted-foreground);">Konten tabel...</div>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:var(--muted-foreground);">
+          <code>rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header" style="background:var(--destructive); color:var(--destructive-foreground);">IAM Aplikasi</div>
+      <div class="mockup-body" style="padding:16px;">
+        <div style="border-radius:6px; border:1px solid var(--border); padding:16px;">
+          <div style="font-weight:500; padding:8px;">
+            HEADER TABEL
+          </div>
+          <div style="padding:12px; color:var(--muted-foreground);">Konten tabel...</div>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:var(--destructive);">
+          <code>rounded-md border</code> — Tidak ada shadow, border tipis
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="split" style="margin-top:16px;">
+    <div class="mockup">
+      <div class="mockup-header" style="background:var(--primary); color:var(--primary-foreground);">IAM Users</div>
+      <div class="mockup-body" style="padding:16px;">
+        <div style="border:2px solid black; box-shadow:4px 4px 0 rgba(0,0,0,1); background:var(--background); overflow:hidden; padding:16px;">
+          <div style="font-weight:900; text-transform:uppercase; font-size:12px; letter-spacing:0.05em; padding:8px; background:var(--muted)/30; border-bottom:2px solid black;">
+            HEADER TABEL
+          </div>
+          <div style="padding:12px; color:var(--muted-foreground);">Konten tabel...</div>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:var(--destructive);">
+          <code>border-2 border-black shadow-[4px_4px_0]</code> — Tanpa <code>rounded-xl</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header" style="background:var(--secondary);">Cuti Audit / Activity Log</div>
+      <div class="mockup-body" style="padding:16px;">
+        <div style="border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+          <div style="padding:16px; font-weight:600; border-bottom:1px solid var(--border);">
+            CardTitle
+          </div>
+          <div style="padding:0;">
+            <div style="padding:12px; color:var(--muted-foreground);">Konten tabel (tanpa padding)...</div>
+          </div>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:var(--muted-foreground);">
+          Menggunakan <code>Card</code> component — gaya berbeda dari halaman lain
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:32px;">
+  <h3>Rekomendasi Standar</h3>
+  <div class="mockup" style="margin-top:16px;">
+    <div class="mockup-header">Container yang Konsisten</div>
+    <div class="mockup-body" style="padding:24px;">
+      <div style="border-radius:12px; border:2px solid black; box-shadow:4px 4px 0 rgba(0,0,0,1); background:var(--background); overflow:hidden;">
+        <div style="font-weight:900; text-transform:uppercase; font-size:12px; letter-spacing:0.05em; padding:12px 16px; background:var(--muted)/30; border-bottom:2px solid black;">
+          HEADER TABEL
+        </div>
+        <div style="padding:16px; color:var(--muted-foreground);">Konten tabel dengan padding konsisten...</div>
+      </div>
+      <div style="background:var(--muted); padding:12px; border-radius:8px; font-size:13px; margin-top:12px;">
+        <strong>Standar:</strong> <code>rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden</code>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,7 @@
+{"type":"click","text":"A\n      \n        Retro Header\n        font-black uppercase text-xs tracking-wider — konsisten dengan gaya retro brutalism","choice":"retro-header","id":null,"timestamp":1777781907838}
+{"type":"click","text":"A\n      \n        Inline Filter\n        Search retro + button shadcn, tanpa Card wrapper. Cocok untuk filter sederhana (search saja).","choice":"inline-filter","id":null,"timestamp":1777781933299}
+{"type":"click","text":"C\n      \n        Hybrid\n        Inline untuk search sederhana, Card untuk filter kompleks. Fleksibel.","choice":"hybrid-filter","id":null,"timestamp":1777781941490}
+{"type":"click","text":"A\n      \n        Inline Filter\n        Search retro + button shadcn, tanpa Card wrapper. Cocok untuk filter sederhana (search saja).","choice":"inline-filter","id":null,"timestamp":1777781946864}
+{"type":"click","text":"C\n      \n        Hybrid\n        Inline untuk search sederhana, Card untuk filter kompleks. Fleksibel.","choice":"hybrid-filter","id":null,"timestamp":1777781954876}
+{"type":"click","text":"B\n      \n        Card Filter\n        Card wrapper untuk filter kompleks (multiple field). Lebih terstruktur.","choice":"card-filter","id":null,"timestamp":1777781956214}
+{"type":"click","text":"C\n      \n        Hybrid\n        Inline untuk search sederhana, Card untuk filter kompleks. Fleksibel.","choice":"hybrid-filter","id":null,"timestamp":1777781978798}

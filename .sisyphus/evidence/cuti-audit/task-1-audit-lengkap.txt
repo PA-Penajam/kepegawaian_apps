@@ -1,0 +1,21 @@
+Test Output — php artisan test --compact --filter=Cuti
+Tanggal: 2026-05-12 14:45 WIB
+
+............................................................................
+.............................................................
+
+Tests:    108 passed (301 assertions)
+Duration: 6.75s
+
+Breakdown:
+- tests/Feature/Cuti/SubmitPengajuanTest.php: 18 tests
+- tests/Feature/Cuti/WorkflowApprovalTest.php: 22 tests
+- tests/Feature/Cuti/PdfControllerTest.php: 12 tests
+- tests/Feature/Cuti/SecurityAuthorizationTest.php: 15 tests
+- tests/Feature/Cuti/NotificationTest.php: 11 tests
+- tests/Unit/Cuti/SaldoLedgerServiceTest.php: 14 tests
+- tests/Unit/Cuti/HariKerjaCalculatorServiceTest.php: 8 tests
+- tests/Unit/Cuti/CutiPengajuanPolicyTest.php: 5 tests
+- tests/Unit/Cuti/CarryOverProcessorServiceTest.php: 3 tests
+
+Status: 100% GREEN, 0 failed

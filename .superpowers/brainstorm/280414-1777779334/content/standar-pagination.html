@@ -1,0 +1,55 @@
+<h2>Standar Pagination</h2>
+<p class="subtitle">Saat ini ada 2 implementasi pagination yang berbeda</p>
+
+<div class="section">
+  <h3>Perbandingan</h3>
+
+  <div class="split" style="margin-top:16px;">
+    <div class="mockup">
+      <div class="mockup-header" style="background:var(--primary); color:var(--primary-foreground);">A. PaginationWrapper Component</div>
+      <div class="mockup-body" style="padding:20px;">
+        <div style="display:flex; justify-content:center; gap:4px;">
+          <div style="padding:6px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px;">1</div>
+          <div style="padding:6px 12px; background:var(--primary); color:var(--primary-foreground); border-radius:6px; font-size:13px; font-weight:600;">2</div>
+          <div style="padding:6px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px;">3</div>
+          <div style="padding:6px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px;">...</div>
+          <div style="padding:6px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px;">10</div>
+        </div>
+        <div style="margin-top:16px; font-size:12px; color:var(--muted-foreground); text-align:center;">
+          <code>PaginationWrapper</code> — reusable, konsisten
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header" style="background:var(--destructive); color:var(--destructive-foreground);">B. Custom Manual (IAM Users)</div>
+      <div class="mockup-body" style="padding:20px;">
+        <div style="display:flex; justify-content:center; gap:12px; align-items:center;">
+          <div style="padding:8px 16px; border:2px solid black; border-radius:6px; font-weight:700; font-size:13px;">← Sebelumnya</div>
+          <div style="padding:8px 16px; background:var(--muted); border:2px solid black; font-weight:700; font-size:13px;">Halaman 2 dari 5</div>
+          <div style="padding:8px 16px; border:2px solid black; border-radius:6px; font-weight:700; font-size:13px;">Selanjutnya →</div>
+        </div>
+        <div style="margin-top:16px; font-size:12px; color:var(--destructive); text-align:center;">
+          Custom manual — tidak konsisten, duplikasi kode
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="options" style="margin-top:24px;">
+    <div class="option" data-choice="wrapper" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>PaginationWrapper (Konsisten)</h3>
+        <p>Gunakan component yang sama di semua halaman. Sudah ada, tinggal pakai.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="custom" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Custom Retro Style</h3>
+        <p>Buat pagination retro brutalism yang konsisten (border-2, shadow, bold).</p>
+      </div>
+    </div>
+  </div>
+</div>

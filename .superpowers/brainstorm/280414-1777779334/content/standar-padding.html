@@ -1,0 +1,103 @@
+<h2>Standar Padding & Gap</h2>
+<p class="subtitle">Pilih konsistensi spacing untuk seluruh halaman</p>
+
+<div class="section">
+  <div class="options">
+    <div class="option" data-choice="p4-gap4" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>p-4 + gap-4 (Compact)</h3>
+        <p>Lebih rapat, cocok untuk data-dense UI. Sudah dipakai di Jenis Dokumen & Roles.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="p6-gap6" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>p-6 + gap-6 (Spacious)</h3>
+        <p>Lebih lega, lebih banyak whitespace. Sudah dipakai di IAM Users.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="responsive" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>p-4 md:p-6 + gap-6 (Responsive)</h3>
+        <p>Compact di mobile, spacious di desktop. Fleksibel tapi lebih kompleks.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Preview A: Compact -->
+<div class="section" style="margin-top:40px;">
+  <h3>A. Compact: p-4 + gap-4</h3>
+  <div class="mockup" style="margin-top:16px;">
+    <div class="mockup-header">Preview: p-4 + gap-4</div>
+    <div class="mockup-body" style="padding:0;">
+      <div style="padding:16px; display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h1 style="font-size:20px; font-weight:700; text-transform:uppercase; margin:0;">JUDUL HALAMAN</h1>
+          <div style="padding:6px 12px; background:var(--primary); color:var(--primary-foreground); border-radius:6px; font-size:12px; font-weight:600;">+ Tambah</div>
+        </div>
+        <div style="padding:8px 12px; border:2px solid black; border-radius:6px; max-width:300px; font-size:13px; color:var(--muted-foreground);">Cari...</div>
+        <div style="border-radius:12px; border:2px solid black; box-shadow:4px 4px 0 rgba(0,0,0,1); overflow:hidden;">
+          <div style="padding:12px 16px; background:var(--muted)/30; border-bottom:2px solid black; font-weight:900; font-size:11px; text-transform:uppercase;">HEADER</div>
+          <div style="padding:12px 16px; font-size:13px; color:var(--muted-foreground);">Konten tabel...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:12px; font-size:13px; padding:12px; background:var(--muted); border-radius:6px;">
+    <strong>Kesan:</strong> Rapat, efisien, banyak informasi terlihat sekaligus. Cocok untuk halaman dengan banyak data.
+  </div>
+</div>
+
+<!-- Preview B: Spacious -->
+<div class="section" style="margin-top:40px;">
+  <h3>B. Spacious: p-6 + gap-6</h3>
+  <div class="mockup" style="margin-top:16px;">
+    <div class="mockup-header">Preview: p-6 + gap-6</div>
+    <div class="mockup-body" style="padding:0;">
+      <div style="padding:24px; display:flex; flex-direction:column; gap:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h1 style="font-size:20px; font-weight:700; text-transform:uppercase; margin:0;">JUDUL HALAMAN</h1>
+          <div style="padding:6px 12px; background:var(--primary); color:var(--primary-foreground); border-radius:6px; font-size:12px; font-weight:600;">+ Tambah</div>
+        </div>
+        <div style="padding:8px 12px; border:2px solid black; border-radius:6px; max-width:300px; font-size:13px; color:var(--muted-foreground);">Cari...</div>
+        <div style="border-radius:12px; border:2px solid black; box-shadow:4px 4px 0 rgba(0,0,0,1); overflow:hidden;">
+          <div style="padding:12px 16px; background:var(--muted)/30; border-bottom:2px solid black; font-weight:900; font-size:11px; text-transform:uppercase;">HEADER</div>
+          <div style="padding:12px 16px; font-size:13px; color:var(--muted-foreground);">Konten tabel...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:12px; font-size:13px; padding:12px; background:var(--muted); border-radius:6px;">
+    <strong>Kesan:</strong> Lega, bernapas, lebih elegan. Tapi butuh scroll lebih banyak di halaman data-dense.
+  </div>
+</div>
+
+<!-- Preview C: Responsive -->
+<div class="section" style="margin-top:40px;">
+  <h3>C. Responsive: p-4 md:p-6 + gap-6</h3>
+  <div class="mockup" style="margin-top:16px;">
+    <div class="mockup-header">Preview: Responsive</div>
+    <div class="mockup-body" style="padding:0;">
+      <div style="padding:16px; display:flex; flex-direction:column; gap:24px;">
+        <div style="font-size:12px; color:var(--muted-foreground); text-align:center; padding:8px; background:var(--muted)/30;">
+          ↑ p-4 di mobile (≤768px) | p-6 di desktop (≥768px) ↑
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h1 style="font-size:20px; font-weight:700; text-transform:uppercase; margin:0;">JUDUL HALAMAN</h1>
+          <div style="padding:6px 12px; background:var(--primary); color:var(--primary-foreground); border-radius:6px; font-size:12px; font-weight:600;">+ Tambah</div>
+        </div>
+        <div style="padding:8px 12px; border:2px solid black; border-radius:6px; max-width:300px; font-size:13px; color:var(--muted-foreground);">Cari...</div>
+        <div style="border-radius:12px; border:2px solid black; box-shadow:4px 4px 0 rgba(0,0,0,1); overflow:hidden;">
+          <div style="padding:12px 16px; background:var(--muted)/30; border-bottom:2px solid black; font-weight:900; font-size:11px; text-transform:uppercase;">HEADER</div>
+          <div style="padding:12px 16px; font-size:13px; color:var(--muted-foreground);">Konten tabel...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:12px; font-size:13px; padding:12px; background:var(--muted); border-radius:6px;">
+    <strong>Kesan:</strong> Adaptif — compact di mobile, spacious di desktop. Paling fleksibel tapi perlu breakpoint handling.
+  </div>
+</div>

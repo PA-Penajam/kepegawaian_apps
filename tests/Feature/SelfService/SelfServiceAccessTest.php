@@ -44,7 +44,7 @@ it('linked_user_can_access_self_service_index', function (): void {
             ->where('kgbInfo.sisa_hari', 90)
             ->where('kpInfo.tmt_kp_berikutnya', '2028-04-01')
             ->where('kpInfo.periode_usul', 'April 2028')
-            ->where('kpInfo.batas_usul', '2027-10-01'),
+            ->where('kpInfo.batas_usul', '2028-03-01'),
         );
 });
 

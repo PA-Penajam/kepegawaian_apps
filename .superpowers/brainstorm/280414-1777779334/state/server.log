@@ -1,0 +1,24 @@
+{"type":"server-started","port":60656,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:60656","screen_dir":"/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.superpowers/brainstorm/280414-1777779334/content","state_dir":"/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.superpowers/brainstorm/280414-1777779334/state"}
+{"type":"screen-added","file":"/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.superpowers/brainstorm/280414-1777779334/content/inkonsistensi-heading.html"}
+{"type":"screen-added","file":"/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.superpowers/brainstorm/280414-1777779334/content/inkonsistensi-container.html"}
+{"type":"screen-added","file":"/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.superpowers/brainstorm/280414-1777779334/content/ringkasan-inkonsistensi.html"}
+{"source":"user-event","type":"click","text":"1\n      \n        Heading Style\n        6 variasi berbeda: text-xl/2xl/3xl, font-semibold/bold/black, uppercase/none","choice":"heading","id":null,"timestamp":1777779420668}
+{"source":"user-event","type":"click","text":"2\n      \n        Table Container\n        4 variasi: rounded-xl+shadow, rounded-md+border, tanpa rounded, Card-based","choice":"container","id":null,"timestamp":1777779421482}
+{"source":"user-event","type":"click","text":"3\n      \n        Table Header\n        2 variasi: font-black uppercase vs default styling","choice":"header","id":null,"timestamp":1777779421962}
+{"source":"user-event","type":"click","text":"4\n      \n        Padding & Gap\n        3 variasi: p-4+gap-4, p-6+gap-6, p-4 md:p-6","choice":"padding","id":null,"timestamp":1777779422448}
+{"source":"user-event","type":"click","text":"5\n      \n        Pagination\n        2 variasi: PaginationWrapper component vs custom manual","choice":"pagination","id":null,"timestamp":1777779423376}
+{"source":"user-event","type":"click","text":"6\n      \n        Button Filter\n        2 variasi: Button component vs raw <button> dengan className manual","choice":"button","id":null,"timestamp":1777779423760}
+{"source":"user-event","type":"click","text":"7\n      \n        Search Input\n        2 variasi: retro brutalism style vs default shadcn","choice":"search","id":null,"timestamp":1777779424488}
+{"type":"screen-added","file":"/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.superpowers/brainstorm/280414-1777779334/content/pendekatan-kombinasi.html"}
+{"type":"screen-added","file":"/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.superpowers/brainstorm/280414-1777779334/content/full-retro-vs-kombinasi.html"}
+{"type":"screen-added","file":"/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.superpowers/brainstorm/280414-1777779334/content/standar-padding.html"}
+{"type":"screen-added","file":"/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.superpowers/brainstorm/280414-1777779334/content/standar-pagination.html"}
+{"type":"screen-added","file":"/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.superpowers/brainstorm/280414-1777779334/content/standar-table-header.html"}
+{"source":"user-event","type":"click","text":"A\n      \n        Retro Header\n        font-black uppercase text-xs tracking-wider — konsisten dengan gaya retro brutalism","choice":"retro-header","id":null,"timestamp":1777781907838}
+{"source":"user-event","type":"click","text":"A\n      \n        Inline Filter\n        Search retro + button shadcn, tanpa Card wrapper. Cocok untuk filter sederhana (search saja).","choice":"inline-filter","id":null,"timestamp":1777781933299}
+{"source":"user-event","type":"click","text":"C\n      \n        Hybrid\n        Inline untuk search sederhana, Card untuk filter kompleks. Fleksibel.","choice":"hybrid-filter","id":null,"timestamp":1777781941490}
+{"source":"user-event","type":"click","text":"A\n      \n        Inline Filter\n        Search retro + button shadcn, tanpa Card wrapper. Cocok untuk filter sederhana (search saja).","choice":"inline-filter","id":null,"timestamp":1777781946864}
+{"source":"user-event","type":"click","text":"C\n      \n        Hybrid\n        Inline untuk search sederhana, Card untuk filter kompleks. Fleksibel.","choice":"hybrid-filter","id":null,"timestamp":1777781954876}
+{"source":"user-event","type":"click","text":"B\n      \n        Card Filter\n        Card wrapper untuk filter kompleks (multiple field). Lebih terstruktur.","choice":"card-filter","id":null,"timestamp":1777781956214}
+{"source":"user-event","type":"click","text":"C\n      \n        Hybrid\n        Inline untuk search sederhana, Card untuk filter kompleks. Fleksibel.","choice":"hybrid-filter","id":null,"timestamp":1777781978798}
+{"type":"server-stopped","reason":"idle timeout"}

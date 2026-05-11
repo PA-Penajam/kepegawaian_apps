@@ -1,0 +1,87 @@
+<h2>Ringkasan Inkonsistensi UI/UX</h2>
+<p class="subtitle">Temuan audit di seluruh modul kepegawaian-apps</p>
+
+<div class="section">
+  <div class="options">
+    <div class="option" data-choice="heading" onclick="toggleSelect(this)">
+      <div class="letter">1</div>
+      <div class="content">
+        <h3>Heading Style</h3>
+        <p>6 variasi berbeda: text-xl/2xl/3xl, font-semibold/bold/black, uppercase/none</p>
+      </div>
+    </div>
+    <div class="option" data-choice="container" onclick="toggleSelect(this)">
+      <div class="letter">2</div>
+      <div class="content">
+        <h3>Table Container</h3>
+        <p>4 variasi: rounded-xl+shadow, rounded-md+border, tanpa rounded, Card-based</p>
+      </div>
+    </div>
+    <div class="option" data-choice="header" onclick="toggleSelect(this)">
+      <div class="letter">3</div>
+      <div class="content">
+        <h3>Table Header</h3>
+        <p>2 variasi: font-black uppercase vs default styling</p>
+      </div>
+    </div>
+    <div class="option" data-choice="padding" onclick="toggleSelect(this)">
+      <div class="letter">4</div>
+      <div class="content">
+        <h3>Padding & Gap</h3>
+        <p>3 variasi: p-4+gap-4, p-6+gap-6, p-4 md:p-6</p>
+      </div>
+    </div>
+    <div class="option" data-choice="pagination" onclick="toggleSelect(this)">
+      <div class="letter">5</div>
+      <div class="content">
+        <h3>Pagination</h3>
+        <p>2 variasi: PaginationWrapper component vs custom manual</p>
+      </div>
+    </div>
+    <div class="option" data-choice="button" onclick="toggleSelect(this)">
+      <div class="letter">6</div>
+      <div class="content">
+        <h3>Button Filter</h3>
+        <p>2 variasi: Button component vs raw &lt;button&gt; dengan className manual</p>
+      </div>
+    </div>
+    <div class="option" data-choice="search" onclick="toggleSelect(this)">
+      <div class="letter">7</div>
+      <div class="content">
+        <h3>Search Input</h3>
+        <p>2 variasi: retro brutalism style vs default shadcn</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:32px;">
+  <h3>Modul yang Terdampak</h3>
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:16px;">
+    <div style="padding:16px; border:2px solid var(--border); border-radius:8px; background:var(--muted)/30;">
+      <div style="font-weight:700; margin-bottom:8px;">Referensi</div>
+      <div style="font-size:13px; color:var(--muted-foreground);">
+        • Jenis Dokumen<br>
+        • Status Pegawai<br>
+        • Status Kepegawaian<br>
+        • Roles
+      </div>
+    </div>
+    <div style="padding:16px; border:2px solid var(--border); border-radius:8px; background:var(--muted)/30;">
+      <div style="font-weight:700; margin-bottom:8px;">IAM</div>
+      <div style="font-size:13px; color:var(--muted-foreground);">
+        • Aplikasi<br>
+        • Users<br>
+        • User Akses
+      </div>
+    </div>
+    <div style="padding:16px; border:2px solid var(--border); border-radius:8px; background:var(--muted)/30;">
+      <div style="font-weight:700; margin-bottom:8px;">Cuti & Lainnya</div>
+      <div style="font-size:13px; color:var(--muted-foreground);">
+        • Cuti Audit<br>
+        • Activity Log<br>
+        • Cuti Saldo
+      </div>
+    </div>
+  </div>
+</div>

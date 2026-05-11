@@ -1,0 +1,84 @@
+<h2>Inkonsistensi Heading Style</h2>
+<p class="subtitle">Perbedaan gaya heading di setiap halaman modul</p>
+
+<div class="section">
+  <h3>Tabel Perbandingan Heading Saat Ini</h3>
+  <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+    <thead>
+      <tr style="background:var(--muted); border-bottom:2px solid var(--border);">
+        <th style="padding:12px; text-align:left; font-weight:800; font-size:12px; text-transform:uppercase;">Halaman</th>
+        <th style="padding:12px; text-align:left; font-weight:800; font-size:12px; text-transform:uppercase;">Ukuran</th>
+        <th style="padding:12px; text-align:left; font-weight:800; font-size:12px; text-transform:uppercase;">Font Weight</th>
+        <th style="padding:12px; text-align:left; font-weight:800; font-size:12px; text-transform:uppercase;">Transform</th>
+        <th style="padding:12px; text-align:left; font-weight:800; font-size:12px; text-transform:uppercase;">Preview</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:12px; font-weight:600;">Jenis Dokumen</td>
+        <td style="padding:12px;"><code>text-2xl</code></td>
+        <td style="padding:12px;"><code>font-bold</code></td>
+        <td style="padding:12px;"><code>uppercase</code></td>
+        <td style="padding:12px;"><span style="font-size:20px; font-weight:700; text-transform:uppercase;">JENIS DOKUMEN</span></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); background:var(--muted)/30;">
+        <td style="padding:12px; font-weight:600;">Status Pegawai</td>
+        <td style="padding:12px;"><code>text-2xl</code></td>
+        <td style="padding:12px;"><code>font-bold</code></td>
+        <td style="padding:12px;"><code>uppercase</code></td>
+        <td style="padding:12px;"><span style="font-size:20px; font-weight:700; text-transform:uppercase;">STATUS PEGAWAI</span></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:12px; font-weight:600;">IAM Aplikasi</td>
+        <td style="padding:12px;"><code>text-2xl</code></td>
+        <td style="padding:12px;"><code style="color:var(--destructive);">font-semibold</code></td>
+        <td style="padding:12px;"><code style="color:var(--destructive);">none</code></td>
+        <td style="padding:12px;"><span style="font-size:20px; font-weight:600;">Kelola Aplikasi IAM</span></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); background:var(--muted)/30;">
+        <td style="padding:12px; font-weight:600;">IAM Users</td>
+        <td style="padding:12px;"><code style="color:var(--destructive);">text-3xl</code></td>
+        <td style="padding:12px;"><code style="color:var(--destructive);">font-black</code></td>
+        <td style="padding:12px;"><code>uppercase</code></td>
+        <td style="padding:12px;"><span style="font-size:24px; font-weight:900; text-transform:uppercase;">USER AKSES</span></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:12px; font-weight:600;">Roles</td>
+        <td style="padding:12px;"><code>text-2xl</code></td>
+        <td style="padding:12px;"><code>font-bold</code></td>
+        <td style="padding:12px;"><code>uppercase</code></td>
+        <td style="padding:12px;"><span style="font-size:20px; font-weight:700; text-transform:uppercase;">ROLES</span></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); background:var(--muted)/30;">
+        <td style="padding:12px; font-weight:600;">Cuti Audit</td>
+        <td style="padding:12px;"><code style="color:var(--destructive);">text-xl</code></td>
+        <td style="padding:12px;"><code style="color:var(--destructive);">font-semibold</code></td>
+        <td style="padding:12px;"><code style="color:var(--destructive);">none</code></td>
+        <td style="padding:12px;"><span style="font-size:18px; font-weight:600;">Audit Log Cuti</span></td>
+      </tr>
+      <tr>
+        <td style="padding:12px; font-weight:600;">Activity Log</td>
+        <td style="padding:12px;"><code style="color:var(--destructive);">none</code></td>
+        <td style="padding:12px;"><code style="color:var(--destructive);">none</code></td>
+        <td style="padding:12px;"><code style="color:var(--destructive);">none</code></td>
+        <td style="padding:12px;"><span style="color:var(--muted-foreground); font-style:italic;">Tidak ada heading</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section" style="margin-top:32px;">
+  <h3>Rekomendasi Standar</h3>
+  <div class="mockup" style="margin-top:16px;">
+    <div class="mockup-header">Heading yang Konsisten</div>
+    <div class="mockup-body" style="padding:24px;">
+      <div style="margin-bottom:16px;">
+        <h1 style="font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:-0.025em; margin:0;">NAMA HALAMAN</h1>
+        <p style="font-size:14px; color:var(--muted-foreground); margin-top:4px; font-weight:500;">Deskripsi singkat tentang halaman ini.</p>
+      </div>
+      <div style="background:var(--muted); padding:12px; border-radius:8px; font-size:13px;">
+        <strong>Standar:</strong> <code>text-2xl font-bold uppercase tracking-tight</code> untuk semua halaman index
+      </div>
+    </div>
+  </div>
+</div>

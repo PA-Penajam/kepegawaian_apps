@@ -1,0 +1,132 @@
+<h2>Standar Table Header & Filter</h2>
+<p class="subtitle">Terakhir — konsistensi header tabel dan filter bar</p>
+
+<div class="section">
+  <h3>Table Header Style</h3>
+
+  <div class="split" style="margin-top:16px;">
+    <div class="mockup">
+      <div class="mockup-header" style="background:var(--primary); color:var(--primary-foreground);">A. Retro Brutalism</div>
+      <div class="mockup-body" style="padding:20px;">
+        <div style="border-radius:12px; border:2px solid black; overflow:hidden;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:var(--muted)/30; border-bottom:2px solid black;">
+                <th style="padding:12px 16px; text-align:left; font-weight:900; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">NAMA</th>
+                <th style="padding:12px 16px; text-align:left; font-weight:900; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">KETERANGAN</th>
+                <th style="padding:12px 16px; text-align:center; font-weight:900; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">AKSI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding:12px 16px; font-size:13px;">Data 1</td><td style="padding:12px 16px; font-size:13px;">...</td><td style="padding:12px 16px; font-size:13px; text-align:center;">...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:var(--muted-foreground);">
+          <code>font-black uppercase text-xs tracking-wider</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header" style="background:var(--secondary);">B. shadcn Default</div>
+      <div class="mockup-body" style="padding:20px;">
+        <div style="border-radius:12px; border:2px solid black; overflow:hidden;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:var(--muted)/30; border-bottom:2px solid black;">
+                <th style="padding:12px 16px; text-align:left; font-weight:600; font-size:14px;">Nama</th>
+                <th style="padding:12px 16px; text-align:left; font-weight:600; font-size:14px;">Keterangan</th>
+                <th style="padding:12px 16px; text-align:center; font-weight:600; font-size:14px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding:12px 16px; font-size:13px;">Data 1</td><td style="padding:12px 16px; font-size:13px;">...</td><td style="padding:12px 16px; font-size:13px; text-align:center;">...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:var(--muted-foreground);">
+          Default shadcn — <code>font-semibold</code>, normal case
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="options" style="margin-top:24px;">
+    <div class="option" data-choice="retro-header" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Retro Header</h3>
+        <p>font-black uppercase text-xs tracking-wider — konsisten dengan gaya retro brutalism</p>
+      </div>
+    </div>
+    <div class="option" data-choice="default-header" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Default Header</h3>
+        <p>font-semibold normal case — lebih halus, kontras dengan container retro</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="section" style="margin-top:40px;">
+  <h3>Filter Bar Style</h3>
+
+  <div class="split" style="margin-top:16px;">
+    <div class="mockup">
+      <div class="mockup-header" style="background:var(--primary); color:var(--primary-foreground);">A. Inline Filter</div>
+      <div class="mockup-body" style="padding:20px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <div style="padding:8px 12px; border:2px solid black; border-radius:6px; box-shadow:2px 2px 0 rgba(0,0,0,1); font-size:13px; min-width:200px; color:var(--muted-foreground);">Cari...</div>
+          <div style="padding:8px 16px; border:1px solid var(--border); border-radius:6px; font-weight:500; font-size:13px;">Terapkan</div>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:var(--muted-foreground);">
+          Search retro + Button shadcn — inline tanpa Card
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header" style="background:var(--secondary);">B. Card Filter</div>
+      <div class="mockup-body" style="padding:20px;">
+        <div style="border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+          <div style="padding:12px 16px; font-weight:600; border-bottom:1px solid var(--border); font-size:14px;">Filter</div>
+          <div style="padding:12px 16px; display:flex; gap:8px; flex-wrap:wrap;">
+            <div style="padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; min-width:160px; color:var(--muted-foreground);">Dari Tanggal</div>
+            <div style="padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; min-width:160px; color:var(--muted-foreground);">Sampai Tanggal</div>
+            <div style="padding:8px 16px; border:1px solid var(--border); border-radius:6px; font-weight:500; font-size:13px;">Terapkan</div>
+          </div>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:var(--muted-foreground);">
+          Semua shadcn — lebih terstruktur untuk filter kompleks
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="options" style="margin-top:24px;">
+    <div class="option" data-choice="inline-filter" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Inline Filter</h3>
+        <p>Search retro + button shadcn, tanpa Card wrapper. Cocok untuk filter sederhana (search saja).</p>
+      </div>
+    </div>
+    <div class="option" data-choice="card-filter" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Card Filter</h3>
+        <p>Card wrapper untuk filter kompleks (multiple field). Lebih terstruktur.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="hybrid-filter" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>Hybrid</h3>
+        <p>Inline untuk search sederhana, Card untuk filter kompleks. Fleksibel.</p>
+      </div>
+    </div>
+  </div>
+</div>

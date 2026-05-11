@@ -1,9 +1,31 @@
 {
-  "active_plan": "/home/moohard/dev/project/kepegawaian-apps/.sisyphus/plans/master-data-kepegawaian.md",
-  "started_at": "2026-03-15T01:53:37.553Z",
+  "active_plan": "/home/moohard/dev/project/sistem-kepegawaian/kepegawaian-apps/.sisyphus/plans/sikep-p1-administrasi.md",
+  "started_at": "2026-05-11T18:07:00.261Z",
   "session_ids": [
-    "ses_310cd153cffeFG3zW1wmXnKsyA"
+    "ses_1e7c87b4fffeYQ7x92284dD4WI",
+    "ses_1e7c5dbdcffe55tiTYy6fzZqpH",
+    "ses_1e7c590edffeGHj5pqx2TDjSvD",
+    "ses_1e7c497d5ffeRnVj8kMVRFzmmf",
+    "ses_1e7c365c4ffejy02afMxQIZqvQ",
+    "ses_1e7c4d8b8ffepQoJoefdn71Mif",
+    "ses_1e7c40d9cffe8WZ6NBSuXIDFLL",
+    "ses_1e7c53c4fffe7PakHHXNPycSuG",
+    "ses_1e7c1f65affeYOcMDpdCqO01c4",
+    "ses_1e7c241b6ffeqTLDDi1nipm4rY",
+    "ses_1e7c397afffeD27ontM0k98qBh",
+    "ses_1e7bc8887ffeWXN5J4IRu65mKL"
   ],
-  "plan_name": "master-data-kepegawaian",
-  "agent": "atlas"
+  "plan_name": "sikep-p1-administrasi",
+  "agent": "atlas",
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "Audit Verifikasi Modul Cuti CUTI-01..CUTI-10",
+      "session_id": "ses_1e7bc8887ffeWXN5J4IRu65mKL",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-05-11T18:22:34.083Z"
+    }
+  }
 }

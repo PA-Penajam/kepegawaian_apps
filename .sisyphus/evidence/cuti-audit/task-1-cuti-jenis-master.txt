@@ -1,0 +1,7 @@
+CutiJenisMaster::pluck('nama')->join(',')
+Tanggal: 2026-05-12 14:46 WIB
+
+Output:
+Cuti Tahunan,Cuti Sakit (1-14 hari),Cuti Sakit (lebih dari 14 hari),Cuti Alasan Penting,Cuti Besar,Cuti Melahirkan,Cuti di Luar Tanggungan Negara
+
+Total: 7 jenis cuti (lebih dari minimum wajib 5)

@@ -12,7 +12,6 @@ use App\Services\KgbMonitoringService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
@@ -77,8 +76,7 @@ test('getStats returns dashboard statistics with expected structure and values',
             ?string $unitKerjaId = null,
             ?string $golongan = null,
             ?string $status = null,
-        ): LengthAwarePaginator
-        {
+        ): LengthAwarePaginator {
             return new LengthAwarePaginator(
                 items: collect([
                     ['id' => 'kgb-1'],
@@ -94,14 +92,13 @@ test('getStats returns dashboard statistics with expected structure and values',
             int $months = 3,
             ?string $unitKerjaId = null,
             ?string $golongan = null,
-        ): array
-        {
+        ): array {
             return [
-                'total'      => 2,
+                'total' => 2,
                 'jatuhTempo' => 0,
-                'segera'     => 2,
-                'mendekati'  => 0,
-                'aman'       => 0,
+                'segera' => 2,
+                'mendekati' => 0,
+                'aman' => 0,
             ];
         }
     });
@@ -109,10 +106,11 @@ test('getStats returns dashboard statistics with expected structure and values',
     app()->instance(KenaikanPangkatMonitoringService::class, new class extends KenaikanPangkatMonitoringService
     {
         public function getUpcomingKenaikanPangkat(
-            ?string $periode = null,
+            ?int $periodeBulan = null,
             int $perPage = 15,
             ?string $unitKerjaId = null,
             ?string $golongan = null,
+            ?int $periodeTahun = null,
         ): LengthAwarePaginator {
             return new LengthAwarePaginator(
                 items: collect([
@@ -126,17 +124,27 @@ test('getStats returns dashboard statistics with expected structure and values',
         }
 
         public function getKpStats(
-            ?string $periode = null,
+            ?int $periodeBulan = null,
+            ?int $periodeTahun = null,
             ?string $unitKerjaId = null,
             ?string $golongan = null,
-        ): array
-        {
+        ): array {
             return [
-                'total'             => 2,
-                'sudahEligible'     => 1,
+                'total' => 2,
+                'sudahEligible' => 1,
                 'mendekatiEligible' => 0,
-                'belumEligible'     => 1,
+                'belumEligible' => 1,
             ];
+        }
+
+        public function getAllPeriodeBulanan(int $tahun): array
+        {
+            return array_map(fn (int $bulan): array => [
+                'bulan' => $bulan,
+                'tahun' => $tahun,
+                'periode_usul' => sprintf('%s %d', $this->getNamaBulan($bulan), $tahun),
+                'stats' => $this->getKpStats($bulan, $tahun),
+            ], range(1, 12));
         }
     });
 

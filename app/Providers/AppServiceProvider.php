@@ -16,6 +16,10 @@ use App\Services\Cuti\Rules\CutiRuleEngine;
 use App\Services\Cuti\Rules\CutiSakitTier1Rule;
 use App\Services\Cuti\Rules\CutiSakitTier2Rule;
 use App\Services\Cuti\Rules\CutiTahunanRule;
+use App\Services\NomorSurat\NomorSuratService;
+use App\Services\NomorSurat\PlaceholderNomorSuratService;
+use App\Services\Sikep\NullSikepAdapter;
+use App\Services\Sikep\SikepAdapter;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Date;
@@ -31,6 +35,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(SikepAdapter::class, NullSikepAdapter::class);
+
+        $this->app->bind(NomorSuratService::class, PlaceholderNomorSuratService::class);
+
         $this->app->bind(CutiRuleEngine::class, fn () => new CutiRuleEngine([
             app(CutiTahunanRule::class),
             app(CutiSakitTier1Rule::class),
