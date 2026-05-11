@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\BerkasChecklist\ChecklistTemplateController;
 use App\Http\Controllers\Cuti\ApprovalController;
 use App\Http\Controllers\Cuti\AuditController;
 use App\Http\Controllers\Cuti\PdfController as CutiPdfController;
@@ -124,6 +125,11 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
 
     Route::resource('referensi/roles', RefRoleController::class)
         ->names('referensi.roles')
+        ->except(['show']);
+
+    Route::resource('admin/checklist-template', ChecklistTemplateController::class)
+        ->parameters(['checklist-template' => 'template'])
+        ->names('admin.checklist-template')
         ->except(['show']);
 
     // Nested kepegawaian routes

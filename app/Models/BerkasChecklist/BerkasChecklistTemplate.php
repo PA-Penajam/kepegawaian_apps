@@ -49,4 +49,9 @@ class BerkasChecklistTemplate extends Model
     {
         return $this->hasMany(BerkasChecklistItem::class, 'berkas_checklist_template_id');
     }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(BerkasChecklistSubmission::class, 'berkas_checklist_template_id');
+    }
 }

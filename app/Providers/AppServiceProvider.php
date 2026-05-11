@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Events\ChecklistKelengkapanBerubah;
+use App\Models\BerkasChecklist\BerkasChecklistTemplate;
 use App\Models\Cuti\CutiPengajuan;
 use App\Models\Pegawai;
 use App\Models\PengajuanPerubahanData;
 use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
+use App\Policies\ChecklistTemplatePolicy;
 use App\Policies\Cuti\CutiPengajuanPolicy;
 use App\Policies\PegawaiPolicy;
 use App\Policies\PengajuanPerubahanDataPolicy;
@@ -60,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(CutiPengajuan::class, CutiPengajuanPolicy::class);
+        Gate::policy(BerkasChecklistTemplate::class, ChecklistTemplatePolicy::class);
         Gate::policy(Pegawai::class, PegawaiPolicy::class);
         Gate::policy(PengajuanPerubahanData::class, PengajuanPerubahanDataPolicy::class);
         Gate::policy(UsulanKenaikanPangkat::class, UsulanKenaikanPangkatPolicy::class);

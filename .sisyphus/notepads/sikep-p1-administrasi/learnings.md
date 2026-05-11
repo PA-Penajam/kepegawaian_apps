@@ -73,6 +73,11 @@
 - `StoreUsulanKenaikanPangkatRequest` mensyaratkan `pegawai_id` UUID, jadi test store perlu membuat `Pegawai` dengan UUID eksplisit bila factory default menghasilkan ULID.
 - Inertia feature test untuk page yang belum punya entry Vite perlu `withoutVite()` agar fokus tetap pada response Inertia controller.
 
+## [2026-05-12] Admin checklist template CRUD
+- Route admin checklist template memakai `/admin/checklist-template` dengan route name `admin.checklist-template.*` dan parameter resource `{template}` agar model binding ke `BerkasChecklistTemplate $template` konsisten.
+- Policy checklist template langsung mengecek permission IAM `checklist.template.view/create/update/delete` melalui `Pegawai::hasPermission()`.
+- Delete template perlu cek relasi submission sebelum `delete()` agar error user-friendly, lalu tetap catch `QueryException` sebagai fallback FK restrict.
+
 ## [2026-05-12] Inbox approval KP frontend
 - Wayfinder route KP approval tersedia di `@/routes/kenaikan-pangkat/approval` setelah `php artisan wayfinder:generate --no-interaction`.
 - `ApprovalController::inbox()` mengirim props `usulan` dan `current_role`; state per role: `DIAJUKAN`, `DIVERIFIKASI_KASUBBAG`, `DIVERIFIKASI_SEKRETARIS`, `DITANDATANGANI_KETUA`.
