@@ -35,7 +35,11 @@
     "ses_1e7807458ffeQ2BrgcMWv83eGM",
     "ses_1e780574cffe9ttQTe1J7tBqTU",
     "ses_1e7809d96ffeLFquofJ1bMcqEO",
-    "ses_1e780bf49ffe0TRdWYRP5boFxv"
+    "ses_1e780bf49ffe0TRdWYRP5boFxv",
+    "ses_1e7718c7bffekBnEJAUtNspDQK",
+    "ses_1e77121d7ffeE7OHqD4iIByglT",
+    "ses_1e7715985ffeQnmnle0ti3AvcT",
+    "ses_1e76a8d57ffeV7hP94cIrh3Dz1"
   ],
   "plan_name": "sikep-p1-administrasi",
   "agent": "atlas",
@@ -84,6 +88,15 @@
       "agent": "Sisyphus-Junior",
       "category": "unspecified-high",
       "updated_at": "2026-05-11T19:30:08.249Z"
+    },
+    "todo:22": {
+      "task_key": "todo:22",
+      "task_label": "22",
+      "task_title": "Auto-Update `riwayat_pangkat` + `pegawai.ref_pangkat_id` saat `SelesaiSKTerbit` + E2E Test",
+      "session_id": "ses_1e76a8d57ffeV7hP94cIrh3Dz1",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-05-11T19:53:06.146Z"
     }
   }
 }

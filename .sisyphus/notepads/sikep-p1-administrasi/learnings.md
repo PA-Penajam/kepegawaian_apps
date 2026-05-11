@@ -97,6 +97,16 @@
 - `npm run build` memicu plugin Wayfinder ikut generate types/actions/routes sebelum Vite build.
 - Ikon timeline tidak di-hardcode per state; komponen membaca `timelineIcons` dari props dan hanya memetakan nama ikon generik ke komponen Lucide.
 
+## [2026-05-12] Notifikasi deadline usulan KP
+- Command deadline usulan KP memakai `KenaikanPangkatMonitoringService::getKpStatus()` untuk menghitung `batas_usul` dari riwayat pangkat aktif; test perlu set `tmt = batas_usul + 1 bulan - 4 tahun`.
+- Anti-spam deadline KP dicek lewat notifikasi database type `KenaikanPangkatDeadlineNotification` + `data->usulan_id` + `created_at >= now()->subDays(7)`.
+- LSP Intelephense di Pest tidak memahami `$this->artisan()` pada closure; gunakan `Artisan::call()` di test command baru agar diagnostics bersih.
+
+## [2026-05-12] Audit trail KP timeline endpoint
+- Endpoint `kenaikan-pangkat.usulan.activity` mengembalikan JSON `data` dari tiga source: `activity_log`, `state_history`, dan `approver_history`, lalu sort `timestamp` desc.
+- Model checklist item dan submission item perlu `LogsActivity` langsung karena sebelumnya hanya template/submission yang memakai activity log concern.
+- Test `AuditTrailKp` sengaja memakai helper berprefix `makeAuditTrailKp*` agar tidak bentrok dengan helper global di test KP lain.
+
 ## [2026-05-12] Sinkronisasi riwayat pangkat dari SK KP
 - Event SK terbit memakai `App\Events\UsulanKenaikanPangkat\UsulanKpSkTerbit` dan listener didaftarkan di `AppServiceProvider::registerEventListeners()`.
 - Listener wajib menonaktifkan semua `riwayat_pangkat` lama pegawai sebelum insert row aktif baru agar invariant unique partial index tidak gagal.

@@ -2428,7 +2428,7 @@ Max Concurrent: 7 (Wave 1)
   - Files: `resources/js/pages/kenaikan-pangkat/admin-sk/*.tsx`
   - Pre-commit: `npm run build`
 
-- [ ] 21. UI Admin Checklist Template CRUD
+- [x] 21. UI Admin Checklist Template CRUD
 
   **What to do**:
   - Buat controller `app/Http/Controllers/BerkasChecklist/ChecklistTemplateController.php` (CRUD): index, create, store, edit, update, destroy + manage items (add/remove/reorder)
