@@ -17,7 +17,27 @@
 - [database/factories/PegawaiFactory.php](file://database/factories/PegawaiFactory.php)
 - [database/seeders/IamSeeder.php](file://database/seeders/IamSeeder.php)
 - [.github/workflows/tests.yml](file://.github/workflows/tests.yml)
+- [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php)
+- [tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php](file://tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php)
+- [tests/Feature/Auth/SsoAwareLoginResponseTest.php](file://tests/Feature/Auth/SsoAwareLoginResponseTest.php)
+- [tests/Feature/Auth/SsoCallbackSelfTest.php](file://tests/Feature/Auth/SsoCallbackSelfTest.php)
+- [tests/Feature/Auth/SsoMiddlewareRedirectTest.php](file://tests/Feature/Auth/SsoMiddlewareRedirectTest.php)
+- [app/Http/Controllers/SsoController.php](file://app/Http/Controllers/SsoController.php)
+- [app/Http/Responses/SsoAwareLoginResponse.php](file://app/Http/Responses/SsoAwareLoginResponse.php)
+- [app/Http/Middleware/VerifyIamSignature.php](file://app/Http/Middleware/VerifyIamSignature.php)
+- [app/Http/Middleware/VerifyIamPermission.php](file://app/Http/Middleware/VerifyIamPermission.php)
+- [app/Services/KenaikanPangkatMonitoringService.php](file://app/Services/KenaikanPangkatMonitoringService.php)
+- [app/Services/KgbMonitoringService.php](file://app/Services/KgbMonitoringService.php)
+- [tests/Feature/Monitoring/KenaikanPangkatMonitoringTest.php](file://tests/Feature/Monitoring/KenaikanPangkatMonitoringTest.php)
+- [tests/Feature/Monitoring/KgbMonitoringTest.php](file://tests/Feature/Monitoring/KgbMonitoringTest.php)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added comprehensive edge case testing documentation for KGB and Kenaikan Pangkat monitoring services
+- Documented new SSO authentication test coverage including login response handling, callback behavior, and middleware redirection
+- Enhanced monitoring service testing patterns with pagination, filtering, and status calculation validation
+- Updated architecture overview to reflect expanded testing infrastructure for IAM and SSO components
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -32,7 +52,7 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document describes the testing strategy for the Kepegawaian Apps project using PestPHP and PHPUnit. It explains the testing philosophy, architecture, and practical patterns for unit tests, feature tests, and test helpers. It also documents database testing with factories, API testing approaches, CI setup, and best practices for Laravel and React components.
+This document describes the testing strategy for the Kepegawaian Apps project using PestPHP and PHPUnit. It explains the testing philosophy, architecture, and practical patterns for unit tests, feature tests, and test helpers. The testing framework has been significantly expanded to include comprehensive edge case testing for KGB and Kenaikan Pangkat monitoring, new SSO authentication tests, and enhanced IAM security testing. It also documents database testing with factories, API testing approaches, CI setup, and best practices for Laravel and React components.
 
 ## Project Structure
 The testing suite is organized into:
@@ -40,6 +60,8 @@ The testing suite is organized into:
 - Feature tests under tests/Feature for HTTP/API flows, Inertia rendering, and policy checks.
 - Test helpers under tests/Helpers for reusable utilities (e.g., IAM signature generation).
 - Shared base TestCase and Pest extension configuration.
+- **Updated**: Expanded monitoring tests for KGB and Kenaikan Pangkat edge cases.
+- **Updated**: New SSO authentication tests covering login response handling and callback behavior.
 
 ```mermaid
 graph TB
@@ -47,6 +69,8 @@ subgraph "Test Suites"
 U["Unit Tests<br/>tests/Unit"]
 F["Feature Tests<br/>tests/Feature"]
 H["Helpers<br/>tests/Helpers"]
+M["Monitoring Edge Cases<br/>tests/Feature/Monitoring"]
+S["SSO Authentication<br/>tests/Feature/Auth"]
 end
 subgraph "Bootstrap"
 TP["Pest Bootstrap<br/>tests/Pest.php"]
@@ -70,6 +94,8 @@ PU --> F
 FX --> F
 SD --> TP
 WF --> PU
+M --> F
+S --> F
 ```
 
 **Diagram sources**
@@ -79,6 +105,11 @@ WF --> PU
 - [database/factories/PegawaiFactory.php:1-162](file://database/factories/PegawaiFactory.php#L1-L162)
 - [database/seeders/IamSeeder.php:1-170](file://database/seeders/IamSeeder.php#L1-L170)
 - [.github/workflows/tests.yml:1-57](file://.github/workflows/tests.yml#L1-L57)
+- [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php:1-117](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php#L1-L117)
+- [tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php:1-119](file://tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php#L1-L119)
+- [tests/Feature/Auth/SsoAwareLoginResponseTest.php:1-33](file://tests/Feature/Auth/SsoAwareLoginResponseTest.php#L1-L33)
+- [tests/Feature/Auth/SsoCallbackSelfTest.php:1-38](file://tests/Feature/Auth/SsoCallbackSelfTest.php#L1-L38)
+- [tests/Feature/Auth/SsoMiddlewareRedirectTest.php:1-29](file://tests/Feature/Auth/SsoMiddlewareRedirectTest.php#L1-L29)
 
 **Section sources**
 - [tests/Pest.php:1-16](file://tests/Pest.php#L1-L16)
@@ -92,6 +123,8 @@ WF --> PU
 - Factories: Generate realistic model instances with related references and role assignments.
 - Seeders: Prepare IAM application, roles, and permissions for middleware and authorization checks.
 - Helpers: Provide signed headers for API tests and IAM signature generation.
+- **Updated**: Monitoring services: Comprehensive testing for KGB and Kenaikan Pangkat calculation logic, pagination, and filtering.
+- **Updated**: SSO authentication: Tests for login response handling, callback behavior, and middleware redirection.
 
 **Section sources**
 - [tests/TestCase.php:8-16](file://tests/TestCase.php#L8-L16)
@@ -100,9 +133,13 @@ WF --> PU
 - [database/factories/PegawaiFactory.php:88-161](file://database/factories/PegawaiFactory.php#L88-L161)
 - [database/seeders/IamSeeder.php:17-168](file://database/seeders/IamSeeder.php#L17-L168)
 - [tests/Helpers/IamTestHelper.php:6-33](file://tests/Helpers/IamTestHelper.php#L6-L33)
+- [app/Services/KenaikanPangkatMonitoringService.php:1-210](file://app/Services/KenaikanPangkatMonitoringService.php#L1-L210)
+- [app/Services/KgbMonitoringService.php:1-209](file://app/Services/KgbMonitoringService.php#L1-L209)
 
 ## Architecture Overview
 The testing architecture leverages PestPHP for expressive, readable tests and PHPUnit for test discovery and coverage. The Pest bootstrap ensures a clean database per test and seeds IAM data so middleware and authorization checks function during tests. Feature tests exercise HTTP routes, Inertia rendering, and API endpoints with HMAC signatures. Unit tests validate enums, services, and pure logic. Factories and seeders provide deterministic, realistic datasets.
+
+**Updated**: The architecture now includes comprehensive testing for monitoring services with edge case scenarios, pagination validation, and filtering logic. SSO authentication testing covers the complete authentication flow from login response handling to callback processing.
 
 ```mermaid
 sequenceDiagram
@@ -113,12 +150,18 @@ participant PHPUnit as "PHPUnit"
 participant DB as "SQLite in-memory"
 participant Seeder as "IamSeeder"
 participant Feature as "Feature Tests"
+participant Monitoring as "Monitoring Edge Cases"
+participant SSO as "SSO Authentication"
 CI->>Composer : Run test script
 Composer->>Pest : Execute Pest
 Pest->>PHPUnit : Discover tests via phpunit.xml
 PHPUnit->>DB : Initialize sqlite in-memory
 PHPUnit->>Seeder : Seed IAM data
 PHPUnit->>Feature : Run Feature tests
+Feature->>Monitoring : Execute monitoring edge cases
+Feature->>SSO : Execute SSO authentication tests
+Monitoring-->>Feature : Assertions and outcomes
+SSO-->>Feature : Assertions and outcomes
 Feature-->>PHPUnit : Assertions and outcomes
 PHPUnit-->>Pest : Results
 Pest-->>Composer : Exit code
@@ -131,6 +174,8 @@ Composer-->>CI : Report
 - [phpunit.xml:26-28](file://phpunit.xml#L26-L28)
 - [database/seeders/IamSeeder.php:17-34](file://database/seeders/IamSeeder.php#L17-L34)
 - [tests/Pest.php:11-14](file://tests/Pest.php#L11-L14)
+- [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php:41-56](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php#L41-L56)
+- [tests/Feature/Auth/SsoAwareLoginResponseTest.php:6-19](file://tests/Feature/Auth/SsoAwareLoginResponseTest.php#L6-19)
 
 ## Detailed Component Analysis
 
@@ -159,6 +204,7 @@ RunTests --> End(["Exit"])
 ### Feature Tests: Authentication
 - Demonstrates rendering login, authenticating users, two-factor challenges, invalid credentials, logout, and rate limiting.
 - Uses factory-generated users and Fortify feature gating.
+- **Updated**: Includes SSO authentication tests covering login response handling, callback behavior for self-service and external applications, and middleware redirection logic.
 
 ```mermaid
 sequenceDiagram
@@ -175,7 +221,7 @@ C->>R : route('login.store')
 alt Valid credentials
 R->>M : Authenticate
 M-->>R : Authenticated
-R-->>C : Redirect to dashboard
+R-->>C : Redirect to dashboard or SSO callback
 else Invalid password
 R-->>C : Stay on login
 end
@@ -187,6 +233,9 @@ end
 
 **Diagram sources**
 - [tests/Feature/Auth/AuthenticationTest.php:7-82](file://tests/Feature/Auth/AuthenticationTest.php#L7-L82)
+- [tests/Feature/Auth/SsoAwareLoginResponseTest.php:6-19](file://tests/Feature/Auth/SsoAwareLoginResponseTest.php#L6-L19)
+- [tests/Feature/Auth/SsoCallbackSelfTest.php:6-18](file://tests/Feature/Auth/SsoCallbackSelfTest.php#L6-L18)
+- [tests/Feature/Auth/SsoMiddlewareRedirectTest.php:5-11](file://tests/Feature/Auth/SsoMiddlewareRedirectTest.php#L5-L11)
 
 **Section sources**
 - [tests/Feature/Auth/AuthenticationTest.php:13-23](file://tests/Feature/Auth/AuthenticationTest.php#L13-L23)
@@ -194,6 +243,9 @@ end
 - [tests/Feature/Auth/AuthenticationTest.php:51-60](file://tests/Feature/Auth/AuthenticationTest.php#L51-L60)
 - [tests/Feature/Auth/AuthenticationTest.php:62-69](file://tests/Feature/Auth/AuthenticationTest.php#L62-L69)
 - [tests/Feature/Auth/AuthenticationTest.php:71-82](file://tests/Feature/Auth/AuthenticationTest.php#L71-L82)
+- [tests/Feature/Auth/SsoAwareLoginResponseTest.php:6-33](file://tests/Feature/Auth/SsoAwareLoginResponseTest.php#L6-L33)
+- [tests/Feature/Auth/SsoCallbackSelfTest.php:6-38](file://tests/Feature/Auth/SsoCallbackSelfTest.php#L6-L38)
+- [tests/Feature/Auth/SsoMiddlewareRedirectTest.php:5-29](file://tests/Feature/Auth/SsoMiddlewareRedirectTest.php#L5-L29)
 
 ### Feature Tests: Kepegawaian CRUD and Filtering
 - Exercises controller actions for listing, filtering, sorting, creating, updating, and soft-deleting pegawai.
@@ -369,10 +421,97 @@ PG --> IR2["IamUserRole"]
 - [database/seeders/IamSeeder.php:17-168](file://database/seeders/IamSeeder.php#L17-L168)
 - [database/factories/PegawaiFactory.php:88-161](file://database/factories/PegawaiFactory.php#L88-L161)
 
+### **Updated**: Monitoring Services: Comprehensive Edge Case Testing
+- **Kenaikan Pangkat Monitoring Edge Cases**: Tests empty states, exception handling for missing active rank history, pagination preservation, and complex filter combinations.
+- **KGB Monitoring Edge Cases**: Tests empty states, exception handling for missing active rank history, pagination validation, and multi-dimensional filtering by unit kerja, golongan, and status.
+- **Monitoring Service Logic**: Validates calculation of next promotion dates, proposal periods, deadline calculations, and status categorization (Sudah Eligible, Mendekati Eligible, Belum Eligible).
+
+```mermaid
+flowchart TD
+KP["KenaikanPangkat Edge Cases"] --> EmptyState["Empty State Testing"]
+KP --> ExceptionHandling["Exception Handling"]
+KP --> Pagination["Pagination Preservation"]
+KP --> Filters["Complex Filter Combinations"]
+KGB["KGB Monitoring Edge Cases"] --> EmptyState2["Empty State Testing"]
+KGB --> ExceptionHandling2["Exception Handling"]
+KGB --> Pagination2["Large Dataset Pagination"]
+KGB --> MultiFilters["Multi-Dimensional Filters"]
+KP --> CalcLogic["Calculation Logic Validation"]
+KGB --> CalcLogic2["Calculation Logic Validation"]
+```
+
+**Diagram sources**
+- [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php:41-56](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php#L41-L56)
+- [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php:58-65](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php#L58-L65)
+- [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php:67-83](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php#L67-L83)
+- [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php:85-116](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php#L85-L116)
+- [tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php:38-54](file://tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php#L38-L54)
+- [tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php:56-68](file://tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php#L56-L68)
+- [tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php:70-86](file://tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php#L70-L86)
+- [tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php:88-118](file://tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php#L88-L118)
+
+**Section sources**
+- [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php:41-117](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php#L41-L117)
+- [tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php:38-119](file://tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php#L38-L119)
+- [app/Services/KenaikanPangkatMonitoringService.php:152-183](file://app/Services/KenaikanPangkatMonitoringService.php#L152-183)
+- [app/Services/KgbMonitoringService.php:163-179](file://app/Services/KgbMonitoringService.php#L163-179)
+
+### **Updated**: SSO Authentication: Complete Flow Testing
+- **SSO Login Response Testing**: Validates redirect behavior based on SSO session presence and absence.
+- **SSO Callback Testing**: Tests self-service redirect bypass and external application code generation.
+- **SSO Middleware Redirect Testing**: Ensures proper middleware redirection for unauthenticated users and validates redirect parameter construction.
+
+```mermaid
+sequenceDiagram
+participant User as "User"
+participant SSO as "SsoController"
+participant Session as "Session Storage"
+participant Response as "Response Handler"
+User->>SSO : GET /sso/login
+SSO->>Session : Store sso_app and sso_redirect
+SSO->>Response : Redirect to /login
+User->>SSO : GET /sso/callback
+alt SSO session present
+SSO->>Response : Redirect to intended URL
+else No SSO session
+SSO->>Response : Redirect to dashboard
+end
+```
+
+**Diagram sources**
+- [app/Http/Controllers/SsoController.php:15-39](file://app/Http/Controllers/SsoController.php#L15-L39)
+- [app/Http/Controllers/SsoController.php:42-65](file://app/Http/Controllers/SsoController.php#L42-L65)
+- [app/Http/Responses/SsoAwareLoginResponse.php:15-26](file://app/Http/Responses/SsoAwareLoginResponse.php#L15-L26)
+- [tests/Feature/Auth/SsoAwareLoginResponseTest.php:6-33](file://tests/Feature/Auth/SsoAwareLoginResponseTest.php#L6-L33)
+- [tests/Feature/Auth/SsoCallbackSelfTest.php:6-38](file://tests/Feature/Auth/SsoCallbackSelfTest.php#L6-L38)
+- [tests/Feature/Auth/SsoMiddlewareRedirectTest.php:5-29](file://tests/Feature/Auth/SsoMiddlewareRedirectTest.php#L5-L29)
+
+**Section sources**
+- [tests/Feature/Auth/SsoAwareLoginResponseTest.php:6-33](file://tests/Feature/Auth/SsoAwareLoginResponseTest.php#L6-L33)
+- [tests/Feature/Auth/SsoCallbackSelfTest.php:6-38](file://tests/Feature/Auth/SsoCallbackSelfTest.php#L6-L38)
+- [tests/Feature/Auth/SsoMiddlewareRedirectTest.php:5-29](file://tests/Feature/Auth/SsoMiddlewareRedirectTest.php#L5-L29)
+- [app/Http/Controllers/SsoController.php:15-92](file://app/Http/Controllers/SsoController.php#L15-L92)
+- [app/Http/Responses/SsoAwareLoginResponse.php:8-28](file://app/Http/Responses/SsoAwareLoginResponse.php#L8-L28)
+
+### **Updated**: Monitoring Service Implementation Details
+- **KenaikanPangkatMonitoringService**: Handles promotion period calculations, eligibility status determination, and complex filtering by period, unit kerja, and golongan.
+- **KgbMonitoringService**: Manages KGB date calculations, status categorization (Jatuh Tempo, Segera, Mendekati, Aman), and multi-dimensional filtering.
+- Both services support database abstraction with MySQL and SQLite compatibility.
+
+**Section sources**
+- [app/Services/KenaikanPangkatMonitoringService.php:14-73](file://app/Services/KenaikanPangkatMonitoringService.php#L14-L73)
+- [app/Services/KenaikanPangkatMonitoringService.php:75-130](file://app/Services/KenaikanPangkatMonitoringService.php#L75-L130)
+- [app/Services/KenaikanPangkatMonitoringService.php:132-209](file://app/Services/KenaikanPangkatMonitoringService.php#L132-L209)
+- [app/Services/KgbMonitoringService.php:15-102](file://app/Services/KgbMonitoringService.php#L15-L102)
+- [app/Services/KgbMonitoringService.php:104-161](file://app/Services/KgbMonitoringService.php#L104-L161)
+- [app/Services/KgbMonitoringService.php:163-208](file://app/Services/KgbMonitoringService.php#L163-L208)
+
 ## Dependency Analysis
 - Pest bootstrap depends on the base TestCase and RefreshDatabase, and seeds IamSeeder before each Feature test.
 - Feature tests depend on factories for model creation and helpers for signed headers.
 - PHPUnit configuration depends on environment variables for a fast in-memory database and coverage scope.
+- **Updated**: Monitoring tests depend on specialized factory methods and service classes for edge case validation.
+- **Updated**: SSO authentication tests depend on controller implementations and session management.
 
 ```mermaid
 graph TB
@@ -384,6 +523,10 @@ PgwTest["tests/Feature/Kepegawaian/PegawaiControllerTest.php"] --> Base
 ApiTest["tests/Feature/Api/PegawaiApiTest.php"] --> Base
 PgwTest --> PFactory["database/factories/PegawaiFactory.php"]
 ApiTest --> IamHelper["tests/Helpers/IamTestHelper.php"]
+KPTests["tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php"] --> KPService["app/Services/KenaikanPangkatMonitoringService.php"]
+KGBTests["tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php"] --> KGBService["app/Services/KgbMonitoringService.php"]
+SSOTests["tests/Feature/Auth/Sso*Test.php"] --> SsoController["app/Http/Controllers/SsoController.php"]
+SSOTests --> SsoResponse["app/Http/Responses/SsoAwareLoginResponse.php"]
 ```
 
 **Diagram sources**
@@ -396,6 +539,15 @@ ApiTest --> IamHelper["tests/Helpers/IamTestHelper.php"]
 - [tests/Feature/Api/PegawaiApiTest.php:8-27](file://tests/Feature/Api/PegawaiApiTest.php#L8-L27)
 - [database/factories/PegawaiFactory.php:88-161](file://database/factories/PegawaiFactory.php#L88-L161)
 - [tests/Helpers/IamTestHelper.php:6-33](file://tests/Helpers/IamTestHelper.php#L6-L33)
+- [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php:8-10](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php#L8-L10)
+- [tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php:8-10](file://tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php#L8-L10)
+- [app/Services/KenaikanPangkatMonitoringService.php:8](file://app/Services/KenaikanPangkatMonitoringService.php#L8)
+- [app/Services/KgbMonitoringService.php:8](file://app/Services/KgbMonitoringService.php#L8)
+- [tests/Feature/Auth/SsoAwareLoginResponseTest.php:3](file://tests/Feature/Auth/SsoAwareLoginResponseTest.php#L3)
+- [tests/Feature/Auth/SsoCallbackSelfTest.php:3](file://tests/Feature/Auth/SsoCallbackSelfTest.php#L3)
+- [tests/Feature/Auth/SsoMiddlewareRedirectTest.php:3](file://tests/Feature/Auth/SsoMiddlewareRedirectTest.php#L3)
+- [app/Http/Controllers/SsoController.php:5](file://app/Http/Controllers/SsoController.php#L5)
+- [app/Http/Responses/SsoAwareLoginResponse.php:5](file://app/Http/Responses/SsoAwareLoginResponse.php#L5)
 
 **Section sources**
 - [tests/Pest.php:9-15](file://tests/Pest.php#L9-L15)
@@ -407,24 +559,26 @@ ApiTest --> IamHelper["tests/Helpers/IamTestHelper.php"]
 - Keep factories lean; generate only necessary relations and attributes.
 - Prefer small batches in API tests to avoid timeouts and excessive memory usage.
 - Clear rate limiter keys before tests to prevent throttling side effects.
-
-[No sources needed since this section provides general guidance]
+- **Updated**: Monitor service tests use Carbon::setTestNow() for deterministic date calculations without performance impact.
+- **Updated**: SSO authentication tests leverage session-based testing to avoid external dependency overhead.
 
 ## Troubleshooting Guide
 - Fortify feature gating: Use the base TestCase helper to skip tests when features are disabled.
 - IAM authorization failures: Ensure IamSeeder is executed and factories auto-assign roles.
 - Signature validation errors: Verify timestamp freshness, correct secret, sorted query string, and SHA256 body hashing.
 - Rate limiting: Clear throttle keys before tests to avoid unexpected 429 responses.
+- **Updated**: Monitoring service edge cases: Validate that exceptions are properly thrown for missing active rank history scenarios.
+- **Updated**: SSO authentication issues: Check session storage keys (sso_app, sso_redirect) and ensure proper middleware configuration.
 
 **Section sources**
 - [tests/TestCase.php:10-15](file://tests/TestCase.php#L10-L15)
 - [tests/Pest.php:11-14](file://tests/Pest.php#L11-L14)
 - [tests/Feature/Api/PegawaiApiTest.php:30-35](file://tests/Feature/Api/PegawaiApiTest.php#L30-L35)
+- [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php:58-65](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php#L58-L65)
+- [tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php:66](file://tests/Feature/Monitoring/KgbMonitoringEdgeCaseTest.php#L66)
 
 ## Conclusion
-The Kepegawaian Apps testing framework combines PestPHP’s expressive power with PHPUnit’s robustness. Feature tests cover HTTP flows, Inertia rendering, and API security with HMAC signatures. Unit tests validate enums and services. Factories and seeders provide reliable, realistic datasets. The CI pipeline runs Pest across supported PHP versions, ensuring consistent quality.
-
-[No sources needed since this section summarizes without analyzing specific files]
+The Kepegawaian Apps testing framework combines PestPHP's expressive power with PHPUnit's robustness. Feature tests cover HTTP flows, Inertia rendering, and API security with HMAC signatures. Unit tests validate enums and services. Factories and seeders provide reliable, realistic datasets. **Updated**: The framework now includes comprehensive edge case testing for KGB and Kenaikan Pangkat monitoring services, along with extensive SSO authentication coverage. The CI pipeline runs Pest across supported PHP versions, ensuring consistent quality and reliability.
 
 ## Appendices
 
@@ -436,6 +590,8 @@ The Kepegawaian Apps testing framework combines PestPHP’s expressive power wit
 - API signature validation: See [tests/Feature/Api/PegawaiApiTest.php:11-27](file://tests/Feature/Api/PegawaiApiTest.php#L11-L27).
 - Enum assertions: See [tests/Unit/Enums/AgamaTest.php:6-32](file://tests/Unit/Enums/AgamaTest.php#L6-L32).
 - Service statistics validation: See [tests/Unit/Services/DashboardStatServiceTest.php:19-127](file://tests/Unit/Services/DashboardStatServiceTest.php#L19-L127).
+- **Updated**: Monitoring edge case testing: See [tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php:41-117](file://tests/Feature/Monitoring/KenaikanPangkatEdgeCaseTest.php#L41-L117).
+- **Updated**: SSO authentication testing: See [tests/Feature/Auth/SsoAwareLoginResponseTest.php:6-33](file://tests/Feature/Auth/SsoAwareLoginResponseTest.php#L6-L33).
 
 ### Continuous Integration and Coverage
 - CI workflow runs Pest on multiple PHP versions and installs Node and Composer dependencies.

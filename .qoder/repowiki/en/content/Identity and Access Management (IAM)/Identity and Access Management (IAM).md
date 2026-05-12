@@ -12,21 +12,23 @@
 - [VerifyHmacSignature.php](file://app/Http/Middleware/VerifyHmacSignature.php)
 - [VerifyIamPermission.php](file://app/Http/Middleware/VerifyIamPermission.php)
 - [EnsurePermission.php](file://app/Http/Middleware/EnsurePermission.php)
+- [SsoAwareLoginResponse.php](file://app/Http/Responses/SsoAwareLoginResponse.php)
 - [IamAuthorizationService.php](file://app/Services/IamAuthorizationService.php)
 - [IamApplication.php](file://app/Models/IamApplication.php)
 - [IamRole.php](file://app/Models/IamRole.php)
 - [IamPermission.php](file://app/Models/IamPermission.php)
 - [IamUserRole.php](file://app/Models/IamUserRole.php)
+- [FortifyServiceProvider.php](file://app/Providers/FortifyServiceProvider.php)
 - [iam.php](file://config/iam.php)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Enhanced HMAC-SHA256 signature verification with proper body hashing and canonical payload construction
-- Improved security with constant-time comparison using hash_equals() for timing attack resistance
-- Consolidated middleware handling with unified signature verification approach
-- Strengthened API security with encrypted secret storage and proper decryption during verification
-- Enhanced SSO security with atomic code exchange and cross-application protection
+- Added new SsoAwareLoginResponse class for seamless SSO integration with custom login redirection
+- Enhanced EnsurePermission middleware with improved SSO redirection and permission checking
+- Improved VerifyIamPermission middleware with better permission enforcement and error handling
+- Strengthened SSO authentication infrastructure with proper session management and redirect handling
+- Integrated SSO-aware login response into Fortify authentication flow
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -44,7 +46,7 @@
 This document describes the Identity and Access Management (IAM) system designed for secure multi-application authentication and authorization in government systems. The system has been enhanced with improved security mechanisms, proper signature verification using HMAC-SHA256 with body hashing, and consolidated middleware handling. It explains how aplikasi (applications) are registered, how roles and permissions are modeled, and how single sign-on (sso) is enabled with enhanced security features. The system now provides robust cryptographic signatures for API integrations, secure user role assignment, permission validation, and comprehensive audit-ready records. The content targets both system administrators who manage aplikasi, roles, and permissions, and developers integrating external systems via API keys and HMAC signatures.
 
 ## Project Structure
-The IAM system spans controllers, models, middleware, services, and configuration. Controllers implement CRUD for aplikasi, roles, permissions, and user access assignments. Enhanced middleware enforces API signature verification with proper body hashing and constant-time comparison. The service layer centralizes permission and role resolution for authorization. Models define the relational schema for applications, roles, permissions, and user-role mappings with improved security features.
+The IAM system spans controllers, models, middleware, services, and configuration. Controllers implement CRUD for aplikasi, roles, permissions, and user access assignments. Enhanced middleware enforces API signature verification with proper body hashing and constant-time comparison. The service layer centralizes permission and role resolution for authorization. Models define the relational schema for applications, roles, permissions, and user-role mappings with improved security features. The new SSO-aware login response ensures seamless authentication across applications.
 
 ```mermaid
 graph TB
@@ -61,6 +63,9 @@ VIM["VerifyIamSignature"]
 VHMAC["VerifyHmacSignature"]
 VIP["VerifyIamPermission"]
 EP["EnsurePermission"]
+end
+subgraph "Responses"
+SLR["SsoAwareLoginResponse"]
 end
 subgraph "Services"
 IAS["IamAuthorizationService"]
@@ -80,6 +85,8 @@ IC --> IAS
 VIM --> APP
 VHMAC --> APP
 VIP --> IAS
+EP --> SLR
+SLR --> SSC
 IAS --> UROLE
 UROLE --> ROLE
 ROLE --> PERM
@@ -92,12 +99,13 @@ APP --> PERM
 - [RoleController.php:13-72](file://app/Http/Controllers/Iam/RoleController.php#L13-L72)
 - [PermissionController.php:13-59](file://app/Http/Controllers/Iam/PermissionController.php#L13-L59)
 - [UserAksesController.php:15-55](file://app/Http/Controllers/Iam/UserAksesController.php#L15-L55)
-- [SsoController.php:13-85](file://app/Http/Controllers/SsoController.php#L13-L85)
+- [SsoController.php:13-92](file://app/Http/Controllers/SsoController.php#L13-L92)
 - [IamController.php:13-91](file://app/Http/Controllers/Api/IamController.php#L13-L91)
 - [VerifyIamSignature.php:11-61](file://app/Http/Middleware/VerifyIamSignature.php#L11-L61)
 - [VerifyHmacSignature.php:17-65](file://app/Http/Middleware/VerifyHmacSignature.php#L17-L65)
-- [VerifyIamPermission.php:12-54](file://app/Http/Middleware/VerifyIamPermission.php#L12-L54)
-- [EnsurePermission.php:9-37](file://app/Http/Middleware/EnsurePermission.php#L9-L37)
+- [VerifyIamPermission.php:12-59](file://app/Http/Middleware/VerifyIamPermission.php#L12-L59)
+- [EnsurePermission.php:9-42](file://app/Http/Middleware/EnsurePermission.php#L9-L42)
+- [SsoAwareLoginResponse.php:8-27](file://app/Http/Responses/SsoAwareLoginResponse.php#L8-L27)
 - [IamAuthorizationService.php:7-45](file://app/Services/IamAuthorizationService.php#L7-L45)
 - [IamApplication.php:14-100](file://app/Models/IamApplication.php#L14-L100)
 - [IamRole.php:13-43](file://app/Models/IamRole.php#L13-L43)
@@ -109,12 +117,13 @@ APP --> PERM
 - [RoleController.php:13-72](file://app/Http/Controllers/Iam/RoleController.php#L13-L72)
 - [PermissionController.php:13-59](file://app/Http/Controllers/Iam/PermissionController.php#L13-L59)
 - [UserAksesController.php:15-55](file://app/Http/Controllers/Iam/UserAksesController.php#L15-L55)
-- [SsoController.php:13-85](file://app/Http/Controllers/SsoController.php#L13-L85)
+- [SsoController.php:13-92](file://app/Http/Controllers/SsoController.php#L13-L92)
 - [IamController.php:13-91](file://app/Http/Controllers/Api/IamController.php#L13-L91)
 - [VerifyIamSignature.php:11-61](file://app/Http/Middleware/VerifyIamSignature.php#L11-L61)
 - [VerifyHmacSignature.php:17-65](file://app/Http/Middleware/VerifyHmacSignature.php#L17-L65)
-- [VerifyIamPermission.php:12-54](file://app/Http/Middleware/VerifyIamPermission.php#L12-L54)
-- [EnsurePermission.php:9-37](file://app/Http/Middleware/EnsurePermission.php#L9-L37)
+- [VerifyIamPermission.php:12-59](file://app/Http/Middleware/VerifyIamPermission.php#L12-L59)
+- [EnsurePermission.php:9-42](file://app/Http/Middleware/EnsurePermission.php#L9-L42)
+- [SsoAwareLoginResponse.php:8-27](file://app/Http/Responses/SsoAwareLoginResponse.php#L8-L27)
 - [IamAuthorizationService.php:7-45](file://app/Services/IamAuthorizationService.php#L7-L45)
 - [IamApplication.php:14-100](file://app/Models/IamApplication.php#L14-L100)
 - [IamRole.php:13-43](file://app/Models/IamRole.php#L13-L43)
@@ -135,16 +144,17 @@ APP --> PERM
 - **Secure User Access Assignment**:
   - UserAksesController lists users, shows their assigned roles and permissions, assigns roles to users, and removes role assignments with audit trail.
   - IamUserRole links users to roles with assignment metadata and proper casting.
-- **Enhanced Single Sign-On (SSO)**:
-  - SsoController validates target aplikasi, handles guest-to-login redirection, and issues short-lived sso codes bound to the correct redirect host with enhanced security.
-  - Atomic code exchange prevents race conditions and cross-application token theft.
-  - Enhanced redirect host validation with exact domain matching.
+- **Enhanced Single Sign-On (SSO) Infrastructure**:
+  - **New SsoAwareLoginResponse**: Custom login response that redirects authenticated users to SSO callback when SSO session exists, ensuring consistent SSO behavior across applications.
+  - **Enhanced SsoController**: Validates target aplikasi, handles guest-to-login redirection with session storage, issues short-lived sso codes with enhanced security, and provides atomic code exchange.
+  - **Integrated Fortify**: SsoAwareLoginResponse is registered as the default LoginResponse in FortifyServiceProvider for seamless integration.
+  - **Enhanced SSO Flow**: Complete SSO lifecycle with proper session management, redirect validation, and cross-application protection.
 - **Advanced Authorization and Permission Checks**:
-  - VerifyIamSignature authenticates API clients using HMAC-SHA256 over standardized payloads with timestamp validation, proper body hashing, and constant-time signature comparison.
-  - VerifyHmacSignature secures internal APIs with HMAC-SHA256 using a server-side shared secret with enhanced security measures.
-  - VerifyIamPermission resolves user permissions/roles for a configured application and enforces access with caching and proper error handling.
-  - EnsurePermission provides route-level permission enforcement for web flows with flexible permission parsing.
-  - IamAuthorizationService centralizes permission and role retrieval for authorization checks with optimized queries.
+  - **Enhanced VerifyIamSignature**: Authenticates API clients using HMAC-SHA256 over standardized payloads with timestamp validation, proper body hashing, and constant-time signature comparison.
+  - **Enhanced VerifyHmacSignature**: Secures internal APIs with HMAC-SHA256 using a server-side shared secret with enhanced security measures.
+  - **Enhanced VerifyIamPermission**: Resolves user permissions/roles for a configured application, enforces access with caching, proper error handling, and SSO redirection for unauthenticated users.
+  - **Enhanced EnsurePermission**: Provides route-level permission enforcement for web flows with flexible permission parsing, SSO redirection, and improved error handling.
+  - **IamAuthorizationService**: Centralizes permission and role retrieval for authorization checks with optimized queries.
 - **Enhanced Configuration**:
   - config/iam.php defines token lifetimes, sso code TTL, and the default application slug used for permission checks with environment variable support.
 
@@ -157,17 +167,19 @@ APP --> PERM
 - [IamPermission.php:17-20](file://app/Models/IamPermission.php#L17-L20)
 - [UserAksesController.php:15-55](file://app/Http/Controllers/Iam/UserAksesController.php#L15-L55)
 - [IamUserRole.php:14-36](file://app/Models/IamUserRole.php#L14-L36)
-- [SsoController.php:15-85](file://app/Http/Controllers/SsoController.php#L15-L85)
+- [SsoController.php:15-92](file://app/Http/Controllers/SsoController.php#L15-L92)
+- [SsoAwareLoginResponse.php:10-27](file://app/Http/Responses/SsoAwareLoginResponse.php#L10-L27)
+- [FortifyServiceProvider.php:25-30](file://app/Providers/FortifyServiceProvider.php#L25-L30)
 - [IamController.php:15-91](file://app/Http/Controllers/Api/IamController.php#L15-L91)
 - [VerifyIamSignature.php:15-61](file://app/Http/Middleware/VerifyIamSignature.php#L15-L61)
 - [VerifyHmacSignature.php:25-65](file://app/Http/Middleware/VerifyHmacSignature.php#L25-L65)
-- [VerifyIamPermission.php:16-54](file://app/Http/Middleware/VerifyIamPermission.php#L16-L54)
-- [EnsurePermission.php:11-37](file://app/Http/Middleware/EnsurePermission.php#L11-L37)
+- [VerifyIamPermission.php:16-59](file://app/Http/Middleware/VerifyIamPermission.php#L16-L59)
+- [EnsurePermission.php:11-42](file://app/Http/Middleware/EnsurePermission.php#L11-L42)
 - [IamAuthorizationService.php:16-43](file://app/Services/IamAuthorizationService.php#L16-L43)
 - [iam.php:5-9](file://config/iam.php#L5-L9)
 
 ## Architecture Overview
-The enhanced IAM system separates concerns across controllers, middleware, services, and models with improved security mechanisms. External systems integrate via HMAC-signed API requests with proper body hashing and constant-time signature verification. Internal authorization relies on cached application metadata and resolved permission sets with enhanced performance optimizations.
+The enhanced IAM system separates concerns across controllers, middleware, services, and models with improved security mechanisms. The new SSO-aware login response ensures consistent authentication behavior across all applications. External systems integrate via HMAC-signed API requests with proper body hashing and constant-time signature verification. Internal authorization relies on cached application metadata and resolved permission sets with enhanced performance optimizations.
 
 ```mermaid
 sequenceDiagram
@@ -203,6 +215,50 @@ Ctl-->>Ext : "Authorized response"
 - [IamAuthorizationService.php:16-43](file://app/Services/IamAuthorizationService.php#L16-L43)
 
 ## Detailed Component Analysis
+
+### Enhanced SSO Authentication Infrastructure
+- **Purpose**: Provide seamless single sign-on experience across all aplikasi with consistent authentication flow.
+- **Key behaviors**:
+  - **SsoAwareLoginResponse**: Custom login response that checks for SSO session and redirects to SSO callback when present, otherwise uses default Fortify behavior.
+  - **Enhanced SSO Controller**: Manages SSO login flow, validates applications, handles guest sessions with proper storage, issues secure codes, and provides atomic code exchange.
+  - **Fortify Integration**: SsoAwareLoginResponse is registered as the default LoginResponse in FortifyServiceProvider for seamless integration.
+  - **Session Management**: Proper session handling for SSO flows with guest-to-authenticated transitions.
+  - **Cross-Application Protection**: Enhanced security preventing token theft across applications.
+- **Practical example**:
+  - User clicks "Login to Aplikasi Lain" and is redirected to SSO login with session storage.
+  - After authentication, user is redirected to SSO callback and then to the target application.
+  - Self-service SSO flow is handled automatically for the kepegawaian application.
+
+```mermaid
+sequenceDiagram
+participant User as "User"
+participant Fortify as "Fortify Login"
+participant SLR as "SsoAwareLoginResponse"
+participant SSC as "SsoController"
+participant Session as "Session Storage"
+User->>Fortify : "POST /login"
+Fortify->>SLR : "toResponse()"
+SLR->>Session : "Check sso_app session"
+alt SSO Session Exists
+SLR-->>User : "Redirect to /sso/callback"
+else No SSO Session
+SLR-->>User : "Redirect to intended URL"
+end
+User->>SSC : "GET /sso/callback"
+SSC->>Session : "Retrieve sso_app and sso_redirect"
+SSC->>SSC : "Generate code and redirect"
+SSC-->>User : "Redirect to target application with code"
+```
+
+**Diagram sources**
+- [SsoAwareLoginResponse.php:15-26](file://app/Http/Responses/SsoAwareLoginResponse.php#L15-L26)
+- [SsoController.php:42-65](file://app/Http/Controllers/SsoController.php#L42-L65)
+- [FortifyServiceProvider.php:25-30](file://app/Providers/FortifyServiceProvider.php#L25-L30)
+
+**Section sources**
+- [SsoAwareLoginResponse.php:8-27](file://app/Http/Responses/SsoAwareLoginResponse.php#L8-L27)
+- [SsoController.php:15-92](file://app/Http/Controllers/SsoController.php#L15-L92)
+- [FortifyServiceProvider.php:25-30](file://app/Providers/FortifyServiceProvider.php#L25-L30)
 
 ### Enhanced Application Registration and API Credentials
 - **Purpose**: Register aplikasi (applications), generate API keys and secrets with enhanced security, and expose them securely.
@@ -307,7 +363,7 @@ IamUserRole --> IamRole : "links"
   - Create or remove role assignments with audit metadata and cache invalidation.
   - Enhanced security with proper user and role validation.
 - **Practical example**:
-  - Assign role "kepegawaian:viewer" to a pegawai (user) and verify the assignment appears in the user's access list with proper caching.
+  - Assign role "kepegawaian:viewer" to a user and verify the assignment appears in the user's access list with proper caching.
 
 ```mermaid
 sequenceDiagram
@@ -342,8 +398,9 @@ UAC-->>Admin : "Back with success"
   - Enforce redirect host matching to prevent open redirect with exact domain validation.
   - Issue a random 64-character code with TTL configured via environment variables.
   - Atomic code exchange prevents race conditions and cross-application token theft.
+  - Self-service SSO flow is handled automatically for the kepegawaian application.
 - **Practical example**:
-  - User clicks "Login to Aplikasi Lain" and is redirected to the sso endpoint with app slug and redirect URL.
+  - User clicks "Login to Aplikasi Lain" and is redirected to the SSO endpoint with app slug and redirect URL.
   - After login, the system issues a code and redirects back to the original redirect URL with enhanced security.
 
 ```mermaid
@@ -364,11 +421,11 @@ SSC-->>User : "Redirect to redirect?code=... with enhanced validation"
 ```
 
 **Diagram sources**
-- [SsoController.php:15-85](file://app/Http/Controllers/SsoController.php#L15-L85)
+- [SsoController.php:15-92](file://app/Http/Controllers/SsoController.php#L15-L92)
 - [iam.php:6-8](file://config/iam.php#L6-L8)
 
 **Section sources**
-- [SsoController.php:15-85](file://app/Http/Controllers/SsoController.php#L15-L85)
+- [SsoController.php:15-92](file://app/Http/Controllers/SsoController.php#L15-L92)
 - [iam.php:6-8](file://config/iam.php#L6-L8)
 
 ### Enhanced API Signature Verification (HMAC-SHA256)
@@ -430,11 +487,12 @@ InjectApp --> Next["Proceed to controller"]
 ### Enhanced Permission Validation and Authorization
 - **Purpose**: Enforce access control for both web and API flows with improved performance and security.
 - **Key behaviors**:
-  - EnsurePermission: Route-level middleware enforcing permissions for web requests with flexible permission parsing and proper error handling.
-  - VerifyIamPermission: Resolves current application by slug with caching, enforces either role presence or specific permission slugs with enhanced validation.
-  - IamAuthorizationService: Centralized retrieval of user roles and permissions scoped to an application with optimized queries and proper casting.
+  - **Enhanced EnsurePermission**: Route-level middleware enforcing permissions for web requests with flexible permission parsing, SSO redirection for unauthenticated users, and proper error handling.
+  - **Enhanced VerifyIamPermission**: Resolves current application by slug with caching, enforces either role presence or specific permission slugs with enhanced validation, and provides SSO redirection for unauthenticated users.
+  - **IamAuthorizationService**: Centralized retrieval of user roles and permissions scoped to an application with optimized queries and proper casting.
   - Enhanced caching strategy with 1-hour TTL for application lookups.
   - Proper error handling with HTTP status codes for different scenarios.
+  - Seamless integration with SSO infrastructure for consistent user experience.
 - **Practical example**:
   - Route requires "kepegawaian:read" permission; middleware resolves user permissions with caching and grants or denies access with enhanced performance.
 
@@ -460,13 +518,13 @@ MW-->>Client : "Allow or 403"
 ```
 
 **Diagram sources**
-- [VerifyIamPermission.php:16-54](file://app/Http/Middleware/VerifyIamPermission.php#L16-L54)
+- [VerifyIamPermission.php:16-59](file://app/Http/Middleware/VerifyIamPermission.php#L16-L59)
 - [IamAuthorizationService.php:16-43](file://app/Services/IamAuthorizationService.php#L16-L43)
 - [iam.php:7](file://config/iam.php#L7)
 
 **Section sources**
-- [EnsurePermission.php:11-37](file://app/Http/Middleware/EnsurePermission.php#L11-L37)
-- [VerifyIamPermission.php:16-54](file://app/Http/Middleware/VerifyIamPermission.php#L16-L54)
+- [EnsurePermission.php:11-42](file://app/Http/Middleware/EnsurePermission.php#L11-L42)
+- [VerifyIamPermission.php:16-59](file://app/Http/Middleware/VerifyIamPermission.php#L16-L59)
 - [IamAuthorizationService.php:16-43](file://app/Services/IamAuthorizationService.php#L16-L43)
 - [iam.php:7](file://config/iam.php#L7)
 
@@ -478,6 +536,7 @@ MW-->>Client : "Allow or 403"
   - IamController.logout(): Invalidates current access tokens with proper cleanup.
   - IamController.exchangeCode(): Atomic SSO code exchange with cross-application protection and scoped tokens.
   - Enhanced error handling with proper HTTP status codes and validation.
+  - Seamless integration with SSO infrastructure for consistent user experience.
 - **Practical example**:
   - External system exchanges SSO code for scoped access token with enhanced security and proper application scoping.
 
@@ -485,9 +544,10 @@ MW-->>Client : "Allow or 403"
 - [IamController.php:15-91](file://app/Http/Controllers/Api/IamController.php#L15-L91)
 
 ## Dependency Analysis
-The enhanced system exhibits clean separation of concerns with improved security:
+The enhanced system exhibits clean separation of concerns with improved security and SSO integration:
 - Controllers depend on models and services with enhanced validation.
 - Middleware depends on models, configuration, and cryptographic services.
+- **New SsoAwareLoginResponse** integrates with Fortify for seamless SSO behavior.
 - Services encapsulate authorization logic with optimized queries.
 - Models define relationships with enhanced security features and proper casting.
 
@@ -502,6 +562,8 @@ IC["IamController"] --> IAS["IamAuthorizationService"]
 VIM["VerifyIamSignature"] --> APP
 VHMAC["VerifyHmacSignature"] --> APP
 VIP["VerifyIamPermission"] --> IAS
+EP["EnsurePermission"] --> SLR["SsoAwareLoginResponse"]
+SLR --> SSC
 IAS --> UROLE
 UROLE --> ROLE
 ROLE --> PERM
@@ -514,11 +576,13 @@ APP --> PERM
 - [RoleController.php:13-72](file://app/Http/Controllers/Iam/RoleController.php#L13-L72)
 - [PermissionController.php:13-59](file://app/Http/Controllers/Iam/PermissionController.php#L13-L59)
 - [UserAksesController.php:15-55](file://app/Http/Controllers/Iam/UserAksesController.php#L15-L55)
-- [SsoController.php:13-85](file://app/Http/Controllers/SsoController.php#L13-L85)
+- [SsoController.php:13-92](file://app/Http/Controllers/SsoController.php#L13-L92)
 - [IamController.php:13-91](file://app/Http/Controllers/Api/IamController.php#L13-L91)
 - [VerifyIamSignature.php:11-61](file://app/Http/Middleware/VerifyIamSignature.php#L11-L61)
 - [VerifyHmacSignature.php:17-65](file://app/Http/Middleware/VerifyHmacSignature.php#L17-L65)
-- [VerifyIamPermission.php:12-54](file://app/Http/Middleware/VerifyIamPermission.php#L12-L54)
+- [VerifyIamPermission.php:12-59](file://app/Http/Middleware/VerifyIamPermission.php#L12-L59)
+- [EnsurePermission.php:9-42](file://app/Http/Middleware/EnsurePermission.php#L9-L42)
+- [SsoAwareLoginResponse.php:8-27](file://app/Http/Responses/SsoAwareLoginResponse.php#L8-L27)
 - [IamAuthorizationService.php:7-45](file://app/Services/IamAuthorizationService.php#L7-L45)
 - [IamApplication.php:14-100](file://app/Models/IamApplication.php#L14-L100)
 - [IamRole.php:13-43](file://app/Models/IamRole.php#L13-L43)
@@ -530,11 +594,13 @@ APP --> PERM
 - [RoleController.php:13-72](file://app/Http/Controllers/Iam/RoleController.php#L13-L72)
 - [PermissionController.php:13-59](file://app/Http/Controllers/Iam/PermissionController.php#L13-L59)
 - [UserAksesController.php:15-55](file://app/Http/Controllers/Iam/UserAksesController.php#L15-L55)
-- [SsoController.php:13-85](file://app/Http/Controllers/SsoController.php#L13-L85)
+- [SsoController.php:13-92](file://app/Http/Controllers/SsoController.php#L13-L92)
 - [IamController.php:13-91](file://app/Http/Controllers/Api/IamController.php#L13-L91)
 - [VerifyIamSignature.php:11-61](file://app/Http/Middleware/VerifyIamSignature.php#L11-L61)
 - [VerifyHmacSignature.php:17-65](file://app/Http/Middleware/VerifyHmacSignature.php#L17-L65)
-- [VerifyIamPermission.php:12-54](file://app/Http/Middleware/VerifyIamPermission.php#L12-L54)
+- [VerifyIamPermission.php:12-59](file://app/Http/Middleware/VerifyIamPermission.php#L12-L59)
+- [EnsurePermission.php:9-42](file://app/Http/Middleware/EnsurePermission.php#L9-L42)
+- [SsoAwareLoginResponse.php:8-27](file://app/Http/Responses/SsoAwareLoginResponse.php#L8-L27)
 - [IamAuthorizationService.php:7-45](file://app/Services/IamAuthorizationService.php#L7-L45)
 - [IamApplication.php:14-100](file://app/Models/IamApplication.php#L14-L100)
 - [IamRole.php:13-43](file://app/Models/IamRole.php#L13-L43)
@@ -545,6 +611,7 @@ APP --> PERM
 - **Enhanced Caching**:
   - Application lookup for permission checks is cached for 1 hour to reduce repeated database queries.
   - Optimized eager loading of related roles and permissions reduces N+1 queries when rendering user access or resolving permissions.
+  - **New SSO Session Caching**: SSO session data is cached in session storage for efficient retrieval.
 - **Improved Query Efficiency**:
   - Eager loading with with() clauses reduces database queries for complex relationships.
   - Optimized permission queries using flatMap() and unique() operations for better performance.
@@ -554,6 +621,7 @@ APP --> PERM
 - **TTL Tuning**:
   - Adjust sso code TTL and token TTL via environment variables to balance usability and security.
   - 5-minute timestamp window provides replay protection while maintaining usability.
+- **SSO Performance**: **New SSO-aware login response eliminates redundant authentication checks by leveraging existing SSO sessions.**
 
 ## Troubleshooting Guide
 - **Enhanced Signature verification fails**:
@@ -567,11 +635,13 @@ APP --> PERM
   - Check that the configured app_slug matches the intended application.
   - Verify cache is not returning stale application data.
   - Ensure proper ULID format for application IDs.
+  - **New SSO Integration Issues**: Check that SSO session is properly stored and retrieved.
 - **Enhanced SSO redirect rejected**:
   - The redirect host must exactly match the registered aplikasi URL host.
   - Ensure the sso code TTL has not elapsed.
   - Check atomic code exchange is working correctly.
   - Verify proper session management for guest users.
+  - **New SSO Callback Issues**: Ensure SsoAwareLoginResponse is properly registered in FortifyServiceProvider.
 - **Enhanced Missing shared secret**:
   - Internal HMAC verification requires a configured shared secret; check configuration and logs for critical errors.
   - Verify kepegawaian.secret_key environment variable is set.
@@ -580,16 +650,22 @@ APP --> PERM
   - Verify application slug exists in cache or database.
   - Check cache invalidation after application updates.
   - Ensure proper error handling for non-existent applications.
+- **New SSO Login Response Issues**:
+  - Verify SsoAwareLoginResponse is properly registered in FortifyServiceProvider.
+  - Check that session storage contains sso_app and sso_redirect data.
+  - Ensure proper redirect routing to sso.callback.
 
 **Section sources**
 - [VerifyIamSignature.php:21-61](file://app/Http/Middleware/VerifyIamSignature.php#L21-L61)
-- [VerifyIamPermission.php:20-54](file://app/Http/Middleware/VerifyIamPermission.php#L20-L54)
-- [SsoController.php:60-85](file://app/Http/Controllers/SsoController.php#L60-L85)
+- [VerifyIamPermission.php:20-59](file://app/Http/Middleware/VerifyIamPermission.php#L20-L59)
+- [SsoController.php:60-92](file://app/Http/Controllers/SsoController.php#L60-L92)
 - [VerifyHmacSignature.php:40-65](file://app/Http/Middleware/VerifyHmacSignature.php#L40-L65)
 - [IamApplication.php:85-98](file://app/Models/IamApplication.php#L85-L98)
+- [SsoAwareLoginResponse.php:15-26](file://app/Http/Responses/SsoAwareLoginResponse.php#L15-L26)
+- [FortifyServiceProvider.php:25-30](file://app/Providers/FortifyServiceProvider.php#L25-L30)
 
 ## Conclusion
-The enhanced IAM system provides a robust foundation for managing aplikasi, roles, and permissions across multiple government applications with significantly improved security mechanisms. The system now features proper HMAC-SHA256 signature verification with body hashing, constant-time comparison for timing attack resistance, encrypted secret storage, and consolidated middleware handling. It secures integrations with enhanced cryptographic signatures, supports seamless and secure sso with atomic exchanges, and centralizes authorization logic for scalable governance. Administrators can manage access efficiently with enhanced validation and audit capabilities, while developers can integrate external systems using well-defined APIs and middleware with improved security guarantees.
+The enhanced IAM system provides a robust foundation for managing aplikasi, roles, and permissions across multiple government applications with significantly improved security mechanisms and SSO infrastructure. The system now features proper HMAC-SHA256 signature verification with body hashing, constant-time comparison for timing attack resistance, encrypted secret storage, and consolidated middleware handling. The new SSO-aware login response ensures seamless authentication across all applications, while enhanced middleware provides better permission checking and enforcement. It secures integrations with enhanced cryptographic signatures, supports seamless and secure SSO with atomic exchanges, and centralizes authorization logic for scalable governance. Administrators can manage access efficiently with enhanced validation and audit capabilities, while developers can integrate external systems using well-defined APIs and middleware with improved security guarantees and consistent SSO behavior.
 
 ## Appendices
 
@@ -600,10 +676,12 @@ The enhanced IAM system provides a robust foundation for managing aplikasi, role
 - Respect timestamp windows and handle 401/403 responses appropriately.
 - Implement proper error handling for signature verification failures.
 - Use hash_equals() for constant-time signature comparison in client implementations.
+- **New SSO Integration**: Ensure proper SSO session handling for cross-application authentication.
 
 **Section sources**
 - [AplikasiController.php:43-56](file://app/Http/Controllers/Iam/AplikasiController.php#L43-L56)
 - [VerifyIamSignature.php:35-61](file://app/Http/Middleware/VerifyIamSignature.php#L35-L61)
+- [SsoAwareLoginResponse.php:15-26](file://app/Http/Responses/SsoAwareLoginResponse.php#L15-L26)
 
 ### Enhanced Audit Logging Guidance
 - Record role assignments and revocations with timestamps and who performed the action.
@@ -612,12 +690,14 @@ The enhanced IAM system provides a robust foundation for managing aplikasi, role
 - Monitor cache operations and invalidation for application data.
 - Log cryptographic operations including secret decryption attempts.
 - Track atomic operation failures in SSO code exchange.
+- **New SSO Session Tracking**: Log SSO session creation, validation, and cleanup for audit trails.
 
 **Section sources**
 - [IamUserRole.php:14-21](file://app/Models/IamUserRole.php#L14-L21)
-- [SsoController.php:70-85](file://app/Http/Controllers/SsoController.php#L70-L85)
+- [SsoController.php:70-92](file://app/Http/Controllers/SsoController.php#L70-L92)
 - [VerifyIamSignature.php:44-61](file://app/Http/Middleware/VerifyIamSignature.php#L44-L61)
 - [IamApplication.php:85-98](file://app/Models/IamApplication.php#L85-L98)
+- [SsoAwareLoginResponse.php:15-26](file://app/Http/Responses/SsoAwareLoginResponse.php#L15-L26)
 
 ### Enhanced Security Best Practices
 - **Secret Management**: Never expose api_secret in responses; use encrypted storage and constant-time verification.
@@ -627,9 +707,13 @@ The enhanced IAM system provides a robust foundation for managing aplikasi, role
 - **Atomic Operations**: Use database transactions for SSO code exchange to prevent race conditions.
 - **Cross-Application Protection**: Validate app_slug in SSO code exchange to prevent token theft across applications.
 - **Session Security**: Implement proper session management for guest SSO flows with exact redirect host validation.
+- **SSO Integration**: Ensure SsoAwareLoginResponse is properly registered and functioning for seamless authentication.
+- **Consistent SSO Behavior**: All applications should behave consistently with SSO flows for better user experience.
 
 **Section sources**
 - [IamApplication.php:85-98](file://app/Models/IamApplication.php#L85-L98)
 - [VerifyIamSignature.php:35-61](file://app/Http/Middleware/VerifyIamSignature.php#L35-L61)
-- [IamController.php:59-89](file://app/Http/Controllers/Api/IamController.php#L59-L89)
-- [SsoController.php:60-85](file://app/Http/Controllers/SsoController.php#L60-L85)
+- [IamController.php:59-91](file://app/Http/Controllers/Api/IamController.php#L59-L91)
+- [SsoController.php:60-92](file://app/Http/Controllers/SsoController.php#L60-L92)
+- [SsoAwareLoginResponse.php:10-27](file://app/Http/Responses/SsoAwareLoginResponse.php#L10-L27)
+- [FortifyServiceProvider.php:25-30](file://app/Providers/FortifyServiceProvider.php#L25-L30)

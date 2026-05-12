@@ -3,17 +3,14 @@
 <cite>
 **Referenced Files in This Document**
 - [SelfServiceController.php](file://app/Http/Controllers/Kepegawaian/SelfServiceController.php)
-- [PengajuanPerubahanDataController.php](file://app/Http/Controllers/SelfService/PengajuanPerubahanDataController.php)
 - [ApprovalPengajuanPerubahanDataController.php](file://app/Http/Controllers/Kepegawaian/ApprovalPengajuanPerubahanDataController.php)
 - [PengajuanPerubahanData.php](file://app/Models/PengajuanPerubahanData.php)
 - [Pegawai.php](file://app/Models/Pegawai.php)
 - [DokumenPegawai.php](file://app/Models/DokumenPegawai.php)
 - [DokumenPegawaiController.php](file://app/Http/Controllers/Kepegawaian/DokumenPegawaiController.php)
-- [SubmitPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/SubmitPengajuanPerubahanDataService.php)
 - [ApprovePengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/ApprovePengajuanPerubahanDataService.php)
 - [RejectPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/RejectPengajuanPerubahanDataService.php)
 - [PengajuanPerubahanDataDiffService.php](file://app/Services/PengajuanPerubahanData/PengajuanPerubahanDataDiffService.php)
-- [StorePengajuanPerubahanDataRequest.php](file://app/Http/Requests/SelfService/StorePengajuanPerubahanDataRequest.php)
 - [ApprovePengajuanPerubahanDataRequest.php](file://app/Http/Requests/Kepegawaian/ApprovePengajuanPerubahanDataRequest.php)
 - [RejectPengajuanPerubahanDataRequest.php](file://app/Http/Requests/Kepegawaian/RejectPengajuanPerubahanDataRequest.php)
 - [StatusPengajuanPerubahanData.php](file://app/Enums/StatusPengajuanPerubahanData.php)
@@ -29,11 +26,9 @@
 - [index.tsx](file://resources/js/pages/self-service/index.tsx)
 - [detail.tsx](file://resources/js/pages/self-service/detail.tsx)
 - [unlinked.tsx](file://resources/js/pages/self-service/unlinked.tsx)
-- [pengajuan/index.tsx](file://resources/js/pages/self-service/pengajuan/index.tsx)
-- [pengajuan/create.tsx](file://resources/js/pages/self-service/pengajuan/create.tsx)
-- [pengajuan/show.tsx](file://resources/js/pages/self-service/pengajuan/show.tsx)
 - [kepegawaian/pengajuan/index.tsx](file://resources/js/pages/kepegawaian/pengajuan/index.tsx)
 - [kepegawaian/pengajuan/show.tsx](file://resources/js/pages/kepegawaian/pengajuan/show.tsx)
+- [kepegawaian/pegawai/show.tsx](file://resources/js/pages/kepegawaian/pegawai/show.tsx)
 - [app.js](file://resources/js/app.tsx)
 - [app-layout.tsx](file://resources/js/layouts/app-layout.tsx)
 - [auth-layout.tsx](file://resources/js/layouts/auth-layout.tsx)
@@ -43,12 +38,11 @@
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive documentation for the new self-service data change approval workflow system
-- Documented PengajuanPerubahanData model and its approval lifecycle
-- Added approval controllers for both self-service and validator workflows
-- Documented validation services for submission, approval, rejection, and diff calculations
-- Added operator interception mechanisms and permission-based access control
-- Updated architecture diagrams to reflect the new approval workflow system
+- Removed documentation for the standalone self-service pengajuan system
+- Updated architecture to reflect streamlined contextual updates within Detail Pegawai interface
+- Clarified that approval workflow system still exists but manual pengajuan forms are removed
+- Revised frontend navigation to show data management actions directly from employee detail view
+- Updated UI flow to eliminate separate pengajuan creation pages in favor of contextual actions
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -57,23 +51,24 @@
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
 6. [Data Change Approval Workflow](#data-change-approval-workflow)
-7. [Dependency Analysis](#dependency-analysis)
-8. [Performance Considerations](#performance-considerations)
-9. [Troubleshooting Guide](#troubleshooting-guide)
-10. [Conclusion](#conclusion)
-11. [Appendices](#appendices)
+7. [Streamlined Employee Data Management](#streamlined-employee-data-management)
+8. [Dependency Analysis](#dependency-analysis)
+9. [Performance Considerations](#performance-considerations)
+10. [Troubleshooting Guide](#troubleshooting-guide)
+11. [Conclusion](#conclusion)
+12. [Appendices](#appendices)
 
 ## Introduction
-The Self-Service Portal empowers civil servants (employees) to manage their personal data and documents independently through a comprehensive approval workflow system. The portal now features three interconnected pillars:
+The Self-Service Portal empowers civil servants (employees) to manage their personal data and documents through a streamlined, contextual approach. The portal now features three interconnected pillars:
 
-- **Employee-centric profile management**: Updating personal details, managing account security, and deleting profiles
-- **Document handling**: Uploading, viewing, editing, and removing official documents linked to employee records
-- **Self-service data change approval workflow**: Submitting, reviewing, and approving data modifications with operator interception and validation
+- **Employee-centric profile management**: Direct access to comprehensive data management through contextual actions
+- **Document handling**: Integrated document upload, viewing, editing, and removal within data management flows
+- **Self-service data change approval workflow**: Maintained approval system for data modifications with operator interception and validation
 
-The new approval workflow system introduces a sophisticated three-tier architecture where employees and operators can propose data changes, validators review and approve/reject them, and the system automatically applies approved changes to the master data. This ensures data integrity while maintaining operational efficiency.
+**Updated** The self-service pengajuan system has been removed and replaced with streamlined contextual updates within the Detail Pegawai interface. Employees now access data management functions directly from their profile detail view, eliminating the separate manual pengajuan forms while preserving the approval workflow system.
 
 ## Project Structure
-The Self-Service Portal spans backend controllers, models, requests, services, and frontend pages. The approval workflow system adds new components for managing data change proposals and their lifecycle.
+The Self-Service Portal spans backend controllers, models, requests, services, and frontend pages. The approval workflow system remains intact but operates through streamlined interfaces.
 
 ```mermaid
 graph TB
@@ -85,7 +80,6 @@ RKepegawaian["routes/kepegawaian.php"]
 end
 subgraph "Controllers"
 SSC["SelfServiceController.php"]
-SPC["SelfService/PengajuanPerubahanDataController.php"]
 APC["Kepegawaian/ApprovalPengajuanPerubahanDataController.php"]
 DPC["DokumenPegawaiController.php"]
 PC["ProfileController.php"]
@@ -97,13 +91,11 @@ DP["DokumenPegawai.php"]
 PPD["PengajuanPerubahanData.php"]
 end
 subgraph "Services"
-SPDS["SubmitPengajuanPerubahanDataService.php"]
 APDS["ApprovePengajuanPerubahanDataService.php"]
 RPDS["RejectPengajuanPerubahanDataService.php"]
 DPDS["PengajuanPerubahanDataDiffService.php"]
 end
 subgraph "Requests"
-SPR["StorePengajuanPerubahanDataRequest.php"]
 APR["ApprovePengajuanPerubahanDataRequest.php"]
 RR["RejectPengajuanPerubahanDataRequest.php"]
 SDPR["StoreDokumenPegawaiRequest.php"]
@@ -115,31 +107,25 @@ subgraph "Frontend Pages"
 SI["self-service/index.tsx"]
 SD["self-service/detail.tsx"]
 SU["self-service/unlinked.tsx"]
-SPI["self-service/pengajuan/index.tsx"]
-SPC["self-service/pengajuan/create.tsx"]
-SPS["self-service/pengajuan/show.tsx"]
 KPI["kepegawaian/pengajuan/index.tsx"]
 KPS["kepegawaian/pengajuan/show.tsx"]
+KPSHOW["kepegawaian/pegawai/show.tsx"]
 end
 RWeb --> SSC
-RWeb --> SPC
 RKepegawaian --> APC
 RWeb --> DPC
 RSettings --> PC
 RSettings --> SC
 SSC --> PM
-SPC --> PPD
 APC --> PPD
 DPC --> PM
 DPC --> DP
 SI --> SSC
 SD --> SSC
 SU --> SSC
-SPI --> SPC
-SPC --> SPDS
-APC --> APDS
-APC --> RPDS
-SPC --> DPDS
+KPI --> APC
+KPS --> APC
+KPSHOW --> PM
 ```
 
 **Diagram sources**
@@ -148,7 +134,6 @@ SPC --> DPDS
 - [routes/settings.php](file://routes/settings.php)
 - [routes/kepegawaian.php](file://routes/kepegawaian.php)
 - [SelfServiceController.php](file://app/Http/Controllers/Kepegawaian/SelfServiceController.php)
-- [PengajuanPerubahanDataController.php](file://app/Http/Controllers/SelfService/PengajuanPerubahanDataController.php)
 - [ApprovalPengajuanPerubahanDataController.php](file://app/Http/Controllers/Kepegawaian/ApprovalPengajuanPerubahanDataController.php)
 - [DokumenPegawaiController.php](file://app/Http/Controllers/Kepegawaian/DokumenPegawaiController.php)
 - [ProfileController.php](file://app/Http/Controllers/Settings/ProfileController.php)
@@ -156,11 +141,9 @@ SPC --> DPDS
 - [PengajuanPerubahanData.php](file://app/Models/PengajuanPerubahanData.php)
 - [Pegawai.php](file://app/Models/Pegawai.php)
 - [DokumenPegawai.php](file://app/Models/DokumenPegawai.php)
-- [SubmitPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/SubmitPengajuanPerubahanDataService.php)
 - [ApprovePengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/ApprovePengajuanPerubahanDataService.php)
 - [RejectPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/RejectPengajuanPerubahanDataService.php)
 - [PengajuanPerubahanDataDiffService.php](file://app/Services/PengajuanPerubahanData/PengajuanPerubahanDataDiffService.php)
-- [StorePengajuanPerubahanDataRequest.php](file://app/Http/Requests/SelfService/StorePengajuanPerubahanDataRequest.php)
 - [ApprovePengajuanPerubahanDataRequest.php](file://app/Http/Requests/Kepegawaian/ApprovePengajuanPerubahanDataRequest.php)
 - [RejectPengajuanPerubahanDataRequest.php](file://app/Http/Requests/Kepegawaian/RejectPengajuanPerubahanDataRequest.php)
 
@@ -170,18 +153,19 @@ SPC --> DPDS
 - [routes/kepegawaian.php](file://routes/kepegawaian.php)
 
 ## Core Components
-The Self-Service Portal now includes several key components for the approval workflow system:
+The Self-Service Portal now focuses on streamlined employee data management through contextual actions:
 
-- **SelfService/PengajuanPerubahanDataController**: Handles self-service data change submissions, viewing submitted requests, and creating new proposals
-- **Kepegawaian/ApprovalPengajuanPerubahanDataController**: Manages the validator workflow for reviewing and approving/rejecting data change requests
+- **SelfServiceController**: Provides employee overview and detail access with contextual data management links
+- **Kepegawaian/ApprovalPengajuanPerubahanDataController**: Manages the validator workflow for reviewing and processing data change requests
 - **PengajuanPerubahanData model**: Central entity representing data change proposals with full audit trail and status tracking
-- **Submission service**: Validates and processes incoming data change requests with conflict prevention
 - **Approval services**: Handle the application of approved changes and rejection with proper audit trails
 - **Diff calculation service**: Generates human-readable differences between before/after payloads
 - **Enhanced validation**: Document attachment requirements based on change type and sensitive field modifications
 
+**Updated** The self-service pengajuan system has been eliminated. Employees now access data management functions directly through contextual actions from the Detail Pegawai interface, reducing navigation complexity while maintaining the approval workflow system.
+
 Practical outcomes:
-- Employees can submit data change requests with supporting documentation
+- Employees access comprehensive data management through contextual actions from their profile detail view
 - Operators can intercept and propose changes on behalf of employees
 - Validators review and approve/reject requests with full audit trail
 - Approved changes are automatically applied to master data tables
@@ -189,27 +173,28 @@ Practical outcomes:
 - Conflict prevention ensures only one pending request per scope
 
 **Section sources**
-- [PengajuanPerubahanDataController.php](file://app/Http/Controllers/SelfService/PengajuanPerubahanDataController.php)
+- [SelfServiceController.php](file://app/Http/Controllers/Kepegawaian/SelfServiceController.php)
 - [ApprovalPengajuanPerubahanDataController.php](file://app/Http/Controllers/Kepegawaian/ApprovalPengajuanPerubahanDataController.php)
 - [PengajuanPerubahanData.php](file://app/Models/PengajuanPerubahanData.php)
-- [SubmitPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/SubmitPengajuanPerubahanDataService.php)
 - [ApprovePengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/ApprovePengajuanPerubahanDataService.php)
 - [RejectPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/RejectPengajuanPerubahanDataService.php)
 - [PengajuanPerubahanDataDiffService.php](file://app/Services/PengajuanPerubahanData/PengajuanPerubahanDataDiffService.php)
 
 ## Architecture Overview
-The Self-Service Portal follows a layered architecture with the new approval workflow system integrated seamlessly:
+The Self-Service Portal follows a streamlined layered architecture with the approval workflow system integrated through contextual interfaces:
 
-- **Presentation Layer**: Inertia-driven React pages for both self-service and validator interfaces
+- **Presentation Layer**: Inertia-driven React pages with streamlined navigation from employee detail view
 - **Application Layer**: Controllers orchestrate requests, enforce authorization, and delegate to specialized services
 - **Domain Layer**: Eloquent models represent employee data, documents, and approval workflow entities
-- **Infrastructure Layer**: Services encapsulate business logic for submission, approval, rejection, and diff calculation
-- **Workflow Layer**: Specialized controllers and services manage the approval lifecycle
+- **Infrastructure Layer**: Services encapsulate business logic for approval, rejection, and diff calculation
+- **Workflow Layer**: Specialized controllers and services manage the approval lifecycle with contextual access
+
+**Updated** The architecture now emphasizes contextual access patterns where data management functions are directly accessible from the employee detail view, eliminating the separate pengajuan creation workflow.
 
 ```mermaid
 graph TB
-UI["Self-Service & Validator Pages<br/>resources/js/pages/self-service & kepegawaian"] --> Ctl["Controllers<br/>SelfService/PengajuanPerubahanDataController<br/>Kepegawaian/ApprovalPengajuanPerubahanDataController"]
-Ctl --> Svc["Services<br/>Submit/Approve/Reject/Diff Services"]
+UI["Streamlined Self-Service Pages<br/>resources/js/pages/self-service/detail.tsx"] --> Ctl["Controllers<br/>SelfServiceController<br/>Kepegawaian/ApprovalPengajuanPerubahanDataController"]
+Ctl --> Svc["Services<br/>Approve/Reject/Diff Services"]
 Ctl --> Mdl["Models<br/>PengajuanPerubahanData, Pegawai, DokumenPegawai"]
 Ctl --> Req["Requests<br/>Validation Rules"]
 Ctl --> Rt["Routes<br/>web.php, kepegawaian.php"]
@@ -217,9 +202,8 @@ Svc --> DB["Database<br/>pengajuan_perubahan_data table"]
 ```
 
 **Diagram sources**
-- [PengajuanPerubahanDataController.php](file://app/Http/Controllers/SelfService/PengajuanPerubahanDataController.php)
+- [SelfServiceController.php](file://app/Http/Controllers/Kepegawaian/SelfServiceController.php)
 - [ApprovalPengajuanPerubahanDataController.php](file://app/Http/Controllers/Kepegawaian/ApprovalPengajuanPerubahanDataController.php)
-- [SubmitPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/SubmitPengajuanPerubahanDataService.php)
 - [ApprovePengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/ApprovePengajuanPerubahanDataService.php)
 - [RejectPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/RejectPengajuanPerubahanDataService.php)
 - [PengajuanPerubahanDataDiffService.php](file://app/Services/PengajuanPerubahanData/PengajuanPerubahanDataDiffService.php)
@@ -229,43 +213,42 @@ Svc --> DB["Database<br/>pengajuan_perubahan_data table"]
 
 ## Detailed Component Analysis
 
-### Self-Service Data Change Submission
-The self-service controller manages the employee-facing workflow for submitting data change requests:
+### Streamlined Employee Data Management
+The SelfServiceController now provides comprehensive access to employee data management through contextual actions:
 
-- **index**: Lists all submitted requests with status, domain, and action type
-- **create**: Renders the form for creating new data change proposals
-- **store**: Processes submissions through the specialized submission service
-- **show**: Displays detailed view with diff visualization for individual requests
+- **index**: Displays employee overview with quick access to detailed management options
+- **detail**: Provides launcher-style interface with direct links to all data management functions
+- **unlinked**: Handles cases where employee accounts are not yet linked to personnel records
+
+**Updated** The detail interface now serves as the central hub for all data management activities, replacing the previous separate pengajuan creation workflow with contextual action links.
 
 ```mermaid
 sequenceDiagram
-participant U as "Employee/User"
+participant E as "Employee User"
 participant R as "routes/web.php"
-participant C as "SelfService/PengajuanPerubahanDataController"
-participant S as "SubmitPengajuanPerubahanDataService"
-participant DB as "Database"
-U->>R : GET /self-service/pengajuan/create
-R->>C : create()
-C-->>U : Render create form
-U->>R : POST /self-service/pengajuan
-R->>C : store(validated)
-C->>S : handle(pengaju, payload, jenisPengaju)
-S->>DB : Create pengajuan_perubahan_data
-S->>DB : Store attachments
-DB-->>U : Success message
+participant C as "SelfServiceController"
+participant D as "Detail Interface"
+E->>R : GET /self-service
+R->>C : index()
+C-->>E : Render overview dashboard
+E->>R : GET /self-service/detail
+R->>C : detail()
+C->>D : Render launcher interface
+D-->>E : Show contextual data management actions
+E->>D : Click specific data management action
+D->>R : Navigate to relevant controller
 ```
 
 **Diagram sources**
-- [PengajuanPerubahanDataController.php](file://app/Http/Controllers/SelfService/PengajuanPerubahanDataController.php)
-- [SubmitPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/SubmitPengajuanPerubahanDataService.php)
+- [SelfServiceController.php](file://app/Http/Controllers/Kepegawaian/SelfServiceController.php)
 - [routes/web.php](file://routes/web.php)
+- [detail.tsx](file://resources/js/pages/self-service/detail.tsx)
 
 **Section sources**
-- [PengajuanPerubahanDataController.php](file://app/Http/Controllers/SelfService/PengajuanPerubahanDataController.php)
-- [StorePengajuanPerubahanDataRequest.php](file://app/Http/Requests/SelfService/StorePengajuanPerubahanDataRequest.php)
-- [pengajuan/index.tsx](file://resources/js/pages/self-service/pengajuan/index.tsx)
-- [pengajuan/create.tsx](file://resources/js/pages/self-service/pengajuan/create.tsx)
-- [pengajuan/show.tsx](file://resources/js/pages/self-service/pengajuan/show.tsx)
+- [SelfServiceController.php](file://app/Http/Controllers/Kepegawaian/SelfServiceController.php)
+- [index.tsx](file://resources/js/pages/self-service/index.tsx)
+- [detail.tsx](file://resources/js/pages/self-service/detail.tsx)
+- [unlinked.tsx](file://resources/js/pages/self-service/unlinked.tsx)
 
 ### Validator Approval Workflow
 The approval controller manages the validator-facing workflow for reviewing and processing data change requests:
@@ -358,7 +341,7 @@ ProfileController and SecurityController provide standard profile management fun
 - [PasswordUpdateRequest.php](file://app/Http/Requests/Settings/PasswordUpdateRequest.php)
 
 ## Data Change Approval Workflow
-The new approval workflow system introduces a comprehensive three-stage process for managing data changes:
+The approval workflow system remains intact but operates through streamlined interfaces:
 
 ### Core Entities and Relationships
 The system centers around the PengajuanPerubahanData model with its approval lifecycle:
@@ -411,85 +394,96 @@ Rejected --> [*]
 **Diagram sources**
 - [StatusPengajuanPerubahanData.php](file://app/Enums/StatusPengajuanPerubahanData.php)
 
-### Submission Process
-The submission service handles complex validation and conflict prevention:
-
-1. **Subject Resolution**: Determines which employee record is affected
-2. **Snapshot Creation**: Captures current data state for audit trail
-3. **Conflict Prevention**: Ensures no duplicate pending requests
-4. **Scope Key Generation**: Creates unique identifiers for conflict detection
-5. **Attachment Processing**: Stores supporting documents securely
-
 ### Approval Process
 The approval service applies changes to master data tables:
 
-1. **Field Validation**: Ensures only allowed fields are modified
+1. **Field Validation**: Ensures only allowed fields are modified according to domain rules
 2. **Domain-specific Application**: Handles different data types appropriately
 3. **Transaction Safety**: Wraps all operations in database transactions
 4. **Audit Trail**: Updates status and timestamps
 
 **Section sources**
 - [PengajuanPerubahanData.php](file://app/Models/PengajuanPerubahanData.php)
-- [SubmitPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/SubmitPengajuanPerubahanDataService.php)
 - [ApprovePengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/ApprovePengajuanPerubahanDataService.php)
 - [RejectPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/RejectPengajuanPerubahanDataService.php)
 - [PengajuanPerubahanDataDiffService.php](file://app/Services/PengajuanPerubahanData/PengajuanPerubahanDataDiffService.php)
 - [2026_04_17_151459_create_pengajuan_perubahan_data_table.php](file://database/migrations/2026_04_17_151459_create_pengajuan_perubahan_data_table.php)
 
+## Streamlined Employee Data Management
+**New** The portal now provides a streamlined approach to employee data management through contextual actions:
+
+### Contextual Data Management Interface
+The Detail Pegawai interface serves as the central hub for all data management activities:
+
+- **Direct Action Links**: Each data category (biodata, keluarga, riwayat jabatan, dll.) provides direct links to management functions
+- **Reduced Navigation**: Eliminates the need for separate pengajuan creation pages
+- **Integrated Experience**: All data management functions are accessible from a single, comprehensive interface
+
+### Supported Data Categories
+Employees can manage the following data categories directly:
+
+- **Biodata Pribadi**: Personal identification and contact information
+- **Keluarga**: Spouse, children, and other family members
+- **Riwayat Jabatan**: Position and promotion history
+- **Riwayat Pangkat**: Rank and grade progression
+- **Pendidikan**: Academic qualifications and training
+- **Riwayat Diklat**: Professional development courses
+- **Penghargaan**: Awards and recognition
+- **Hukuman Disiplin**: Disciplinary records
+- **Dokumen Digital**: Official documents and certificates
+
+**Section sources**
+- [detail.tsx](file://resources/js/pages/self-service/detail.tsx)
+- [kepegawaian/pegawai/show.tsx](file://resources/js/pages/kepegawaian/pegawai/show.tsx)
+
 ## Dependency Analysis
-The approval workflow system introduces new dependencies and relationships:
+The approval workflow system maintains its core dependencies while supporting the streamlined interface:
 
 ```mermaid
 graph LR
-SSC["SelfService/PengajuanPerubahanDataController"] --> SPS["SubmitPengajuanPerubahanDataService"]
-SSC --> DPS["PengajuanPerubahanDataDiffService"]
+SSC["SelfServiceController"] --> PPD["PengajuanPerubahanData Model"]
 APC["Kepegawaian/ApprovalPengajuanPerubahanDataController"] --> APS["ApprovePengajuanPerubahanDataService"]
 APC --> RPS["RejectPengajuanPerubahanDataService"]
-SSC --> PPD["PengajuanPerubahanData Model"]
 APC --> PPD
-SPS --> PPD
-APS --> PPD
 PPD --> PM["Pegawai Model"]
 PPD --> KM["Keluarga Model"]
-SPS --> DPR["StorePengajuanPerubahanDataRequest"]
 APR["ApprovePengajuanPerubahanDataRequest"] --> PPD
 ```
 
 **Diagram sources**
-- [PengajuanPerubahanDataController.php](file://app/Http/Controllers/SelfService/PengajuanPerubahanDataController.php)
+- [SelfServiceController.php](file://app/Http/Controllers/Kepegawaian/SelfServiceController.php)
 - [ApprovalPengajuanPerubahanDataController.php](file://app/Http/Controllers/Kepegawaian/ApprovalPengajuanPerubahanDataController.php)
-- [SubmitPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/SubmitPengajuanPerubahanDataService.php)
 - [ApprovePengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/ApprovePengajuanPerubahanDataService.php)
 - [RejectPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/RejectPengajuanPerubahanDataService.php)
-- [PengajuanPerubahanDataDiffService.php](file://app/Services/PengajuanPerubahanData/PengajuanPerubahanDataDiffService.php)
 - [PengajuanPerubahanData.php](file://app/Models/PengajuanPerubahanData.php)
 - [Pegawai.php](file://app/Models/Pegawai.php)
 
 **Section sources**
-- [PengajuanPerubahanDataController.php](file://app/Http/Controllers/SelfService/PengajuanPerubahanDataController.php)
+- [SelfServiceController.php](file://app/Http/Controllers/Kepegawaian/SelfServiceController.php)
 - [ApprovalPengajuanPerubahanDataController.php](file://app/Http/Controllers/Kepegawaian/ApprovalPengajuanPerubahanDataController.php)
-- [SubmitPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/SubmitPengajuanPerubahanDataService.php)
 - [ApprovePengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/ApprovePengajuanPerubahanDataService.php)
 - [RejectPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/RejectPengajuanPerubahanDataService.php)
 - [PengajuanPerubahanDataDiffService.php](file://app/Services/PengajuanPerubahanData/PengajuanPerubahanDataDiffService.php)
 
 ## Performance Considerations
-The approval workflow system implements several performance optimizations:
+The streamlined approval workflow system implements several performance optimizations:
 
-- **Conflict Prevention**: Database-level locking prevents race conditions during concurrent submissions
 - **Efficient Queries**: Eager loading of related data reduces N+1 query problems
 - **Transaction Safety**: All approval operations occur within atomic database transactions
 - **Index Optimization**: Strategic indexing on scope_key and status fields improves query performance
 - **File Storage**: Secure file storage with proper cleanup mechanisms
 - **Pagination**: Built-in pagination for large approval queues
+- **Reduced Navigation**: Streamlined interface eliminates redundant page loads
+
+**Updated** The removal of separate pengajuan creation pages reduces server load and improves user experience through direct access to data management functions.
 
 ## Troubleshooting Guide
-Common issues and resolutions for the approval workflow system:
+Common issues and resolutions for the streamlined approval workflow system:
 
-### Submission Issues
-- **Duplicate Pending Requests**: Ensure scope_key uniqueness prevents concurrent submissions
-- **Missing Attachments**: Document requirements vary by domain and action type
-- **Invalid Target Records**: Verify target_id exists and belongs to correct employee
+### Access Issues
+- **Unlinked Accounts**: Users with unlinked accounts see the unlinked.tsx page with guidance
+- **Permission Denied**: Validators need proper permissions (`pengajuan-perubahan.validate`)
+- **Contextual Access**: Ensure employees have proper role assignments for data management access
 
 ### Approval Issues
 - **Authorization Failures**: Validators must have proper permissions (`pengajuan-perubahan.validate`)
@@ -500,30 +494,34 @@ Common issues and resolutions for the approval workflow system:
 - **Diff Visualization**: Ensure before/after payloads contain valid data for comparison
 - **Form Validation**: Client-side validation mirrors server-side rules
 - **Route Access**: Self-service and validator routes have appropriate middleware protection
+- **Contextual Navigation**: Ensure proper linking to data management functions from detail interface
 
 **Section sources**
-- [SubmitPengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/SubmitPengajuanPerubahanDataService.php)
-- [ApprovePengajuanPerubahanDataService.php](file://app/Services/PengajuanPerubahanData/ApprovePengajuanPerubahanDataService.php)
-- [StorePengajuanPerubahanDataRequest.php](file://app/Http/Requests/SelfService/StorePengajuanPerubahanDataRequest.php)
+- [SelfServiceController.php](file://app/Http/Controllers/Kepegawaian/SelfServiceController.php)
+- [ApprovalPengajuanPerubahanDataController.php](file://app/Http/Controllers/Kepegawaian/ApprovalPengajuanPerubahanDataController.php)
 - [ApprovePengajuanPerubahanDataRequest.php](file://app/Http/Requests/Kepegawaian/ApprovePengajuanPerubahanDataRequest.php)
+- [RejectPengajuanPerubahanDataRequest.php](file://app/Http/Requests/Kepegawaian/RejectPengajuanPerubahanDataRequest.php)
 - [routes/web.php](file://routes/web.php)
 - [routes/kepegawaian.php](file://routes/kepegawaian.php)
 
 ## Conclusion
-The Self-Service Portal now provides a comprehensive, secure, and efficient platform for employees to manage personal data and documents through a robust approval workflow system. The new data change approval system ensures data integrity while maintaining operational efficiency through:
+The Self-Service Portal now provides a streamlined, efficient platform for employees to manage personal data and documents through contextual access patterns. The new streamlined approach ensures data integrity while maintaining operational efficiency through:
 
-- **Three-tier approval system**: Employees, operators, and validators with clear responsibilities
-- **Comprehensive audit trail**: Full visibility into all data changes with before/after comparisons
-- **Conflict prevention**: Database-level safeguards against duplicate or conflicting requests
-- **Flexible domain support**: Extensible framework for handling various data change scenarios
-- **Secure document handling**: Proper validation and storage of supporting documentation
+- **Contextual Access**: Direct access to data management functions from the employee detail view
+- **Simplified Navigation**: Elimination of separate pengajuan creation pages reduces complexity
+- **Maintained Approval System**: The approval workflow system remains intact for data modifications
+- **Comprehensive Audit Trail**: Full visibility into all data changes with before/after comparisons
+- **Conflict Prevention**: Database-level safeguards against duplicate or conflicting requests
+- **Flexible Domain Support**: Extensible framework for handling various data change scenarios
+- **Secure Document Handling**: Proper validation and storage of supporting documentation
 
-The modular architecture supports future enhancements including multi-level approvals, domain expansion, and advanced notification systems while maintaining the core principles of security, transparency, and operational efficiency.
+**Updated** The removal of the standalone self-service pengajuan system and replacement with streamlined contextual updates within the Detail Pegawai interface creates a more intuitive user experience while preserving the robust approval workflow system that ensures data integrity and operational efficiency.
 
 ## Appendices
 
 ### User Interface Design Notes
-- **Dual Interfaces**: Separate self-service and validator interfaces with appropriate navigation
+- **Streamlined Navigation**: Single interface for all data management functions
+- **Contextual Access**: Direct links to specific data management actions
 - **Approval Workflows**: Dedicated pages for pending requests, detailed views, and action buttons
 - **Diff Visualization**: Clear presentation of changes with color-coded indicators
 - **Document Uploads**: Integrated file handling with validation and preview capabilities
@@ -532,9 +530,7 @@ The modular architecture supports future enhancements including multi-level appr
 **Section sources**
 - [app-layout.tsx](file://resources/js/layouts/app-layout.tsx)
 - [auth-layout.tsx](file://resources/js/layouts/auth-layout.tsx)
-- [pengajuan/index.tsx](file://resources/js/pages/self-service/pengajuan/index.tsx)
-- [pengajuan/create.tsx](file://resources/js/pages/self-service/pengajuan/create.tsx)
-- [pengajuan/show.tsx](file://resources/js/pages/self-service/pengajuan/show.tsx)
+- [detail.tsx](file://resources/js/pages/self-service/detail.tsx)
 - [kepegawaian/pengajuan/index.tsx](file://resources/js/pages/kepegawaian/pengajuan/index.tsx)
 - [kepegawaian/pengajuan/show.tsx](file://resources/js/pages/kepegawaian/pengajuan/show.tsx)
 
@@ -544,9 +540,9 @@ The modular architecture supports future enhancements including multi-level appr
 - **Audit Trail Security**: Immutable record of all approval actions and changes
 - **Conflict Prevention**: Database locks prevent concurrent modification conflicts
 - **Data Validation**: Strict field-level validation prevents unauthorized modifications
+- **Contextual Security**: Direct access links respect user permissions and role assignments
 
 **Section sources**
-- [StorePengajuanPerubahanDataRequest.php](file://app/Http/Requests/SelfService/StorePengajuanPerubahanDataRequest.php)
 - [ApprovePengajuanPerubahanDataRequest.php](file://app/Http/Requests/Kepegawaian/ApprovePengajuanPerubahanDataRequest.php)
 - [RejectPengajuanPerubahanDataRequest.php](file://app/Http/Requests/Kepegawaian/RejectPengajuanPerubahanDataRequest.php)
 - [PengajuanPerubahanData.php](file://app/Models/PengajuanPerubahanData.php)
@@ -556,6 +552,7 @@ The modular architecture supports future enhancements including multi-level appr
 - **Relationship Preservation**: Family relationships and employment history remain intact
 - **Historical Tracking**: Complete audit trail maintains historical context
 - **Conflict Resolution**: System prevents conflicting changes through scope-based locking
+- **Contextual Updates**: Streamlined interface ensures proper data management workflows
 
 **Section sources**
 - [PengajuanPerubahanData.php](file://app/Models/PengajuanPerubahanData.php)
