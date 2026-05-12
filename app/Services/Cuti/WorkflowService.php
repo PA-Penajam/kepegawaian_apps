@@ -266,6 +266,12 @@ class WorkflowService
      */
     public function reassignApprover(string $id, string $role, string $newNip, Pegawai $aktor, string $alasan): void
     {
+        $allowedRoles = ['atasan_langsung', 'pejabat_berwenang'];
+
+        if (! in_array($role, $allowedRoles, true)) {
+            throw new \InvalidArgumentException("Role tidak valid untuk reassignment: {$role}");
+        }
+
         DB::transaction(function () use ($id, $role, $newNip, $aktor, $alasan): void {
             $pengajuan = CutiPengajuan::where('id', $id)->lockForUpdate()->firstOrFail();
             $this->guardAuthorization($aktor, 'cuti.pengajuan.reassign');

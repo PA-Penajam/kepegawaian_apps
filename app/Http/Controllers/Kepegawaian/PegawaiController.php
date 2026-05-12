@@ -133,15 +133,7 @@ class PegawaiController extends Controller
             'refPangkat' => RefPangkat::orderBy('urutan')->get(['id', 'kode', 'nama']),
             'refJabatan' => RefJabatan::orderBy('nama')->get(['id', 'nama', 'jenis_jabatan']),
             'refUnitKerja' => RefUnitKerja::orderBy('urutan')->get(['id', 'nama']),
-            'enums' => [
-                'jenisKelamin' => JenisKelamin::cases(),
-                'agama' => Agama::cases(),
-                'golonganDarah' => GolonganDarah::cases(),
-                'statusPerkawinan' => StatusPerkawinan::cases(),
-                'statusPegawai' => StatusPegawai::cases(),
-                'statusKepegawaian' => StatusKepegawaian::cases(),
-                'pendidikanTerakhir' => JenjangPendidikan::cases(),
-            ],
+            'enums' => $this->enumOptions(),
         ]);
     }
 
@@ -158,6 +150,8 @@ class PegawaiController extends Controller
             return to_route('kepegawaian.pegawai.show', $pegawai)
                 ->with('success', 'Data pegawai berhasil ditambahkan.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menambahkan data pegawai. Silakan coba lagi.');
         }
     }
@@ -196,15 +190,7 @@ class PegawaiController extends Controller
             'refPangkat' => RefPangkat::orderBy('urutan')->get(['id', 'kode', 'nama']),
             'refJabatan' => RefJabatan::orderBy('nama')->get(['id', 'nama', 'jenis_jabatan']),
             'refUnitKerja' => RefUnitKerja::orderBy('urutan')->get(['id', 'nama']),
-            'enums' => [
-                'jenisKelamin' => JenisKelamin::cases(),
-                'agama' => Agama::cases(),
-                'golonganDarah' => GolonganDarah::cases(),
-                'statusPerkawinan' => StatusPerkawinan::cases(),
-                'statusPegawai' => StatusPegawai::cases(),
-                'statusKepegawaian' => StatusKepegawaian::cases(),
-                'pendidikanTerakhir' => JenjangPendidikan::cases(),
-            ],
+            'enums' => $this->enumOptions(),
         ]);
     }
 
@@ -248,6 +234,8 @@ class PegawaiController extends Controller
             return to_route('kepegawaian.pegawai.show', $pegawai)
                 ->with('success', 'Data pegawai berhasil diperbarui.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat memperbarui data pegawai. Silakan coba lagi.');
         }
     }
@@ -265,6 +253,8 @@ class PegawaiController extends Controller
             return to_route('kepegawaian.pegawai.index')
                 ->with('success', 'Data pegawai berhasil dihapus.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menghapus data pegawai. Silakan coba lagi.');
         }
     }
@@ -288,7 +278,22 @@ class PegawaiController extends Controller
 
             return back()->with('success', 'Foto pegawai berhasil diperbarui.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat mengunggah foto. Pastikan file gambar valid dan silakan coba lagi.');
         }
+    }
+
+    private function enumOptions(): array
+    {
+        return [
+            'jenisKelamin' => JenisKelamin::cases(),
+            'agama' => Agama::cases(),
+            'golonganDarah' => GolonganDarah::cases(),
+            'statusPerkawinan' => StatusPerkawinan::cases(),
+            'statusPegawai' => StatusPegawai::cases(),
+            'statusKepegawaian' => StatusKepegawaian::cases(),
+            'pendidikanTerakhir' => JenjangPendidikan::cases(),
+        ];
     }
 }

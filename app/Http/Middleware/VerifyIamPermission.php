@@ -29,7 +29,6 @@ class VerifyIamPermission
         }
 
         $appSlug = config('iam.app_slug', 'kepegawaian');
-        // Cache query IAM app (hasil statis, TTL 1 jam)
         $kepegawaian = Cache::remember("iam_app:{$appSlug}", 3600,
             fn () => IamApplication::where('slug', $appSlug)->first()
         );
@@ -38,7 +37,6 @@ class VerifyIamPermission
             abort(Response::HTTP_FORBIDDEN);
         }
 
-        // Tanpa parameter: cukup cek user punya role di aplikasi ini
         if (empty($permissions)) {
             $userRoles = $this->iamAuth->getUserRoles($user->id, $kepegawaian->id);
             abort_if(empty($userRoles), Response::HTTP_FORBIDDEN);
@@ -46,11 +44,42 @@ class VerifyIamPermission
             return $next($request);
         }
 
-        // Dengan parameter: cek setiap permission yang diminta
         $userPermissions = $this->iamAuth->getUserPermissions($user->id, $kepegawaian->id);
 
+        // Deteksi mode: 'any:perm1,perm2' = OR logic, default = AND logic
+        $mode = 'all';
+        $resolvedPermissions = [];
+
         foreach ($permissions as $permission) {
-            abort_unless(in_array($permission, $userPermissions, true), Response::HTTP_FORBIDDEN);
+            if (str_starts_with($permission, 'any:')) {
+                $mode = 'any';
+                $resolvedPermissions = array_merge(
+                    $resolvedPermissions,
+                    array_map('trim', explode(',', substr($permission, 4)))
+                );
+            } else {
+                $resolvedPermissions = array_merge(
+                    $resolvedPermissions,
+                    array_map('trim', explode(',', $permission))
+                );
+            }
+        }
+
+        $resolvedPermissions = array_filter($resolvedPermissions);
+
+        if ($mode === 'any') {
+            $hasAny = false;
+            foreach ($resolvedPermissions as $perm) {
+                if (in_array($perm, $userPermissions, true)) {
+                    $hasAny = true;
+                    break;
+                }
+            }
+            abort_unless($hasAny, Response::HTTP_FORBIDDEN);
+        } else {
+            foreach ($resolvedPermissions as $perm) {
+                abort_unless(in_array($perm, $userPermissions, true), Response::HTTP_FORBIDDEN);
+            }
         }
 
         return $next($request);

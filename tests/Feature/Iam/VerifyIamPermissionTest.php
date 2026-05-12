@@ -26,11 +26,25 @@ beforeEach(function () {
         'group' => 'pegawai',
     ]);
 
+    $this->pegawaiWritePerm = IamPermission::firstOrCreate([
+        'iam_application_id' => $this->kepegawaianApp->id,
+        'slug' => 'pegawai:write',
+    ], [
+        'nama' => 'Tulis Pegawai Test',
+        'group' => 'pegawai',
+    ]);
+
     // Admin role punya permission pegawai:read
     $this->adminRole->permissions()->syncWithoutDetaching([$this->pegawaiReadPerm->id]);
 
     Route::middleware(['auth', 'iam.permission:pegawai:read'])
         ->get('/test-iam-perm', fn () => 'ok');
+
+    Route::middleware(['auth', 'iam.permission:pegawai:read,pegawai:write'])
+        ->get('/test-iam-perm-all', fn () => 'ok');
+
+    Route::middleware(['auth', 'iam.permission:any:pegawai:read,pegawai:write'])
+        ->get('/test-iam-perm-any', fn () => 'ok');
 });
 
 test('guest diredirect ke login', function () {
@@ -56,4 +70,32 @@ test('user dengan permission yang sesuai lolos', function () {
     $user = Pegawai::factory()->admin()->create();
 
     $this->actingAs($user)->get('/test-iam-perm')->assertOk();
+});
+
+test('mode all: user harus punya semua permission', function () {
+    $user = Pegawai::factory()->admin()->create();
+    // Admin punya pegawai:read tapi tidak punya pegawai:write
+
+    $this->actingAs($user)->get('/test-iam-perm-all')->assertForbidden();
+});
+
+test('mode all: user dengan semua permission lolos', function () {
+    $user = Pegawai::factory()->admin()->create();
+    $this->adminRole->permissions()->syncWithoutDetaching([$this->pegawaiWritePerm->id]);
+
+    $this->actingAs($user)->get('/test-iam-perm-all')->assertOk();
+});
+
+test('mode any: user cukup punya salah satu permission', function () {
+    $user = Pegawai::factory()->admin()->create();
+    // Admin punya pegawai:read, tidak punya pegawai:write — tetap lolos karena mode any
+
+    $this->actingAs($user)->get('/test-iam-perm-any')->assertOk();
+});
+
+test('mode any: user tanpa satupun permission mendapat 403', function () {
+    $user = Pegawai::factory()->create();
+    // Viewer tidak punya pegawai:read maupun pegawai:write
+
+    $this->actingAs($user)->get('/test-iam-perm-any')->assertForbidden();
 });

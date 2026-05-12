@@ -28,12 +28,19 @@ class SendKenaikanPangkatNotification extends Command
 
             $data = $service->getUpcomingKenaikanPangkat($targetBulan, 1000, null, null, $targetTahun);
 
-            foreach ($data->items() as $row) {
-                if ($row['status'] !== 'Mendekati Eligible') {
-                    continue;
-                }
+            $eligibleRows = collect($data->items())
+                ->filter(fn ($row) => $row['status'] === 'Mendekati Eligible');
 
-                $pegawai = Pegawai::find($row['id']);
+            if ($eligibleRows->isEmpty()) {
+                continue;
+            }
+
+            $pegawaiMap = Pegawai::whereIn('id', $eligibleRows->pluck('id'))
+                ->get()
+                ->keyBy('id');
+
+            foreach ($eligibleRows as $row) {
+                $pegawai = $pegawaiMap->get($row['id']);
                 if ($pegawai === null) {
                     continue;
                 }

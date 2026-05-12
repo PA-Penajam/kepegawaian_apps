@@ -47,7 +47,7 @@ class NotifikasiDeadlineUsulanKp extends Command
                             usulanId: $usulan->id,
                             batasUsul: $batasUsul,
                             sisaHari: $sisaHari,
-                            url: url("/kepegawaian/kenaikan-pangkat/usulan/{$usulan->id}"),
+                            url: route('kenaikan-pangkat.usulan.show', $usulan),
                         ));
 
                         $count++;

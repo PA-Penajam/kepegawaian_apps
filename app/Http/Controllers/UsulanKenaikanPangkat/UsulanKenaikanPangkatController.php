@@ -39,8 +39,10 @@ class UsulanKenaikanPangkatController extends Controller
             })
             ->when($filters['pegawai'] ?? null, function ($query, string $pegawai): void {
                 $query->whereHas('pegawai', fn ($query) => $query
-                    ->where('nama_lengkap', 'like', "%{$pegawai}%")
-                    ->orWhere('nip', 'like', "%{$pegawai}%"));
+                    ->where(function ($sub) use ($pegawai): void {
+                        $sub->where('nama_lengkap', 'like', "%{$pegawai}%")
+                            ->orWhere('nip', 'like', "%{$pegawai}%");
+                    }));
             })
             ->latest()
             ->paginate(10)

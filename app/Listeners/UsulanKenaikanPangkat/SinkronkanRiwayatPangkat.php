@@ -24,7 +24,7 @@ class SinkronkanRiwayatPangkat
                 'no_sk' => $usulan->nomor_sk,
                 'tanggal_sk' => $usulan->tanggal_sk,
                 'tmt' => $usulan->tanggal_sk,
-                'pejabat_penetap' => 'Biro Kepegawaian Mahkamah Agung RI',
+                'pejabat_penetap' => config('sikep.kp.pejabat_penetap', 'Biro Kepegawaian Mahkamah Agung RI'),
                 'is_aktif' => true,
                 'masa_kerja_tahun' => 0,
                 'masa_kerja_bulan' => 0,

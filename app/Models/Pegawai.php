@@ -146,18 +146,51 @@ class Pegawai extends Authenticatable
 
     // === Permission methods (IAM-aware) ===
 
+    private ?array $cachedPermissions = null;
+
+    private function loadPermissions(): array
+    {
+        if ($this->cachedPermissions === null) {
+            $this->cachedPermissions = $this->iamRoles()
+                ->with('permissions')
+                ->get()
+                ->flatMap(fn ($role) => $role->permissions->pluck('slug'))
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return $this->cachedPermissions;
+    }
+
+    public function clearPermissionCache(): void
+    {
+        $this->cachedPermissions = null;
+    }
+
+    public function refresh(): static
+    {
+        $this->clearPermissionCache();
+
+        return parent::refresh();
+    }
+
     public function hasPermission(string $permission): bool
     {
-        return $this->iamRoles()->whereHas('permissions', function (Builder $q) use ($permission) {
-            $q->where('slug', $permission);
-        })->exists();
+        return in_array($permission, $this->loadPermissions(), true);
     }
 
     public function hasAnyPermission(string ...$permissions): bool
     {
-        return $this->iamRoles()->whereHas('permissions', function (Builder $q) use ($permissions) {
-            $q->whereIn('slug', $permissions);
-        })->exists();
+        $loaded = $this->loadPermissions();
+
+        foreach ($permissions as $permission) {
+            if (in_array($permission, $loaded, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function isAdmin(): bool

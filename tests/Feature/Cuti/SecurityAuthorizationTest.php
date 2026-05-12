@@ -18,6 +18,7 @@ use Laravel\Sanctum\Sanctum;
 beforeEach(function () {
     $this->seed(CutiJenisMasterSeeder::class);
     $this->seed(CutiPermissionSeeder::class);
+    $this->withoutVite();
 });
 
 /**
