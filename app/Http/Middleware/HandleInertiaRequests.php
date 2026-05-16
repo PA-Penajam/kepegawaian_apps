@@ -56,6 +56,14 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
             ],
+            'iam' => fn () => [
+                'slug_pattern' => config('iam.slug.pattern'),
+                'standard_actions' => config('iam.standard_actions'),
+                'standard_roles' => config('iam.standard_roles'),
+                'min_segments' => config('iam.slug.min_segments'),
+                'max_segments' => config('iam.slug.max_segments'),
+                'docs_url' => config('iam.docs_url'),
+            ],
         ];
     }
 }
