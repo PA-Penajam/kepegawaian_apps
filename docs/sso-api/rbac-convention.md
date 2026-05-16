@@ -224,7 +224,7 @@ kenaikan-pangkat.usulan.* (10 actions)
 kenaikan-pangkat.monitoring.view, monitoring.view
 referensi.view, referensi.create, referensi.update, referensi.delete
 pengajuan-perubahan.validate
-iam-manage, rbac.manage
+iam.manage, rbac.manage
 ```
 
 ### 6.2 `persediaan` (12 permissions)
@@ -285,7 +285,34 @@ Bila menemukan app dengan slug yang tidak ikut konvensi (mis. pakai prefix, unde
 
 ## 9. Referensi
 
+### Sumber kebenaran (machine-readable)
+
+- **Config**: `config/iam.php` — pola regex slug, daftar action standar, daftar role standar (single source of truth)
+- **Validator**: `app/Rules/ValidIamSlug.php` — rule object dipakai di FormRequest, seeder validation, dan audit
+- **Service**: `app/Services/Iam/IamPermissionAuditor.php` — audit + suggest canonical
+- **Command**: `php artisan iam:audit-slugs` — laporan slug non-canonical (opsi: `--app=<slug>`, `--json`)
+- **FormRequest**: `app/Http/Requests/Iam/StorePermissionRequest.php` (validasi keras saat create, auto-derive `group` dari segment pertama slug)
+- **FormRequest**: `app/Http/Requests/Iam/UpdatePermissionRequest.php` (slug TIDAK divalidasi — immutable, pakai endpoint migrate)
+
+### Migration & seeder
+
 - Migration: `database/migrations/2026_03_21_000001_create_iam_tables.php`
-- Seeder template: `database/seeders/IamSeeder.php`, `PersediaanRoleSeeder.php`
+- Seeder template: `database/seeders/IamSeeder.php`, `PersediaanRoleSeeder.php`, `CutiPermissionSeeder.php`, `PermissionSikepP1Seeder.php`
+
+### Endpoint & API
+
 - HMAC API contract: `docs/sso-api/authentication.md`
 - Endpoint validate: `docs/sso-api/endpoints.md`
+- Endpoint migrate-slug (UI internal admin): `POST /iam/aplikasi/{aplikasi}/permissions/{permission}/migrate-slug`
+
+### Test guard
+
+- `tests/Feature/Iam/SeederSlugCanonicalTest.php` — regression guard semua seeder utama (4 seeder)
+- `tests/Unit/Rules/ValidIamSlugTest.php` — unit test validator (8 cases)
+- `tests/Unit/Services/Iam/IamPermissionAuditorTest.php` — unit test auditor (8 cases)
+- `tests/Feature/Iam/PermissionSlugMigrateTest.php` — feature test endpoint migrate (5 cases termasuk IDOR + audit log)
+
+### Design doc
+
+- `docs/superpowers/specs/2026-05-16-iam-informative-design.md` — design rationale modul IAM informatif (2026-05-16)
+- `docs/superpowers/plans/2026-05-16-iam-informative-plan.md` — implementation plan TDD
