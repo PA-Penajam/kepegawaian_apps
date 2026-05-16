@@ -39,7 +39,15 @@
     "ses_1e7718c7bffekBnEJAUtNspDQK",
     "ses_1e77121d7ffeE7OHqD4iIByglT",
     "ses_1e7715985ffeQnmnle0ti3AvcT",
-    "ses_1e76a8d57ffeV7hP94cIrh3Dz1"
+    "ses_1e76a8d57ffeV7hP94cIrh3Dz1",
+    "ses_1e762663bffesbBBiCDRoPt82t",
+    "ses_1e7620c4cffe6am0ViV7sreX7T",
+    "ses_1e76240dcffeA0JpdH9xd7HpAR",
+    "ses_1e761b313ffem0NSHVv1VV8NUO",
+    "ses_1e7606242ffeENJZRvmD2cXObs",
+    "ses_1e75df15dffeXbHuS6OOx20IWu",
+    "ses_1e75e50c3ffey50FXTEFgGCv0o",
+    "ses_1e75e2071ffe7IPWbpr05RZ759"
   ],
   "plan_name": "sikep-p1-administrasi",
   "agent": "atlas",
@@ -97,6 +105,15 @@
       "agent": "Sisyphus-Junior",
       "category": "quick",
       "updated_at": "2026-05-11T19:53:06.146Z"
+    },
+    "final-wave:f1": {
+      "task_key": "final-wave:f1",
+      "task_label": "F1",
+      "task_title": "**Plan Compliance Audit** — `oracle`",
+      "session_id": "ses_1e75e2071ffe7IPWbpr05RZ759",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-05-11T20:04:04.645Z"
     }
   }
 }

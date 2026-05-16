@@ -11,9 +11,9 @@ return new class extends Migration
         Schema::create('berkas_checklist_submission_items', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->foreignUlid('berkas_checklist_submission_id')
-                ->constrained('berkas_checklist_submissions')->cascadeOnDelete();
+                ->constrained('berkas_checklist_submissions', 'id', 'fk_bcsi_submission_id')->cascadeOnDelete();
             $table->foreignUlid('berkas_checklist_item_id')
-                ->constrained('berkas_checklist_items')->restrictOnDelete();
+                ->constrained('berkas_checklist_items', 'id', 'fk_bcsi_item_id')->restrictOnDelete();
             $table->string('status')->default('belum_ada');
             $table->text('catatan')->nullable();
             $table->string('file_path', 500)->nullable();
