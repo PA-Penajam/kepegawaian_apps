@@ -81,6 +81,8 @@ Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])->group(func
             Route::post('aplikasi/{aplikasi}/permissions', [PermissionController::class, 'store'])->name('aplikasi.permissions.store');
             Route::put('aplikasi/{aplikasi}/permissions/{permission}', [PermissionController::class, 'update'])->name('aplikasi.permissions.update');
             Route::delete('aplikasi/{aplikasi}/permissions/{permission}', [PermissionController::class, 'destroy'])->name('aplikasi.permissions.destroy');
+            Route::post('aplikasi/{aplikasi}/permissions/{permission}/migrate-slug', [PermissionController::class, 'migrateSlug'])
+                ->name('aplikasi.permissions.migrate-slug');
 
             // User akses
             Route::get('users', [UserAksesController::class, 'index'])->name('users.index');
