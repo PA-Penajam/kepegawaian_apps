@@ -30,6 +30,9 @@ export type IamPermission = {
     id: number;
     iam_application_id: number;
     nama: string;
+    slug: string;
+    group: string | null;
+    keterangan: string | null;
     deskripsi: string | null;
     created_at: string;
     updated_at: string;

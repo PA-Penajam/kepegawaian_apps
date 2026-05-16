@@ -27,7 +27,7 @@ class AplikasiController extends Controller
         return inertia('iam/aplikasi/index', compact('aplikasi'));
     }
 
-    public function show(IamApplication $aplikasi): Response
+    public function show(IamApplication $aplikasi, \App\Services\Iam\IamPermissionAuditor $auditor): Response
     {
         $aplikasi->load(['roles.permissions', 'permissions']);
 
@@ -36,8 +36,15 @@ class AplikasiController extends Controller
         $aplikasiArray['api_key_display'] = $this->maskApiKey($aplikasi->api_key);
         unset($aplikasiArray['api_key']);
 
+        $nonCanonicalCount = $auditor->findNonCanonical()
+            ->filter(fn ($p) => $p['app'] === $aplikasi->slug)
+            ->count();
+
         return inertia('iam/aplikasi/show', [
             'aplikasi' => $aplikasiArray,
+            'permission_audit' => [
+                'non_canonical_count' => $nonCanonicalCount,
+            ],
         ]);
     }
 

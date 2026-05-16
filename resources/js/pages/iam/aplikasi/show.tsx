@@ -1,5 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Copy, Key, Pencil, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Copy, Key, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AlertError from '@/components/alert-error';
 import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
@@ -13,6 +13,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,16 +44,24 @@ import type {
     IamRole,
     IamPermission,
 } from '@/types';
+import { PermissionFormFields } from './components/permission-form-fields';
+import { SlugStatusBadge } from './components/slug-status-badge';
+import { SlugMigrateButton } from './components/slug-migrate-button';
 
 type Props = {
     aplikasi: IamApplication & { api_key_display?: string };
     flash?: {
         api_secret_once?: string;
     };
+    permission_audit?: {
+        non_canonical_count: number;
+    };
 };
 
 export default function Show() {
-    const { aplikasi, flash } = usePage<Props>().props;
+    const { aplikasi, flash, permission_audit } = usePage<Props>().props;
+    const { props: pageProps } = usePage();
+    const iam = (pageProps as unknown as { iam: { slug_pattern: string } }).iam;
     const [showApiSecretModal, setShowApiSecretModal] = useState(false);
     const [apiSecret, setApiSecret] = useState<string | null>(null);
 
@@ -95,17 +104,8 @@ export default function Show() {
         keterangan: '',
     });
 
-    // Auto-generate slug dari nama permission
-    useEffect(() => {
-        const generated = addPermissionForm.data.nama
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9\s\-.:]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-');
-        addPermissionForm.setData('slug', generated);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [addPermissionForm.data.nama]);
+    // Catatan: slug permission dikelola oleh PermissionFormFields (builder/free mode)
+    // useEffect auto-generate slug dari nama sudah dihapus untuk menghindari konflik
 
     // Form untuk regenerate key
     const regenerateForm = useForm({});
@@ -555,6 +555,17 @@ return;
                     {/* Tab Permissions */}
                     <TabsContent value="permissions" className="mt-4">
                         <div className="flex flex-col gap-4">
+                            {(permission_audit?.non_canonical_count ?? 0) > 0 && (
+                                <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/30">
+                                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                                    <AlertTitle>Ada permission yang melanggar konvensi</AlertTitle>
+                                    <AlertDescription>
+                                        {permission_audit?.non_canonical_count} permission di aplikasi ini punya slug non-canonical.
+                                        Cek kolom "Status" pada list, atau jalankan{' '}
+                                        <code className="font-mono text-xs">php artisan iam:audit-slugs</code> untuk laporan lengkap.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
                             <div className="flex justify-end">
                                 <Dialog
                                     open={showAddPermissionDialog}
@@ -590,120 +601,17 @@ return;
                                                     title="Gagal menambahkan permission"
                                                 />
                                             )}
-                                            <div className="grid gap-4 py-4">
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="perm-nama">
-                                                        Nama Permission
-                                                    </Label>
-                                                    <Input
-                                                        id="perm-nama"
-                                                        value={
-                                                            addPermissionForm
-                                                                .data.nama
-                                                        }
-                                                        onChange={(e) =>
-                                                            addPermissionForm.setData(
-                                                                'nama',
-                                                                e.target
-                                                                    .value,
-                                                            )
-                                                        }
-                                                        placeholder="Contoh: create-post"
-                                                        required
-                                                    />
-                                                    {addPermissionForm.errors
-                                                        .nama && (
-                                                        <p className="text-sm text-destructive">
-                                                            {
-                                                                addPermissionForm
-                                                                    .errors
-                                                                    .nama
-                                                            }
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="perm-slug">
-                                                        Slug
-                                                    </Label>
-                                                    <Input
-                                                        id="perm-slug"
-                                                        value={
-                                                            addPermissionForm
-                                                                .data.slug
-                                                        }
-                                                        onChange={(e) =>
-                                                            addPermissionForm.setData(
-                                                                'slug',
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        placeholder="Contoh: post.create"
-                                                        className="font-mono"
-                                                        required
-                                                    />
-                                                    {addPermissionForm.errors
-                                                        .slug && (
-                                                        <p className="text-sm text-destructive">
-                                                            {
-                                                                addPermissionForm
-                                                                    .errors
-                                                                    .slug
-                                                            }
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="perm-group">
-                                                        Group (Opsional)
-                                                    </Label>
-                                                    <Input
-                                                        id="perm-group"
-                                                        value={
-                                                            addPermissionForm
-                                                                .data.group
-                                                        }
-                                                        onChange={(e) =>
-                                                            addPermissionForm.setData(
-                                                                'group',
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        placeholder="Contoh: post"
-                                                    />
-                                                </div>
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="perm-keterangan">
-                                                        Keterangan (Opsional)
-                                                    </Label>
-                                                    <Input
-                                                        id="perm-keterangan"
-                                                        value={
-                                                            addPermissionForm
-                                                                .data
-                                                                .keterangan
-                                                        }
-                                                        onChange={(e) =>
-                                                            addPermissionForm.setData(
-                                                                'keterangan',
-                                                                e.target
-                                                                    .value,
-                                                            )
-                                                        }
-                                                        placeholder="Keterangan permission"
-                                                    />
-                                                    {addPermissionForm.errors
-                                                        .keterangan && (
-                                                        <p className="text-sm text-destructive">
-                                                            {
-                                                                addPermissionForm
-                                                                    .errors
-                                                                    .keterangan
-                                                            }
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
+                                            <PermissionFormFields
+                                                data={{
+                                                    nama: addPermissionForm.data.nama,
+                                                    slug: addPermissionForm.data.slug,
+                                                    group: addPermissionForm.data.group,
+                                                    keterangan: addPermissionForm.data.keterangan,
+                                                }}
+                                                setData={(key, value) => addPermissionForm.setData(key, value)}
+                                                errors={addPermissionForm.errors}
+                                                disabled={addPermissionForm.processing}
+                                            />
                                             <DialogFooter>
                                                 <Button
                                                     variant="outline"
@@ -720,6 +628,11 @@ return;
                                                     type="submit"
                                                     disabled={
                                                         addPermissionForm.processing
+                                                        || !addPermissionForm.data.slug
+                                                        || !PermissionFormFields.isSlugValid(
+                                                            addPermissionForm.data.slug,
+                                                            iam.slug_pattern,
+                                                        )
                                                     }
                                                 >
                                                     {addPermissionForm.processing
@@ -740,6 +653,7 @@ return;
                                                 Nama Permission
                                             </TableHead>
                                             <TableHead>Deskripsi</TableHead>
+                                            <TableHead>Status</TableHead>
                                             <TableHead className="w-[100px] text-center">
                                                 Aksi
                                             </TableHead>
@@ -750,7 +664,7 @@ return;
                                         aplikasi.permissions.length === 0 ? (
                                             <TableRow>
                                                 <TableCell
-                                                    colSpan={3}
+                                                    colSpan={4}
                                                     className="text-center"
                                                 >
                                                     Belum ada permission
@@ -764,6 +678,16 @@ return;
                                                     </TableCell>
                                                     <TableCell>
                                                         {perm.deskripsi ?? '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-2">
+                                                            <SlugStatusBadge slug={perm.slug} />
+                                                            <SlugMigrateButton
+                                                                aplikasiId={String(aplikasi.id)}
+                                                                permissionId={String(perm.id)}
+                                                                slug={perm.slug}
+                                                            />
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center justify-center gap-2">
