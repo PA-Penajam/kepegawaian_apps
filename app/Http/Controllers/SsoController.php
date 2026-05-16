@@ -9,10 +9,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SsoController extends Controller
 {
-    public function login(Request $request): RedirectResponse|JsonResponse
+    public function login(Request $request): RedirectResponse|JsonResponse|Response
     {
         try {
             $validated = $request->validate([
@@ -39,7 +41,7 @@ class SsoController extends Controller
     }
 
     /** Dipanggil setelah login berhasil jika ada SSO session */
-    public function callback(Request $request): RedirectResponse
+    public function callback(Request $request): RedirectResponse|Response
     {
         $appSlug = session()->pull('sso_app');
         $redirect = session()->pull('sso_redirect');
@@ -64,7 +66,7 @@ class SsoController extends Controller
         return $this->generateCodeAndRedirect($request->user()->id, $app, $redirect);
     }
 
-    private function generateCodeAndRedirect(string $userId, IamApplication $app, string $redirectUrl): RedirectResponse
+    private function generateCodeAndRedirect(string $userId, IamApplication $app, string $redirectUrl): RedirectResponse|Response
     {
         // Validasi host: redirect harus ke domain yang sama persis dengan app terdaftar
         $appHost = parse_url($app->url, PHP_URL_HOST);
@@ -85,7 +87,10 @@ class SsoController extends Controller
         ]);
 
         $separator = str_contains($redirectUrl, '?') ? '&' : '?';
+        $destination = $redirectUrl.$separator.'code='.$code;
 
-        return redirect($redirectUrl.$separator.'code='.$code);
+        // Gunakan Inertia::location() agar browser melakukan window.location = url
+        // (full page navigation), bukan XHR redirect yang diblokir CORS.
+        return Inertia::location($destination);
     }
 }
