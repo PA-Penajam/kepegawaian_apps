@@ -608,7 +608,7 @@ return;
                                                     group: addPermissionForm.data.group,
                                                     keterangan: addPermissionForm.data.keterangan,
                                                 }}
-                                                setData={(key, value) => addPermissionForm.setData(key, value)}
+                                                setData={(key, value) => addPermissionForm.setData(key, value as never)}
                                                 errors={addPermissionForm.errors}
                                                 disabled={addPermissionForm.processing}
                                             />
