@@ -168,7 +168,7 @@ export function AppSidebar() {
           ]
         : [];
 
-    const iamNavItems: NavItem[] = hasPermission('iam-manage')
+    const iamNavItems: NavItem[] = hasPermission('iam.manage')
         ? [
               {
                   title: 'Aplikasi',

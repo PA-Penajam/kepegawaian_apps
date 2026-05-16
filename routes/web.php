@@ -61,7 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('cuti/pengajuan/{id}/pdf', [CutiPdfController::class, 'show'])->name('cuti.pengajuan.pdf');
 });
 
-Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])->group(function () {
+Route::middleware(['auth', 'verified', 'iam.permission:iam.manage'])->group(function () {
     Route::get('activity-log', [ActivityLogController::class, 'index'])
         ->name('activity-log.index');
 

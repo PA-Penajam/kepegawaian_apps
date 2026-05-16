@@ -8,7 +8,7 @@ class StoreUserAksesRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->hasPermission('iam-manage') ?? false;
+        return $this->user()?->hasPermission('iam.manage') ?? false;
     }
 
     public function rules(): array
