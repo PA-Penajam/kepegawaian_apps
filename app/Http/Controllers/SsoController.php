@@ -37,7 +37,7 @@ class SsoController extends Controller
             return redirect()->route('login');
         }
 
-        return $this->generateCodeAndRedirect($request->user()->id, $app, $validated['redirect']);
+        return $this->generateCodeAndRedirect($request, $request->user()->id, $app, $validated['redirect']);
     }
 
     /** Dipanggil setelah login berhasil jika ada SSO session */
@@ -63,10 +63,10 @@ class SsoController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return $this->generateCodeAndRedirect($request->user()->id, $app, $redirect);
+        return $this->generateCodeAndRedirect($request, $request->user()->id, $app, $redirect);
     }
 
-    private function generateCodeAndRedirect(string $userId, IamApplication $app, string $redirectUrl): RedirectResponse|Response
+    private function generateCodeAndRedirect(Request $request, string $userId, IamApplication $app, string $redirectUrl): RedirectResponse|Response
     {
         // Validasi host: redirect harus ke domain yang sama persis dengan app terdaftar
         $appHost = parse_url($app->url, PHP_URL_HOST);
@@ -89,8 +89,12 @@ class SsoController extends Controller
         $separator = str_contains($redirectUrl, '?') ? '&' : '?';
         $destination = $redirectUrl.$separator.'code='.$code;
 
-        // Gunakan Inertia::location() agar browser melakukan window.location = url
-        // (full page navigation), bukan XHR redirect yang diblokir CORS.
-        return Inertia::location($destination);
+        // Inertia request → Inertia::location() (409 + X-Inertia-Location header)
+        // Browser navigation biasa → redirect()->away() (302 redirect)
+        if ($request->header('X-Inertia')) {
+            return Inertia::location($destination);
+        }
+
+        return redirect()->away($destination);
     }
 }
