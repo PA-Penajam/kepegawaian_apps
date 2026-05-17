@@ -162,3 +162,42 @@ test('POST /acknowledge-secret denied 403 for is_system app', function () {
         ->post("/iam/aplikasi/{$app->id}/acknowledge-secret")
         ->assertForbidden();
 });
+
+test('POST /regenerate-key respects rate limit: 5 per hour per user, 6th gets blocked', function () {
+    $app = IamApplication::factory()->create(['is_system' => false]);
+
+    \Illuminate\Support\Facades\RateLimiter::clear('iam-regenerate:'.$this->admin->id);
+
+    for ($i = 1; $i <= 5; $i++) {
+        $this->actingAs($this->admin)
+            ->post("/iam/aplikasi/{$app->id}/regenerate-key")
+            ->assertRedirect();
+    }
+
+    $response = $this->actingAs($this->admin)
+        ->post("/iam/aplikasi/{$app->id}/regenerate-key");
+
+    $response->assertRedirect();
+    $response->assertSessionHas('error');
+    $errorMsg = session('error');
+    expect($errorMsg)->toContain('batas regenerasi');
+});
+
+test('rate limit terpisah per user', function () {
+    $admin2 = Pegawai::factory()->admin()->create();
+    $app = IamApplication::factory()->create(['is_system' => false]);
+
+    \Illuminate\Support\Facades\RateLimiter::clear('iam-regenerate:'.$this->admin->id);
+    \Illuminate\Support\Facades\RateLimiter::clear('iam-regenerate:'.$admin2->id);
+
+    for ($i = 1; $i <= 5; $i++) {
+        $this->actingAs($this->admin)
+            ->post("/iam/aplikasi/{$app->id}/regenerate-key")
+            ->assertRedirect();
+    }
+
+    $this->actingAs($admin2)
+        ->post("/iam/aplikasi/{$app->id}/regenerate-key")
+        ->assertRedirect()
+        ->assertSessionMissing('error');
+});
