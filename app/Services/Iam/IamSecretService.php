@@ -5,12 +5,13 @@ namespace App\Services\Iam;
 use App\Models\IamApplication;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Crypt;
 
 class IamSecretService
 {
     private const CACHE_KEY_PREFIX = 'iam:secret:recovery:';
+
     private const CACHE_TTL_MINUTES = 15;
+
     private const ACTIVITY_LOG_NAME = 'iam_audit';
 
     public function __construct(
@@ -88,7 +89,7 @@ class IamSecretService
     public function getRecoveryTtlSeconds(IamApplication $app): int
     {
         $expiresAt = \DB::table('cache')
-            ->where('key', config('cache.prefix') . $this->cacheKey($app))
+            ->where('key', config('cache.prefix').$this->cacheKey($app))
             ->value('expiration');
 
         if ($expiresAt === null) {
@@ -102,7 +103,7 @@ class IamSecretService
 
     private function cacheKey(IamApplication $app): string
     {
-        return self::CACHE_KEY_PREFIX . $app->id;
+        return self::CACHE_KEY_PREFIX.$app->id;
     }
 
     private function putRecoveryCache(IamApplication $app, string $secret): void

@@ -5,6 +5,7 @@ use App\Services\Iam\IamSecretService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
@@ -71,7 +72,7 @@ test('regenerate logs activity with previous_key_prefix', function () {
 
     $this->service->regenerate($this->iamApp);
 
-    $activity = \Spatie\Activitylog\Models\Activity::query()
+    $activity = Activity::query()
         ->where('log_name', 'iam_audit')
         ->where('event', 'secret.regenerated')
         ->latest('id')
@@ -89,7 +90,7 @@ test('recoverFromCache returns plaintext when cache hit and logs viewed event', 
 
     expect($result)->toBe('CACHED_SECRET_PLAINTEXT');
 
-    $activity = \Spatie\Activitylog\Models\Activity::query()
+    $activity = Activity::query()
         ->where('log_name', 'iam_audit')
         ->where('event', 'secret.recovery_viewed')
         ->latest('id')
@@ -106,7 +107,7 @@ test('recoverFromCache returns null when cache miss and does not log', function 
 
     expect($result)->toBeNull();
 
-    $activityCount = \Spatie\Activitylog\Models\Activity::query()
+    $activityCount = Activity::query()
         ->where('log_name', 'iam_audit')
         ->where('event', 'secret.recovery_viewed')
         ->count();
@@ -131,7 +132,7 @@ test('invalidateRecovery removes cache and logs acknowledged event', function ()
 
     expect(Cache::has("iam:secret:recovery:{$this->iamApp->id}"))->toBeFalse();
 
-    $activity = \Spatie\Activitylog\Models\Activity::query()
+    $activity = Activity::query()
         ->where('log_name', 'iam_audit')
         ->where('event', 'secret.recovery_acknowledged')
         ->latest('id')
