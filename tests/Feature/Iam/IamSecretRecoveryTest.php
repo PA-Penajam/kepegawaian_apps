@@ -40,3 +40,46 @@ test('POST /iam/aplikasi creates app, flashes api_secret_once, caches plaintext,
     expect($activity->properties['app_slug'])->toBe('new-test-app');
     expect($activity->properties['ip'])->not->toBeNull();
 });
+
+test('GET /iam/aplikasi/{id} exposes recovery_status props correctly', function () {
+    $app = IamApplication::factory()->create(['is_system' => false]);
+    Cache::put("iam:secret:recovery:{$app->id}", 'TEST_RECOVERABLE_PLAINTEXT', now()->addMinutes(15));
+
+    $response = $this->actingAs($this->admin)->get("/iam/aplikasi/{$app->id}");
+    $response->assertOk();
+
+    $props = $response->viewData('page')['props'];
+    expect($props['recovery_status']['recoverable'])->toBeTrue();
+    expect($props['recovery_status']['ttl_remaining_secs'])->toBeGreaterThan(0);
+});
+
+test('GET /iam/aplikasi/{id} returns recoverable=false when cache empty', function () {
+    $app = IamApplication::factory()->create(['is_system' => false]);
+    Cache::forget("iam:secret:recovery:{$app->id}");
+
+    $response = $this->actingAs($this->admin)->get("/iam/aplikasi/{$app->id}");
+    $response->assertOk();
+
+    $props = $response->viewData('page')['props'];
+    expect($props['recovery_status']['recoverable'])->toBeFalse();
+    expect($props['recovery_status']['ttl_remaining_secs'])->toBe(0);
+});
+
+test('GET /iam/aplikasi exposes secret_recoverable on each app row', function () {
+    $appWith = IamApplication::factory()->create(['slug' => 'with-cache']);
+    $appWithout = IamApplication::factory()->create(['slug' => 'without-cache']);
+
+    Cache::put("iam:secret:recovery:{$appWith->id}", 'X', now()->addMinutes(15));
+    Cache::forget("iam:secret:recovery:{$appWithout->id}");
+
+    $response = $this->actingAs($this->admin)->get('/iam/aplikasi');
+    $response->assertOk();
+
+    $list = $response->viewData('page')['props']['aplikasi'];
+
+    $rowWith = collect($list)->firstWhere('slug', 'with-cache');
+    $rowWithout = collect($list)->firstWhere('slug', 'without-cache');
+
+    expect($rowWith['secret_recoverable'])->toBeTrue();
+    expect($rowWithout['secret_recoverable'])->toBeFalse();
+});
