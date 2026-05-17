@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -60,6 +61,7 @@ class Handler
      *
      * Exception yang di-skip:
      * - HttpException dan subclass-nya (403, 404, 405, 429, dll)
+     * - HttpResponseException (short-circuit response, misalnya dari throttle middleware)
      * - AuthenticationException (sudah ditangani SSO handler)
      * - ValidationException (ditangani Laravel)
      */
@@ -67,6 +69,12 @@ class Handler
     {
         // HTTP exception — biarkan Laravel menangani dengan status code yang benar
         if ($e instanceof HttpException) {
+            return true;
+        }
+
+        // HttpResponseException — short-circuit response dari framework (throttle, dll)
+        // Response yang dibungkus di dalamnya sudah merupakan response final yang valid
+        if ($e instanceof HttpResponseException) {
             return true;
         }
 

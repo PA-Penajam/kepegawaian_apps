@@ -73,6 +73,7 @@ Route::middleware(['auth', 'verified', 'iam.permission:iam.manage'])->group(func
             Route::resource('aplikasi', AplikasiController::class)
                 ->except(['create']);
             Route::post('aplikasi/{aplikasi}/regenerate-key', [AplikasiController::class, 'regenerateKey'])
+                ->middleware('throttle:iam-regenerate')
                 ->name('aplikasi.regenerate-key');
             Route::post('aplikasi/{aplikasi}/recover-secret', [IamSecretRecoveryController::class, 'show'])
                 ->name('aplikasi.recover-secret');
