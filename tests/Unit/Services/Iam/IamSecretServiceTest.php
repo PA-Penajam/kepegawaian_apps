@@ -49,3 +49,35 @@ test('generateAndStore creates new credentials, persists hash, caches plaintext'
     $cached = Cache::get("iam:secret:recovery:{$this->iamApp->id}");
     expect($cached)->toBe($plaintext);
 });
+
+test('regenerate overwrites existing credentials and old cache key', function () {
+    Cache::put("iam:secret:recovery:{$this->iamApp->id}", 'OLD_PLAINTEXT', now()->addMinutes(15));
+
+    $oldKey = $this->iamApp->api_key;
+    $newPlaintext = $this->service->regenerate($this->iamApp);
+
+    $this->iamApp->refresh();
+
+    expect($this->iamApp->api_key)->not->toBe($oldKey);
+
+    $cached = Cache::get("iam:secret:recovery:{$this->iamApp->id}");
+    expect($cached)->toBe($newPlaintext);
+    expect($cached)->not->toBe('OLD_PLAINTEXT');
+});
+
+test('regenerate logs activity with previous_key_prefix', function () {
+    $oldKey = $this->iamApp->api_key;
+    $expectedPrefix = substr($oldKey, 0, 8);
+
+    $this->service->regenerate($this->iamApp);
+
+    $activity = \Spatie\Activitylog\Models\Activity::query()
+        ->where('log_name', 'iam_audit')
+        ->where('event', 'secret.regenerated')
+        ->latest('id')
+        ->first();
+
+    expect($activity)->not->toBeNull();
+    expect($activity->properties['previous_key_prefix'])->toBe($expectedPrefix);
+    expect($activity->properties['app_slug'])->toBe($this->iamApp->slug);
+});
