@@ -9,6 +9,7 @@ use App\Http\Controllers\Cuti\PengajuanController;
 use App\Http\Controllers\Cuti\SaldoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Iam\AplikasiController;
+use App\Http\Controllers\Iam\IamSecretRecoveryController;
 use App\Http\Controllers\Iam\PermissionController;
 use App\Http\Controllers\Iam\RoleController;
 use App\Http\Controllers\Iam\UserAksesController;
@@ -73,6 +74,10 @@ Route::middleware(['auth', 'verified', 'iam.permission:iam.manage'])->group(func
                 ->except(['create']);
             Route::post('aplikasi/{aplikasi}/regenerate-key', [AplikasiController::class, 'regenerateKey'])
                 ->name('aplikasi.regenerate-key');
+            Route::post('aplikasi/{aplikasi}/recover-secret', [IamSecretRecoveryController::class, 'show'])
+                ->name('aplikasi.recover-secret');
+            Route::post('aplikasi/{aplikasi}/acknowledge-secret', [IamSecretRecoveryController::class, 'acknowledge'])
+                ->name('aplikasi.acknowledge-secret');
 
             // Role & Permission (nested under aplikasi)
             Route::post('aplikasi/{aplikasi}/roles', [RoleController::class, 'store'])->name('aplikasi.roles.store');
