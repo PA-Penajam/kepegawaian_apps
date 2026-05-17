@@ -124,3 +124,41 @@ test('POST /recover-secret denied 403 for is_system app', function () {
         ->post("/iam/aplikasi/{$app->id}/recover-secret")
         ->assertForbidden();
 });
+
+test('POST /acknowledge-secret removes cache and logs acknowledged event', function () {
+    $app = IamApplication::factory()->create(['is_system' => false]);
+    Cache::put("iam:secret:recovery:{$app->id}", 'WILL_BE_FORGOTTEN', now()->addMinutes(15));
+
+    $this->actingAs($this->admin)
+        ->post("/iam/aplikasi/{$app->id}/acknowledge-secret")
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect(Cache::has("iam:secret:recovery:{$app->id}"))->toBeFalse();
+
+    $activity = Activity::query()
+        ->where('log_name', 'iam_audit')
+        ->where('event', 'secret.recovery_acknowledged')
+        ->where('subject_id', $app->id)
+        ->latest('id')
+        ->first();
+
+    expect($activity)->not->toBeNull();
+});
+
+test('POST /acknowledge-secret is idempotent when cache already empty', function () {
+    $app = IamApplication::factory()->create(['is_system' => false]);
+    Cache::forget("iam:secret:recovery:{$app->id}");
+
+    $this->actingAs($this->admin)
+        ->post("/iam/aplikasi/{$app->id}/acknowledge-secret")
+        ->assertRedirect();
+});
+
+test('POST /acknowledge-secret denied 403 for is_system app', function () {
+    $app = IamApplication::factory()->create(['is_system' => true]);
+
+    $this->actingAs($this->admin)
+        ->post("/iam/aplikasi/{$app->id}/acknowledge-secret")
+        ->assertForbidden();
+});
