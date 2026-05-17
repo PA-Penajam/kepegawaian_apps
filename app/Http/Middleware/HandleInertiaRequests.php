@@ -55,6 +55,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
+                'api_secret_once' => $request->session()->get('api_secret_once'),
             ],
             'iam' => fn () => [
                 'slug_pattern' => config('iam.slug.pattern'),
