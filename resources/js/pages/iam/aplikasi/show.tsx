@@ -56,10 +56,14 @@ type Props = {
     permission_audit?: {
         non_canonical_count: number;
     };
+    recovery_status?: {
+        recoverable: boolean;
+        ttl_remaining_secs: number;
+    };
 };
 
 export default function Show() {
-    const { aplikasi, flash, permission_audit } = usePage<Props>().props;
+    const { aplikasi, flash, permission_audit, recovery_status } = usePage<Props>().props;
     const { props: pageProps } = usePage();
     const iam = (pageProps as unknown as { iam: { slug_pattern: string } }).iam;
     const [showApiSecretModal, setShowApiSecretModal] = useState(false);
@@ -109,6 +113,23 @@ export default function Show() {
 
     // Form untuk regenerate key
     const regenerateForm = useForm({});
+
+    // Form untuk recover & acknowledge secret
+    const recoverForm = useForm({});
+    const acknowledgeForm = useForm({});
+
+    const handleRecoverSecret = useCallback(() => {
+        recoverForm.post(`/iam/aplikasi/${aplikasi.id}/recover-secret`);
+    }, [aplikasi.id, recoverForm]);
+
+    const handleAcknowledgeSecret = useCallback(() => {
+        acknowledgeForm.post(`/iam/aplikasi/${aplikasi.id}/acknowledge-secret`, {
+            onSuccess: () => {
+                setShowApiSecretModal(false);
+                setApiSecret(null);
+            },
+        });
+    }, [aplikasi.id, acknowledgeForm]);
 
     // Form untuk delete
     const deleteForm = useForm({});
@@ -841,6 +862,36 @@ return;
                                         </Button>
                                     </div>
                                 </div>
+                                {recovery_status?.recoverable && !aplikasi.is_system && (
+                                    <div className="rounded-md border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30 p-4">
+                                        <h3 className="mb-2 flex items-center gap-2 font-medium text-amber-900 dark:text-amber-100">
+                                            <Key className="h-4 w-4" aria-hidden="true" />
+                                            Secret bisa dipulihkan
+                                        </h3>
+                                        <p className="mb-3 text-sm text-amber-800 dark:text-amber-200">
+                                            Sisa waktu: {Math.floor(recovery_status.ttl_remaining_secs / 60)} menit{' '}
+                                            {(recovery_status.ttl_remaining_secs % 60).toString().padStart(2, '0')} detik
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={handleRecoverSecret}
+                                                disabled={recoverForm.processing}
+                                            >
+                                                Tampilkan Ulang Secret
+                                            </Button>
+                                            <Button
+                                                variant="default"
+                                                size="sm"
+                                                onClick={handleAcknowledgeSecret}
+                                                disabled={acknowledgeForm.processing}
+                                            >
+                                                Saya sudah simpan
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                                 {!aplikasi.is_system && (
                                     <div>
                                         <h3 className="mb-1 text-sm font-medium text-muted-foreground">
@@ -906,6 +957,9 @@ return;
                 apiSecret={apiSecret ?? undefined}
                 open={showApiSecretModal}
                 onClose={() => setShowApiSecretModal(false)}
+                ttlRemainingSecs={recovery_status?.ttl_remaining_secs ?? 0}
+                onAcknowledge={handleAcknowledgeSecret}
+                acknowledging={acknowledgeForm.processing}
             />
         </AppLayout>
     );

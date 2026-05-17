@@ -9,6 +9,7 @@ export type IamApplication = {
     api_key_display?: string; // API key yang sudah di-mask, bukan full key
     is_active: boolean;
     is_system: boolean;
+    secret_recoverable?: boolean; // Apakah secret masih bisa di-recover dari cache
     roles_count?: number;
     roles?: IamRole[];
     permissions?: IamPermission[];
@@ -72,6 +73,16 @@ export type IamAvailableApp = {
     nama: string;
     slug: string;
     roles: IamRole[];
+};
+
+/**
+ * Status recovery secret di halaman show aplikasi.
+ * recoverable=true berarti cache masih ada dan user bisa klik "Tampilkan Ulang".
+ * ttl_remaining_secs untuk countdown timer di UI.
+ */
+export type IamRecoveryStatus = {
+    recoverable: boolean;
+    ttl_remaining_secs: number;
 };
 
 // Interface untuk data paginasi dari Laravel
