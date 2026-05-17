@@ -12,13 +12,14 @@ use Inertia\Response;
 
 class AplikasiController extends Controller
 {
-    public function index(): Response
+    public function index(\App\Services\Iam\IamSecretService $secretService): Response
     {
         $aplikasi = IamApplication::withCount('roles')
             ->latest()
             ->get()
-            ->map(function ($app) {
+            ->map(function ($app) use ($secretService) {
                 $app->api_key_display = $this->maskApiKey($app->api_key);
+                $app->secret_recoverable = $secretService->hasRecoverableSecret($app);
                 unset($app->api_key);
 
                 return $app;
@@ -27,8 +28,11 @@ class AplikasiController extends Controller
         return inertia('iam/aplikasi/index', compact('aplikasi'));
     }
 
-    public function show(IamApplication $aplikasi, \App\Services\Iam\IamPermissionAuditor $auditor): Response
-    {
+    public function show(
+        IamApplication $aplikasi,
+        \App\Services\Iam\IamPermissionAuditor $auditor,
+        \App\Services\Iam\IamSecretService $secretService,
+    ): Response {
         $aplikasi->load(['roles.permissions', 'permissions']);
 
         // Mask api_key — tampilkan 4 karakter pertama dan 8 terakhir saja
@@ -44,6 +48,10 @@ class AplikasiController extends Controller
             'aplikasi' => $aplikasiArray,
             'permission_audit' => [
                 'non_canonical_count' => $nonCanonicalCount,
+            ],
+            'recovery_status' => [
+                'recoverable' => $secretService->hasRecoverableSecret($aplikasi),
+                'ttl_remaining_secs' => $secretService->getRecoveryTtlSeconds($aplikasi),
             ],
         ]);
     }
