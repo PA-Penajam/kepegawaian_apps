@@ -123,3 +123,46 @@ test('recoverFromCache idempotent: cache tidak hilang setelah view', function ()
     expect($first)->toBe('STAYS_VISIBLE');
     expect($second)->toBe('STAYS_VISIBLE');
 });
+
+test('invalidateRecovery removes cache and logs acknowledged event', function () {
+    Cache::put("iam:secret:recovery:{$this->iamApp->id}", 'TO_BE_REMOVED', now()->addMinutes(15));
+
+    $this->service->invalidateRecovery($this->iamApp);
+
+    expect(Cache::has("iam:secret:recovery:{$this->iamApp->id}"))->toBeFalse();
+
+    $activity = \Spatie\Activitylog\Models\Activity::query()
+        ->where('log_name', 'iam_audit')
+        ->where('event', 'secret.recovery_acknowledged')
+        ->latest('id')
+        ->first();
+
+    expect($activity)->not->toBeNull();
+});
+
+test('invalidateRecovery is idempotent when cache already empty', function () {
+    Cache::forget("iam:secret:recovery:{$this->iamApp->id}");
+
+    $this->service->invalidateRecovery($this->iamApp);
+
+    expect(Cache::has("iam:secret:recovery:{$this->iamApp->id}"))->toBeFalse();
+});
+
+test('hasRecoverableSecret returns true when cache exists, false when empty', function () {
+    Cache::forget("iam:secret:recovery:{$this->iamApp->id}");
+    expect($this->service->hasRecoverableSecret($this->iamApp))->toBeFalse();
+
+    Cache::put("iam:secret:recovery:{$this->iamApp->id}", 'X', now()->addMinutes(15));
+    expect($this->service->hasRecoverableSecret($this->iamApp))->toBeTrue();
+});
+
+test('getRecoveryTtlSeconds returns positive int when cache exists, 0 when miss', function () {
+    Cache::forget("iam:secret:recovery:{$this->iamApp->id}");
+    expect($this->service->getRecoveryTtlSeconds($this->iamApp))->toBe(0);
+
+    Cache::put("iam:secret:recovery:{$this->iamApp->id}", 'X', now()->addMinutes(15));
+    $ttl = $this->service->getRecoveryTtlSeconds($this->iamApp);
+
+    expect($ttl)->toBeGreaterThan(0);
+    expect($ttl)->toBeLessThanOrEqual(900);
+});
