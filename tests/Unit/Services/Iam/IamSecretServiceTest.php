@@ -81,3 +81,45 @@ test('regenerate logs activity with previous_key_prefix', function () {
     expect($activity->properties['previous_key_prefix'])->toBe($expectedPrefix);
     expect($activity->properties['app_slug'])->toBe($this->iamApp->slug);
 });
+
+test('recoverFromCache returns plaintext when cache hit and logs viewed event', function () {
+    Cache::put("iam:secret:recovery:{$this->iamApp->id}", 'CACHED_SECRET_PLAINTEXT', now()->addMinutes(15));
+
+    $result = $this->service->recoverFromCache($this->iamApp);
+
+    expect($result)->toBe('CACHED_SECRET_PLAINTEXT');
+
+    $activity = \Spatie\Activitylog\Models\Activity::query()
+        ->where('log_name', 'iam_audit')
+        ->where('event', 'secret.recovery_viewed')
+        ->latest('id')
+        ->first();
+
+    expect($activity)->not->toBeNull();
+    expect($activity->properties['app_slug'])->toBe($this->iamApp->slug);
+});
+
+test('recoverFromCache returns null when cache miss and does not log', function () {
+    Cache::forget("iam:secret:recovery:{$this->iamApp->id}");
+
+    $result = $this->service->recoverFromCache($this->iamApp);
+
+    expect($result)->toBeNull();
+
+    $activityCount = \Spatie\Activitylog\Models\Activity::query()
+        ->where('log_name', 'iam_audit')
+        ->where('event', 'secret.recovery_viewed')
+        ->count();
+
+    expect($activityCount)->toBe(0);
+});
+
+test('recoverFromCache idempotent: cache tidak hilang setelah view', function () {
+    Cache::put("iam:secret:recovery:{$this->iamApp->id}", 'STAYS_VISIBLE', now()->addMinutes(15));
+
+    $first = $this->service->recoverFromCache($this->iamApp);
+    $second = $this->service->recoverFromCache($this->iamApp);
+
+    expect($first)->toBe('STAYS_VISIBLE');
+    expect($second)->toBe('STAYS_VISIBLE');
+});
