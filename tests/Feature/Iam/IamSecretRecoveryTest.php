@@ -85,3 +85,42 @@ test('GET /iam/aplikasi exposes secret_recoverable on each app row', function ()
     expect($rowWith['secret_recoverable'])->toBeTrue();
     expect($rowWithout['secret_recoverable'])->toBeFalse();
 });
+
+test('POST /recover-secret returns plaintext via flash when within TTL', function () {
+    $app = IamApplication::factory()->create(['is_system' => false]);
+    Cache::put("iam:secret:recovery:{$app->id}", 'RECOVERED_PLAIN_64CHARS', now()->addMinutes(15));
+
+    $this->actingAs($this->admin)
+        ->post("/iam/aplikasi/{$app->id}/recover-secret")
+        ->assertRedirect()
+        ->assertSessionHas('api_secret_once', 'RECOVERED_PLAIN_64CHARS');
+
+    $activity = Activity::query()
+        ->where('log_name', 'iam_audit')
+        ->where('event', 'secret.recovery_viewed')
+        ->where('subject_id', $app->id)
+        ->latest('id')
+        ->first();
+
+    expect($activity)->not->toBeNull();
+});
+
+test('POST /recover-secret flashes error when cache expired', function () {
+    $app = IamApplication::factory()->create(['is_system' => false]);
+    Cache::forget("iam:secret:recovery:{$app->id}");
+
+    $this->actingAs($this->admin)
+        ->post("/iam/aplikasi/{$app->id}/recover-secret")
+        ->assertRedirect()
+        ->assertSessionMissing('api_secret_once')
+        ->assertSessionHas('error');
+});
+
+test('POST /recover-secret denied 403 for is_system app', function () {
+    $app = IamApplication::factory()->create(['is_system' => true]);
+    Cache::put("iam:secret:recovery:{$app->id}", 'X', now()->addMinutes(15));
+
+    $this->actingAs($this->admin)
+        ->post("/iam/aplikasi/{$app->id}/recover-secret")
+        ->assertForbidden();
+});
