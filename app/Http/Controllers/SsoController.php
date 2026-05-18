@@ -5,21 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\IamApplication;
 use App\Models\IamSsoCode;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
-use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 class SsoController extends Controller
 {
-    public function login(Request $request): RedirectResponse|JsonResponse|Response
+    public function login(Request $request): Response
     {
         try {
             $validated = $request->validate([
                 'app' => 'required|string',
                 'redirect' => 'required|url',
+                'state' => 'nullable|string|max:128',
             ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
@@ -31,20 +31,28 @@ class SsoController extends Controller
             abort(404, 'Aplikasi tidak ditemukan');
         }
 
+        // Simpan state dari client app untuk di-pass balik setelah login
+        $state = $validated['state'] ?? null;
+
         if (! $request->user()) {
-            session(['sso_app' => $validated['app'], 'sso_redirect' => $validated['redirect']]);
+            session([
+                'sso_app' => $validated['app'],
+                'sso_redirect' => $validated['redirect'],
+                'sso_state' => $state,
+            ]);
 
             return redirect()->route('login');
         }
 
-        return $this->generateCodeAndRedirect($request, $request->user()->id, $app, $validated['redirect']);
+        return $this->generateCodeAndRedirect($request, $request->user()->id, $app, $validated['redirect'], $state);
     }
 
     /** Dipanggil setelah login berhasil jika ada SSO session */
-    public function callback(Request $request): RedirectResponse|Response
+    public function callback(Request $request): Response
     {
         $appSlug = session()->pull('sso_app');
         $redirect = session()->pull('sso_redirect');
+        $state = session()->pull('sso_state');
 
         if (! $appSlug || ! $redirect) {
             return redirect()->route('dashboard');
@@ -63,10 +71,10 @@ class SsoController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return $this->generateCodeAndRedirect($request, $request->user()->id, $app, $redirect);
+        return $this->generateCodeAndRedirect($request, $request->user()->id, $app, $redirect, $state);
     }
 
-    private function generateCodeAndRedirect(Request $request, string $userId, IamApplication $app, string $redirectUrl): RedirectResponse|Response
+    private function generateCodeAndRedirect(Request $request, string $userId, IamApplication $app, string $redirectUrl, ?string $state = null): Response
     {
         // Validasi host: redirect harus ke domain yang sama persis dengan app terdaftar
         $appHost = parse_url($app->url, PHP_URL_HOST);
@@ -88,6 +96,11 @@ class SsoController extends Controller
 
         $separator = str_contains($redirectUrl, '?') ? '&' : '?';
         $destination = $redirectUrl.$separator.'code='.$code;
+
+        // Pass state back to client app for CSRF validation
+        if ($state) {
+            $destination .= '&state=' . urlencode($state);
+        }
 
         // Inertia request → Inertia::location() (409 + X-Inertia-Location header)
         // Browser navigation biasa → redirect()->away() (302 redirect)
