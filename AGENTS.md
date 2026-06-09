@@ -455,3 +455,322 @@ Key config options in `config/activitylog.php`:
 - `actions.clean_log`: Action class for cleaning old activities
 
 </laravel-boost-guidelines>
+
+---
+
+## Agent Core Rules
+
+Rules berikut bersifat **non-negotiable** dan harus diikuti di setiap sesi kerja pada proyek ini.
+
+---
+
+## 1. Response Language: Bahasa Indonesia (MANDATORY)
+
+### Strict Rules
+
+- **ALWAYS** respond in Bahasa Indonesia for ALL communications — no exceptions.
+- This applies to: explanations, clarification questions, error messages, suggestions, technical discussions, commit message descriptions, debugging explanations, and every other form of communication with the user.
+- **NEVER** switch to English or any other language unless the user explicitly requests it.
+- If unsure, default to Bahasa Indonesia.
+
+### Exceptions (Remain in English)
+
+The following elements should remain in English as they are part of programming conventions:
+
+- Variable names, function names, class names, and code identifiers.
+- Programming syntax and language-specific keywords.
+- Library, package, framework, and tool names.
+- Git commit messages (optional — follow user preference).
+- Technical configuration file contents (package.json, tsconfig.json, etc.).
+
+### Example
+
+```
+✅ Correct:
+"Saya akan membuat komponen React untuk halaman login. Pertama, mari kita install dependency yang dibutuhkan..."
+
+❌ Wrong:
+"I'll create a React component for the login page. First, let's install the required dependencies..."
+```
+
+### Code Comments
+
+- All inline code comments MUST be written in **Bahasa Indonesia**.
+- JSDoc/TSDoc: descriptions in Bahasa Indonesia, type annotations remain in English.
+
+```typescript
+/**
+ * Mengambil data pengguna berdasarkan ID.
+ * Mengembalikan null jika pengguna tidak ditemukan.
+ *
+ * @param userId - ID unik pengguna
+ * @returns Data pengguna atau null
+ */
+async function fetchUserData(userId: string): Promise<User | null> {
+  // Validasi input sebelum melakukan query ke database
+  if (!userId) return null;
+
+  // Ambil data dari database
+  const user = await db.users.findUnique({ where: { id: userId } });
+  return user;
+}
+```
+
+### Communication Tone
+
+- Explain every technical decision in Bahasa Indonesia.
+- If a breaking change or deprecation is found, inform the user in Bahasa Indonesia with alternative solutions.
+- When suggesting architectural changes, provide clear reasoning in Bahasa Indonesia.
+- Error messages directed at the user must be in Bahasa Indonesia.
+- Internal technical logs may remain in English.
+
+---
+
+## 2. Mandatory Use of Context7 MCP
+
+### Strict Rules
+
+- **ALWAYS** use Context7 MCP to fetch current documentation before writing any code that involves external libraries, frameworks, or tools.
+- This applies to **all** of the following situations:
+  - Using libraries/frameworks already present in the project.
+  - Adding new libraries/frameworks to the project.
+  - Upgrading or migrating library versions.
+  - Writing code that depends on any external library API.
+  - Fixing bugs related to library usage.
+  - Configuring build tools, bundlers, or dev tooling.
+
+### How to Use
+
+Append `use context7` to every internal prompt when documentation reference is needed. Context7 will automatically fetch up-to-date, version-specific documentation from official sources.
+
+### Required Workflow
+
+```
+1. User requests a feature/change involving the tech stack
+2. MANDATORY: Use Context7 to fetch current documentation
+3. Verify that APIs, methods, and patterns match the current version
+4. Only then write/modify code based on accurate documentation
+5. If there is a conflict between internal knowledge and Context7, ALWAYS PRIORITIZE Context7 results
+```
+
+### Situations Requiring Context7
+
+| Situation | Context7 Action |
+|---|---|
+| Creating a new React component | Check React docs for the project's installed version |
+| Setting up Next.js routing | Check App Router vs Pages Router for the installed Next.js version |
+| Configuring Tailwind CSS | Check config syntax for the current Tailwind version |
+| Querying database with Prisma | Check Prisma Client API for the installed version |
+| Adding Express middleware | Check current Express middleware patterns |
+| Setting up authentication | Check docs for the auth library in use (NextAuth, Clerk, etc.) |
+| Third-party API integration | Check the latest SDK/library wrapper version |
+| Configuring Vite/Webpack/Turbopack | Check bundler docs for current configuration API |
+
+### Prohibited Actions
+
+```
+❌ Writing code based on training data without Context7 verification
+❌ Assuming an API or method is still valid without checking current docs
+❌ Skipping Context7 because you believe you already "know" a library
+❌ Using patterns or syntax that may have been deprecated
+```
+
+---
+
+## 3. Context7 MCP Configuration
+
+### Setup via CLI (Recommended)
+
+```bash
+claude mcp add context7 -- npx -y @upstash/context7-mcp@latest
+```
+
+### Setup via Remote HTTP
+
+```bash
+claude mcp add --transport http context7 https://mcp.context7.com/mcp
+```
+
+### Manual Setup (claude_desktop_config.json or .mcp.json)
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    }
+  }
+}
+```
+
+### Setup with API Key (Higher Rate Limits)
+
+Get a free API key at [context7.com/dashboard](https://context7.com/dashboard).
+
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest", "--api-key", "YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+### Verify Connection
+
+```bash
+claude mcp list
+```
+
+Ensure the output shows `context7` with `✓ Connected` status.
+
+---
+
+## 4. Mandatory Coding Principles
+
+The following coding principles **MUST** be applied in every piece of code that is written, modified, or reviewed. The goal is to produce software that is maintainable, scalable, readable, and minimizes technical debt for long-term collaboration.
+
+### SOLID Principles (Object-Oriented Design)
+
+- **Single Responsibility (SRP)**: A class or module should have one, and only one, reason to change. If a class handles more than one responsibility, split it into separate classes.
+
+```typescript
+// ❌ Wrong: One class handling multiple responsibilities
+class UserService {
+  createUser() { /* ... */ }
+  sendEmail() { /* ... */ }
+  generateReport() { /* ... */ }
+}
+
+// ✅ Correct: Each class has a single responsibility
+class UserService {
+  createUser() { /* ... */ }
+}
+class EmailService {
+  sendEmail() { /* ... */ }
+}
+class ReportService {
+  generateReport() { /* ... */ }
+}
+```
+
+- **Open/Closed (OCP)**: Software entities should be open for extension but closed for modification. Use abstractions so new features can be added without altering existing code.
+
+- **Liskov Substitution (LSP)**: Subtypes must be substitutable for their base types without altering program correctness. Every derived class must fulfill the contract of its parent class.
+
+- **Interface Segregation (ISP)**: Clients should not be forced to depend on methods they do not use. Split large interfaces into smaller, focused ones.
+
+```typescript
+// ❌ Wrong: Interface is too broad
+interface Worker {
+  work(): void;
+  eat(): void;
+  sleep(): void;
+}
+
+// ✅ Correct: Small and focused interfaces
+interface Workable {
+  work(): void;
+}
+interface Feedable {
+  eat(): void;
+}
+```
+
+- **Dependency Inversion (DIP)**: Depend on abstractions (interfaces), not concrete implementations. High-level modules must not depend directly on low-level modules.
+
+```typescript
+// ❌ Wrong: Direct dependency on concrete implementation
+class OrderService {
+  private mysqlDb = new MySQLDatabase();
+}
+
+// ✅ Correct: Depends on an abstraction
+class OrderService {
+  constructor(private db: DatabaseInterface) {}
+}
+```
+
+### Clean Code & Design Principles
+
+- **DRY (Don't Repeat Yourself)**: Avoid duplication of logic. If the same code exists in two or more places, extract it into a reusable function or module.
+
+- **KISS (Keep It Simple, Stupid)**: Avoid unnecessary complexity. Prioritize readability and simplicity. A simple working solution beats a complex "elegant" one.
+
+- **YAGNI (You Ain't Gonna Need It)**: Do not add functionality until it is actually needed. Do not write code for hypothetical future requirements.
+
+- **Clean Code / Readability**: Use meaningful variable and function names, consistent formatting, and simple logic. Code should be self-documenting.
+
+- **Abstraction**: Hide internal complexity and only expose necessary interfaces. Abstraction layers help isolate changes and reduce coupling.
+
+### Best Practices for Implementation
+
+- **Test-Driven Development (TDD)**: Write tests before implementing code. Follow RED-GREEN-REFACTOR strictly.
+
+- **Continuous Refactoring**: Regularly improve code structure without changing behavior. Boy Scout Rule: leave code better than you found it.
+
+- **Code Reviews**: Utilize peer reviews to maintain code quality, standards, and consistency.
+
+- **Security by Design**: Validate all input, sanitize data, and manage dependencies regularly. Security is a foundation, not an afterthought.
+
+```
+Basic security checklist:
+- Validate and sanitize all user input
+- Use parameterized queries (prevent SQL injection)
+- Never hardcode secrets or credentials in source code
+- Update dependencies regularly for security patches
+- Apply the principle of least privilege
+```
+
+### Agent Enforcement Table
+
+| Principle | How the Agent Applies It |
+|---|---|
+| SRP | Every function/class/module handles only one responsibility |
+| OCP | Use patterns that allow extension without modification |
+| LSP | Ensure inheritance and polymorphism are correctly applied |
+| ISP | Create small, focused interfaces |
+| DIP | Inject dependencies through constructors or parameters |
+| DRY | Identify and eliminate code duplication |
+| KISS | Choose the simplest solution that fulfills the requirement |
+| YAGNI | Only implement what is requested — nothing more |
+| TDD | Write tests before implementation — always |
+| Security | Always validate input and follow security best practices |
+
+---
+
+## 5. Additional Rules
+
+### Code Quality
+
+- Always follow best practices from official documentation (fetched via Context7).
+- Use TypeScript if the project already uses TypeScript.
+- Add adequate error handling in all code paths.
+- Write clean, readable, and well-documented code.
+
+### Error Handling
+
+- Error messages shown to users should be descriptive and in Bahasa Indonesia.
+- Internal technical logs may use English conventions.
+- When debugging, explain the process and findings in Bahasa Indonesia.
+
+---
+
+## Quick Reference
+
+| Rule | Application |
+|---|---|
+| Response language | **Always Bahasa Indonesia** |
+| Code language | English (variables, functions, syntax) |
+| Code comments | Bahasa Indonesia |
+| Context7 | Mandatory for every tech stack reference |
+| Documentation priority | Context7 > internal/training knowledge |
+| Coding principles | SOLID, DRY, KISS, YAGNI — always enforced |
+| Testing | TDD: RED-GREEN-REFACTOR — no code before tests |
+| Debugging | systematic-debugging + verification-before-completion |
+| Security | Security by design — validate input, sanitize data |
+| Refactoring | Continuous improvement — Boy Scout Rule |
+| Communication with user | **Always in Bahasa Indonesia** |
