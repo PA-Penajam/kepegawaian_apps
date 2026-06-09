@@ -12,13 +12,14 @@ use Inertia\Response;
 
 class AplikasiController extends Controller
 {
-    public function index(): Response
+    public function index(\App\Services\Iam\IamSecretService $secretService): Response
     {
         $aplikasi = IamApplication::withCount('roles')
             ->latest()
             ->get()
-            ->map(function ($app) {
+            ->map(function ($app) use ($secretService) {
                 $app->api_key_display = $this->maskApiKey($app->api_key);
+                $app->secret_recoverable = $secretService->hasRecoverableSecret($app);
                 unset($app->api_key);
 
                 return $app;
@@ -27,8 +28,11 @@ class AplikasiController extends Controller
         return inertia('iam/aplikasi/index', compact('aplikasi'));
     }
 
-    public function show(IamApplication $aplikasi): Response
-    {
+    public function show(
+        IamApplication $aplikasi,
+        \App\Services\Iam\IamPermissionAuditor $auditor,
+        \App\Services\Iam\IamSecretService $secretService,
+    ): Response {
         $aplikasi->load(['roles.permissions', 'permissions']);
 
         // Mask api_key — tampilkan 4 karakter pertama dan 8 terakhir saja
@@ -36,8 +40,19 @@ class AplikasiController extends Controller
         $aplikasiArray['api_key_display'] = $this->maskApiKey($aplikasi->api_key);
         unset($aplikasiArray['api_key']);
 
+        $nonCanonicalCount = $auditor->findNonCanonical()
+            ->filter(fn ($p) => $p['app'] === $aplikasi->slug)
+            ->count();
+
         return inertia('iam/aplikasi/show', [
             'aplikasi' => $aplikasiArray,
+            'permission_audit' => [
+                'non_canonical_count' => $nonCanonicalCount,
+            ],
+            'recovery_status' => [
+                'recoverable' => $secretService->hasRecoverableSecret($aplikasi),
+                'ttl_remaining_secs' => $secretService->getRecoveryTtlSeconds($aplikasi),
+            ],
         ]);
     }
 
@@ -50,21 +65,16 @@ class AplikasiController extends Controller
         ]);
     }
 
-    public function store(StoreAplikasiRequest $request): RedirectResponse
-    {
-        // Buat aplikasi dengan data validasi (api_key & api_secret_hash tidak fillable)
+    public function store(
+        StoreAplikasiRequest $request,
+        \App\Services\Iam\IamSecretService $secretService,
+    ): RedirectResponse {
         $app = IamApplication::create($request->validated());
-
-        // Generate & set credentials secara manual setelah create
-        // (sama dengan approach di regenerateKey())
-        ['key' => $key, 'secret' => $secret, 'hash' => $hash] = IamApplication::generateApiCredentials();
-        $app->api_key = $key;
-        $app->api_secret_hash = $hash;
-        $app->save();
+        $plaintext = $secretService->generateAndStore($app, $request);
 
         return redirect()
             ->route('iam.aplikasi.show', $app)
-            ->with('api_secret_once', $secret);
+            ->with('api_secret_once', $plaintext);
     }
 
     public function update(UpdateAplikasiRequest $request, IamApplication $aplikasi): RedirectResponse
@@ -91,18 +101,18 @@ class AplikasiController extends Controller
     /**
      * Regenerate api_key dan api_secret untuk aplikasi.
      * Field api_key dan api_secret_hash tidak mass-assignable (security),
-     * jadi harus di-set secara manual.
+     * jadi harus di-set secara manual via service.
      */
-    public function regenerateKey(IamApplication $aplikasi): RedirectResponse
-    {
-        ['key' => $key, 'secret' => $secret, 'hash' => $hash] = IamApplication::generateApiCredentials();
+    public function regenerateKey(
+        \Illuminate\Http\Request $request,
+        IamApplication $aplikasi,
+        \App\Services\Iam\IamSecretService $secretService,
+    ): RedirectResponse {
+        abort_if($aplikasi->is_system, 403, 'Aplikasi sistem tidak dapat diregenerasi');
 
-        // Set field sensitif secara manual karena tidak fillable
-        $aplikasi->api_key = $key;
-        $aplikasi->api_secret_hash = $hash;
-        $aplikasi->save();
+        $plaintext = $secretService->regenerate($aplikasi, $request);
 
-        return back()->with('api_secret_once', $secret);
+        return back()->with('api_secret_once', $plaintext);
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Http\Controllers\Cuti\PengajuanController;
 use App\Http\Controllers\Cuti\SaldoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Iam\AplikasiController;
+use App\Http\Controllers\Iam\IamSecretRecoveryController;
 use App\Http\Controllers\Iam\PermissionController;
 use App\Http\Controllers\Iam\RoleController;
 use App\Http\Controllers\Iam\UserAksesController;
@@ -61,7 +62,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('cuti/pengajuan/{id}/pdf', [CutiPdfController::class, 'show'])->name('cuti.pengajuan.pdf');
 });
 
-Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])->group(function () {
+Route::middleware(['auth', 'verified', 'iam.permission:iam.manage'])->group(function () {
     Route::get('activity-log', [ActivityLogController::class, 'index'])
         ->name('activity-log.index');
 
@@ -72,7 +73,12 @@ Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])->group(func
             Route::resource('aplikasi', AplikasiController::class)
                 ->except(['create']);
             Route::post('aplikasi/{aplikasi}/regenerate-key', [AplikasiController::class, 'regenerateKey'])
+                ->middleware('throttle:iam-regenerate')
                 ->name('aplikasi.regenerate-key');
+            Route::post('aplikasi/{aplikasi}/recover-secret', [IamSecretRecoveryController::class, 'show'])
+                ->name('aplikasi.recover-secret');
+            Route::post('aplikasi/{aplikasi}/acknowledge-secret', [IamSecretRecoveryController::class, 'acknowledge'])
+                ->name('aplikasi.acknowledge-secret');
 
             // Role & Permission (nested under aplikasi)
             Route::post('aplikasi/{aplikasi}/roles', [RoleController::class, 'store'])->name('aplikasi.roles.store');
@@ -81,6 +87,8 @@ Route::middleware(['auth', 'verified', 'iam.permission:iam-manage'])->group(func
             Route::post('aplikasi/{aplikasi}/permissions', [PermissionController::class, 'store'])->name('aplikasi.permissions.store');
             Route::put('aplikasi/{aplikasi}/permissions/{permission}', [PermissionController::class, 'update'])->name('aplikasi.permissions.update');
             Route::delete('aplikasi/{aplikasi}/permissions/{permission}', [PermissionController::class, 'destroy'])->name('aplikasi.permissions.destroy');
+            Route::post('aplikasi/{aplikasi}/permissions/{permission}/migrate-slug', [PermissionController::class, 'migrateSlug'])
+                ->name('aplikasi.permissions.migrate-slug');
 
             // User akses
             Route::get('users', [UserAksesController::class, 'index'])->name('users.index');

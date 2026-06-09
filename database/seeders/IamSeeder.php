@@ -138,7 +138,7 @@ class IamSeeder extends Seeder
 
         // 7. Tambahkan default permissions untuk kepegawaian
         $defaultPermissions = [
-            ['slug' => 'iam-manage', 'nama' => 'Kelola IAM', 'group' => 'iam', 'keterangan' => 'Akses penuh ke manajemen IAM'],
+            ['slug' => 'iam.manage', 'nama' => 'Kelola IAM', 'group' => 'iam', 'keterangan' => 'Akses penuh ke manajemen IAM'],
             ['slug' => 'pegawai.view', 'nama' => 'Lihat Pegawai', 'group' => 'pegawai', 'keterangan' => 'Melihat data pegawai'],
             ['slug' => 'pegawai.create', 'nama' => 'Tambah Pegawai', 'group' => 'pegawai', 'keterangan' => 'Menambah data pegawai'],
             ['slug' => 'pegawai.update', 'nama' => 'Ubah Pegawai', 'group' => 'pegawai', 'keterangan' => 'Mengubah data pegawai'],

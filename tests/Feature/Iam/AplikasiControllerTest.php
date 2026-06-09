@@ -19,7 +19,7 @@ beforeEach(function () {
         ->where('slug', 'viewer')->first();
 
     $this->adminPermission = IamPermission::where('iam_application_id', $this->kepegawaianApp->id)
-        ->where('slug', 'iam-manage')->first();
+        ->where('slug', 'iam.manage')->first();
 });
 
 test('admin dapat melihat daftar aplikasi', function () {

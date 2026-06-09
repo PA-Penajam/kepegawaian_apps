@@ -293,17 +293,32 @@ export default function Index() {
                                             {app.roles_count ?? 0}
                                         </TableCell>
                                         <TableCell className="text-center">
-                                            <Badge
-                                                variant={
-                                                    app.is_active
-                                                        ? 'default'
-                                                        : 'outline'
-                                                }
-                                            >
-                                                {app.is_active
-                                                    ? 'Aktif'
-                                                    : 'Nonaktif'}
-                                            </Badge>
+                                            <div className="flex flex-wrap items-center justify-center gap-1">
+                                                <Badge
+                                                    variant={
+                                                        app.is_active
+                                                            ? 'default'
+                                                            : 'outline'
+                                                    }
+                                                >
+                                                    {app.is_active
+                                                        ? 'Aktif'
+                                                        : 'Nonaktif'}
+                                                </Badge>
+                                                {app.secret_recoverable && (
+                                                    <Link
+                                                        href={`/iam/aplikasi/${app.id}`}
+                                                        aria-label={`Secret bisa dipulihkan untuk ${app.nama}`}
+                                                    >
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="border-amber-500 bg-amber-50 text-amber-900 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-100"
+                                                        >
+                                                            Recoverable
+                                                        </Badge>
+                                                    </Link>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-center gap-2">

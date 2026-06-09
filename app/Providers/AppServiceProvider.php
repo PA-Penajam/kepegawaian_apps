@@ -29,10 +29,13 @@ use App\Services\Sikep\NullSikepAdapter;
 use App\Services\Sikep\SikepAdapter;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -72,6 +75,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->registerEventListeners();
         $this->registerSlowQueryLogger();
+        $this->registerRateLimiters();
     }
 
     /**
@@ -127,6 +131,20 @@ class AppServiceProvider extends ServiceProvider
 
         Event::listen(ChecklistKelengkapanBerubah::class, function (ChecklistKelengkapanBerubah $event): void {
             unset($event);
+        });
+    }
+
+    private function registerRateLimiters(): void
+    {
+        RateLimiter::for('iam-regenerate', function (HttpRequest $request) {
+            return Limit::perHour(5)
+                ->by($request->user()?->id ?: $request->ip())
+                ->response(function (HttpRequest $request, array $headers) {
+                    return back()->with(
+                        'error',
+                        'Anda telah melampaui batas regenerasi kunci (5 per jam). Silakan coba lagi nanti.',
+                    );
+                });
         });
     }
 }
