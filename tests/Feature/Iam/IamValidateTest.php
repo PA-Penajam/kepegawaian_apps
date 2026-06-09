@@ -7,6 +7,7 @@ use App\Models\IamRole;
 use App\Models\IamRolePermission;
 use App\Models\IamUserRole;
 use App\Models\Pegawai;
+use App\Models\RefUnitKerja;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
@@ -107,7 +108,7 @@ test('validate endpoint dengan user berrole', function () {
 
     $response->assertOk()
         ->assertJsonStructure([
-            'user' => ['id', 'name', 'email', 'nip'],
+            'user' => ['id', 'name', 'email', 'nip', 'unit_kerja'],
             'roles',
             'permissions',
             'token_expires_at',
@@ -115,4 +116,71 @@ test('validate endpoint dengan user berrole', function () {
         ->assertJsonPath('user.name', 'Test User')
         ->assertJsonPath('roles', ['admin'])
         ->assertJsonPath('permissions', ['users:manage']);
+});
+
+test('validate endpoint menyertakan unit_kerja dari relasi RefUnitKerja', function () {
+    $unitKerja = RefUnitKerja::factory()->create(['nama' => 'Bagian Kepegawaian']);
+    $user = Pegawai::factory()->create([
+        'nama_lengkap' => 'Pegawai Unit',
+        'ref_unit_kerja_id' => $unitKerja->id,
+    ]);
+
+    IamUserRole::create([
+        'user_id' => $user->id,
+        'iam_role_id' => $this->adminRole->id,
+        'assigned_at' => now(),
+    ]);
+
+    Sanctum::actingAs($user);
+
+    Route::middleware(['auth:sanctum', 'iam.signature'])
+        ->get('/test-iam-validate', [IamController::class, 'validate']);
+
+    $ts = now()->timestamp;
+    $bodyHash = hash('sha256', '[]');
+    $payload = 'GET:/test-iam-validate::'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
+
+    $response = $this->getJson('/test-iam-validate', [
+        'X-App-Key' => $this->iamApp->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+        'Accept' => 'application/json',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('user.unit_kerja', 'Bagian Kepegawaian');
+});
+
+test('validate endpoint mengembalikan null unit_kerja jika pegawai tidak punya unit kerja', function () {
+    $user = Pegawai::factory()->create([
+        'nama_lengkap' => 'Pegawai Tanpa Unit',
+        'ref_unit_kerja_id' => null,
+    ]);
+
+    IamUserRole::create([
+        'user_id' => $user->id,
+        'iam_role_id' => $this->adminRole->id,
+        'assigned_at' => now(),
+    ]);
+
+    Sanctum::actingAs($user);
+
+    Route::middleware(['auth:sanctum', 'iam.signature'])
+        ->get('/test-iam-validate', [IamController::class, 'validate']);
+
+    $ts = now()->timestamp;
+    $bodyHash = hash('sha256', '[]');
+    $payload = 'GET:/test-iam-validate::'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
+
+    $response = $this->getJson('/test-iam-validate', [
+        'X-App-Key' => $this->iamApp->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+        'Accept' => 'application/json',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('user.unit_kerja', null);
 });

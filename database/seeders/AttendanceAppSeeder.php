@@ -13,45 +13,67 @@ class AttendanceAppSeeder extends Seeder
 {
     public function run(): void
     {
-        $slug = 'attendance-qr-system';
+        $this->seedApplication();
+        $this->seedRolesAndPermissions();
+    }
+
+    /**
+     * Registrasi aplikasi attendance di tabel IamApplication.
+     * Slug "attendance" digunakan untuk SSO login (?app=attendance)
+     * dan HMAC signature (X-App-Key=attendance).
+     */
+    private function seedApplication(): void
+    {
+        $slug = 'attendance';
 
         $app = IamApplication::where('slug', $slug)->first();
 
         if ($app) {
             $this->command->info("IAM Application '{$slug}' sudah ada (id: {$app->id}).");
-        } else {
-            $secret = Str::random(64);
 
-            $app = new IamApplication;
-            $app->nama = 'Attendance QR System';
-            $app->slug = $slug;
-            $app->url = env('ATTENDANCE_APP_URL', 'http://localhost:8001');
-            $app->deskripsi = 'Sistem absensi berbasis QR code PA Penajam';
-            $app->is_active = true;
-            $app->is_system = false;
-            // Samakan api_key dengan slug agar attendance cukup satu IAM_CLIENT_ID
-            // untuk SSO login (?app=slug) dan HMAC signature (X-App-Key=api_key)
-            $app->api_key = $slug;
-            $app->api_secret_hash = Crypt::encryptString($secret);
-            $app->save();
-
-            $this->command->info("IAM Application '{$slug}' berhasil dibuat.");
-            $this->command->newLine();
-            $this->command->warn('╔══════════════════════════════════════════════════════════════════╗');
-            $this->command->warn('║  SIMPAN KREDENSIAL BERIKUT (hanya ditampilkan sekali!)          ║');
-            $this->command->warn('╠══════════════════════════════════════════════════════════════════╣');
-            $this->command->warn("║  IAM_CLIENT_ID={$slug}");
-            $this->command->warn("║  IAM_CLIENT_SECRET={$secret}");
-            $this->command->warn("║  IAM_HMAC_SECRET={$secret}");
-            $this->command->warn('╚══════════════════════════════════════════════════════════════════╝');
-            $this->command->newLine();
+            return;
         }
 
-        // Roles untuk attendance
+        $secret = Str::random(64);
+
+        $app = new IamApplication;
+        $app->nama = 'Attendance System';
+        $app->slug = $slug;
+        $app->url = env('ATTENDANCE_APP_URL', 'http://localhost:3000');
+        $app->deskripsi = 'Sistem absensi QR code PA Penajam';
+        $app->is_active = true;
+        $app->is_system = false;
+        // Samakan api_key dengan slug agar attendance cukup satu identifier
+        // untuk SSO login (?app=slug) dan HMAC signature (X-App-Key=api_key)
+        $app->api_key = $slug;
+        $app->api_secret_hash = Crypt::encryptString($secret);
+        $app->save();
+
+        $this->command->info("IAM Application '{$slug}' berhasil dibuat.");
+        $this->command->newLine();
+        $this->command->warn('╔══════════════════════════════════════════════════════════════════════════╗');
+        $this->command->warn('║  SIMPAN KREDENSIAL BERIKUT (hanya ditampilkan sekali!)                  ║');
+        $this->command->warn('║  Konfigurasi ini diperlukan di .env attendance-system                   ║');
+        $this->command->warn('╠══════════════════════════════════════════════════════════════════════════╣');
+        $this->command->warn("║  SSO_APP_KEY={$slug}");
+        $this->command->warn("║  SSO_APP_SECRET={$secret}");
+        $this->command->warn('╚══════════════════════════════════════════════════════════════════════════╝');
+        $this->command->newLine();
+    }
+
+    /**
+     * Seed roles dan permissions untuk aplikasi attendance.
+     * Role: pegawai, admin, pimpinan (sesuai spec SSO integration).
+     */
+    private function seedRolesAndPermissions(): void
+    {
+        $app = IamApplication::where('slug', 'attendance')->firstOrFail();
+
+        // Roles untuk attendance sesuai spec SSO integration
         $roles = [
+            ['slug' => 'pegawai', 'nama' => 'Pegawai', 'is_system' => true],
             ['slug' => 'admin', 'nama' => 'Admin', 'is_system' => true],
-            ['slug' => 'operator', 'nama' => 'Operator', 'is_system' => true],
-            ['slug' => 'user', 'nama' => 'User', 'is_system' => true],
+            ['slug' => 'pimpinan', 'nama' => 'Pimpinan', 'is_system' => true],
         ];
 
         foreach ($roles as $roleData) {
@@ -87,26 +109,25 @@ class AttendanceAppSeeder extends Seeder
             $adminRole->permissions()->syncWithoutDetaching(array_values($permissionIds));
         }
 
-        // Operator mendapat attendance.* dan users.view dan reports.*
-        $operatorRole = IamRole::where('iam_application_id', $app->id)->where('slug', 'operator')->first();
-        if ($operatorRole) {
-            $operatorRole->permissions()->syncWithoutDetaching([
+        // Pimpinan mendapat view dan reports
+        $pimpinanRole = IamRole::where('iam_application_id', $app->id)->where('slug', 'pimpinan')->first();
+        if ($pimpinanRole) {
+            $pimpinanRole->permissions()->syncWithoutDetaching([
                 $permissionIds['attendance.view'],
-                $permissionIds['attendance.manage'],
                 $permissionIds['users.view'],
                 $permissionIds['reports.view'],
                 $permissionIds['reports.generate'],
             ]);
         }
 
-        // User mendapat attendance.view saja
-        $userRole = IamRole::where('iam_application_id', $app->id)->where('slug', 'user')->first();
-        if ($userRole) {
-            $userRole->permissions()->syncWithoutDetaching([
+        // Pegawai mendapat attendance.view saja
+        $pegawaiRole = IamRole::where('iam_application_id', $app->id)->where('slug', 'pegawai')->first();
+        if ($pegawaiRole) {
+            $pegawaiRole->permissions()->syncWithoutDetaching([
                 $permissionIds['attendance.view'],
             ]);
         }
 
-        $this->command->info("Roles & permissions untuk '{$slug}' selesai di-seed.");
+        $this->command->info("Roles & permissions untuk 'attendance' selesai di-seed.");
     }
 }

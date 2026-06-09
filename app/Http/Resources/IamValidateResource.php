@@ -13,6 +13,7 @@ class IamValidateResource extends JsonResource
             'name' => $this->nama_lengkap,
             'email' => $this->email,
             'nip' => $this->nip,
+            'unit_kerja' => $this->unitKerja?->nama,
         ];
     }
 }
