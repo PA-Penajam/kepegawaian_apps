@@ -31,11 +31,12 @@ services:
       KC_HOSTNAME_STRICT_HTTPS: "false"
       KC_HTTP_ENABLED: "true"
       KC_HTTP_PORT: "8080"
-      KC_PROXY_HEADERS: "xforwarded"
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    # SECURITY: Bind to localhost only - prevents LAN exposure
+    # For production: enable HTTPS or use reverse proxy with TLS
     ports:
-      - "9080:8080"
+      - "127.0.0.1:9080:8080"
     depends_on:
       postgres:
         condition: service_healthy
