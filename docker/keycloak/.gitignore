@@ -1,0 +1,15 @@
+# Gitignore untuk docker/keycloak/
+# =================================
+
+# Environment file (contains secrets)
+.env
+
+# PostgreSQL data (should not be committed)
+data/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
