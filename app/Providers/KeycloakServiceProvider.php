@@ -12,6 +12,7 @@ use App\Keycloak\Services\KeycloakCircuitBreaker;
 use App\Keycloak\Services\KeycloakClient;
 use App\Keycloak\Services\KeycloakSyncService;
 use App\Keycloak\Services\KeycloakTokenStorage;
+use App\Keycloak\Services\SyncAuditLogger;
 use Illuminate\Support\ServiceProvider;
 
 class KeycloakServiceProvider extends ServiceProvider
@@ -31,6 +32,7 @@ class KeycloakServiceProvider extends ServiceProvider
         $this->app->singleton(KeycloakClientInterface::class, KeycloakClient::class);
         $this->app->singleton(KeycloakSyncServiceInterface::class, KeycloakSyncService::class);
         $this->app->singleton(ConflictResolutionInterface::class, ConflictResolution::class);
+        $this->app->singleton(SyncAuditLogger::class);
     }
 
     /**

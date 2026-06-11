@@ -10,6 +10,9 @@ use App\Enums\StatusPegawai;
 use App\Enums\StatusPerkawinan;
 use App\Models\Concerns\HasActivityLogOptions;
 use App\Traits\Filterable;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -25,7 +28,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
-class Pegawai extends Authenticatable
+class Pegawai extends Authenticatable implements FilamentUser, HasName
 {
     use Filterable, HasActivityLogOptions, HasApiTokens, HasFactory, HasUlids, LogsActivity, Notifiable, SoftDeletes, TwoFactorAuthenticatable {
         HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
@@ -44,6 +47,7 @@ class Pegawai extends Authenticatable
         'no_karpeg', 'no_karis_karsu', 'npwp', 'no_bpjs_kesehatan',
         'no_bpjs_ketenagakerjaan', 'no_taspen', 'foto', 'keterangan',
         'password',
+        'keycloak_id', 'keycloak_synced_at', 'keycloak_user_id',
     ];
 
     protected $hidden = [
@@ -69,6 +73,7 @@ class Pegawai extends Authenticatable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'email_verified_at' => 'datetime',
+            'keycloak_synced_at' => 'datetime',
         ];
     }
 
@@ -254,5 +259,21 @@ class Pegawai extends Authenticatable
         }
 
         return sprintf('%s - %s', $this->pangkat->nama, $this->pangkat->kode);
+    }
+
+    /**
+     * Menentukan apakah user dapat mengakses Filament admin panel.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
+    }
+
+    /**
+     * Nama yang ditampilkan di Filament admin panel.
+     */
+    public function getFilamentName(): string
+    {
+        return $this->nama_lengkap ?? '';
     }
 }
