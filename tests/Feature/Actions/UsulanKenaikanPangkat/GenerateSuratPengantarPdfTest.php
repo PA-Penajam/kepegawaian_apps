@@ -7,8 +7,31 @@ use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Spatie\LaravelPdf\Facades\Pdf;
+use Spatie\LaravelPdf\FakePdfBuilder;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    Storage::fake('local');
+
+    Pdf::swap(new class extends FakePdfBuilder
+    {
+        public function save(string $path): static
+        {
+            parent::save($path);
+
+            // Create a dummy file so Storage assertions pass
+            $dir = dirname($path);
+            if (! is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            file_put_contents($path, '%PDF-1.4 fake');
+
+            return $this;
+        }
+    });
+});
 
 function makeKpUsulan(): UsulanKenaikanPangkat
 {
@@ -28,8 +51,6 @@ function makeKpUsulan(): UsulanKenaikanPangkat
 }
 
 it('generate surat pengantar PDF dan menyimpan record metadata', function () {
-    Storage::fake('local');
-
     $usulan = makeKpUsulan();
     $pejabat = Pegawai::factory()->create([
         'nama_lengkap' => 'Drs. Pejabat Penandatangan',
@@ -57,8 +78,6 @@ it('generate surat pengantar PDF dan menyimpan record metadata', function () {
 });
 
 it('menghasilkan nomor surat berbeda untuk dua usulan berbeda', function () {
-    Storage::fake('local');
-
     $pejabat = Pegawai::factory()->create();
     $pdfPertama = app(GenerateSuratPengantarPdf::class)->handle(makeKpUsulan(), $pejabat);
     $pdfKedua = app(GenerateSuratPengantarPdf::class)->handle(makeKpUsulan(), $pejabat);
