@@ -81,6 +81,8 @@ it('can render view page with snapshots', function () {
         'event_type' => 'conflict',
         'pegawai_snapshot' => ['nip' => '123456789012345678', 'nama' => 'Test User'],
         'keycloak_snapshot' => ['username' => '123456789012345678', 'email' => 'test@example.com'],
+        // Nilai bersarang (fields_updated) harus dirender sebagai string, bukan crash
+        'resolution' => ['action' => 'pegawai_wins', 'fields_updated' => ['email', 'nama']],
     ]);
 
     $this->get(KeycloakSyncAuditResource::getUrl('view', ['record' => $audit]))

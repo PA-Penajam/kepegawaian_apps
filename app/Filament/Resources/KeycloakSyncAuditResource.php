@@ -161,6 +161,7 @@ class KeycloakSyncAuditResource extends Resource
                     ->schema([
                         Infolists\Components\KeyValueEntry::make('pegawai_snapshot')
                             ->label('')
+                            ->state(fn (KeycloakSyncAudit $record): array => self::flattenForKeyValue($record->pegawai_snapshot))
                             ->columnSpanFull(),
                     ])
                     ->collapsible()
@@ -170,6 +171,7 @@ class KeycloakSyncAuditResource extends Resource
                     ->schema([
                         Infolists\Components\KeyValueEntry::make('keycloak_snapshot')
                             ->label('')
+                            ->state(fn (KeycloakSyncAudit $record): array => self::flattenForKeyValue($record->keycloak_snapshot))
                             ->columnSpanFull(),
                     ])
                     ->collapsible()
@@ -179,11 +181,30 @@ class KeycloakSyncAuditResource extends Resource
                     ->schema([
                         Infolists\Components\KeyValueEntry::make('resolution')
                             ->label('')
+                            ->state(fn (KeycloakSyncAudit $record): array => self::flattenForKeyValue($record->resolution))
                             ->columnSpanFull(),
                     ])
                     ->collapsible()
                     ->visible(fn (KeycloakSyncAudit $record): bool => ! empty($record->resolution)),
             ]);
+    }
+
+    /**
+     * Meratakan data snapshot agar aman dirender oleh KeyValueEntry.
+     *
+     * KeyValueEntry hanya mendukung data key-value satu dimensi, sehingga
+     * nilai bersarang (array/objek) dikonversi menjadi string JSON.
+     *
+     * @param  array<string, mixed>|null  $data
+     * @return array<string, scalar|null>
+     */
+    protected static function flattenForKeyValue(?array $data): array
+    {
+        return collect($data ?? [])
+            ->map(fn ($value) => is_scalar($value) || $value === null
+                ? $value
+                : json_encode($value, JSON_UNESCAPED_UNICODE))
+            ->all();
     }
 
     public static function getRelations(): array
