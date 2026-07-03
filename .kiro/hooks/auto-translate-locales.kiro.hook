@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "name": "Auto Translate Locales",
+  "description": "Memantau perubahan pada file lokalisasi (JSON, YAML, PHP) di bahasa utama. Ketika perubahan terdeteksi, otomatis mengidentifikasi teks baru atau yang dimodifikasi dan menghasilkan terjemahan untuk semua bahasa target yang dikonfigurasi, dengan mempertahankan konteks dan konvensi lokal yang tepat.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/lang/id/*.php",
+      "**/lang/id/*.json",
+      "**/lang/id.json",
+      "**/locales/id/**/*.json",
+      "**/locales/id/**/*.yaml",
+      "**/locales/id/**/*.yml"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "File lokalisasi bahasa utama (Indonesia) telah diubah. Lakukan langkah berikut:\n\n1. Identifikasi teks baru atau yang dimodifikasi dalam file yang berubah.\n2. Untuk setiap bahasa target yang dikonfigurasi dalam proyek (periksa folder lang/ atau locales/ untuk bahasa lain seperti 'en'), buat atau perbarui terjemahan yang sesuai.\n3. Pastikan terjemahan:\n   - Mempertahankan konteks dan makna yang tepat\n   - Mengikuti konvensi lokal spesifik (format tanggal, angka, dll.)\n   - Mempertahankan placeholder dan variabel yang sama (misalnya :name, {count}, dll.)\n   - Mempertahankan struktur key yang sama dengan file sumber\n4. Tulis file terjemahan yang diperbarui ke lokasi yang sesuai untuk setiap bahasa target.\n5. Laporkan ringkasan singkat dari terjemahan yang dihasilkan."
+  }
+}
