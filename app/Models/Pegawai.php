@@ -200,17 +200,32 @@ class Pegawai extends Authenticatable implements FilamentUser, HasName
 
     public function isAdmin(): bool
     {
-        return $this->iamRoles()->where('slug', 'admin')->exists();
+        return $this->hasKepegawaianRole('admin');
     }
 
     public function isOperator(): bool
     {
-        return $this->iamRoles()->where('slug', 'operator')->exists();
+        return $this->hasKepegawaianRole('operator');
     }
 
     public function isViewer(): bool
     {
-        return $this->iamRoles()->where('slug', 'viewer')->exists();
+        return $this->hasKepegawaianRole('viewer');
+    }
+
+    /**
+     * Cek apakah pegawai memiliki role dengan slug tertentu khusus pada
+     * aplikasi IAM "kepegawaian". Role dengan slug sama dari aplikasi lain
+     * (mis. attendance) tidak dihitung untuk mencegah privilege escalation.
+     */
+    private function hasKepegawaianRole(string $slug): bool
+    {
+        return $this->iamRoles()
+            ->where('iam_roles.slug', $slug)
+            ->whereHas('application', function (Builder $query): void {
+                $query->where('slug', 'kepegawaian');
+            })
+            ->exists();
     }
 
     // === Notifikasi ===
@@ -266,7 +281,8 @@ class Pegawai extends Authenticatable implements FilamentUser, HasName
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return $panel->getId() === 'admin'
+            && ($this->isAdmin() || $this->isOperator());
     }
 
     /**

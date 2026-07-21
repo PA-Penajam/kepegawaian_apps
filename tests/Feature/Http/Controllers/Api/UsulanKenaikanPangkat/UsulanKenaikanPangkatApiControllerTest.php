@@ -11,6 +11,20 @@ use function Pest\Laravel\getJson;
 
 uses(RefreshDatabase::class);
 
+function kenaikanPangkatApiSignedHeaders(string $path, array $query = []): array
+{
+    $timestamp = now()->timestamp;
+    $queryString = http_build_query(collect($query)->sortKeys()->all());
+    $bodyHash = hash('sha256', '[]');
+    $payload = "GET:{$path}:{$queryString}:{$bodyHash}:{$timestamp}";
+
+    return [
+        'X-Timestamp' => $timestamp,
+        'X-Signature' => hash_hmac('sha256', $payload, config('kepegawaian.secret_key')),
+        'Accept' => 'application/json',
+    ];
+}
+
 it('mengembalikan daftar usulan kenaikan pangkat sebagai JSON', function (): void {
     $pegawai = Pegawai::factory()->create(['id' => fake()->uuid()]);
     UsulanKenaikanPangkat::factory()->count(2)->create([
@@ -20,9 +34,15 @@ it('mengembalikan daftar usulan kenaikan pangkat sebagai JSON', function (): voi
         'state' => 'DRAFT',
     ]);
 
-    Sanctum::actingAs($pegawai, ['*']);
+    Sanctum::actingAs($pegawai, ['app:kepegawaian']);
 
-    $response = getJson('/api/kenaikan-pangkat/usulan?state=DRAFT&periode_usul_tahun=2026&periode_usul_bulan=4');
+    $query = [
+        'state' => 'DRAFT',
+        'periode_usul_tahun' => 2026,
+        'periode_usul_bulan' => 4,
+    ];
+    $path = '/api/kenaikan-pangkat/usulan';
+    $response = getJson($path.'?'.http_build_query($query), kenaikanPangkatApiSignedHeaders($path, $query));
 
     $response->assertSuccessful()
         ->assertJsonCount(2, 'data')
@@ -44,9 +64,14 @@ it('mengembalikan statistik usulan kenaikan pangkat sebagai JSON', function (): 
         'state' => 'DIAJUKAN',
     ]);
 
-    Sanctum::actingAs($pegawai, ['*']);
+    Sanctum::actingAs($pegawai, ['app:kepegawaian']);
 
-    $response = getJson('/api/kenaikan-pangkat/stats?periode_usul_tahun=2026&periode_usul_bulan=4');
+    $query = [
+        'periode_usul_tahun' => 2026,
+        'periode_usul_bulan' => 4,
+    ];
+    $path = '/api/kenaikan-pangkat/stats';
+    $response = getJson($path.'?'.http_build_query($query), kenaikanPangkatApiSignedHeaders($path, $query));
 
     $response->assertSuccessful()
         ->assertJsonPath('total', 2)
@@ -59,4 +84,23 @@ it('menolak request tanpa auth sanctum', function (): void {
     $response = getJson('/api/kenaikan-pangkat/usulan');
 
     $response->assertUnauthorized();
+});
+
+it('menolak request tanpa signature HMAC', function (): void {
+    $pegawai = Pegawai::factory()->create(['id' => fake()->uuid()]);
+    Sanctum::actingAs($pegawai, ['app:kepegawaian']);
+
+    $response = getJson('/api/kenaikan-pangkat/usulan');
+
+    $response->assertUnauthorized();
+});
+
+it('menolak token tanpa ability app kepegawaian', function (): void {
+    $pegawai = Pegawai::factory()->create(['id' => fake()->uuid()]);
+    Sanctum::actingAs($pegawai, ['app:attendance']);
+
+    $path = '/api/kenaikan-pangkat/usulan';
+    $response = getJson($path, kenaikanPangkatApiSignedHeaders($path));
+
+    $response->assertForbidden();
 });

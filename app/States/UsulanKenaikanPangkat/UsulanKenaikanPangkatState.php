@@ -31,6 +31,7 @@ abstract class UsulanKenaikanPangkatState extends State
             ->allowTransition(MenungguSkState::class, PerluPerbaikanState::class)
             ->allowTransition(MenungguSkState::class, DitolakState::class)
             ->allowTransition(PerluPerbaikanState::class, DraftState::class)
+            ->allowTransition(PerluPerbaikanState::class, DiajukanState::class)
             ->allowTransition(PerluPerbaikanState::class, DibatalkanState::class);
     }
 }

@@ -53,11 +53,14 @@ Route::middleware(['auth:sanctum', 'verify.hmac', 'throttle:60,1'])
         Route::get('/saldo/{nip}/ledger', [CutiSaldoController::class, 'ledger'])->name('saldo.ledger');
     });
 
-Route::prefix('kenaikan-pangkat')->name('api.kenaikan-pangkat.')->middleware('auth:sanctum')->group(function () {
-    Route::get('usulan', [UsulanKenaikanPangkatApiController::class, 'index'])->name('usulan.index');
-    Route::get('usulan/{usulan}', [UsulanKenaikanPangkatApiController::class, 'show'])->name('usulan.show');
-    Route::get('stats', [UsulanKenaikanPangkatApiController::class, 'stats'])->name('stats');
-});
+Route::prefix('kenaikan-pangkat')
+    ->name('api.kenaikan-pangkat.')
+    ->middleware(['auth:sanctum', 'abilities:app:kepegawaian', 'verify.hmac', 'throttle:60,1'])
+    ->group(function () {
+        Route::get('usulan', [UsulanKenaikanPangkatApiController::class, 'index'])->name('usulan.index');
+        Route::get('usulan/{usulan}', [UsulanKenaikanPangkatApiController::class, 'show'])->name('usulan.show');
+        Route::get('stats', [UsulanKenaikanPangkatApiController::class, 'stats'])->name('stats');
+    });
 
 // Exchange code — throttle ketat 10 req/menit (endpoint sensitif SSO)
 Route::middleware(['iam.signature', 'throttle:10,1'])

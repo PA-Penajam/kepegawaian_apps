@@ -10,6 +10,7 @@ use App\Services\Cuti\SaldoLedgerService;
 use Database\Seeders\CutiJenisMasterSeeder;
 
 beforeEach(function () {
+    $this->travelTo('2026-01-01');
     $this->seed(CutiJenisMasterSeeder::class);
 });
 

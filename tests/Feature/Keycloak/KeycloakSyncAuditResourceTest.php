@@ -7,7 +7,7 @@ use App\Models\Pegawai;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    $this->admin = Pegawai::factory()->create();
+    $this->admin = Pegawai::factory()->admin()->create();
     $this->actingAs($this->admin);
 });
 

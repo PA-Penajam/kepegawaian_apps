@@ -10,6 +10,7 @@ use App\States\UsulanKenaikanPangkat\DiverifikasiKasubbagState;
 use App\States\UsulanKenaikanPangkat\DiverifikasiSekretarisState;
 use App\States\UsulanKenaikanPangkat\DraftState;
 use App\States\UsulanKenaikanPangkat\MenungguSkState;
+use App\States\UsulanKenaikanPangkat\PerluPerbaikanState;
 
 class UsulanKenaikanPangkatPolicy
 {
@@ -43,7 +44,7 @@ class UsulanKenaikanPangkatPolicy
      */
     public function update(Pegawai $user, UsulanKenaikanPangkat $usulan): bool
     {
-        $allowedStates = [DraftState::class, 'PerluPerbaikanState'];
+        $allowedStates = [DraftState::class, PerluPerbaikanState::class];
 
         return in_array($usulan->state::class, $allowedStates)
             && ($usulan->pegawai_id === $user->id || $user->hasPermission('kenaikan-pangkat.usulan.update'));
@@ -62,7 +63,7 @@ class UsulanKenaikanPangkatPolicy
      */
     public function submit(Pegawai $user, UsulanKenaikanPangkat $usulan): bool
     {
-        $allowed = [DraftState::class, 'PerluPerbaikanState'];
+        $allowed = [DraftState::class, PerluPerbaikanState::class];
 
         return in_array($usulan->state::class, $allowed)
             && $user->hasPermission('kenaikan-pangkat.usulan.submit');
@@ -118,7 +119,7 @@ class UsulanKenaikanPangkatPolicy
      */
     public function batalkan(Pegawai $user, UsulanKenaikanPangkat $usulan): bool
     {
-        $allowed = [DraftState::class, 'PerluPerbaikanState'];
+        $allowed = [DraftState::class, PerluPerbaikanState::class];
 
         return in_array($usulan->state::class, $allowed) && $usulan->pegawai_id === $user->id;
     }

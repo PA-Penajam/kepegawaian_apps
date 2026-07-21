@@ -13,6 +13,17 @@
         "-y",
         "@magicuidesign/mcp@latest"
       ]
+    },
+    "flyenv": {
+      "tools": [
+        "*"
+      ],
+      "type": "http",
+      "url": "http://127.0.0.1:7682",
+      "source": "user",
+      "headers": {
+        "Authorization": "Bearer 25d76181013347178fe43bcae6d4fda3"
+      }
     }
   }
 }

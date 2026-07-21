@@ -37,8 +37,6 @@ class DatabaseSeeder extends Seeder
             IamSeeder::class,
             PermissionSikepP1Seeder::class,
             AttendanceAppSeeder::class,
-            IamSeeder::class,
-            AttendanceAppSeeder::class,
             CutiJenisMasterSeeder::class,
             CutiJenisPerStatusPegawaiSeeder::class,
             CutiPermissionSeeder::class,
