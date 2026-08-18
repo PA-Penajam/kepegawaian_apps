@@ -2,11 +2,15 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\ViteManifestNotFoundException;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
@@ -32,10 +36,40 @@ class Handler
      */
     public function __invoke(Exceptions $exceptions): void
     {
+        // Tangani HttpException khusus (403, 404, 419, 429, 500, 503) untuk Inertia & API
+        $exceptions->render(function (HttpException $e, Request $request) {
+            $statusCode = $e->getStatusCode();
+
+            if (in_array($statusCode, [403, 404, 419, 429, 500, 503])) {
+                $userMessage = match ($statusCode) {
+                    403 => 'Akses dibatasi. Anda tidak memiliki izin untuk halaman ini.',
+                    404 => 'Halaman yang Anda cari tidak ditemukan.',
+                    419 => 'Sesi kedaluwarsa. Silakan muat ulang halaman.',
+                    429 => 'Terlalu banyak permintaan. Silakan tunggu beberapa saat.',
+                    500 => 'Kendala server internal.',
+                    503 => 'Layanan sedang dalam pemeliharaan.',
+                    default => 'Terjadi kesalahan pada sistem.',
+                };
+
+                if ($this->isApiRequest($request)) {
+                    return response()->json([
+                        'message' => $e->getMessage() ?: $userMessage,
+                    ], $statusCode);
+                }
+
+                if ($request->hasHeader('X-Inertia')) {
+                    return Inertia::render('errors/error', [
+                        'status' => $statusCode,
+                        'message' => $e->getMessage() ?: null,
+                    ])->toResponse($request)->setStatusCode($statusCode);
+                }
+            }
+
+            return null;
+        });
+
         // Tangani semua exception yang TIDAK punya HTTP status code.
         // Ini mencakup: RuntimeException, PDOException, LogicException, dll.
-        // HttpException (403, 404, 429, dll) dan exception yang sudah ditangani
-        // handler lain akan di-skip.
         $exceptions->render(function (Throwable $e, Request $request) {
             // Skip exception yang sudah ditangani handler lain
             if ($this->shouldSkip($e)) {
@@ -51,7 +85,29 @@ class Handler
                 ], 500);
             }
 
-            // Web (Inertia) request → redirect back dengan flash error
+            // Web request → hindari redirect loop ke dirinya sendiri
+            // Jika Vite manifest hilang (public/build belum di-build) jangan
+            // gunakan back() karena fallback-nya adalah URL saat ini → loop 302
+            if ($e instanceof ViteManifestNotFoundException) {
+                return response(
+                    '<h1>Build frontend belum tersedia</h1><p>Jalankan <code>npm install && npm run build</code> atau <code>npm run dev</code> untuk generate Vite manifest.</p>',
+                    500
+                );
+            }
+
+            // Cegah loop back() ke URL yang sama (terjadi pada request pertama tanpa referer)
+            $previous = url()->previous();
+            $current = $request->url();
+            if ($previous === $current) {
+                return response(
+                    '<h1>Terjadi kesalahan</h1><p>'.e($userMessage).'</p>',
+                    500,
+                    ['Content-Type' => 'text/html; charset=utf-8']
+                );
+            }
+
+            // Inertia request → redirect back dengan flash error (aman, Inertia handle 302)
+            // Browser biasa → redirect back dengan flash error
             return back()->with('error', $userMessage);
         });
     }
@@ -69,6 +125,16 @@ class Handler
     {
         // HTTP exception — biarkan Laravel menangani dengan status code yang benar
         if ($e instanceof HttpException) {
+            return true;
+        }
+
+        // Authorization exception (Laravel akan konversi ke 403)
+        if ($e instanceof AuthorizationException) {
+            return true;
+        }
+
+        // Model not found exception (Laravel akan konversi ke 404)
+        if ($e instanceof ModelNotFoundException) {
             return true;
         }
 

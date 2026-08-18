@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -7,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 import { errorsToArray } from '@/lib/form-errors';
 import { store } from '@/routes/login';
@@ -19,12 +19,34 @@ type Props = {
 };
 
 export default function Login({ status, canResetPassword }: Props) {
+    const shouldReduceMotion = useReducedMotion();
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: shouldReduceMotion ? 0 : 0.05,
+                delayChildren: shouldReduceMotion ? 0 : 0.05,
+            },
+        },
+    };
+
+    const itemVariants = {
+        hidden: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.25, ease: 'easeOut' as const },
+        },
+    };
+
     return (
         <AuthLayout
-            title="Masuk ke akun Anda"
-            description="Masukkan NIP dan password untuk login"
+            title="SIMPEG PA Penajam"
+            description="Sistem Informasi Kepegawaian Pengadilan Agama Penajam"
         >
-            <Head title="Login" />
+            <Head title="Login SIMPEG" />
 
             <Form
                 {...store.form()}
@@ -33,36 +55,68 @@ export default function Login({ status, canResetPassword }: Props) {
             >
                 {({ processing, errors }) => (
                     <>
-                        {Object.keys(errors).length > 0 && (
-                            <AlertError
-                                errors={errorsToArray(errors)}
-                                title="Login gagal"
-                            />
-                        )}
-                        <div className="grid gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="nip">NIP</Label>
+                        <AnimatePresence mode="wait">
+                            {Object.keys(errors).length > 0 && (
+                                <motion.div
+                                    key="login-error-banner"
+                                    initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.98 }}
+                                    animate={
+                                        shouldReduceMotion
+                                            ? { opacity: 1 }
+                                            : {
+                                                  opacity: 1,
+                                                  y: 0,
+                                                  scale: 1,
+                                                  x: [0, -4, 4, -2, 2, 0],
+                                                  transition: { duration: 0.35, ease: 'easeOut' },
+                                              }
+                                    }
+                                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                >
+                                    <AlertError
+                                        errors={errorsToArray(errors)}
+                                        title="Login gagal"
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            className="grid gap-5"
+                        >
+                            <motion.div variants={itemVariants} className="grid gap-2">
+                                <Label htmlFor="nip">NIP (Nomor Induk Pegawai)</Label>
                                 <Input
                                     id="nip"
                                     type="text"
                                     name="nip"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={18}
                                     required
                                     autoFocus
-                                    tabIndex={1}
                                     autoComplete="username"
-                                    placeholder="Masukkan NIP"
+                                    placeholder="Contoh: 199001012020121001"
+                                    onInput={(e) => {
+                                        const target = e.currentTarget;
+                                        target.value = target.value.replace(/\D/g, '');
+                                    }}
+                                    aria-invalid={errors.nip ? true : undefined}
+                                    aria-describedby={errors.nip ? 'nip-error' : undefined}
                                 />
-                                <InputError message={errors.nip} />
-                            </div>
+                                <InputError id="nip-error" message={errors.nip} />
+                            </motion.div>
 
-                            <div className="grid gap-2">
-                                <div className="flex items-center">
+                            <motion.div variants={itemVariants} className="grid gap-2">
+                                <div className="flex flex-wrap items-center justify-between gap-1">
                                     <Label htmlFor="password">Password</Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
-                                            className="ml-auto text-sm"
-                                            tabIndex={5}
+                                            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                                         >
                                             Lupa password?
                                         </TextLink>
@@ -72,41 +126,60 @@ export default function Login({ status, canResetPassword }: Props) {
                                     id="password"
                                     name="password"
                                     required
-                                    tabIndex={2}
                                     autoComplete="current-password"
-                                    placeholder="Masukkan password"
+                                    placeholder="Masukkan password akun"
+                                    aria-invalid={errors.password ? true : undefined}
+                                    aria-describedby={errors.password ? 'password-error' : undefined}
                                 />
-                                <InputError message={errors.password} />
-                            </div>
+                                <InputError id="password-error" message={errors.password} />
+                            </motion.div>
 
-                            <div className="flex items-center space-x-3">
+                            <motion.div variants={itemVariants} className="flex min-h-[36px] items-center space-x-2.5">
                                 <Checkbox
                                     id="remember"
                                     name="remember"
-                                    tabIndex={3}
                                 />
-                                <Label htmlFor="remember">Ingat saya</Label>
-                            </div>
+                                <Label htmlFor="remember" className="cursor-pointer select-none text-sm font-normal text-muted-foreground hover:text-foreground">
+                                    Ingat saya di perangkat ini
+                                </Label>
+                            </motion.div>
 
-                            <Button
-                                type="submit"
-                                className="mt-4 w-full"
-                                tabIndex={4}
-                                processing={processing}
-                                data-test="login-button"
-                            >
-                                Masuk
-                            </Button>
-                        </div>
+                            <motion.div variants={itemVariants} className="space-y-3">
+                                <Button
+                                    type="submit"
+                                    className="h-10 w-full text-sm font-semibold tracking-wide"
+                                    processing={processing}
+                                    data-test="login-button"
+                                >
+                                    Masuk ke SIMPEG
+                                </Button>
+
+                                <p className="text-center text-xs text-muted-foreground">
+                                    Kendala akses?{' '}
+                                    <span className="font-medium text-foreground/80">
+                                        Hubungi Kepegawaian & Ortala PA Penajam
+                                    </span>
+                                </p>
+                            </motion.div>
+                        </motion.div>
                     </>
                 )}
             </Form>
 
-            {status && (
-                <div className="mb-4 text-center text-sm font-medium text-primary">
-                    {status}
-                </div>
-            )}
+            <AnimatePresence>
+                {status && (
+                    <motion.div
+                        initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        role="status"
+                        className="mt-2 rounded-lg border border-primary/20 bg-primary/10 p-3 text-center text-sm font-medium text-primary"
+                    >
+                        {status}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </AuthLayout>
     );
 }

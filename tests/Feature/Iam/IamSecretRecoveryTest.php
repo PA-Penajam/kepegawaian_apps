@@ -4,6 +4,7 @@ use App\Models\IamApplication;
 use App\Models\Pegawai;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\RateLimiter;
 use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
@@ -166,7 +167,7 @@ test('POST /acknowledge-secret denied 403 for is_system app', function () {
 test('POST /regenerate-key respects rate limit: 5 per hour per user, 6th gets blocked', function () {
     $app = IamApplication::factory()->create(['is_system' => false]);
 
-    \Illuminate\Support\Facades\RateLimiter::clear('iam-regenerate:'.$this->admin->id);
+    RateLimiter::clear('iam-regenerate:'.$this->admin->id);
 
     for ($i = 1; $i <= 5; $i++) {
         $this->actingAs($this->admin)
@@ -187,8 +188,8 @@ test('rate limit terpisah per user', function () {
     $admin2 = Pegawai::factory()->admin()->create();
     $app = IamApplication::factory()->create(['is_system' => false]);
 
-    \Illuminate\Support\Facades\RateLimiter::clear('iam-regenerate:'.$this->admin->id);
-    \Illuminate\Support\Facades\RateLimiter::clear('iam-regenerate:'.$admin2->id);
+    RateLimiter::clear('iam-regenerate:'.$this->admin->id);
+    RateLimiter::clear('iam-regenerate:'.$admin2->id);
 
     for ($i = 1; $i <= 5; $i++) {
         $this->actingAs($this->admin)

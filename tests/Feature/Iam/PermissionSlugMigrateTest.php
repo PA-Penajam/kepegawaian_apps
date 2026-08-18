@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\IamApplication;
-use App\Models\IamPermission;
 use App\Models\Pegawai;
 
 beforeEach(function () {
@@ -82,7 +81,7 @@ it('mencatat audit log saat slug dimigrasi', function () {
         ->post("/iam/aplikasi/{$this->kepegawaian->id}/permissions/{$perm->id}/migrate-slug");
 
     $this->assertDatabaseHas('activity_log', [
-        'log_name'   => 'iam.permission',
+        'log_name' => 'iam.permission',
         'subject_id' => $perm->id,
         'description' => 'slug-migrated',
     ]);

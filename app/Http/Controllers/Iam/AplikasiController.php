@@ -6,13 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Iam\StoreAplikasiRequest;
 use App\Http\Requests\Iam\UpdateAplikasiRequest;
 use App\Models\IamApplication;
+use App\Services\Iam\IamPermissionAuditor;
+use App\Services\Iam\IamSecretService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Response;
 
 class AplikasiController extends Controller
 {
-    public function index(\App\Services\Iam\IamSecretService $secretService): Response
+    public function index(IamSecretService $secretService): Response
     {
         $aplikasi = IamApplication::withCount('roles')
             ->latest()
@@ -30,8 +33,8 @@ class AplikasiController extends Controller
 
     public function show(
         IamApplication $aplikasi,
-        \App\Services\Iam\IamPermissionAuditor $auditor,
-        \App\Services\Iam\IamSecretService $secretService,
+        IamPermissionAuditor $auditor,
+        IamSecretService $secretService,
     ): Response {
         $aplikasi->load(['roles.permissions', 'permissions']);
 
@@ -67,7 +70,7 @@ class AplikasiController extends Controller
 
     public function store(
         StoreAplikasiRequest $request,
-        \App\Services\Iam\IamSecretService $secretService,
+        IamSecretService $secretService,
     ): RedirectResponse {
         $app = IamApplication::create($request->validated());
         $plaintext = $secretService->generateAndStore($app, $request);
@@ -104,9 +107,9 @@ class AplikasiController extends Controller
      * jadi harus di-set secara manual via service.
      */
     public function regenerateKey(
-        \Illuminate\Http\Request $request,
+        Request $request,
         IamApplication $aplikasi,
-        \App\Services\Iam\IamSecretService $secretService,
+        IamSecretService $secretService,
     ): RedirectResponse {
         abort_if($aplikasi->is_system, 403, 'Aplikasi sistem tidak dapat diregenerasi');
 

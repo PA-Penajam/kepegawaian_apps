@@ -7,6 +7,7 @@ use App\Http\Requests\Iam\StorePermissionRequest;
 use App\Http\Requests\Iam\UpdatePermissionRequest;
 use App\Models\IamApplication;
 use App\Models\IamPermission;
+use App\Services\Iam\IamPermissionAuditor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -60,7 +61,7 @@ class PermissionController extends Controller
     public function migrateSlug(
         IamApplication $aplikasi,
         IamPermission $permission,
-        \App\Services\Iam\IamPermissionAuditor $auditor,
+        IamPermissionAuditor $auditor,
     ): RedirectResponse {
         // Validasi IDOR: pastikan permission milik aplikasi yang dimaksud
         abort_unless($permission->iam_application_id === $aplikasi->id, 404);
@@ -92,7 +93,7 @@ class PermissionController extends Controller
 
         $before = $permission->slug;
         $permission->update([
-            'slug'  => $suggested,
+            'slug' => $suggested,
             'group' => explode('.', $suggested)[0],
         ]);
 

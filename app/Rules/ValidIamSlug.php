@@ -16,8 +16,8 @@ class ValidIamSlug implements ValidationRule
 
         if (! is_string($value) || ! preg_match($pattern, $value)) {
             $fail('Slug harus format {resource}.{action} atau {module}.{resource}.{action}. '
-                . 'Contoh: pegawai.view, cuti.pengajuan.create. '
-                . 'Lowercase, antar-segment pakai titik, antar-kata pakai strip.');
+                .'Contoh: pegawai.view, cuti.pengajuan.create. '
+                .'Lowercase, antar-segment pakai titik, antar-kata pakai strip.');
 
             return;
         }

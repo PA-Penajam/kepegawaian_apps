@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import JudicialAuthBackground from '@/components/auth/judicial-background';
 import { BlurFade } from '@/components/ui/blur-fade';
 import {
     Card,
@@ -21,7 +22,8 @@ export default function AuthCardLayout({
     description?: string;
 }>) {
     return (
-        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-gradient-to-br from-background via-muted to-background p-6 md:p-10">
+        <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden bg-background p-6 md:p-10">
+            <JudicialAuthBackground />
             <div className="flex w-full max-w-md flex-col gap-6">
                 <BlurFade delay={0.1} duration={0.4}>
                     <Link

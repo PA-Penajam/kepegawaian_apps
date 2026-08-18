@@ -5,6 +5,7 @@ use App\Models\Pegawai;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
     Route::middleware(['auth:sanctum', 'iam.signature'])
@@ -144,7 +145,7 @@ test('HMAC verification failure logs hmac.verification_failed event with reason'
         'X-Timestamp' => $ts,
     ])->assertStatus(401);
 
-    $activity = \Spatie\Activitylog\Models\Activity::query()
+    $activity = Activity::query()
         ->where('log_name', 'iam_audit')
         ->where('event', 'hmac.verification_failed')
         ->latest('id')
@@ -166,7 +167,7 @@ test('HMAC failure dengan api_key tidak terdaftar log reason=app_not_found', fun
         'X-Timestamp' => now()->timestamp,
     ])->assertStatus(401);
 
-    $activity = \Spatie\Activitylog\Models\Activity::query()
+    $activity = Activity::query()
         ->where('log_name', 'iam_audit')
         ->where('event', 'hmac.verification_failed')
         ->latest('id')
@@ -182,7 +183,7 @@ test('HMAC failure missing header log reason=missing_header', function () {
 
     $this->getJson('/test-iam-signature')->assertStatus(401);
 
-    $activity = \Spatie\Activitylog\Models\Activity::query()
+    $activity = Activity::query()
         ->where('log_name', 'iam_audit')
         ->where('event', 'hmac.verification_failed')
         ->latest('id')

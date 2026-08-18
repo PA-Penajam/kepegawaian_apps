@@ -12,6 +12,7 @@ function validateSlug(string $slug): ?string
         ['slug' => $slug],
         ['slug' => [new ValidIamSlug]],
     );
+
     return $validator->errors()->first('slug') ?: null;
 }
 

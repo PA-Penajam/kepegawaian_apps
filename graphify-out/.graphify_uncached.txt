@@ -1,0 +1,295 @@
+/home/development/project/kepegawaian_apps/.agents/skills/fortify-development/SKILL.md
+/home/development/project/kepegawaian_apps/.agents/skills/inertia-react-development/SKILL.md
+/home/development/project/kepegawaian_apps/.agents/skills/pest-testing/SKILL.md
+/home/development/project/kepegawaian_apps/.agents/skills/tailwindcss-development/SKILL.md
+/home/development/project/kepegawaian_apps/.agents/skills/wayfinder-development/SKILL.md
+/home/development/project/kepegawaian_apps/.commandcode/taste/taste.md
+/home/development/project/kepegawaian_apps/.github/skills/fortify-development/SKILL.md
+/home/development/project/kepegawaian_apps/.github/skills/inertia-react-development/SKILL.md
+/home/development/project/kepegawaian_apps/.github/skills/pest-testing/SKILL.md
+/home/development/project/kepegawaian_apps/.github/skills/tailwindcss-development/SKILL.md
+/home/development/project/kepegawaian_apps/.github/skills/wayfinder-development/SKILL.md
+/home/development/project/kepegawaian_apps/.github/workflows/lint.yml
+/home/development/project/kepegawaian_apps/.github/workflows/tests.yml
+/home/development/project/kepegawaian_apps/.kiro/specs/keycloak-iam-migration/design.md
+/home/development/project/kepegawaian_apps/.kiro/specs/keycloak-iam-migration/requirements.md
+/home/development/project/kepegawaian_apps/.kiro/specs/keycloak-iam-migration/tasks.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/API Documentation/API Documentation.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/API Documentation/Employee Management API.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/API Documentation/IAM Authentication API.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Backend Architecture.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/API Controllers.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Base Controller.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Controller Layer.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/IAM Controllers/Application Management Controller.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/IAM Controllers/IAM Controllers.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/IAM Controllers/Permission Management Controller.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/IAM Controllers/Role Management Controller.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/IAM Controllers/User Access Controller.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Kepegawaian Controllers/Career Progression Controllers.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Kepegawaian Controllers/Document Management Controller.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Kepegawaian Controllers/Kepegawaian Controllers.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Kepegawaian Controllers/Pegawai Controller.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Kepegawaian Controllers/Personal and Family Controllers.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Kepegawaian Controllers/Self-Service Controller.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Monitoring Controllers.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Reference Data Controllers.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Controller Layer/Settings Controllers.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Middleware Integration.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Model Layer/Academic Records.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Model Layer/Core Models.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Model Layer/Document Models.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Model Layer/IAM Models.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Model Layer/Model Layer.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Model Layer/Model Relationships.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Model Layer/Reference Data Models.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Policy System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Provider & Configuration.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Service Layer/Career History Service.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Service Layer/Dashboard Statistics Service.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Service Layer/IAM Authorization Service.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Service Layer/KGB Monitoring Service.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Service Layer/Promotion Monitoring Service.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Service Layer/Service Layer.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Backend Architecture/Service Layer/Service Testing Patterns.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Database Design/Core Entity Relationships.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Database Design/Database Design.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Database Design/IAM Database Schema.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Database Design/Reference Data Schema.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Deployment and Configuration.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Development Guidelines.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Awards and Disciplinary Actions.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Career Progression Tracking/Career Progression Analytics.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Career Progression Tracking/Career Progression Tracking.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Career Progression Tracking/Position Change Tracking (Riwayat Jabatan).md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Career Progression Tracking/Rank Advancement Management (Riwayat Pangkat).md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Career Progression Tracking/Training and Education Records (Riwayat Diklat & Riwayat Pendidikan).md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Document Management.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Employee Data Management/Employee Data Management.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Employee Data Management/Photo Management System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Employee Management System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Employee Management System/Family and Personal Data.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/Frontend Architecture.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/Layout System/Application Layouts.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/Layout System/Authentication Layouts.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/Layout System/Layout System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/Layout System/Settings Layouts.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/React Component System/Employee Tabs System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/React Component System/Kepegawaian-Specific Components.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/React Component System/Layout System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/React Component System/React Component System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/React Component System/UI Primitives Library.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/State Management.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/Styling and Theming.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/TypeScript Integration.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Frontend Architecture/UI_UX Refactor Design Document.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Getting Started.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Identity and Access Management (IAM)/Application Management.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Identity and Access Management (IAM)/Identity and Access Management (IAM).md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Identity and Access Management (IAM)/Role and Permission System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Identity and Access Management (IAM)/Security Mechanisms/Audit Trail System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Identity and Access Management (IAM)/Security Mechanisms/Security Mechanisms.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Identity and Access Management (IAM)/User Access Control.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Monitoring and Analytics System/Dashboard Analytics and Statistics.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Monitoring and Analytics System/KGB Eligibility Monitoring.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Monitoring and Analytics System/KP (Promotion) Monitoring.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Monitoring and Analytics System/Monitoring and Analytics System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Project Overview/Architecture Overview.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Project Overview/Key Features.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Project Overview/Project Overview.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Project Overview/System Introduction.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Project Overview/Technology Stack.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Project Overview/User Personas.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Reference Data Management/Document Type Reference Data.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Reference Data Management/Position and Rank Reference Data.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Reference Data Management/Reference Data Management.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Reference Data Management/Role and Permission Reference Data.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Reference Data Management/Status and Classification Reference Data.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Security Considerations/Authentication Security.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Security Considerations/Authorization Mechanisms.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Security Considerations/Data Protection.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Security Considerations/Security Considerations.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Self-Service Portal/Document Handling System.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Self-Service Portal/Eligibility Monitoring Integration.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Self-Service Portal/Employee Profile Management.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Self-Service Portal/Self-Service Portal.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Testing Strategy/Feature Testing.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Testing Strategy/Test Helpers and Utilities.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Testing Strategy/Testing Strategy.md
+/home/development/project/kepegawaian_apps/.qoder/repowiki/en/content/Testing Strategy/Unit Testing.md
+/home/development/project/kepegawaian_apps/.qoder/rules/coding.md
+/home/development/project/kepegawaian_apps/.serena/memories/project_overview.md
+/home/development/project/kepegawaian_apps/.serena/memories/style_and_conventions.md
+/home/development/project/kepegawaian_apps/.serena/memories/suggested_commands.md
+/home/development/project/kepegawaian_apps/.serena/memories/task_completion.md
+/home/development/project/kepegawaian_apps/.serena/project.yml
+/home/development/project/kepegawaian_apps/.sisyphus/drafts/gap-analysis-administrasi-kepegawaian.md
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/cuti-audit/cuti-audit-report.md
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/cuti-audit/task-1-audit-lengkap.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/cuti-audit/task-1-cuti-jenis-master.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/f2-build-output.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/f2-code-review.md
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/f2-pint-output.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/f2-test-output.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/f3-qa-summary.md
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/f3-rerun-summary.md
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/f4-scope-fidelity-v3.md
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/f4-scope-fidelity.md
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/console-errors-admin-initial.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-1-enum-values.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-10-pendidikan-build.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-10-pendidikan-crud.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-11-diklat-build.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-11-diklat-crud.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-12-keluarga-build.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-12-keluarga-crud.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-13-penghargaan-build.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-13-penghargaan-crud.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-14-hukuman-build.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-14-hukuman-scope.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-15-dokumen-build.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-15-dokumen-crud.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-18-dashboard-accuracy.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-2-seed-data.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-21-rbac-enforcement.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-21-self-service-access.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-3-role-middleware.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-5-pegawai-create.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-5-pegawai-relations.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-5-user-pegawai-link.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-6-policy.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-6-routes.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-8-pangkat-sync.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-8-riwayat-crud.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-8-riwayat-pangkat-build.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-9-jabatan-build.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-9-jabatan-sync.txt
+/home/development/project/kepegawaian_apps/.sisyphus/notepads/master-data-kepegawaian/decisions.md
+/home/development/project/kepegawaian_apps/.sisyphus/notepads/master-data-kepegawaian/issues.md
+/home/development/project/kepegawaian_apps/.sisyphus/notepads/master-data-kepegawaian/learnings.md
+/home/development/project/kepegawaian_apps/.sisyphus/notepads/master-data-kepegawaian/problems.md
+/home/development/project/kepegawaian_apps/.sisyphus/notepads/sikep-p1-administrasi/decisions.md
+/home/development/project/kepegawaian_apps/.sisyphus/notepads/sikep-p1-administrasi/issues.md
+/home/development/project/kepegawaian_apps/.sisyphus/notepads/sikep-p1-administrasi/learnings.md
+/home/development/project/kepegawaian_apps/.sisyphus/notepads/sikep-p1-administrasi/problems.md
+/home/development/project/kepegawaian_apps/.sisyphus/plans/master-data-kepegawaian.md
+/home/development/project/kepegawaian_apps/.sisyphus/plans/sikep-p1-administrasi.md
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/1050143-1774061812/api-design.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/1050143-1774061812/architecture-overview.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/1050143-1774061812/database-schema.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/1050143-1774061812/ui-admin-iam.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/280414-1777779334/content/full-retro-vs-kombinasi.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/280414-1777779334/content/inkonsistensi-container.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/280414-1777779334/content/inkonsistensi-heading.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/280414-1777779334/content/pendekatan-kombinasi.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/280414-1777779334/content/ringkasan-inkonsistensi.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/280414-1777779334/content/standar-padding.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/280414-1777779334/content/standar-pagination.html
+/home/development/project/kepegawaian_apps/.superpowers/brainstorm/280414-1777779334/content/standar-table-header.html
+/home/development/project/kepegawaian_apps/AGENTS.md
+/home/development/project/kepegawaian_apps/docker/keycloak/README.md
+/home/development/project/kepegawaian_apps/docker/keycloak/docker-compose.yml
+/home/development/project/kepegawaian_apps/docs/analisis_project.md
+/home/development/project/kepegawaian_apps/docs/cuti/README.md
+/home/development/project/kepegawaian_apps/docs/cuti/runbook.md
+/home/development/project/kepegawaian_apps/docs/iam/secret-management.md
+/home/development/project/kepegawaian_apps/docs/implementation_plan.md
+/home/development/project/kepegawaian_apps/docs/plans/2026-03-16-relational-role-migration-design.md
+/home/development/project/kepegawaian_apps/docs/plans/2026-03-16-relational-role-migration.md
+/home/development/project/kepegawaian_apps/docs/plans/2026-04-15-ui-refactor-design.md
+/home/development/project/kepegawaian_apps/docs/plans/2026-04-15-ui-refactor-plan.md
+/home/development/project/kepegawaian_apps/docs/plans/2026-04-20-dashboard-ui.md
+/home/development/project/kepegawaian_apps/docs/plans/2026-04-20-perbaikan-bug-dan-placeholder.md
+/home/development/project/kepegawaian_apps/docs/plans/2026-04-20-sso-self-login-kepegawaian.md
+/home/development/project/kepegawaian_apps/docs/rules.md
+/home/development/project/kepegawaian_apps/docs/spesifikasi-dokumen.md
+/home/development/project/kepegawaian_apps/docs/spesifikasi-fitur-administrasi-kepegawaian-belum-tercover.md
+/home/development/project/kepegawaian_apps/docs/sso-api/README.md
+/home/development/project/kepegawaian_apps/docs/sso-api/authentication.md
+/home/development/project/kepegawaian_apps/docs/sso-api/endpoints.md
+/home/development/project/kepegawaian_apps/docs/sso-api/integration/ci4.md
+/home/development/project/kepegawaian_apps/docs/sso-api/integration/express.md
+/home/development/project/kepegawaian_apps/docs/sso-api/integration/fastapi.md
+/home/development/project/kepegawaian_apps/docs/sso-api/integration/laravel.md
+/home/development/project/kepegawaian_apps/docs/sso-api/openapi.yaml
+/home/development/project/kepegawaian_apps/docs/sso-api/rbac-convention.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-03-16-pegawai-as-user.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-03-21-iam-security-fixes.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-03-21-iam-sso-gateway.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-04-17-fase-1-fondasi-stabil.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-04-17-fase-2-kepatuhan-kualitas.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-04-17-fase-3-ux-harian.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-04-17-fase-4-fitur-operasional.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-04-17-fase-5-fitur-lanjutan.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-05-01-modul-cuti.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-05-02-error-success-handling.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-05-03-jenis-cuti-asn.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-05-03-ui-ux-consistency.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-05-16-iam-informative-plan.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-05-17-iam-hub-secret-display.md
+/home/development/project/kepegawaian_apps/docs/superpowers/plans/2026-06-11-keycloak-iam-migration.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-03-16-pegawai-as-user-design.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-03-21-iam-sso-design.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-04-17-fase-2-kepatuhan-kualitas-design.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-04-17-improvement-roadmap-design.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-04-17-self-service-pengajuan-perubahan-data-design.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-05-01-modul-cuti-design.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-05-03-jenis-cuti-asn-design.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-05-03-ui-ux-consistency-design.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-05-16-iam-informative-design.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-05-17-iam-hub-secret-display-design.md
+/home/development/project/kepegawaian_apps/docs/superpowers/specs/2026-06-11-keycloak-iam-migration-design.md
+/home/development/project/kepegawaian_apps/mockup_retro.html
+/home/development/project/kepegawaian_apps/mockup_retro_launcher.html
+/home/development/project/kepegawaian_apps/public/robots.txt
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/admin-access.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/dashboard-cards.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/dashboard-distribusi.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/dashboard-stats.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s1-login-admin.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s10-self-service.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s11-access-control.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s2-dashboard.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s3-pegawai-index.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s4-search-filter.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s5-pegawai-show.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s6-tab-pangkat.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s7-monitoring-kgb.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s8-create-form.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/f3-rerun/s9-monitoring-kp.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/login-success.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/monitoring-kgb-filter.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/monitoring-kgb.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/monitoring-kp-filter.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/monitoring-kp.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/pegawai-create-form-fail.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/pegawai-create.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/pegawai-filter.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/pegawai-index.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/pegawai-search.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/pegawai-show-biodata.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/pegawai-show-pangkat.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/pegawai-show-tabs.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/pegawai-show.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/pegawai-sort.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/rbac-redirect-fail.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/rbac-redirect.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/rbac-viewer.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-01-login.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-02-dashboard.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-03-pegawai-index.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-04-search.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-05-pegawai-detail.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-06-monitoring-kgb.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-07-monitoring-kp.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-08-create-form.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-09-rbac-admin.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-10-self-service.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/scenario-11-rbac-viewer.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/self-service-fail.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/final-qa/self-service.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-4-navigation-hrefs.png
+/home/development/project/kepegawaian_apps/.sisyphus/evidence/task-4-sidebar-menu.png
+/home/development/project/kepegawaian_apps/public/apple-touch-icon.png
+/home/development/project/kepegawaian_apps/public/favicon.svg
+/home/development/project/kepegawaian_apps/public/images/human-resources.svg

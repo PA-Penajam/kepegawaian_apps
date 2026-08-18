@@ -1,74 +1,144 @@
 import { usePage } from '@inertiajs/react';
-import { Check, X, AlertCircle } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
-import React, { useEffect, useState, useRef } from 'react';
+import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import React, { useEffect, useRef, useState } from 'react';
+
+type FlashType = 'success' | 'error' | 'warning' | 'info';
+
+interface FlashMessageItem {
+    id: number;
+    type: FlashType;
+    text: string;
+}
 
 export function FlashMessages() {
-    const { flash } = usePage<any>().props;
-    const [messages, setMessages] = useState<any[]>([]);
+    const { flash } = usePage<{
+        flash?: {
+            success?: string;
+            error?: string;
+            warning?: string;
+            info?: string;
+        };
+    }>().props;
+
+    const [messages, setMessages] = useState<FlashMessageItem[]>([]);
+    const shouldReduceMotion = useReducedMotion();
+    const lastAddedRef = useRef<{ time: number; text: string } | null>(null);
 
     useEffect(() => {
         if (flash?.success) {
             addMessage('success', flash.success);
         }
-
         if (flash?.error) {
             addMessage('error', flash.error);
         }
+        if (flash?.warning) {
+            addMessage('warning', flash.warning);
+        }
+        if (flash?.info) {
+            addMessage('info', flash.info);
+        }
     }, [flash]);
 
-    const lastAddedRef = React.useRef<{ time: number; text: string } | null>(null);
-
-    const addMessage = (type: string, text: string) => {
+    const addMessage = (type: FlashType, text: string) => {
         const now = Date.now();
 
+        // Cegah duplikasi pesan identik dalam 500ms (misal React Strict Mode)
         if (
             lastAddedRef.current &&
             lastAddedRef.current.text === text &&
             now - lastAddedRef.current.time < 500
         ) {
-            return; // Cegah duplikasi karena React Strict Mode
+            return;
         }
 
         lastAddedRef.current = { time: now, text };
 
         const id = now + Math.random();
         setMessages((prev) => [...prev, { id, type, text }]);
+
+        // Auto-dismiss setelah 5 detik
         setTimeout(() => {
             setMessages((prev) => prev.filter((m) => m.id !== id));
-        }, 4000); // Tampil selama 4 detik
+        }, 5000);
     };
 
     const removeMessage = (id: number) => {
         setMessages((prev) => prev.filter((m) => m.id !== id));
     };
 
+    const getIcon = (type: FlashType) => {
+        switch (type) {
+            case 'success':
+                return (
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                        <CheckCircle2 className="size-4.5" />
+                    </div>
+                );
+            case 'error':
+                return (
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-destructive/15 text-destructive dark:bg-destructive/20">
+                        <AlertCircle className="size-4.5" />
+                    </div>
+                );
+            case 'warning':
+                return (
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+                        <AlertTriangle className="size-4.5" />
+                    </div>
+                );
+            case 'info':
+            default:
+                return (
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary dark:bg-primary/20">
+                        <Info className="size-4.5" />
+                    </div>
+                );
+        }
+    };
+
     return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
+        <div
+            aria-live="polite"
+            role="region"
+            aria-label="Pemberitahuan Sistem"
+            className="pointer-events-none fixed right-4 bottom-5 z-50 flex w-[380px] max-w-[calc(100vw-2rem)] flex-col gap-2.5 sm:right-6 sm:bottom-6"
+        >
             <AnimatePresence>
                 {messages.map((message) => (
                     <motion.div
                         key={message.id}
-                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                        className={`pointer-events-auto flex items-center gap-3 border-2 border-black p-4 shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background w-[350px] max-w-[90vw]`}
+                        layout
+                        initial={
+                            shouldReduceMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, y: 24, scale: 0.96 }
+                        }
+                        animate={
+                            shouldReduceMotion
+                                ? { opacity: 1 }
+                                : { opacity: 1, y: 0, scale: 1 }
+                        }
+                        exit={
+                            shouldReduceMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, scale: 0.92, transition: { duration: 0.2 } }
+                        }
+                        className="pointer-events-auto flex items-start gap-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-lg backdrop-blur-md transition-all dark:border-white/10 dark:bg-card"
                     >
-                        {message.type === 'success' ? (
-                            <div className="bg-primary border-2 border-black rounded-full p-1.5 text-primary-foreground">
-                                <Check className="w-5 h-5 stroke-[3]" />
-                            </div>
-                        ) : (
-                            <div className="bg-destructive border-2 border-black rounded-full p-1.5 text-destructive-foreground">
-                                <AlertCircle className="w-5 h-5 stroke-[3]" />
-                            </div>
-                        )}
-                        <p className="text-sm font-bold flex-1 leading-snug text-foreground">{message.text}</p>
+                        {getIcon(message.type)}
+                        <div className="min-w-0 flex-1 pt-0.5">
+                            <p className="text-xs leading-relaxed font-medium text-foreground break-words sm:text-sm">
+                                {message.text}
+                            </p>
+                        </div>
                         <button
+                            type="button"
                             onClick={() => removeMessage(message.id)}
-                            className="text-foreground/50 hover:text-foreground transition-colors p-1"
+                            aria-label="Tutup pemberitahuan"
+                            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
-                            <X className="w-4 h-4 stroke-[3]" />
+                            <X className="size-4" />
                         </button>
                     </motion.div>
                 ))}

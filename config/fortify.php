@@ -121,6 +121,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Login Pipeline Middleware
+    |--------------------------------------------------------------------------
+    |
+    | Custom middleware to add to the login pipeline. This is where you can
+    | add custom validation or transformation logic before authentication occurs.
+    |
+    */
+
+    'pipelines' => [
+        'login' => [
+            \App\Http\Middleware\ValidatePegawaiStatus::class,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Register View Routes
     |--------------------------------------------------------------------------
     |

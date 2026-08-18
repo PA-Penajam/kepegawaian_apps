@@ -19,8 +19,8 @@ class UpdatePermissionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama'       => ['required', 'string', 'min:3', 'max:100'],
-            'group'      => ['nullable', 'string', 'max:50'],
+            'nama' => ['required', 'string', 'min:3', 'max:100'],
+            'group' => ['nullable', 'string', 'max:50'],
             'keterangan' => ['nullable', 'string', 'max:255'],
         ];
     }

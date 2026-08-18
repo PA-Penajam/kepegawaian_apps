@@ -2,11 +2,16 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import '../css/app.css';
 import { initializeTheme } from '@/hooks/use-appearance';
+import { setupInertiaErrorListeners } from '@/lib/inertia-error-listener';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Kepegawaian';
+
+// Inisialisasi pendengar error global Inertia
+setupInertiaErrorListeners();
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -20,16 +25,18 @@ createInertiaApp({
 
         root.render(
             <StrictMode>
-                <TooltipProvider delayDuration={0}>
-                    <App {...props} />
-                </TooltipProvider>
+                <ErrorBoundary>
+                    <TooltipProvider delayDuration={0}>
+                        <App {...props} />
+                    </TooltipProvider>
+                </ErrorBoundary>
             </StrictMode>,
         );
     },
     progress: {
-        color: '#4B5563',
+        color: '#166534',
     },
 });
 
-// This will set light / dark mode on load...
+// Inisialisasi tema light / dark mode
 initializeTheme();

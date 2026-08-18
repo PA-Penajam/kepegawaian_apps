@@ -21,9 +21,9 @@ class IamPermissionFactory extends Factory
 
         return [
             'iam_application_id' => IamApplication::factory(),
-            'nama'       => ucfirst($action).' '.ucfirst($resource),
-            'slug'       => "{$resource}.{$action}",
-            'group'      => $resource,
+            'nama' => ucfirst($action).' '.ucfirst($resource),
+            'slug' => "{$resource}.{$action}",
+            'group' => $resource,
             'keterangan' => null,
         ];
     }
@@ -32,7 +32,7 @@ class IamPermissionFactory extends Factory
     public function legacy(string $slug = 'iam-manage'): static
     {
         return $this->state(fn () => [
-            'slug'  => $slug,
+            'slug' => $slug,
             'group' => str_contains($slug, '.') ? explode('.', $slug)[0] : $slug,
         ]);
     }

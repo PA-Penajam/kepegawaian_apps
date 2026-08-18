@@ -3,6 +3,7 @@
 use App\Exceptions\Handler;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\ValidatePegawaiStatus;
 use App\Http\Middleware\VerifyHmacSignature;
 use App\Http\Middleware\VerifyIamPermission;
 use App\Http\Middleware\VerifyIamSignature;
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'abilities' => CheckAbilities::class,
             'permission' => VerifyIamPermission::class,
+            'pegawai.status' => ValidatePegawaiStatus::class,
             'verify.hmac' => VerifyHmacSignature::class,
             'iam.signature' => VerifyIamSignature::class,
             'iam.permission' => VerifyIamPermission::class,

@@ -5,26 +5,86 @@ export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
         <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 64 64"
+            fill="none"
             {...props}
         >
-            <rect width="28" height="42" x="2" y="2" fill="#88929f" transform="rotate(-180 16 23)" />
-            <rect width="12" height="8" x="6" y="32" fill="#fff" transform="rotate(-180 12 36)" />
-            <rect width="20" height="22" x="6" y="6" fill="#ebf7fe" transform="rotate(-180 16 17)" />
-            <path fill="#669e54" d="M22,28V22a2,2,0,0,0-2-2H12a2,2,0,0,0-2,2v6Z" />
-            <rect width="6" height="8" x="13" y="10" fill="#efbe9c" rx="3" />
-            <rect width="28" height="42" x="34" y="2" fill="#88929f" />
-            <rect width="12" height="8" x="46" y="32" fill="#fff" />
-            <rect width="20" height="22" x="38" y="6" fill="#ebf7fe" />
-            <path fill="#669e54" d="M42,28V22a2,2,0,0,1,2-2h8a2,2,0,0,1,2,2v6Z" />
-            <rect width="6" height="8" x="45" y="10" fill="#efbe9c" rx="3" transform="rotate(180 48 14)" />
-            <rect width="28" height="40" x="18" y="6" fill="#b8bec5" />
-            <rect width="20" height="22" x="22" y="10" fill="#ebf7fe" />
-            <path fill="#4472b0" d="M26,32V26a2,2,0,0,1,2-2h8a2,2,0,0,1,2,2v6Z" />
-            <rect width="6" height="8" x="29" y="14" fill="#efbe9c" rx="3" transform="rotate(180 32 18)" />
-            <path fill="#efbe9c" d="M40,45a2,2,0,0,0-2,2,2,2,0,0,0-4,0,2,2,0,0,0-4,0V39a2,2,0,0,0-4,0V51a2,2,0,0,0-4,0v2.172A6.826,6.826,0,0,0,24,58a6.826,6.826,0,0,1,2,4.828V63H40v-.764A9.468,9.468,0,0,1,41,58a9.468,9.468,0,0,0,1-4.236V47A2,2,0,0,0,40,45Z" />
-            <path d="M22,33H42a1,1,0,0,0,1-1V10a1,1,0,0,0-1-1H22a1,1,0,0,0-1,1V32A1,1,0,0,0,22,33Zm15-2H36V27H34v4H30V27H28v4H27V26a1,1,0,0,1,1-1h8a1,1,0,0,1,1,1ZM23,11H41V31H39V26a3,3,0,0,0-3-3H28a3,3,0,0,0-3,3v5H23Z" />
-            <path d="M36,19V17a4,4,0,0,0-8,0v2a4,4,0,0,0,8,0Zm-2,0a2,2,0,0,1-4,0V17a2,2,0,0,1,4,0Z" />
-            <path d="M62,1H34a1,1,0,0,0-1,1V5H31V2a1,1,0,0,0-1-1H2A1,1,0,0,0,1,2V44a1,1,0,0,0,1,1H17v1a1,1,0,0,0,1,1h7v1.184A2.966,2.966,0,0,0,24,48a3,3,0,0,0-3,3v2.172a7.772,7.772,0,0,0,2.293,5.535A5.789,5.789,0,0,1,25,62.828V63h2v-.172a7.772,7.772,0,0,0-2.293-5.535A5.789,5.789,0,0,1,23,53.172V51a1,1,0,0,1,2,0v2h2V39a1,1,0,0,1,2,0V51h2V47a1,1,0,0,1,2,0v4h2V47a1,1,0,0,1,2,0v4h2V47a1,1,0,0,1,2,0v6.764a8.505,8.505,0,0,1-.9,3.789A10.527,10.527,0,0,0,39,62.236V63h2v-.764a8.505,8.505,0,0,1,.9-3.789A10.527,10.527,0,0,0,43,53.764V47h3a1,1,0,0,0,1-1V45H62a1,1,0,0,0,1-1V2A1,1,0,0,0,62,1ZM3,43V3H29V5H18a1,1,0,0,0-1,1V9.143A3.946,3.946,0,0,0,12,13v2a3.946,3.946,0,0,0,5,3.857V19H12a3,3,0,0,0-3,3v5H7V7h8V5H6A1,1,0,0,0,5,6V28a1,1,0,0,0,1,1H17v2H6a1,1,0,0,0-1,1v8a1,1,0,0,0,1,1H17v2ZM17,16.728A1.994,1.994,0,0,1,14,15V13a2,2,0,0,1,3-1.729ZM12,23v4H11V22a1,1,0,0,1,1-1h5v6H14V23Zm5,14v2H7V33H17v2H8v2Zm28,8H42.22A2.96,2.96,0,0,0,38,44.78a2.954,2.954,0,0,0-4,0,2.908,2.908,0,0,0-3-.6V39a3,3,0,0,0-6,0v6H19V7H45Zm2-33.729A2,2,0,0,1,50,13v2a1.994,1.994,0,0,1-3,1.728ZM53,27H52V23H50v4H47V21h5a1,1,0,0,1,1,1ZM47,37h9V35H47V33H57v6H47Zm14,6H47V41H58a1,1,0,0,0,1-1V32a1,1,0,0,0-1-1H47V29H58a1,1,0,0,0,1-1V6a1,1,0,0,0-1-1H49V7h8V27H55V22a3,3,0,0,0-3-3H47v-.143A3.946,3.946,0,0,0,52,15V13a3.946,3.946,0,0,0-5-3.857V6a1,1,0,0,0-1-1H35V3H61Z" />
+            <defs>
+                <linearGradient id="shieldGrad" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="var(--color-primary, #1e4a38)" />
+                    <stop offset="100%" stopColor="#0d281e" />
+                </linearGradient>
+                <linearGradient id="goldGrad" x1="16" y1="12" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#f7d070" />
+                    <stop offset="50%" stopColor="#d4a337" />
+                    <stop offset="100%" stopColor="#9a6e1a" />
+                </linearGradient>
+            </defs>
+
+            {/* Shield Base */}
+            <path
+                d="M32 4L10 12V28C10 44 19.5 54.5 32 60C44.5 54.5 54 44 54 28V12L32 4Z"
+                fill="url(#shieldGrad)"
+                stroke="url(#goldGrad)"
+                strokeWidth="2.5"
+                strokeLinejoin="round"
+            />
+
+            {/* Inner Border */}
+            <path
+                d="M32 8.5L14 15V27.5C14 41 21.8 50 32 55C42.2 50 50 41 50 27.5V15L32 8.5Z"
+                stroke="url(#goldGrad)"
+                strokeWidth="1"
+                strokeOpacity="0.4"
+                fill="none"
+            />
+
+            {/* Central Pillar of Justice */}
+            <path
+                d="M32 16V46"
+                stroke="url(#goldGrad)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+            />
+            {/* Top Star of Excellence */}
+            <circle cx="32" cy="14" r="2" fill="#f7d070" />
+
+            {/* Balance Crossbeam */}
+            <path
+                d="M20 22C24 20.5 40 20.5 44 22"
+                stroke="url(#goldGrad)"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+
+            {/* Left Balance Scale */}
+            <path d="M20 22L16 31" stroke="url(#goldGrad)" strokeWidth="1.2" strokeLinecap="round" />
+            <path d="M20 22L24 31" stroke="url(#goldGrad)" strokeWidth="1.2" strokeLinecap="round" />
+            <path
+                d="M14 31C14 34 26 34 26 31H14Z"
+                fill="url(#goldGrad)"
+            />
+
+            {/* Right Balance Scale */}
+            <path d="M44 22L40 31" stroke="url(#goldGrad)" strokeWidth="1.2" strokeLinecap="round" />
+            <path d="M44 22L48 31" stroke="url(#goldGrad)" strokeWidth="1.2" strokeLinecap="round" />
+            <path
+                d="M38 31C38 34 50 34 50 31H38Z"
+                fill="url(#goldGrad)"
+            />
+
+            {/* Base Pedestal */}
+            <path
+                d="M24 46H40"
+                stroke="url(#goldGrad)"
+                strokeWidth="3"
+                strokeLinecap="round"
+            />
+            <path
+                d="M27 43H37"
+                stroke="url(#goldGrad)"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
         </svg>
     );
 }

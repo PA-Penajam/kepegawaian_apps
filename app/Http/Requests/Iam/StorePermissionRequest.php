@@ -27,7 +27,7 @@ class StorePermissionRequest extends FormRequest
                 Rule::unique('iam_permissions', 'slug')
                     ->where('iam_application_id', $aplikasi->id),
             ],
-            'group'      => ['nullable', 'string', 'max:50'],
+            'group' => ['nullable', 'string', 'max:50'],
             'keterangan' => ['nullable', 'string', 'max:255'],
         ];
     }

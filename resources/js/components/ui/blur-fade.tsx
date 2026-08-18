@@ -3,6 +3,7 @@ import {
   AnimatePresence,
   motion,
   useInView,
+  useReducedMotion,
   type MotionProps,
   type UseInViewOptions,
   type Variants,
@@ -14,8 +15,8 @@ interface BlurFadeProps extends MotionProps {
   children: React.ReactNode
   className?: string
   variant?: {
-    hidden: { y: number }
-    visible: { y: number }
+    hidden: { y?: number; x?: number; opacity?: number; filter?: string }
+    visible: { y?: number; x?: number; opacity?: number; filter?: string }
   }
   duration?: number
   delay?: number
@@ -43,21 +44,27 @@ export function BlurFade({
   ...props
 }: BlurFadeProps) {
   const ref = useRef(null)
+  const shouldReduceMotion = useReducedMotion()
   const inViewResult = useInView(ref, { once: true, margin: inViewMargin })
   const isInView = !inView || inViewResult
-  const defaultVariants: Variants = {
-    hidden: {
-      [direction === "left" || direction === "right" ? "x" : "y"]:
-        direction === "right" || direction === "down" ? -offset : offset,
-      opacity: 0,
-      filter: `blur(${blur})`,
-    },
-    visible: {
-      [direction === "left" || direction === "right" ? "x" : "y"]: 0,
-      opacity: 1,
-      filter: `blur(0px)`,
-    },
-  }
+  const defaultVariants: Variants = shouldReduceMotion
+    ? {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 },
+      }
+    : {
+        hidden: {
+          [direction === "left" || direction === "right" ? "x" : "y"]:
+            direction === "right" || direction === "down" ? -offset : offset,
+          opacity: 0,
+          filter: `blur(${blur})`,
+        },
+        visible: {
+          [direction === "left" || direction === "right" ? "x" : "y"]: 0,
+          opacity: 1,
+          filter: `blur(0px)`,
+        },
+      }
   const combinedVariants = variant ?? defaultVariants
 
   const hiddenFilter = getFilter(combinedVariants.hidden)
