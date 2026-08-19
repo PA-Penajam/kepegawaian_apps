@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Middleware\ValidatePegawaiStatus;
+use Laravel\Fortify\Actions\AttemptToAuthenticate;
+use Laravel\Fortify\Actions\CanonicalizeUsername;
+use Laravel\Fortify\Actions\EnsureLoginIsNotThrottled;
+use Laravel\Fortify\Actions\PrepareAuthenticatedSession;
+use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Features;
 
 return [
@@ -131,7 +137,12 @@ return [
 
     'pipelines' => [
         'login' => [
-            \App\Http\Middleware\ValidatePegawaiStatus::class,
+            EnsureLoginIsNotThrottled::class,
+            CanonicalizeUsername::class,
+            ValidatePegawaiStatus::class,
+            RedirectIfTwoFactorAuthenticatable::class,
+            AttemptToAuthenticate::class,
+            PrepareAuthenticatedSession::class,
         ],
     ],
 

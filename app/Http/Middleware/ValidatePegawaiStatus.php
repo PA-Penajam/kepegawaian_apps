@@ -6,13 +6,17 @@ use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Middleware untuk memvalidasi status Pegawai sebelum proses autentikasi.
  *
  * Middleware ini memastikan hanya Pegawai dengan status "aktif" yang dapat login,
  * baik melalui Laravel Fortify maupun Keycloak SSO.
+ *
+ * Penting: return type harus `mixed` bukan `Response` karena class ini
+ * dipakai di dua konteks:
+ * - HTTP Middleware (return Symfony Response)
+ * - Fortify Login Pipeline (return Responsable seperti SsoAwareLoginResponse)
  */
 class ValidatePegawaiStatus
 {
@@ -22,7 +26,7 @@ class ValidatePegawaiStatus
      * Validasi status_pegawai dari NIP yang diinput user, dan redirect ke halaman login
      * jika status bukan "aktif".
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next): mixed
     {
         // Skip validation jika route login tidak sesuai
         // Route login: GET /login (form), POST /login (submit)
