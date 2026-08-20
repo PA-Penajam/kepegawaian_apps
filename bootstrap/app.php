@@ -3,6 +3,7 @@
 use App\Exceptions\Handler;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SsoTokenRefresh;
 use App\Http\Middleware\ValidatePegawaiStatus;
 use App\Http\Middleware\VerifyHmacSignature;
 use App\Http\Middleware\VerifyIamPermission;
@@ -12,6 +13,7 @@ use App\Keycloak\Exceptions\KeycloakException;
 use App\Keycloak\Http\Middleware\EmergencyBypass;
 use App\Keycloak\Http\Middleware\KeycloakTokenRefresh;
 use App\Keycloak\Http\Middleware\VerifyKeycloakPermission;
+use App\Services\Sso\Exceptions\SsoException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -30,6 +32,9 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function () {
             Route::middleware('web')
                 ->group(base_path('routes/keycloak.php'));
+
+            Route::middleware('web')
+                ->group(base_path('routes/sso.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -43,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'keycloak.refresh' => KeycloakTokenRefresh::class,
             'keycloak.emergency' => EmergencyBypass::class,
             'keycloak.permission' => VerifyKeycloakPermission::class,
+            'sso.refresh' => SsoTokenRefresh::class,
         ]);
 
         // Middleware group 'keycloak' untuk authenticated routes via Keycloak
@@ -129,6 +135,28 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             abort($statusCode, $userMessage);
+        });
+
+        // Handler untuk Exception SSO PA Penajam
+        $exceptions->render(function (SsoException $e, Request $request) {
+            $statusCode = match ($e->getCode()) {
+                SsoException::USER_INFO_FAILED => 401,
+                SsoException::REFRESH_TOKEN_FAILED => 401,
+                SsoException::CODE_EXCHANGE_FAILED => 502,
+                SsoException::SSO_UNREACHABLE => 503,
+                default => 500,
+            };
+
+            $userMessage = $e->getMessage() ?: 'Terjadi kesalahan pada layanan SSO PA Penajam. Silakan coba lagi.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $userMessage,
+                    'error' => 'sso_error',
+                ], $statusCode);
+            }
+
+            return redirect()->route('login')->with('error', $userMessage);
         });
 
         // Daftarkan global exception handler untuk pesan user-friendly

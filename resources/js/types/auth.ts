@@ -16,6 +16,8 @@ export type User = {
 
 export type Auth = {
     user: User;
+    /** true jika user login via SSO Keycloak */
+    sso?: boolean;
 };
 
 export type TwoFactorSetupData = {

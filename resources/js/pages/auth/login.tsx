@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
 import { errorsToArray } from '@/lib/form-errors';
+import { login as ssoLogin } from '@/routes/auth/sso';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 
@@ -165,6 +166,20 @@ export default function Login({ status, canResetPassword }: Props) {
                     </>
                 )}
             </Form>
+
+            <div className="flex items-center gap-3 py-1">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs uppercase tracking-wider text-muted-foreground">atau</span>
+                <div className="h-px flex-1 bg-border" />
+            </div>
+
+            <a
+                href={ssoLogin()}
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 text-sm font-semibold tracking-wide text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                data-test="sso-login-button"
+            >
+                Masuk dengan SSO PA Penajam
+            </a>
 
             <AnimatePresence>
                 {status && (

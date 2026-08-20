@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-19T16:13:35.054Z",
+  "title": "Design System: Kepegawaian PA Penajam",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Judicial Forest Green",
+        "canonical": "oklch(0.32 0.10 155)",
+        "tonalRamp": [
+          "oklch(0.95 0.02 155)",
+          "oklch(0.85 0.04 155)",
+          "oklch(0.75 0.06 155)",
+          "oklch(0.60 0.08 155)",
+          "oklch(0.45 0.10 155)",
+          "oklch(0.32 0.10 155)",
+          "oklch(0.24 0.08 155)",
+          "oklch(0.16 0.05 155)"
+        ]
+      },
+      "accent": {
+        "role": "accent",
+        "displayName": "Mahkamah Gold",
+        "canonical": "oklch(0.72 0.16 75)",
+        "tonalRamp": [
+          "oklch(0.96 0.03 75)",
+          "oklch(0.88 0.08 75)",
+          "oklch(0.80 0.12 75)",
+          "oklch(0.72 0.16 75)",
+          "oklch(0.62 0.15 75)",
+          "oklch(0.50 0.13 75)",
+          "oklch(0.38 0.10 75)",
+          "oklch(0.25 0.06 75)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Institutional Canvas",
+        "canonical": "oklch(0.99 0.002 155)",
+        "tonalRamp": [
+          "oklch(0.99 0.002 155)",
+          "oklch(0.95 0.005 155)",
+          "oklch(0.90 0.01 155)",
+          "oklch(0.80 0.015 155)",
+          "oklch(0.65 0.02 155)",
+          "oklch(0.50 0.02 155)",
+          "oklch(0.30 0.02 155)",
+          "oklch(0.15 0.02 155)"
+        ]
+      },
+      "destructive": {
+        "role": "destructive",
+        "displayName": "Disciplinary Crimson",
+        "canonical": "oklch(0.577 0.245 27.325)",
+        "tonalRamp": [
+          "oklch(0.96 0.04 27.325)",
+          "oklch(0.85 0.10 27.325)",
+          "oklch(0.72 0.18 27.325)",
+          "oklch(0.577 0.245 27.325)",
+          "oklch(0.48 0.22 27.325)",
+          "oklch(0.38 0.18 27.325)",
+          "oklch(0.28 0.12 27.325)",
+          "oklch(0.18 0.07 27.325)"
+        ]
+      },
+      "sidebar": {
+        "role": "sidebar",
+        "displayName": "Judicial Deep Pine",
+        "canonical": "oklch(0.18 0.06 155)",
+        "tonalRamp": [
+          "oklch(0.92 0.02 155)",
+          "oklch(0.80 0.04 155)",
+          "oklch(0.65 0.06 155)",
+          "oklch(0.50 0.06 155)",
+          "oklch(0.35 0.06 155)",
+          "oklch(0.25 0.06 155)",
+          "oklch(0.18 0.06 155)",
+          "oklch(0.12 0.04 155)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Judul hero dashboard dan portal gerbang utama."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Judul modul utama dan halaman aplikasi."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Header kartu, section, dan dialog."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Teks isi, sel tabel data, dan deskripsi dokumen."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Label formulir input, badge status, dan metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-xs",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "purpose": "Efek angkat mikro pada tombol aksi dan input aktif."
+      },
+      {
+        "name": "shadow-sm",
+        "value": "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+        "purpose": "Kedalaman standar kontainer kartu dan tabel data."
+      },
+      {
+        "name": "shadow-md",
+        "value": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+        "purpose": "Elemen aksi mengambang dan dropdown popover."
+      },
+      {
+        "name": "shadow-lg",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+        "purpose": "Modal dialog persetujuan dan overlay drawer berkas."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Transisi default untuk hover, focus, dan animasi mikro."
+      },
+      {
+        "name": "duration-fast",
+        "value": "150ms",
+        "purpose": "Kecepatan transisi status tombol, input, dan badge."
+      },
+      {
+        "name": "duration-normal",
+        "value": "200ms",
+        "purpose": "Durasi animasi pembukaan dialog modal dan drawer."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "2xl",
+        "value": "1536px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Tombol aksi utama untuk simpan data, ajukan permohonan, dan setujui berkas.",
+      "html": "<button class=\"ds-btn-primary\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg>Simpan Permohonan</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: oklch(0.32 0.10 155); color: #ffffff; height: 36px; padding: 0 16px; font-size: 14px; font-weight: 500; font-family: Instrument Sans, sans-serif; border: 1px solid transparent; border-radius: 8px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); cursor: pointer; transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); outline: none; } .ds-btn-primary:hover { background: oklch(0.28 0.10 155); } .ds-btn-primary:focus-visible { box-shadow: 0 0 0 3px oklch(0.50 0.10 155 / 0.4); } .ds-icon { width: 16px; height: 16px; shrink: 0; }"
+    },
+    {
+      "name": "Secondary Neutral Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Tombol pendukung aksi sekunder untuk batal, kembali, atau filter lanjutan.",
+      "html": "<button class=\"ds-btn-secondary\">Batal / Kembali</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: oklch(0.95 0.02 155); color: oklch(0.25 0.05 60); height: 36px; padding: 0 16px; font-size: 14px; font-weight: 500; font-family: Instrument Sans, sans-serif; border: 1px solid oklch(0.90 0.02 155); border-radius: 8px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); cursor: pointer; transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); outline: none; } .ds-btn-secondary:hover { background: oklch(0.90 0.02 155); }"
+    },
+    {
+      "name": "Destructive Action Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Tombol aksi penolakan permohonan, penghapusan dokumen, atau pembatalan SK.",
+      "html": "<button class=\"ds-btn-destructive\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/></svg>Tolak Berkas</button>",
+      "css": ".ds-btn-destructive { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: oklch(0.577 0.245 27.325); color: #ffffff; height: 36px; padding: 0 16px; font-size: 14px; font-weight: 500; font-family: Instrument Sans, sans-serif; border: none; border-radius: 8px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); cursor: pointer; transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); outline: none; } .ds-btn-destructive:hover { background: oklch(0.50 0.245 27.325); } .ds-icon { width: 16px; height: 16px; shrink: 0; }"
+    },
+    {
+      "name": "Status Badge Pill",
+      "kind": "chip",
+      "description": "Indikator pill semantik untuk menampilkan status verifikasi permohonan.",
+      "html": "<span class=\"ds-badge ds-badge-approved\"><span class=\"ds-badge-dot\"></span>Disetujui</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; font-size: 12px; font-weight: 600; font-family: Instrument Sans, sans-serif; border-radius: 9999px; line-height: 1.4; letter-spacing: 0.02em; } .ds-badge-approved { background: oklch(0.92 0.05 155); color: oklch(0.32 0.10 155); border: 1px solid oklch(0.85 0.08 155); } .ds-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }"
+    },
+    {
+      "name": "Data Input Field",
+      "kind": "input",
+      "description": "Field input formulir standar untuk memasukkan data ASN (NIP, Nama, Jabatan).",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Masukkan Nomor Induk Pegawai (NIP)...\" value=\"198501152010011002\" />",
+      "css": ".ds-input { width: 100%; height: 36px; padding: 4px 12px; font-size: 14px; font-family: Instrument Sans, sans-serif; color: oklch(0.15 0.02 155); background: #ffffff; border: 1px solid oklch(0.90 0.02 155); border-radius: 8px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); transition: border-color 150ms, box-shadow 150ms; outline: none; box-sizing: border-box; } .ds-input:focus { border-color: oklch(0.50 0.10 155); box-shadow: 0 0 0 3px oklch(0.50 0.10 155 / 0.25); }"
+    },
+    {
+      "name": "Data Card Container",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Kontainer kartu berstruktur untuk mengelompokkan riwayat dan formulir administrasi.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><h3 class=\"ds-card-title\">Ringkasan Saldo Cuti 2026</h3><p class=\"ds-card-desc\">Hak cuti tahunan dan akumulasi tahun sebelumnya</p></div><div class=\"ds-card-body\"><div class=\"ds-kpi\"><span class=\"ds-kpi-val\">12</span><span class=\"ds-kpi-lbl\">Hari Tersedia</span></div></div></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid oklch(0.90 0.02 155); border-radius: 10px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.06); padding: 20px; font-family: Instrument Sans, sans-serif; } .ds-card-header { margin-bottom: 16px; } .ds-card-title { font-size: 16px; font-weight: 600; color: oklch(0.15 0.02 155); margin: 0 0 4px 0; } .ds-card-desc { font-size: 13px; color: oklch(0.50 0.02 155); margin: 0; } .ds-kpi { display: flex; align-items: baseline; gap: 8px; } .ds-kpi-val { font-size: 28px; font-weight: 700; color: oklch(0.32 0.10 155); } .ds-kpi-lbl { font-size: 14px; color: oklch(0.50 0.02 155); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Judicial Bastion",
+    "overview": "Sistem desain Kepegawaian PA Penajam dibangun untuk menghadirkan pengalaman antarmuka instansi peradilan yang berwibawa, formal, kredibel, dan berintegritas tinggi. Mengusung arsitektur operasional (Operate mode), sistem memprioritaskan efisiensi penelaahan berkas birokrasi peradilan, validitas data ASN, dan kejelasan alur persetujuan bertingkat.\n\nSetiap antarmuka dirancang dengan kepadatan data tinggi (high-density utility) tanpa mengorbankan kenyamanan keterbacaan aparatur peradilan. Estetika visual memadukan wibawa hijau pinus yudisial (Judicial Forest Green) dengan kemilau aksen emas kehormatan (Mahkamah Gold) yang diterapkan secara terukur dan disiplin.",
+    "keyCharacteristics": [
+      "Judicial Gravity: Nuansa institusional yang formal, tertib hukum, dan berwibawa.",
+      "High-Density Utility: Kerapatan tabel data dan formulir terstruktur optimal untuk verifikasi cepat.",
+      "Tonal Layering & Crisp Precision: Struktur batas halus 1px dan mikro-shadow daripada drop-shadow tebal.",
+      "Strict Semantic Integrity: Indikator status mutlak dan konsisten di seluruh modul layanan kepegawaian."
+    ],
+    "rules": [
+      {
+        "name": "The 10% Gold Accent Rule",
+        "body": "Aksen Mahkamah Gold digunakan maksimal <= 10% dari total area layar. Keistimewaan dan daya tariknya terletak pada eksklusivitas penggunaannya untuk sorotan kritis.",
+        "section": "colors"
+      },
+      {
+        "name": "The Strict Semantic Rule",
+        "body": "Warna semantik (hijau, amber, merah) dilarang digunakan untuk dekorasi murni; setiap warna semantik wajib merepresentasikan status riil data administrasi.",
+        "section": "colors"
+      },
+      {
+        "name": "The Data Legibility Rule",
+        "body": "Angka identifikasi kepegawaian (NIP, Nomor SK, Saldo Cuti, TMT) wajib ditampilkan dengan font tabular/standar yang tidak terpotong dan berkontras minimal 4.5:1 terhadap latar belakang.",
+        "section": "typography"
+      },
+      {
+        "name": "The High-Density Table Rule",
+        "body": "Tabel data operasional mengutamakan kerapatan informasi baris dan penataan header rata kiri untuk teks/status serta rata kanan untuk kuota/angka saldo, tanpa elemen ornamen dekoratif yang menyita ruang vertikal.",
+        "section": "layout"
+      },
+      {
+        "name": "The Border-First Elevation Rule",
+        "body": "Seluruh kontainer data dan kartu wajib memiliki pembatas garis 1px border-border sebagai fondasi pemisah bidang sebelum menerapkan efek bayangan.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Formal Rounded Rule",
+        "body": "Radius elemen dibatasi maksimal 10px (rounded-xl) untuk mempertahankan karakter kelembagaan formal yang tegas dan berstruktur.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do gunakan token warna semantik (Approval Emerald, Warning Amber, Disciplinary Crimson) secara konsisten pada setiap status alur kerja birokrasi (Cuti, KP, KGB, IAM).",
+      "Do sediakan state kosong (Empty State) informatif dengan ikon tematik, keterangan jelas, dan tombol aksi pembuat data baru.",
+      "Do tampilkan skeleton loader yang berkedip halus (pulsing skeleton) saat Inertia memuat dataset tabel atau detail berkas pegawai.",
+      "Do sertakan modal konfirmasi berlapis sebelum eksekusi penolakan permohonan atau penghapusan arsip digital ASN.",
+      "Do gunakan label formulir eksplisit dengan indikator bintang merah untuk kolom wajib sesuai regulasi BKN."
+    ],
+    "donts": [
+      "Don't menggunakan gradien teks berwarna-warni atau animasi dekoratif berlebih yang mengurangi wibawa institusi peradilan.",
+      "Don't menyembunyikan pesan kesalahan validasi server; selalu render pesan inline di bawah field input terkait.",
+      "Don't memakai kontras rendah (abu-abu pudar di atas putih) pada atribut vital aparatur seperti NIP, Tanggal TMT, dan Saldo Cuti.",
+      "Don't menempatkan tombol aksi destruktif (Tolak/Hapus) tanpa diferensiasi warna merah yang kontras dari tombol persetujuan (Setujui/Simpan)."
+    ]
+  }
+}

@@ -1,4 +1,27 @@
 [mcp_servers.laravel-boost]
 command = "php"
-args = ["artisan", "boost:mcp"]
+args = [
+    "artisan",
+    "boost:mcp",
+]
 cwd = "/home/moohard/dev/project/kepegawaian-apps"
+
+[mcp_servers.flyenv]
+url = "http://127.0.0.1:7682"
+
+[mcp_servers.flyenv.http_headers]
+Authorization = "Bearer 25d76181013347178fe43bcae6d4fda3"
+
+[mcp_servers.magicuidesign-mcp]
+command = "npx"
+args = [
+    "-y",
+    "@magicuidesign/mcp@latest",
+]
+
+[mcp_servers.shadcn]
+command = "npx"
+args = [
+    "shadcn@latest",
+    "mcp",
+]

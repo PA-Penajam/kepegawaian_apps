@@ -1,12 +1,11 @@
 // Components
 import { Form, Head } from '@inertiajs/react';
 import AlertError from '@/components/alert-error';
-import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 import { errorsToArray } from '@/lib/form-errors';
-import { logout } from '@/routes';
+import { logout as keycloakLogout } from '@/routes/keycloak';
 import { send } from '@/routes/verification';
 
 export default function VerifyEmail({ status }: { status?: string }) {
@@ -37,12 +36,14 @@ export default function VerifyEmail({ status }: { status?: string }) {
                             Resend verification email
                         </Button>
 
-                        <TextLink
-                            href={logout()}
-                            className="mx-auto block text-sm"
-                        >
-                            Log out
-                        </TextLink>
+                        <Form method="post" action={keycloakLogout()} className="mx-auto block">
+                            <button
+                                type="submit"
+                                className="cursor-pointer text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                            >
+                                Log out
+                            </button>
+                        </Form>
                     </>
                 )}
             </Form>
