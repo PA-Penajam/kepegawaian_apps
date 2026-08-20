@@ -20,15 +20,15 @@ class KeycloakSyncAuditResource extends Resource
 {
     protected static ?string $model = KeycloakSyncAudit::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
 
-    protected static ?string $navigationLabel = 'Sync Audit Log';
+    protected static ?string $navigationLabel = 'Log Audit Sinkronisasi';
 
-    protected static ?string $modelLabel = 'Sync Audit';
+    protected static ?string $modelLabel = 'Audit Sinkronisasi';
 
-    protected static ?string $pluralModelLabel = 'Sync Audit Logs';
+    protected static ?string $pluralModelLabel = 'Log Audit Sinkronisasi';
 
-    protected static ?string $navigationGroup = 'Keycloak';
+    protected static ?string $navigationGroup = 'Integrasi Keycloak & SSO';
 
     protected static ?int $navigationSort = 2;
 
@@ -37,14 +37,18 @@ class KeycloakSyncAuditResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('event_type')
+                    ->label('Tipe Event')
                     ->required()
                     ->maxLength(50),
                 Forms\Components\TextInput::make('nip')
+                    ->label('NIP Pegawai')
                     ->required()
                     ->maxLength(18),
                 Forms\Components\TextInput::make('conflict_type')
+                    ->label('Tipe Konflik')
                     ->maxLength(50),
                 Forms\Components\TextInput::make('resolved_by')
+                    ->label('Diselesaikan Oleh')
                     ->required()
                     ->maxLength(50),
             ]);
@@ -55,7 +59,7 @@ class KeycloakSyncAuditResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('event_type')
-                    ->label('Event Type')
+                    ->label('Tipe Event')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'create' => 'success',
@@ -66,10 +70,13 @@ class KeycloakSyncAuditResource extends Resource
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('nip')
-                    ->label('NIP')
+                    ->label('NIP Pegawai')
+                    ->fontFamily('mono')
+                    ->copyable()
+                    ->copyMessage('NIP berhasil disalin')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('conflict_type')
-                    ->label('Conflict Type')
+                    ->label('Tipe Konflik')
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
                         'data_mismatch' => 'warning',
@@ -80,9 +87,10 @@ class KeycloakSyncAuditResource extends Resource
                     })
                     ->placeholder('-'),
                 Tables\Columns\TextColumn::make('resolved_by')
-                    ->label('Resolved By'),
+                    ->label('Diselesaikan Oleh')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Created At')
+                    ->label('Waktu Kejadian')
                     ->dateTime('d M Y H:i:s')
                     ->sortable(),
             ])
@@ -91,22 +99,22 @@ class KeycloakSyncAuditResource extends Resource
             ->defaultPaginationPageOption(50)
             ->filters([
                 Tables\Filters\SelectFilter::make('event_type')
-                    ->label('Event Type')
+                    ->label('Tipe Event')
                     ->options([
-                        'create' => 'Create',
-                        'update' => 'Update',
-                        'conflict' => 'Conflict',
-                        'sync_failure' => 'Sync Failure',
+                        'create' => 'Pembuatan Akun (Create)',
+                        'update' => 'Pembaruan Data (Update)',
+                        'conflict' => 'Konflik Data (Conflict)',
+                        'sync_failure' => 'Kegagalan Sync (Failure)',
                     ]),
                 Tables\Filters\SelectFilter::make('conflict_type')
-                    ->label('Conflict Type')
+                    ->label('Tipe Konflik')
                     ->options(
                         collect(ConflictType::cases())
                             ->mapWithKeys(fn (ConflictType $type) => [$type->value => ucwords(str_replace('_', ' ', $type->value))])
                             ->toArray()
                     ),
                 Tables\Filters\Filter::make('created_at')
-                    ->label('Date Range')
+                    ->label('Rentang Tanggal')
                     ->form([
                         Forms\Components\DatePicker::make('from')
                             ->label('Dari'),
@@ -120,7 +128,8 @@ class KeycloakSyncAuditResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('Lihat Snapshot'),
             ]);
     }
 

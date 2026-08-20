@@ -23,13 +23,13 @@ use Filament\Pages\Page;
  */
 class SyncDashboard extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-path';
+    protected static ?string $navigationIcon = 'heroicon-o-arrow-path-rounded-square';
 
-    protected static ?string $navigationLabel = 'Sync Dashboard';
+    protected static ?string $navigationLabel = 'Dashboard Sinkronisasi';
 
-    protected static ?string $title = 'Keycloak Sync Dashboard';
+    protected static ?string $title = 'Dashboard Sinkronisasi Keycloak';
 
-    protected static ?string $navigationGroup = 'Keycloak';
+    protected static ?string $navigationGroup = 'Integrasi Keycloak & SSO';
 
     protected static ?int $navigationSort = 1;
 

@@ -19,15 +19,15 @@ class KeycloakEmergencyLoginLogResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-exclamation';
 
-    protected static ?string $navigationLabel = 'Emergency Login Log';
+    protected static ?string $navigationLabel = 'Log Login Darurat';
 
-    protected static ?string $navigationGroup = 'Keycloak';
+    protected static ?string $navigationGroup = 'Keamanan & Audit';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 1;
 
-    protected static ?string $modelLabel = 'Emergency Login Log';
+    protected static ?string $modelLabel = 'Login Darurat';
 
-    protected static ?string $pluralModelLabel = 'Emergency Login Logs';
+    protected static ?string $pluralModelLabel = 'Log Login Darurat';
 
     public static function table(Table $table): Table
     {
@@ -35,25 +35,31 @@ class KeycloakEmergencyLoginLogResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('ip_address')
                     ->label('IP Address')
+                    ->fontFamily('mono')
+                    ->icon('heroicon-m-globe-alt')
+                    ->iconColor('primary')
+                    ->copyable()
+                    ->copyMessage('IP Address disalin')
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('user_agent')
-                    ->label('User Agent')
-                    ->limit(50)
+                    ->label('Perangkat / User Agent')
+                    ->limit(60)
                     ->tooltip(fn (KeycloakEmergencyLoginLog $record): ?string => $record->user_agent)
+                    ->icon('heroicon-m-computer-desktop')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('logged_in_at')
-                    ->label('Logged In At')
-                    ->dateTime('Y-m-d H:i:s')
+                    ->label('Waktu Masuk')
+                    ->dateTime('d M Y H:i:s')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('logged_out_at')
-                    ->label('Logged Out At')
-                    ->dateTime('Y-m-d H:i:s')
+                    ->label('Waktu Keluar')
+                    ->dateTime('d M Y H:i:s')
                     ->sortable()
-                    ->placeholder('-'),
+                    ->placeholder('Sesi Masih Aktif / Tidak Tercatat'),
             ])
             ->defaultSort('logged_in_at', 'desc')
             ->paginated([10, 25, 50])
