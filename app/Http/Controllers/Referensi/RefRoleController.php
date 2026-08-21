@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Referensi\StoreRefRoleRequest;
 use App\Http\Requests\Referensi\UpdateRefRoleRequest;
 use App\Models\IamApplication;
-use App\Models\IamPermission as RefPermission;
-use App\Models\IamRole as RefRole;
+use App\Models\IamPermission;
+use App\Models\IamRole;
 use App\Models\Pegawai;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
@@ -23,11 +23,11 @@ class RefRoleController extends Controller
 
     public function index(): Response
     {
-        $this->authorize('viewAny', RefRole::class);
+        $this->authorize('viewAny', IamRole::class);
 
         $appId = $this->getAppId();
 
-        $roles = RefRole::query()
+        $roles = IamRole::query()
             ->where('iam_application_id', $appId)
             ->with(['permissions:id'])
             ->withCount(['permissions', 'pegawai'])
@@ -41,7 +41,7 @@ class RefRoleController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $permissions = RefPermission::query()
+        $permissions = IamPermission::query()
             ->where('iam_application_id', $appId)
             ->orderBy('group')
             ->orderBy('nama')
@@ -60,7 +60,7 @@ class RefRoleController extends Controller
         $data['iam_application_id'] = $this->getAppId();
         $data['slug'] = Str::slug($data['nama']);
 
-        $role = RefRole::query()->create($data);
+        $role = IamRole::query()->create($data);
 
         if ($request->has('permissions')) {
             $role->permissions()->sync($request->input('permissions', []));
@@ -71,7 +71,7 @@ class RefRoleController extends Controller
             ->with('success', 'Role berhasil ditambahkan.');
     }
 
-    public function edit(RefRole $role): Response
+    public function edit(IamRole $role): Response
     {
         $this->authorize('update', $role);
 
@@ -79,7 +79,7 @@ class RefRoleController extends Controller
 
         $appId = $this->getAppId();
 
-        $permissions = RefPermission::query()
+        $permissions = IamPermission::query()
             ->where('iam_application_id', $appId)
             ->orderBy('group')
             ->orderBy('nama')
@@ -100,7 +100,7 @@ class RefRoleController extends Controller
         ]);
     }
 
-    public function update(UpdateRefRoleRequest $request, RefRole $role): RedirectResponse
+    public function update(UpdateRefRoleRequest $request, IamRole $role): RedirectResponse
     {
         $data = $request->safe()->only(['nama', 'keterangan']);
         $data['slug'] = Str::slug($data['nama']);
@@ -120,7 +120,7 @@ class RefRoleController extends Controller
             ->with('success', 'Role berhasil diperbarui.');
     }
 
-    public function destroy(RefRole $role): RedirectResponse
+    public function destroy(IamRole $role): RedirectResponse
     {
         if ($role->is_system) {
             return redirect()

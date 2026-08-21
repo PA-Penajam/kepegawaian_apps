@@ -34,3 +34,6 @@ docker/keycloak/data/
 .worktrees
 graphify-out/
 .zcode/
+
+# SQLite database lokal (data lokal, jangan dicommit)
+/kepegawaian_db

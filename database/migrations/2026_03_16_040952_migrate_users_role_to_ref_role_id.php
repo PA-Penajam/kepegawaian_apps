@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\RefRole;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +19,7 @@ return new class extends Migration
         });
 
         // Migrasi data: map enum role ke ref_roles
-        $roleMap = RefRole::query()->pluck('id', 'nama');
+        $roleMap = DB::table('ref_roles')->pluck('id', 'nama');
 
         DB::table('users')->where('role', 'admin')
             ->update(['ref_role_id' => $roleMap->get('Admin')]);
@@ -46,7 +45,7 @@ return new class extends Migration
             $table->string('role')->default('viewer');
         });
 
-        $roles = RefRole::query()->pluck('nama', 'id');
+        $roles = DB::table('ref_roles')->pluck('nama', 'id');
         foreach ($roles as $id => $nama) {
             DB::table('users')->where('ref_role_id', $id)
                 ->update(['role' => strtolower($nama)]);
