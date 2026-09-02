@@ -4,7 +4,6 @@ use App\Exceptions\Handler;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SsoTokenRefresh;
-use App\Http\Middleware\ValidatePegawaiStatus;
 use App\Http\Middleware\VerifyHmacSignature;
 use App\Http\Middleware\VerifyIamPermission;
 use App\Http\Middleware\VerifyIamSignature;
@@ -32,12 +31,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'abilities' => CheckAbilities::class,
-            'permission' => VerifyIamPermission::class,
-            'pegawai.status' => ValidatePegawaiStatus::class,
             'verify.hmac' => VerifyHmacSignature::class,
             'iam.signature' => VerifyIamSignature::class,
             'iam.permission' => VerifyIamPermission::class,
-            'sso.refresh' => SsoTokenRefresh::class,
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
@@ -46,9 +42,6 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
-        ]);
-
-        $middleware->web(append: [
             SsoTokenRefresh::class,
         ]);
     })

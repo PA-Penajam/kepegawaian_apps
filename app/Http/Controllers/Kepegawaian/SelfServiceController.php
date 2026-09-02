@@ -37,11 +37,6 @@ class SelfServiceController extends Controller
         ]);
     }
 
-    public function unlinked(): Response
-    {
-        return Inertia::render('self-service/unlinked');
-    }
-
     private function currentPegawai(Request $request, array $relations): Pegawai
     {
         // $request->user() sudah return Pegawai (Pegawai = User)
