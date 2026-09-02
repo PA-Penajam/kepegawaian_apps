@@ -133,7 +133,7 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
 
     Route::resource('referensi/roles', RefRoleController::class)
         ->names('referensi.roles')
-        ->except(['show']);
+        ->except(['show', 'create']);
 
     Route::resource('admin/checklist-template', ChecklistTemplateController::class)
         ->parameters(['checklist-template' => 'template'])
