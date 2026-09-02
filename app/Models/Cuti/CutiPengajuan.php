@@ -128,11 +128,6 @@ class CutiPengajuan extends Model
         return $this->hasMany(CutiPengajuanStateHistory::class, 'pengajuan_id');
     }
 
-    public function periode(): HasMany
-    {
-        return $this->hasMany(CutiPengajuanPeriode::class, 'pengajuan_id');
-    }
-
     public function pdf(): HasMany
     {
         return $this->hasMany(CutiPengajuanPdf::class, 'pengajuan_id');
