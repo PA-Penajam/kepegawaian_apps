@@ -47,7 +47,6 @@ class Pegawai extends Authenticatable implements FilamentUser, HasName
         'no_karpeg', 'no_karis_karsu', 'npwp', 'no_bpjs_kesehatan',
         'no_bpjs_ketenagakerjaan', 'no_taspen', 'foto', 'keterangan',
         'password',
-        'keycloak_id', 'keycloak_synced_at', 'keycloak_user_id',
     ];
 
     protected $hidden = [
@@ -73,7 +72,6 @@ class Pegawai extends Authenticatable implements FilamentUser, HasName
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'email_verified_at' => 'datetime',
-            'keycloak_synced_at' => 'datetime',
         ];
     }
 

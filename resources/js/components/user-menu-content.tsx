@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
-import { logout as keycloakLogout } from '@/routes/keycloak';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
 
@@ -56,7 +55,7 @@ export function UserMenuContent({ user }: Props) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-                <Form method="post" action={keycloakLogout()} className="block w-full">
+                <Form method="post" action="/auth/sso/logout" className="block w-full">
                     <button
                         type="submit"
                         className="flex w-full cursor-pointer items-center px-2 py-1.5 text-left text-sm outline-none data-[highlighted]:bg-accent"

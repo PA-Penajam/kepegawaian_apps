@@ -16,7 +16,7 @@ export type User = {
 
 export type Auth = {
     user: User;
-    /** true jika user login via SSO Keycloak */
+    /** true jika user login via SSO PA Penajam */
     sso?: boolean;
 };
 

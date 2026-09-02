@@ -46,7 +46,7 @@ test('guests are redirected to the login page for riwayat diklat routes', functi
     $pegawai = Pegawai::factory()->create();
 
     get(riwayatDiklatIndexUrl($pegawai))
-        ->assertRedirectContains(route('sso.login'));
+        ->assertRedirectContains(route('auth.sso.login'));
 });
 
 test('viewers are forbidden from accessing the riwayat diklat page', function () {

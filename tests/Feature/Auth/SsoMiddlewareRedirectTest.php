@@ -6,15 +6,15 @@ test('unauthenticated user diarahkan ke sso login bukan langsung ke login', func
     $response = $this->get('/dashboard');
 
     $location = $response->headers->get('Location');
-    expect($location)->toContain('/sso/login');
-    expect($location)->toContain('app=kepegawaian');
+    expect($location)->toContain('/auth/sso/login');
 });
 
-test('sso login menyertakan parameter redirect yang benar', function () {
+test('sso login tidak lagi menyertakan parameter redirect IAM', function () {
     $response = $this->get('/dashboard');
 
     $location = $response->headers->get('Location');
-    expect($location)->toContain('redirect=');
+    expect($location)->toContain('/auth/sso/login');
+    expect($location)->not->toContain('app=kepegawaian');
 });
 
 test('user yang sudah login tidak diarahkan ke sso login', function () {
@@ -22,7 +22,6 @@ test('user yang sudah login tidak diarahkan ke sso login', function () {
 
     $response = $this->actingAs($pegawai)->get('/dashboard');
 
-    // Tidak redirect ke sso.login
     $location = $response->headers->get('Location') ?? '';
-    expect($location)->not->toContain('/sso/login');
+    expect($location)->not->toContain('/auth/sso/login');
 });

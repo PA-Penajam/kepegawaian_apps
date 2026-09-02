@@ -33,7 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
                 'Utama',
-                'Integrasi Keycloak & SSO',
+                'Integrasi SSO',
                 'Keamanan & Audit',
             ])
             ->colors([

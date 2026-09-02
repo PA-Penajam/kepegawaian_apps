@@ -42,7 +42,7 @@ test('guests are redirected to the login page for riwayat pendidikan routes', fu
     $pegawai = Pegawai::factory()->create();
 
     get(riwayatPendidikanIndexUrl($pegawai))
-        ->assertRedirectContains(route('sso.login'));
+        ->assertRedirectContains(route('auth.sso.login'));
 });
 
 test('viewers are forbidden from accessing the riwayat pendidikan page', function () {

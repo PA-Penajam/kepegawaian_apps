@@ -37,7 +37,7 @@ test('guest tidak bisa upload foto pegawai', function () {
     $pegawai = Pegawai::factory()->create();
 
     post(route('kepegawaian.pegawai.foto.update', $pegawai))
-        ->assertRedirectContains(route('sso.login'));
+        ->assertRedirectContains(route('auth.sso.login'));
 });
 
 test('pegawai biasa tidak bisa upload foto pegawai lain', function () {

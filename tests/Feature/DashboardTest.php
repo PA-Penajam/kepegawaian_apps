@@ -7,7 +7,7 @@ use Inertia\Testing\AssertableInertia;
 
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('dashboard'));
-    $response->assertRedirectContains(route('sso.login'));
+    $response->assertRedirectContains(route('auth.sso.login'));
 });
 
 test('authenticated users can visit the dashboard', function () {

@@ -47,8 +47,8 @@ beforeEach(function () {
         ->get('/test-iam-perm-any', fn () => 'ok');
 });
 
-test('guest diredirect ke login', function () {
-    $this->get('/test-iam-perm')->assertRedirectContains(route('sso.login'));
+test('guest diredirect ke sso login', function () {
+    $this->get('/test-iam-perm')->assertRedirectContains(route('auth.sso.login'));
 });
 
 test('user tanpa role di aplikasi ini mendapat 403', function () {

@@ -171,13 +171,7 @@ return [
     */
 
     'features' => [
-        Features::resetPasswords(),
         Features::emailVerification(),
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-            // 'window' => 0
-        ]),
     ],
 
 ];

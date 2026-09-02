@@ -37,7 +37,7 @@ function makePegawaiPayload(array $overrides = []): array
 
 test('guests are redirected to the login page', function () {
     get(route('kepegawaian.pegawai.index'))
-        ->assertRedirectContains(route('sso.login'));
+        ->assertRedirectContains(route('auth.sso.login'));
 });
 
 test('viewers are forbidden from accessing the pegawai index page', function () {
