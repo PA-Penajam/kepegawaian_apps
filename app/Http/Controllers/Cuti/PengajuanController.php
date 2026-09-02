@@ -131,29 +131,4 @@ class PengajuanController extends Controller
             'pengajuan' => $pengajuan,
         ]);
     }
-
-    /**
-     * Menampilkan daftar pengajuan cuti milik user yang sedang login.
-     */
-    public function myPage(Request $request): Response
-    {
-        $user = $request->user();
-        $tahun = now()->year;
-
-        $pengajuanList = CutiPengajuan::where('pegawai_nip', $user->nip)
-            ->with('jenisCuti:kode,nama')
-            ->latest('submitted_at')
-            ->paginate(10);
-
-        // Ringkasan saldo CT
-        $saldoCt = $this->saldoService->saldoBucket($user->nip, 'CT', $tahun);
-
-        return Inertia::render('cuti/pengajuan/my-page', [
-            'pengajuanList' => $pengajuanList,
-            'saldoSummary' => [
-                'CT' => $saldoCt,
-                'tahun' => $tahun,
-            ],
-        ]);
-    }
 }
