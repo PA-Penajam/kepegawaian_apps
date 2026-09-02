@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
+import { ShieldCheck } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
@@ -20,6 +21,9 @@ type Props = {
 };
 
 export default function Login({ status, canResetPassword }: Props) {
+    const { flash } = usePage<{
+        flash?: { error?: string | null; success?: string | null };
+    }>().props;
     const shouldReduceMotion = useReducedMotion();
 
     const containerVariants = {
@@ -49,6 +53,48 @@ export default function Login({ status, canResetPassword }: Props) {
         >
             <Head title="Login SIMPEG" />
 
+            {/* Flash Error (misal kegagalan callback SSO) */}
+            <AnimatePresence>
+                {flash?.error && (
+                    <motion.div
+                        initial={
+                            shouldReduceMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, y: -6 }
+                        }
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                    >
+                        <AlertError
+                            errors={[flash.error]}
+                            title="Autentikasi SSO Gagal"
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Status Pesan Sistem */}
+            <AnimatePresence>
+                {status && (
+                    <motion.div
+                        initial={
+                            shouldReduceMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, y: 6 }
+                        }
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        role="status"
+                        className="rounded-lg border border-primary/20 bg-primary/10 p-3 text-center text-sm font-medium text-primary"
+                    >
+                        {status}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* FORM LOGIN LOKAL (NIP & PASSWORD - DEFAULT & UTAMA) */}
             <Form
                 {...store.form()}
                 resetOnSuccess={['password']}
@@ -60,7 +106,11 @@ export default function Login({ status, canResetPassword }: Props) {
                             {Object.keys(errors).length > 0 && (
                                 <motion.div
                                     key="login-error-banner"
-                                    initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.98 }}
+                                    initial={
+                                        shouldReduceMotion
+                                            ? { opacity: 0 }
+                                            : { opacity: 0, y: -6, scale: 0.98 }
+                                    }
                                     animate={
                                         shouldReduceMotion
                                             ? { opacity: 1 }
@@ -69,10 +119,17 @@ export default function Login({ status, canResetPassword }: Props) {
                                                   y: 0,
                                                   scale: 1,
                                                   x: [0, -4, 4, -2, 2, 0],
-                                                  transition: { duration: 0.35, ease: 'easeOut' },
+                                                  transition: {
+                                                      duration: 0.35,
+                                                      ease: 'easeOut',
+                                                  },
                                               }
                                     }
-                                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                    exit={{
+                                        opacity: 0,
+                                        height: 0,
+                                        marginTop: 0,
+                                    }}
                                 >
                                     <AlertError
                                         errors={errorsToArray(errors)}
@@ -88,8 +145,13 @@ export default function Login({ status, canResetPassword }: Props) {
                             animate="visible"
                             className="grid gap-5"
                         >
-                            <motion.div variants={itemVariants} className="grid gap-2">
-                                <Label htmlFor="nip">NIP (Nomor Induk Pegawai)</Label>
+                            <motion.div
+                                variants={itemVariants}
+                                className="grid gap-2"
+                            >
+                                <Label htmlFor="nip">
+                                    NIP (Nomor Induk Pegawai)
+                                </Label>
                                 <Input
                                     id="nip"
                                     type="text"
@@ -103,15 +165,26 @@ export default function Login({ status, canResetPassword }: Props) {
                                     placeholder="Contoh: 199001012020121001"
                                     onInput={(e) => {
                                         const target = e.currentTarget;
-                                        target.value = target.value.replace(/\D/g, '');
+                                        target.value = target.value.replace(
+                                            /\D/g,
+                                            '',
+                                        );
                                     }}
                                     aria-invalid={errors.nip ? true : undefined}
-                                    aria-describedby={errors.nip ? 'nip-error' : undefined}
+                                    aria-describedby={
+                                        errors.nip ? 'nip-error' : undefined
+                                    }
                                 />
-                                <InputError id="nip-error" message={errors.nip} />
+                                <InputError
+                                    id="nip-error"
+                                    message={errors.nip}
+                                />
                             </motion.div>
 
-                            <motion.div variants={itemVariants} className="grid gap-2">
+                            <motion.div
+                                variants={itemVariants}
+                                className="grid gap-2"
+                            >
                                 <div className="flex flex-wrap items-center justify-between gap-1">
                                     <Label htmlFor="password">Password</Label>
                                     {canResetPassword && (
@@ -129,23 +202,38 @@ export default function Login({ status, canResetPassword }: Props) {
                                     required
                                     autoComplete="current-password"
                                     placeholder="Masukkan password akun"
-                                    aria-invalid={errors.password ? true : undefined}
-                                    aria-describedby={errors.password ? 'password-error' : undefined}
+                                    aria-invalid={
+                                        errors.password ? true : undefined
+                                    }
+                                    aria-describedby={
+                                        errors.password
+                                            ? 'password-error'
+                                            : undefined
+                                    }
                                 />
-                                <InputError id="password-error" message={errors.password} />
+                                <InputError
+                                    id="password-error"
+                                    message={errors.password}
+                                />
                             </motion.div>
 
-                            <motion.div variants={itemVariants} className="flex min-h-[36px] items-center space-x-2.5">
-                                <Checkbox
-                                    id="remember"
-                                    name="remember"
-                                />
-                                <Label htmlFor="remember" className="cursor-pointer select-none text-sm font-normal text-muted-foreground hover:text-foreground">
+                            <motion.div
+                                variants={itemVariants}
+                                className="flex min-h-[36px] items-center space-x-2.5"
+                            >
+                                <Checkbox id="remember" name="remember" />
+                                <Label
+                                    htmlFor="remember"
+                                    className="cursor-pointer text-sm font-normal text-muted-foreground select-none hover:text-foreground"
+                                >
                                     Ingat saya di perangkat ini
                                 </Label>
                             </motion.div>
 
-                            <motion.div variants={itemVariants} className="space-y-3">
+                            <motion.div
+                                variants={itemVariants}
+                                className="space-y-3"
+                            >
                                 <Button
                                     type="submit"
                                     className="h-10 w-full text-sm font-semibold tracking-wide"
@@ -167,34 +255,31 @@ export default function Login({ status, canResetPassword }: Props) {
                 )}
             </Form>
 
+            {/* PEMISAH */}
             <div className="flex items-center gap-3 py-1">
                 <div className="h-px flex-1 bg-border" />
-                <span className="text-xs uppercase tracking-wider text-muted-foreground">atau</span>
+                <span className="text-xs tracking-wider text-muted-foreground uppercase">
+                    atau
+                </span>
                 <div className="h-px flex-1 bg-border" />
             </div>
 
-            <a
-                href={ssoLogin()}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 text-sm font-semibold tracking-wide text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            {/* OPSI SEKUNDER: MASUK DENGAN SSO PA PENAJAM */}
+            <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="h-10 w-full border-input bg-background text-sm font-semibold tracking-wide text-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground"
                 data-test="sso-login-button"
             >
-                Masuk dengan SSO PA Penajam
-            </a>
-
-            <AnimatePresence>
-                {status && (
-                    <motion.div
-                        initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        role="status"
-                        className="mt-2 rounded-lg border border-primary/20 bg-primary/10 p-3 text-center text-sm font-medium text-primary"
-                    >
-                        {status}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                <a href={ssoLogin.url()}>
+                    <ShieldCheck
+                        className="size-4 text-muted-foreground"
+                        aria-hidden="true"
+                    />
+                    Masuk dengan SSO PA Penajam
+                </a>
+            </Button>
         </AuthLayout>
     );
 }

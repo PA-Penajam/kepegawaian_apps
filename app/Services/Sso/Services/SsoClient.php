@@ -32,18 +32,22 @@ class SsoClient implements SsoClientInterface
         $pkce = $this->pkceGenerator->generate();
         $state = $this->generateState();
 
-        $defaultScopes = (array) config('sso.scopes', ['openid', 'profile', 'email']);
-        $scopeString = implode(' ', ! empty($scopes) ? $scopes : $defaultScopes);
+        $defaultScopes = (array) config('sso.scopes', []);
+        $effectiveScopes = ! empty($scopes) ? $scopes : $defaultScopes;
+        $scopeString = implode(' ', array_filter($effectiveScopes));
 
         $params = [
             'client_id' => $this->clientId,
             'redirect_uri' => $redirectUri,
             'response_type' => 'code',
-            'scope' => $scopeString,
             'state' => $state,
             'code_challenge' => $pkce->challenge,
             'code_challenge_method' => $pkce->method,
         ];
+
+        if (! empty($scopeString)) {
+            $params['scope'] = $scopeString;
+        }
 
         $url = $this->baseUrl.'/oauth/authorize?'.http_build_query($params);
 
