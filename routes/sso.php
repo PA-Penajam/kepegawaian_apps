@@ -5,11 +5,12 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| SSO PA Penajam Authentication Routes
+| SSO Eksternal — Consumer sso-papenajam.test
 |--------------------------------------------------------------------------
 |
 | Routes untuk autentikasi OAuth 2.0 via Identity Provider SSO PA Penajam.
 | Mendukung alur Authorization Code Grant + PKCE (RFC 7636).
+| Dibedakan dari IAM internal (/sso/* di web.php) yang bertindak sebagai IdP.
 |
 */
 

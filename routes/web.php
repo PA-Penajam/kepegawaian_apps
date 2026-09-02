@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
-// SSO Login routes
+// IAM IdP internal — provider untuk aplikasi satker lain
 Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
 Route::middleware('auth')->get('/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');
 
@@ -205,7 +205,7 @@ Route::middleware(['auth', 'verified'])->prefix('cuti')->name('cuti.')->group(fu
     Route::post('/pengajuan/{id}/approve-pejabat', [ApprovalController::class, 'approvePejabat'])->name('pengajuan.approve-pejabat');
     Route::post('/pengajuan/{id}/reject', [ApprovalController::class, 'reject'])->name('pengajuan.reject');
     Route::post('/pengajuan/{id}/cancel', [ApprovalController::class, 'cancel'])->name('pengajuan.cancel');
-    Route::post('/pengajuan/{id}/reassign-approver', [ApprovalController::class, 'reassign'])->middleware('permission:cuti.pengajuan.reassign')->name('pengajuan.reassign');
+    Route::post('/pengajuan/{id}/reassign-approver', [ApprovalController::class, 'reassign'])->middleware('iam.permission:cuti.pengajuan.reassign')->name('pengajuan.reassign');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('kenaikan-pangkat')->name('kenaikan-pangkat.')->group(function () {
@@ -226,11 +226,11 @@ Route::middleware(['auth', 'verified'])->prefix('kenaikan-pangkat')->name('kenai
     Route::get('admin-sk/pdf/{pdf}/download', [KenaikanPangkatSkAdminController::class, 'downloadSuratPengantar'])->name('admin-sk.download-surat-pengantar');
 });
 
-Route::middleware(['auth', 'verified', 'permission:cuti.saldo.view-all'])->prefix('admin/cuti')->name('admin.cuti.')->group(function () {
+Route::middleware(['auth', 'verified', 'iam.permission:cuti.saldo.view-all'])->prefix('admin/cuti')->name('admin.cuti.')->group(function () {
     Route::get('/saldo', [SaldoController::class, 'adminIndex'])->name('saldo.index');
     Route::get('/saldo/init', [SaldoController::class, 'adminInit'])->name('saldo.init');
     Route::post('/saldo/init', [SaldoController::class, 'adminInitStore'])->name('saldo.init.store');
-    Route::post('/saldo/adjust', [SaldoController::class, 'adminAdjust'])->middleware('permission:cuti.saldo.adjust')->name('saldo.adjust');
+    Route::post('/saldo/adjust', [SaldoController::class, 'adminAdjust'])->middleware('iam.permission:cuti.saldo.adjust')->name('saldo.adjust');
     Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
 });
 
