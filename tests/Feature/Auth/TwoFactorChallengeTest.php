@@ -1,41 +1,11 @@
 <?php
 
-use App\Models\Pegawai;
-use Inertia\Testing\AssertableInertia as Assert;
-use Laravel\Fortify\Features;
+use Illuminate\Support\Facades\Route;
 
-beforeEach(function () {
-    $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
-});
-
-test('two factor challenge redirects to login when not authenticated', function () {
-    $response = $this->get(route('two-factor.login'));
-
-    $response->assertRedirect(route('login'));
-});
-
-test('two factor challenge can be rendered', function () {
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => true,
-    ]);
-
-    $user = Pegawai::factory()->create();
-
-    $user->forceFill([
-        'two_factor_secret' => encrypt('test-secret'),
-        'two_factor_recovery_codes' => encrypt(json_encode(['code1', 'code2'])),
-        'two_factor_confirmed_at' => now(),
-    ])->save();
-
-    $this->post(route('login'), [
-        'nip' => $user->nip,
-        'password' => 'password',
-    ]);
-
-    $this->get(route('two-factor.login'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('auth/two-factor-challenge'),
-        );
+test('seluruh route two factor lokal dinonaktifkan', function () {
+    expect(Route::has('two-factor.login'))->toBeFalse()
+        ->and(Route::has('two-factor.login.store'))->toBeFalse()
+        ->and(Route::has('two-factor.enable'))->toBeFalse()
+        ->and(Route::has('two-factor.confirm'))->toBeFalse()
+        ->and(Route::has('two-factor.disable'))->toBeFalse();
 });

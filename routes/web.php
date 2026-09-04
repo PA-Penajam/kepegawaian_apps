@@ -35,7 +35,14 @@ use App\Http\Controllers\UsulanKenaikanPangkat\SkAdminController as KenaikanPang
 use App\Http\Controllers\UsulanKenaikanPangkat\UsulanKenaikanPangkatController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->name('home');
+// Landing page dihapus. Beranda mengarahkan pengguna sesuai status sesi:
+// - sudah login  -> dashboard
+// - tamu         -> halaman login lokal (bukan SSO eksternal)
+// Redirect dilakukan langsung di sini agar tamu tidak melewati middleware auth
+// yang akan melempar ke SSO PA Penajam.
+Route::get('/', function () {
+    return redirect()->route(auth()->check() ? 'dashboard' : 'login');
+})->name('home');
 
 // IAM IdP internal — provider untuk aplikasi satker lain
 Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');

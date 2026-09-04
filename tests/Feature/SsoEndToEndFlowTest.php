@@ -1,131 +1,93 @@
 <?php
 
+use App\Enums\StatusPegawai;
 use App\Models\IamApplication;
 use App\Models\Pegawai;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
-test('sso login menyimpan state dan redirect ke fortify login', function () {
-    $app = IamApplication::factory()->create([
+test('gateway IdP mengarahkan pengguna tamu ke login SSO eksternal', function () {
+    IamApplication::factory()->create([
         'slug' => 'persediaan',
         'url' => 'http://localhost:8000',
         'is_active' => true,
     ]);
 
-    $response = $this->get('/sso/login?'.http_build_query([
-        'app' => 'persediaan',
-        'redirect' => 'http://localhost:8000/auth/sso/callback',
-    ]));
-
-    $response->assertRedirect(route('login'));
-});
-
-test('sso state bertahan melewati fortify login dan redirect ke callback', function () {
-    $app = IamApplication::factory()->create([
-        'slug' => 'persediaan',
-        'url' => 'http://localhost:8000',
-        'is_active' => true,
-    ]);
-
-    $pegawai = Pegawai::factory()->create([
-        'password' => Hash::make('password'),
-    ]);
-
-    // Langkah 1: Akses /sso/login — simpan state, redirect ke /login
     $this->get('/sso/login?'.http_build_query([
         'app' => 'persediaan',
         'redirect' => 'http://localhost:8000/auth/sso/callback',
-    ]));
-
-    // Langkah 2: Login via Fortify
-    $loginResponse = $this->post('/login', [
-        'nip' => $pegawai->nip,
-        'password' => 'password',
-    ]);
-
-    // Harus redirect ke sso.callback, BUKAN ke dashboard
-    $loginResponse->assertRedirect(route('sso.callback'));
+        'state' => 'client-state',
+    ]))
+        ->assertRedirect(route('auth.sso.login'))
+        ->assertSessionHas('sso_app', 'persediaan')
+        ->assertSessionHas('sso_state', 'client-state');
 });
 
-test('sso callback menghasilkan code dan redirect ke aplikasi client', function () {
-    $app = IamApplication::factory()->create([
+test('gateway IdP menyelesaikan alur aplikasi konsumen setelah login SSO eksternal', function () {
+    IamApplication::factory()->create([
         'slug' => 'persediaan',
         'url' => 'http://localhost:8000',
         'is_active' => true,
     ]);
 
     $pegawai = Pegawai::factory()->create([
-        'password' => Hash::make('password'),
+        'nip' => '199001012020121009',
+        'status_pegawai' => StatusPegawai::Aktif,
     ]);
-
     $redirectUrl = 'http://localhost:8000/auth/sso/callback';
 
-    // Langkah 1: Akses /sso/login
     $this->get('/sso/login?'.http_build_query([
         'app' => 'persediaan',
         'redirect' => $redirectUrl,
-    ]));
+        'state' => 'consumer-csrf-state',
+    ]))->assertRedirect(route('auth.sso.login'));
 
-    // Langkah 2: Login via Fortify
-    $this->post('/login', [
-        'nip' => $pegawai->nip,
-        'password' => 'password',
+    $this->get(route('auth.sso.login'))->assertRedirect();
+    $oauthState = session('sso.oauth_state');
+
+    Http::fake([
+        config('sso.base_url').'/oauth/token' => Http::response([
+            'token_type' => 'Bearer',
+            'expires_in' => 3600,
+            'access_token' => 'valid-access-token',
+            'refresh_token' => 'valid-refresh-token',
+        ]),
+        config('sso.base_url').'/api/user' => Http::response([
+            'data' => [
+                'sub' => $pegawai->nip,
+                'nip' => $pegawai->nip,
+                'name' => $pegawai->nama_lengkap,
+                'email' => $pegawai->email,
+            ],
+        ]),
     ]);
 
-    // Langkah 3: Follow redirect ke /sso/callback
-    $callbackResponse = $this->get(route('sso.callback'));
+    $this->get(route('auth.sso.callback', [
+        'code' => 'valid-auth-code',
+        'state' => $oauthState['state'],
+    ]))
+        ->assertRedirect(route('sso.callback'));
 
-    // Harus redirect ke persediaan callback URL dengan ?code=
+    expect(Auth::id())->toBe($pegawai->id);
+
+    $callbackResponse = $this->get(route('sso.callback'));
     $location = $callbackResponse->headers->get('Location');
-    expect($location)->toStartWith($redirectUrl);
-    expect($location)->toContain('code=');
+
+    expect($location)->toStartWith($redirectUrl.'?code=')
+        ->and($location)->toContain('&state=consumer-csrf-state');
 });
 
-test('sso callback tanpa state redirect ke dashboard dengan warning', function () {
+test('callback gateway tanpa state kembali ke dashboard dengan peringatan', function () {
     $pegawai = Pegawai::factory()->create();
 
-    // Langsung akses callback tanpa SSO flow sebelumnya
-    $response = $this->actingAs($pegawai)->get(route('sso.callback'));
-
-    $response->assertRedirect(route('dashboard'));
-    $response->assertSessionHas('warning');
+    $this->actingAs($pegawai)
+        ->get(route('sso.callback'))
+        ->assertRedirect(route('dashboard'))
+        ->assertSessionHas('warning');
 });
 
-test('sso state bertahan melewati session regeneration', function () {
-    $app = IamApplication::factory()->create([
-        'slug' => 'persediaan',
-        'url' => 'http://localhost:8000',
-        'is_active' => true,
-    ]);
-
-    $pegawai = Pegawai::factory()->create([
-        'password' => Hash::make('password'),
-    ]);
-
-    $redirectUrl = 'http://localhost:8000/auth/sso/callback';
-
-    // Simpan SSO state via cache-backed mechanism
-    $this->get('/sso/login?'.http_build_query([
-        'app' => 'persediaan',
-        'redirect' => $redirectUrl,
-    ]));
-
-    // Login Fortify (ini melakukan session()->regenerate())
-    $this->post('/login', [
-        'nip' => $pegawai->nip,
-        'password' => 'password',
-    ]);
-
-    // Pastikan callback bisa ambil state setelah regeneration
-    $callbackResponse = $this->get(route('sso.callback'));
-
-    $location = $callbackResponse->headers->get('Location');
-    expect($location)->not->toEqual(route('dashboard'));
-    expect($location)->toStartWith($redirectUrl);
-});
-
-test('sso state dengan user yang sudah login langsung generate code', function () {
-    $app = IamApplication::factory()->create([
+test('gateway IdP langsung menghasilkan code bagi pengguna yang sudah login', function () {
+    IamApplication::factory()->create([
         'slug' => 'persediaan',
         'url' => 'http://localhost:8000',
         'is_active' => true,
@@ -134,13 +96,10 @@ test('sso state dengan user yang sudah login langsung generate code', function (
     $pegawai = Pegawai::factory()->create();
     $redirectUrl = 'http://localhost:8000/auth/sso/callback';
 
-    // User sudah login → /sso/login langsung generate code
     $response = $this->actingAs($pegawai)->get('/sso/login?'.http_build_query([
         'app' => 'persediaan',
         'redirect' => $redirectUrl,
     ]));
 
-    $location = $response->headers->get('Location');
-    expect($location)->toStartWith($redirectUrl);
-    expect($location)->toContain('code=');
+    expect($response->headers->get('Location'))->toStartWith($redirectUrl.'?code=');
 });

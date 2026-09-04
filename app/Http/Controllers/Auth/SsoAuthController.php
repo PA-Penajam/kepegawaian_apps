@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\StatusPegawai;
 use App\Http\Controllers\Controller;
 use App\Models\Pegawai;
+use App\Services\Iam\IamSsoStateStore;
 use App\Services\Sso\Contracts\SsoClientInterface;
 use App\Services\Sso\Contracts\SsoTokenStorageInterface;
 use App\Services\Sso\Exceptions\SsoException;
@@ -25,6 +26,7 @@ class SsoAuthController extends Controller
     public function __construct(
         private SsoClientInterface $ssoClient,
         private SsoTokenStorageInterface $tokenStorage,
+        private IamSsoStateStore $iamSsoStateStore,
     ) {}
 
     /**
@@ -180,6 +182,10 @@ class SsoAuthController extends Controller
         // 10. Regenerasi session ID untuk keamanan dan autentikasi user
         session()->regenerate();
         Auth::login($pegawai);
+
+        if ($this->iamSsoStateStore->hasPending()) {
+            return redirect()->route('sso.callback');
+        }
 
         return redirect()->intended('/dashboard');
     }

@@ -238,10 +238,12 @@ test('cancelAfterApproved CT transitions ke DICABUT_SETELAH_DISETUJUI dengan ref
 
     app(SaldoLedgerService::class)->kreditAlokasi($pemohon->nip, 'CT', 2026, 12, 'init');
 
+    // Cuti belum berjalan (mulai di masa depan) sehingga refund penuh sesuai
+    // jumlah_hari_kerja, konsisten dengan logika hitungRefund() pada state ini.
     $pengajuan = buatPengajuanCT('DISETUJUI', $pemohon, [
         'approved_at' => now(),
-        'tanggal_mulai' => '2026-09-01',
-        'tanggal_selesai' => '2026-09-05',
+        'tanggal_mulai' => now()->addWeek()->toDateString(),
+        'tanggal_selesai' => now()->addWeek()->addDays(4)->toDateString(),
         'jumlah_hari_kerja' => 5,
     ]);
 

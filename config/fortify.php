@@ -1,11 +1,6 @@
 <?php
 
-use App\Http\Middleware\ValidatePegawaiStatus;
-use Laravel\Fortify\Actions\AttemptToAuthenticate;
-use Laravel\Fortify\Actions\CanonicalizeUsername;
-use Laravel\Fortify\Actions\EnsureLoginIsNotThrottled;
-use Laravel\Fortify\Actions\PrepareAuthenticatedSession;
-use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
+use App\Actions\Fortify\RejectLocalLogin;
 use Laravel\Fortify\Features;
 
 return [
@@ -121,8 +116,7 @@ return [
     */
 
     'limiters' => [
-        'login' => 'login',
-        'two-factor' => 'two-factor',
+        'login' => null,
     ],
 
     /*
@@ -137,12 +131,7 @@ return [
 
     'pipelines' => [
         'login' => [
-            EnsureLoginIsNotThrottled::class,
-            CanonicalizeUsername::class,
-            ValidatePegawaiStatus::class,
-            RedirectIfTwoFactorAuthenticatable::class,
-            AttemptToAuthenticate::class,
-            PrepareAuthenticatedSession::class,
+            RejectLocalLogin::class,
         ],
     ],
 
@@ -171,13 +160,7 @@ return [
     */
 
     'features' => [
-        Features::resetPasswords(),
         Features::emailVerification(),
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-            // 'window' => 0,
-        ]),
     ],
 
 ];

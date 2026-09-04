@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\Handler;
+use App\Http\Middleware\EnforceSsoOnly;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SsoTokenRefresh;
@@ -34,11 +35,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'verify.hmac' => VerifyHmacSignature::class,
             'iam.signature' => VerifyIamSignature::class,
             'iam.permission' => VerifyIamPermission::class,
+            'sso.refresh' => SsoTokenRefresh::class,
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
+            EnforceSsoOnly::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

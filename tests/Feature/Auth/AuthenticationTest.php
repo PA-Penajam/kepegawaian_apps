@@ -1,16 +1,19 @@
 <?php
 
 use App\Models\Pegawai;
-use Illuminate\Support\Facades\RateLimiter;
-use Laravel\Fortify\Features;
+use Illuminate\Support\Facades\Route;
+use Inertia\Testing\AssertableInertia as Assert;
 
-test('login screen can be rendered', function () {
-    $response = $this->get(route('login'));
-
-    $response->assertOk();
+test('halaman login hanya menjadi pintu masuk SSO', function () {
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('auth/login')
+            ->missing('canResetPassword'),
+        );
 });
 
-test('users can authenticate using the login screen', function () {
+test('login lokal ditolak meskipun kredensial valid', function () {
     $user = Pegawai::factory()->create();
 
     $response = $this->post(route('login.store'), [
@@ -18,65 +21,31 @@ test('users can authenticate using the login screen', function () {
         'password' => 'password',
     ]);
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $this->assertGuest();
+    $response
+        ->assertRedirect(route('login'))
+        ->assertSessionHas('error', 'Login lokal dinonaktifkan. Silakan masuk melalui SSO PA Penajam.');
 });
 
-test('users with two factor enabled are redirected to two factor challenge', function () {
-    $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
-
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => true,
-    ]);
-
+test('login lokal melalui API ditolak dengan forbidden', function () {
     $user = Pegawai::factory()->create();
 
-    $user->forceFill([
-        'two_factor_secret' => encrypt('test-secret'),
-        'two_factor_recovery_codes' => encrypt(json_encode(['code1', 'code2'])),
-        'two_factor_confirmed_at' => now(),
-    ])->save();
-
-    $response = $this->post(route('login'), [
+    $this->postJson(route('login.store'), [
         'nip' => $user->nip,
         'password' => 'password',
-    ]);
-
-    $response->assertRedirect(route('two-factor.login'));
-    $response->assertSessionHas('login.id', $user->id);
-    $this->assertGuest();
-});
-
-test('users can not authenticate with invalid password', function () {
-    $user = Pegawai::factory()->create();
-
-    $this->post(route('login.store'), [
-        'nip' => $user->nip,
-        'password' => 'wrong-password',
-    ]);
+    ])
+        ->assertForbidden()
+        ->assertJson([
+            'message' => 'Login lokal dinonaktifkan. Silakan masuk melalui SSO PA Penajam.',
+        ]);
 
     $this->assertGuest();
 });
 
-test('users can logout', function () {
-    $user = Pegawai::factory()->create();
-
-    $response = $this->actingAs($user)->post(route('logout'));
-
-    $this->assertGuest();
-    $response->assertRedirect(route('home'));
+test('login lokal Filament tidak tersedia', function () {
+    expect(Route::has('filament.admin.auth.login'))->toBeFalse();
 });
 
-test('users are rate limited', function () {
-    $user = Pegawai::factory()->create();
-
-    RateLimiter::increment(md5('login'.implode('|', [$user->nip, '127.0.0.1'])), amount: 5);
-
-    $response = $this->post(route('login.store'), [
-        'nip' => $user->nip,
-        'password' => 'wrong-password',
-    ]);
-
-    $response->assertTooManyRequests();
+test('panel admin pengguna tamu diarahkan ke SSO', function () {
+    $this->get('/admin')->assertRedirectContains(route('auth.sso.login'));
 });

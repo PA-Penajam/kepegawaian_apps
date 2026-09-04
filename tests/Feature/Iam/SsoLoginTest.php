@@ -14,14 +14,14 @@ test('GET /sso/login dengan app tidak dikenal mengembalikan 404', function () {
         ->assertStatus(404);
 });
 
-test('GET /sso/login user belum login diredirect ke halaman login', function () {
+test('GET /sso/login user belum login diredirect ke SSO eksternal', function () {
     IamApplication::create([
         'nama' => 'Test', 'slug' => 'test', 'url' => 'http://test.local',
         'api_key' => 'k', 'api_secret_hash' => Crypt::encryptString('s'),
     ]);
 
     $this->get('/sso/login?app=test&redirect=http://test.local/callback')
-        ->assertRedirect(route('login'));
+        ->assertRedirect(route('auth.sso.login'));
 });
 
 test('GET /sso/login user sudah login generate SSO code dan redirect', function () {

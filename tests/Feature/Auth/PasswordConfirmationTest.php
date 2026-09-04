@@ -1,22 +1,15 @@
 <?php
 
 use App\Models\Pegawai;
-use Inertia\Testing\AssertableInertia as Assert;
 
-test('confirm password screen can be rendered', function () {
+test('endpoint konfirmasi password lokal tidak tersedia bagi pengguna terautentikasi', function () {
     $user = Pegawai::factory()->create();
 
-    $response = $this->actingAs($user)->get(route('password.confirm'));
-
-    $response->assertOk();
-
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('auth/confirm-password'),
-    );
+    $this->actingAs($user)->get(route('password.confirm'))->assertNotFound();
+    $this->actingAs($user)->post(route('password.confirm.store'), [])->assertNotFound();
+    $this->actingAs($user)->get(route('password.confirmation'))->assertNotFound();
 });
 
-test('password confirmation requires authentication', function () {
-    $response = $this->get(route('password.confirm'));
-
-    $response->assertRedirectContains(route('auth.sso.login'));
+test('konfirmasi password lokal menolak pengguna tamu ke SSO', function () {
+    $this->get(route('password.confirm'))->assertRedirectContains(route('auth.sso.login'));
 });
