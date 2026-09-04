@@ -21,7 +21,12 @@ type Props = {
     onClose: () => void;
 };
 
-export function DialogAdjustSaldo({ pegawai, currentSaldo, open, onClose }: Props) {
+export function DialogAdjustSaldo({
+    pegawai,
+    currentSaldo,
+    open,
+    onClose,
+}: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
         pegawai_nip: pegawai.nip,
         jenis_cuti_kode: 'CT',
@@ -32,7 +37,7 @@ export function DialogAdjustSaldo({ pegawai, currentSaldo, open, onClose }: Prop
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(adminCuti.saldo.adjust(), {
+        post(adminCuti.saldo.adjust.url(), {
             onSuccess: () => {
                 reset();
                 onClose();
@@ -50,15 +55,20 @@ export function DialogAdjustSaldo({ pegawai, currentSaldo, open, onClose }: Prop
                 <DialogHeader>
                     <DialogTitle>Penyesuaian Saldo Cuti</DialogTitle>
                     <DialogDescription>
-                        Sesuaikan saldo cuti untuk <strong>{pegawai.nama}</strong> ({pegawai.nip})
+                        Sesuaikan saldo cuti untuk{' '}
+                        <strong>{pegawai.nama}</strong> ({pegawai.nip})
                     </DialogDescription>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Informasi saldo saat ini */}
                     <div className="space-y-2 rounded-lg border bg-muted/50 p-3">
-                        <p className="text-sm text-muted-foreground">Saldo saat ini</p>
-                        <p className="text-2xl font-bold">{currentSaldo} hari</p>
+                        <p className="text-sm text-muted-foreground">
+                            Saldo saat ini
+                        </p>
+                        <p className="text-2xl font-bold">
+                            {currentSaldo} hari
+                        </p>
                     </div>
 
                     {/* Jenis Cuti - hanya CT pada MVP */}
@@ -79,49 +89,71 @@ export function DialogAdjustSaldo({ pegawai, currentSaldo, open, onClose }: Prop
                             type="number"
                             min={2020}
                             value={data.tahun}
-                            onChange={(e) => setData('tahun', parseInt(e.target.value) || 0)}
+                            onChange={(e) =>
+                                setData('tahun', parseInt(e.target.value) || 0)
+                            }
                         />
                         <InputError message={errors.tahun} />
                     </div>
 
                     {/* Jumlah Hari */}
                     <div className="space-y-2">
-                        <Label htmlFor="jumlah_hari">Jumlah Hari (positif = tambah, negatif = kurang)</Label>
+                        <Label htmlFor="jumlah_hari">
+                            Jumlah Hari (positif = tambah, negatif = kurang)
+                        </Label>
                         <Input
                             id="jumlah_hari"
                             type="number"
                             value={data.jumlah_hari}
-                            onChange={(e) => setData('jumlah_hari', parseInt(e.target.value) || 0)}
+                            onChange={(e) =>
+                                setData(
+                                    'jumlah_hari',
+                                    parseInt(e.target.value) || 0,
+                                )
+                            }
                         />
                         <InputError message={errors.jumlah_hari} />
                         {data.jumlah_hari !== 0 && (
                             <p className="text-xs text-muted-foreground">
-                                Saldo setelah penyesuaian: <strong>{saldoSetelah} hari</strong>
+                                Saldo setelah penyesuaian:{' '}
+                                <strong>{saldoSetelah} hari</strong>
                             </p>
                         )}
                     </div>
 
                     {/* Keterangan */}
                     <div className="space-y-2">
-                        <Label htmlFor="keterangan">Keterangan (wajib, min. 10 karakter)</Label>
+                        <Label htmlFor="keterangan">
+                            Keterangan (wajib, min. 10 karakter)
+                        </Label>
                         <Textarea
                             id="keterangan"
                             rows={3}
                             placeholder="Jelaskan alasan penyesuaian saldo..."
                             value={data.keterangan}
-                            onChange={(e) => setData('keterangan', e.target.value)}
+                            onChange={(e) =>
+                                setData('keterangan', e.target.value)
+                            }
                         />
                         <InputError message={errors.keterangan} />
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose} disabled={processing}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                            disabled={processing}
+                        >
                             Batal
                         </Button>
                         <Button
                             type="submit"
                             processing={processing}
-                            disabled={data.jumlah_hari === 0 || data.keterangan.length < 10}
+                            disabled={
+                                data.jumlah_hari === 0 ||
+                                data.keterangan.length < 10
+                            }
                         >
                             Simpan Penyesuaian
                         </Button>

@@ -67,7 +67,10 @@ export default function Index({ jenisDokumen, filters }: Props) {
     };
 
     const confirmDelete = () => {
-        if (!deleteTarget) return;
+        if (!deleteTarget) {
+return;
+}
+
         deleteForm.delete(destroy.url(deleteTarget.id), {
             onSuccess: () => setDeleteTarget(null),
         });
@@ -80,8 +83,12 @@ export default function Index({ jenisDokumen, filters }: Props) {
             <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold uppercase tracking-tight">Jenis Dokumen</h1>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">Kelola jenis dokumen yang digunakan dalam sistem.</p>
+                        <h1 className="text-2xl font-bold tracking-tight uppercase">
+                            Jenis Dokumen
+                        </h1>
+                        <p className="mt-1 text-sm font-medium text-muted-foreground">
+                            Kelola jenis dokumen yang digunakan dalam sistem.
+                        </p>
                     </div>
                     <Button asChild>
                         <Link href={create()}>
@@ -96,17 +103,21 @@ export default function Index({ jenisDokumen, filters }: Props) {
                         placeholder="Cari jenis dokumen..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="max-w-md border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
+                        className="max-w-md border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all focus-visible:translate-x-[2px] focus-visible:translate-y-[2px] focus-visible:shadow-none"
                     />
                 </div>
 
-                <div className="rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden">
+                <div className="overflow-hidden rounded-xl border-2 border-black bg-background shadow-[4px_4px_0_rgba(0,0,0,1)]">
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
-                                <TableHead className="font-black uppercase text-xs tracking-wider">Nama</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider">Keterangan</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider text-center w-[100px]">
+                            <TableRow className="border-b-2 border-black bg-muted/30 hover:bg-muted/30">
+                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                    Nama
+                                </TableHead>
+                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                    Keterangan
+                                </TableHead>
+                                <TableHead className="w-[100px] text-center text-xs font-black tracking-wider uppercase">
                                     Aksi
                                 </TableHead>
                             </TableRow>
@@ -116,14 +127,17 @@ export default function Index({ jenisDokumen, filters }: Props) {
                                 <TableRow>
                                     <TableCell
                                         colSpan={3}
-                                        className="text-center py-12 font-medium text-muted-foreground"
+                                        className="py-12 text-center font-medium text-muted-foreground"
                                     >
                                         Tidak ada data jenis dokumen ditemukan.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 jenisDokumen.data.map((item) => (
-                                    <TableRow key={item.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
+                                    <TableRow
+                                        key={item.id}
+                                        className="border-b border-black/10 transition-colors hover:bg-muted/20"
+                                    >
                                         <TableCell className="font-bold">
                                             {item.nama}
                                         </TableCell>
@@ -145,7 +159,10 @@ export default function Index({ jenisDokumen, filters }: Props) {
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() =>
-                                                        handleDelete(item.id, item.nama)
+                                                        handleDelete(
+                                                            item.id,
+                                                            item.nama,
+                                                        )
                                                     }
                                                 >
                                                     <Trash2 className="h-4 w-4 text-destructive" />
@@ -159,7 +176,10 @@ export default function Index({ jenisDokumen, filters }: Props) {
                     </Table>
                 </div>
 
-                <PaginationWrapper meta={jenisDokumen.meta} />
+                <PaginationWrapper
+                    links={jenisDokumen.links}
+                    lastPage={jenisDokumen.last_page}
+                />
             </div>
 
             <ConfirmDeleteDialog

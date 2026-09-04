@@ -66,7 +66,7 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
     // Submit bulk init
     function handleBulkInit(e: React.FormEvent) {
         e.preventDefault();
-        bulkForm.post(adminCuti.saldo.init.store(), {
+        bulkForm.post(adminCuti.saldo.init.store.url(), {
             preserveScroll: true,
             onSuccess: () => bulkForm.reset(),
         });
@@ -87,8 +87,10 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
                 <div>
-                    <h1 className="text-2xl font-bold uppercase tracking-tight">Kelola Saldo Cuti</h1>
-                    <p className="text-sm text-muted-foreground mt-1 font-medium">
+                    <h1 className="text-2xl font-bold tracking-tight uppercase">
+                        Kelola Saldo Cuti
+                    </h1>
+                    <p className="mt-1 text-sm font-medium text-muted-foreground">
                         Kelola dan sesuaikan saldo cuti pegawai.
                     </p>
                 </div>
@@ -105,10 +107,18 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                                 type="number"
                                 className="w-28"
                                 value={filterTahun}
-                                onChange={(e) => setFilterTahun(parseInt(e.target.value) || tahun)}
+                                onChange={(e) =>
+                                    setFilterTahun(
+                                        parseInt(e.target.value) || tahun,
+                                    )
+                                }
                             />
                         </div>
-                        <Button variant="outline" size="sm" onClick={applyFilter}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={applyFilter}
+                        >
                             Terapkan
                         </Button>
                     </CardContent>
@@ -120,30 +130,51 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                         <CardTitle className="text-base">
                             Saldo Cuti Tahun {tahun}
                         </CardTitle>
-                        <Badge variant="secondary">{alokasiList.total} data</Badge>
+                        <Badge variant="secondary">
+                            {alokasiList.total} data
+                        </Badge>
                     </CardHeader>
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
-                                    <TableHead className="font-black uppercase text-xs tracking-wider">NIP</TableHead>
-                                    <TableHead className="font-black uppercase text-xs tracking-wider">Nama Pegawai</TableHead>
-                                    <TableHead className="font-black uppercase text-xs tracking-wider">Jenis</TableHead>
-                                    <TableHead className="font-black uppercase text-xs tracking-wider text-right">Hak Awal</TableHead>
-                                    <TableHead className="font-black uppercase text-xs tracking-wider text-right">Saldo Saat Ini</TableHead>
-                                    <TableHead className="font-black uppercase text-xs tracking-wider text-right">Aksi</TableHead>
+                                <TableRow className="border-b-2 border-black bg-muted/30 hover:bg-muted/30">
+                                    <TableHead className="text-xs font-black tracking-wider uppercase">
+                                        NIP
+                                    </TableHead>
+                                    <TableHead className="text-xs font-black tracking-wider uppercase">
+                                        Nama Pegawai
+                                    </TableHead>
+                                    <TableHead className="text-xs font-black tracking-wider uppercase">
+                                        Jenis
+                                    </TableHead>
+                                    <TableHead className="text-right text-xs font-black tracking-wider uppercase">
+                                        Hak Awal
+                                    </TableHead>
+                                    <TableHead className="text-right text-xs font-black tracking-wider uppercase">
+                                        Saldo Saat Ini
+                                    </TableHead>
+                                    <TableHead className="text-right text-xs font-black tracking-wider uppercase">
+                                        Aksi
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {alokasiList.data.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-12 font-medium text-muted-foreground">
-                                            Belum ada data alokasi untuk tahun {tahun}
+                                        <TableCell
+                                            colSpan={6}
+                                            className="py-12 text-center font-medium text-muted-foreground"
+                                        >
+                                            Belum ada data alokasi untuk tahun{' '}
+                                            {tahun}
                                         </TableCell>
                                     </TableRow>
                                 )}
                                 {alokasiList.data.map((item) => (
-                                    <TableRow key={item.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
+                                    <TableRow
+                                        key={item.id}
+                                        className="border-b border-black/10 transition-colors hover:bg-muted/20"
+                                    >
                                         <TableCell className="font-mono text-sm">
                                             {item.pegawai_nip}
                                         </TableCell>
@@ -151,9 +182,13 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                                             {item.pegawai?.nama_lengkap ?? '-'}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline">{item.jenis_cuti_kode}</Badge>
+                                            <Badge variant="outline">
+                                                {item.jenis_cuti_kode}
+                                            </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right">{item.hak_awal}</TableCell>
+                                        <TableCell className="text-right">
+                                            {item.hak_awal}
+                                        </TableCell>
                                         <TableCell className="text-right font-semibold">
                                             {item.saldo_saat_ini}
                                         </TableCell>
@@ -161,7 +196,9 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                                             <Button
                                                 variant="ghost"
                                                 size="xs"
-                                                onClick={() => openSesuaikanDialog(item)}
+                                                onClick={() =>
+                                                    openSesuaikanDialog(item)
+                                                }
                                             >
                                                 <Settings2 className="mr-1 h-3 w-3" />
                                                 Sesuaikan
@@ -182,10 +219,15 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                 {/* Form Inisialisasi Saldo */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Inisialisasi Saldo Pegawai</CardTitle>
+                        <CardTitle className="text-base">
+                            Inisialisasi Saldo Pegawai
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handleBulkInit} className="flex flex-wrap items-end gap-3">
+                        <form
+                            onSubmit={handleBulkInit}
+                            className="flex flex-wrap items-end gap-3"
+                        >
                             {Object.keys(bulkForm.errors).length > 0 && (
                                 <div className="w-full">
                                     <AlertError
@@ -201,9 +243,16 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                                     className="w-48"
                                     placeholder="Masukkan NIP"
                                     value={bulkForm.data.pegawai_nip}
-                                    onChange={(e) => bulkForm.setData('pegawai_nip', e.target.value)}
+                                    onChange={(e) =>
+                                        bulkForm.setData(
+                                            'pegawai_nip',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
-                                <InputError message={bulkForm.errors.pegawai_nip} />
+                                <InputError
+                                    message={bulkForm.errors.pegawai_nip}
+                                />
                             </div>
                             <div className="space-y-1">
                                 <Label htmlFor="init-tahun">Tahun</Label>
@@ -212,7 +261,12 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                                     type="number"
                                     className="w-28"
                                     value={bulkForm.data.tahun}
-                                    onChange={(e) => bulkForm.setData('tahun', parseInt(e.target.value) || 0)}
+                                    onChange={(e) =>
+                                        bulkForm.setData(
+                                            'tahun',
+                                            parseInt(e.target.value) || 0,
+                                        )
+                                    }
                                 />
                                 <InputError message={bulkForm.errors.tahun} />
                             </div>
@@ -224,11 +278,21 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                                     className="w-24"
                                     min={1}
                                     value={bulkForm.data.jumlah_hari}
-                                    onChange={(e) => bulkForm.setData('jumlah_hari', parseInt(e.target.value) || 0)}
+                                    onChange={(e) =>
+                                        bulkForm.setData(
+                                            'jumlah_hari',
+                                            parseInt(e.target.value) || 0,
+                                        )
+                                    }
                                 />
-                                <InputError message={bulkForm.errors.jumlah_hari} />
+                                <InputError
+                                    message={bulkForm.errors.jumlah_hari}
+                                />
                             </div>
-                            <Button type="submit" processing={bulkForm.processing}>
+                            <Button
+                                type="submit"
+                                processing={bulkForm.processing}
+                            >
                                 <Plus className="mr-1 h-4 w-4" />
                                 Inisialisasi
                             </Button>

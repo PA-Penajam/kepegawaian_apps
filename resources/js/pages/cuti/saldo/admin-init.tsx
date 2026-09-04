@@ -33,7 +33,7 @@ export default function AdminSaldoInit({ tahun }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(adminCuti.saldo.init.store());
+        post(adminCuti.saldo.init.store.url());
     }
 
     return (
@@ -48,14 +48,20 @@ export default function AdminSaldoInit({ tahun }: Props) {
                         </Link>
                     </Button>
                     <div>
-                        <h1 className="text-xl font-semibold tracking-tight">Inisialisasi Saldo Cuti</h1>
-                        <p className="text-sm text-muted-foreground">Tambahkan saldo cuti tahunan untuk pegawai.</p>
+                        <h1 className="text-xl font-semibold tracking-tight">
+                            Inisialisasi Saldo Cuti
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Tambahkan saldo cuti tahunan untuk pegawai.
+                        </p>
                     </div>
                 </div>
 
                 <Card className="max-w-xl">
                     <CardHeader>
-                        <CardTitle className="text-base">Formulir Inisialisasi Saldo</CardTitle>
+                        <CardTitle className="text-base">
+                            Formulir Inisialisasi Saldo
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,14 +78,18 @@ export default function AdminSaldoInit({ tahun }: Props) {
                                     id="pegawai_nip"
                                     placeholder="Masukkan NIP pegawai"
                                     value={data.pegawai_nip}
-                                    onChange={(e) => setData('pegawai_nip', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('pegawai_nip', e.target.value)
+                                    }
                                 />
                                 <InputError message={errors.pegawai_nip} />
                             </div>
 
                             {/* Jenis Cuti */}
                             <div className="space-y-2">
-                                <Label htmlFor="jenis_cuti_kode">Jenis Cuti</Label>
+                                <Label htmlFor="jenis_cuti_kode">
+                                    Jenis Cuti
+                                </Label>
                                 <Input
                                     id="jenis_cuti_kode"
                                     value="CT — Cuti Tahunan"
@@ -95,7 +105,12 @@ export default function AdminSaldoInit({ tahun }: Props) {
                                     type="number"
                                     min={2020}
                                     value={data.tahun}
-                                    onChange={(e) => setData('tahun', parseInt(e.target.value) || 0)}
+                                    onChange={(e) =>
+                                        setData(
+                                            'tahun',
+                                            parseInt(e.target.value) || 0,
+                                        )
+                                    }
                                 />
                                 <InputError message={errors.tahun} />
                             </div>
@@ -108,25 +123,38 @@ export default function AdminSaldoInit({ tahun }: Props) {
                                     type="number"
                                     min={1}
                                     value={data.jumlah_hari}
-                                    onChange={(e) => setData('jumlah_hari', parseInt(e.target.value) || 0)}
+                                    onChange={(e) =>
+                                        setData(
+                                            'jumlah_hari',
+                                            parseInt(e.target.value) || 0,
+                                        )
+                                    }
                                 />
                                 <InputError message={errors.jumlah_hari} />
                             </div>
 
                             {/* Keterangan */}
                             <div className="space-y-2">
-                                <Label htmlFor="keterangan">Keterangan (opsional)</Label>
+                                <Label htmlFor="keterangan">
+                                    Keterangan (opsional)
+                                </Label>
                                 <Textarea
                                     id="keterangan"
                                     rows={3}
                                     placeholder="Keterangan inisialisasi..."
                                     value={data.keterangan}
-                                    onChange={(e) => setData('keterangan', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('keterangan', e.target.value)
+                                    }
                                 />
                                 <InputError message={errors.keterangan} />
                             </div>
 
-                            <Button type="submit" processing={processing} className="w-full">
+                            <Button
+                                type="submit"
+                                processing={processing}
+                                className="w-full"
+                            >
                                 Inisialisasi Saldo
                             </Button>
                         </form>
