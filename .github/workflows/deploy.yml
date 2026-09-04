@@ -1,0 +1,161 @@
+name: Deploy Production (Windows Server 2019)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Group khusus kepegawaian-apps agar tidak saling membatalkan dengan deploy
+# aplikasi lain (mis. sso-papenajam) yang berjalan di self-hosted runner sama.
+concurrency:
+  group: production-deploy-kepegawaian
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Build & Test on Windows Server 2019
+    runs-on: [self-hosted, windows, x64]
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 30
+
+    steps:
+      - name: Verify runner operating system
+        shell: powershell
+        run: |
+          $os = Get-CimInstance -ClassName Win32_OperatingSystem
+
+          if ($os.Caption -notmatch 'Windows Server 2019' -or $os.Version -notlike '10.0.17763*') {
+              throw "Runner harus menggunakan Windows Server 2019. OS terdeteksi: $($os.Caption) ($($os.Version))."
+          }
+
+          Write-Host "Runner tervalidasi: $($os.Caption) ($($os.Version))."
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify PHP environment
+        shell: powershell
+        run: |
+          php -v
+          composer -V
+          $exts = @('bcmath', 'intl', 'pdo_sqlite', 'sqlite3', 'fileinfo', 'mbstring', 'gd', 'openssl')
+          $loaded = php -m
+          foreach ($ext in $exts) {
+              if ($loaded -notcontains $ext) {
+                  throw "Ekstensi PHP yang dibutuhkan tidak ditemukan: $ext"
+              }
+          }
+          Write-Host "PHP dan ekstensi tervalidasi."
+
+      - name: Verify Node.js environment
+        shell: powershell
+        run: |
+          node -v
+          npm -v
+          Write-Host "Node.js dan npm tervalidasi."
+
+      - name: Prepare Laravel environment
+        shell: powershell
+        run: Copy-Item .env.example .env -Force
+
+      - name: Install PHP dependencies
+        shell: powershell
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Generate application key
+        shell: powershell
+        run: php artisan key:generate --force
+
+      - name: Install JavaScript dependencies
+        shell: powershell
+        run: npm ci --no-audit --no-fund
+
+      - name: Build frontend assets
+        shell: powershell
+        run: npm run build
+
+      - name: Run test suite
+        shell: powershell
+        run: |
+          php artisan config:clear
+          php artisan test --compact
+
+  deploy:
+    name: Deploy to Production
+    runs-on: [self-hosted, windows, x64]
+    needs: test
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    timeout-minutes: 30
+    env:
+      # Sesuaikan jika path produksi berbeda dari konvensi E:\pa-penajam\...
+      DEPLOY_PATH: E:\pa-penajam\kepegawaian-apps
+
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+        with:
+          path: release
+
+      - name: Backup current production
+        shell: powershell
+        run: |
+          $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+          $backupRoot = Join-Path $env:DEPLOY_PATH 'storage\backups\releases'
+          New-Item -ItemType Directory -Force -Path $backupRoot | Out-Null
+          $backupPath = Join-Path $backupRoot $timestamp
+          Write-Host "Backup produksi ke: $backupPath"
+          # Salin seluruh app (termasuk database SQLite & vendor) agar rollback mandiri.
+          robocopy $env:DEPLOY_PATH $backupPath /E /XD 'storage' 'node_modules' '.git' /XF '.env' /R:2 /W:2 /NP /NFL /NDL
+          if ($LASTEXITCODE -ge 8) { throw "Backup gagal (robocopy exit code $LASTEXITCODE)." }
+          # Robocopy exit 1-7 = sukses (file tersalin); nol-kan agar runner tidak fail.
+          $LASTEXITCODE = 0
+          Get-ChildItem -Path $backupRoot -Directory | Sort-Object Name -Descending | Select-Object -Skip 5 | Remove-Item -Recurse -Force
+
+      - name: Sync release to production
+        shell: powershell
+        run: |
+          $source = Join-Path $PWD 'release'
+          Write-Host "Sync $source ke $env:DEPLOY_PATH"
+          # /MIR menghapus file lama, namun .env dan database SQLite produksi
+          # dilindungi agar tidak tertimpa/terhapus oleh /XF.
+          robocopy $source $env:DEPLOY_PATH /MIR /XD '.git' 'node_modules' 'storage' 'vendor' 'public\build' 'bootstrap\cache' /XF '.env' 'kepegawaian_db' '*.sqlite' '*.sqlite3' /R:2 /W:2 /NP /NFL /NDL
+          if ($LASTEXITCODE -ge 8) { throw "Sync gagal (robocopy exit code $LASTEXITCODE)." }
+          # Robocopy exit 1-7 = sukses (file tersalin); nol-kan agar runner tidak fail.
+          $LASTEXITCODE = 0
+
+      - name: Install production dependencies
+        shell: powershell
+        run: |
+          Set-Location $env:DEPLOY_PATH
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-progress
+          # Install lengkap dulu (termasuk vite dkk) agar build bisa jalan,
+          # lalu prune devDependencies setelah build selesai.
+          npm ci --no-audit --no-fund
+          npm run build
+          npm prune --omit=dev
+
+      - name: Migrate, link storage, and optimize
+        shell: powershell
+        run: |
+          Set-Location $env:DEPLOY_PATH
+          if (-not (Test-Path '.env')) { throw "File .env tidak ditemukan di $env:DEPLOY_PATH. Deploy dibatalkan agar konfigurasi produksi tidak tertimpa." }
+          php artisan migrate --force
+          # Symlink/junction untuk file upload (foto pegawai) bila belum ada.
+          if (-not (Test-Path 'public\storage')) { php artisan storage:link }
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+      - name: Verify deployment
+        shell: powershell
+        run: |
+          Set-Location $env:DEPLOY_PATH
+          php artisan about --only=environment
+          php artisan config:show app.url
