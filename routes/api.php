@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Cuti\PengajuanController as CutiPengajuanController
 use App\Http\Controllers\Api\Cuti\SaldoController as CutiSaldoController;
 use App\Http\Controllers\Api\IamController;
 use App\Http\Controllers\Api\PegawaiApiController;
+use App\Http\Controllers\Api\PegawaiSyncController;
 use App\Http\Controllers\Api\UsulanKenaikanPangkat\UsulanKenaikanPangkatApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum', 'verify.hmac', 'throttle:60,1'])
     ->prefix('v1')
     ->group(function () {
+        // Ekspor sinkronisasi penuh/delta (meta paginator lengkap)
+        Route::get('pegawai/sync', [PegawaiSyncController::class, 'index']);
+
         // Single pegawai lookup by NIP (18 digits)
         Route::get('pegawai/{nip}', [PegawaiApiController::class, 'show'])
             ->where('nip', '^\d{18}$');

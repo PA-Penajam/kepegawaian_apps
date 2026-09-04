@@ -5,6 +5,7 @@ import {
     FileText,
     Inbox,
     LayoutGrid,
+    RefreshCcw,
     ScrollText,
     Settings,
     Shield,
@@ -174,6 +175,11 @@ export function AppSidebar() {
                   title: 'Aplikasi',
                   href: aplikasi.index.url(),
                   icon: ShieldCheck,
+              },
+              {
+                  title: 'Klien Sinkronisasi',
+                  href: '/iam/sinkronisasi',
+                  icon: RefreshCcw,
               },
               {
                   title: 'User Akses',

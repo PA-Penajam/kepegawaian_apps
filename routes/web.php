@@ -12,6 +12,7 @@ use App\Http\Controllers\Iam\AplikasiController;
 use App\Http\Controllers\Iam\IamSecretRecoveryController;
 use App\Http\Controllers\Iam\PermissionController;
 use App\Http\Controllers\Iam\RoleController;
+use App\Http\Controllers\Iam\SyncConsumerController;
 use App\Http\Controllers\Iam\UserAksesController;
 use App\Http\Controllers\Kepegawaian\ApprovalPengajuanPerubahanDataController;
 use App\Http\Controllers\Kepegawaian\DokumenPegawaiController;
@@ -102,6 +103,16 @@ Route::middleware(['auth', 'verified', 'iam.permission:iam.manage'])->group(func
             Route::get('users/{user}/akses', [UserAksesController::class, 'show'])->name('users.akses');
             Route::post('users/{user}/akses', [UserAksesController::class, 'store'])->name('users.akses.store');
             Route::delete('users/{user}/akses/{role}', [UserAksesController::class, 'destroy'])->name('users.akses.destroy');
+
+            // Klien sinkronisasi
+            Route::get('sinkronisasi', [SyncConsumerController::class, 'index'])->name('sinkronisasi.index');
+            Route::post('sinkronisasi', [SyncConsumerController::class, 'store'])->name('sinkronisasi.store');
+            Route::put('sinkronisasi/{konsumen}', [SyncConsumerController::class, 'update'])->name('sinkronisasi.update');
+            Route::delete('sinkronisasi/{konsumen}', [SyncConsumerController::class, 'destroy'])->name('sinkronisasi.destroy');
+            Route::post('sinkronisasi/{konsumen}/test-connection', [SyncConsumerController::class, 'testConnection'])->name('sinkronisasi.test-connection');
+            Route::post('sinkronisasi/{konsumen}/regenerate-token', [SyncConsumerController::class, 'regenerateToken'])->name('sinkronisasi.regenerate-token');
+            Route::post('sinkronisasi/{konsumen}/regenerate-secret', [SyncConsumerController::class, 'regenerateSecret'])->name('sinkronisasi.regenerate-secret');
+            Route::post('sinkronisasi/{konsumen}/revoke-token', [SyncConsumerController::class, 'revokeToken'])->name('sinkronisasi.revoke-token');
         });
 });
 

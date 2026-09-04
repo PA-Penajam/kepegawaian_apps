@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SyncConsumer;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +15,12 @@ use Symfony\Component\HttpFoundation\Response;
  * 1. Verifikasi signature HMAC-SHA256
  * 2. Timestamp validation (anti-replay attack, window 5 menit)
  * 3. Query string tampering detection
+ *
+ * Resolusi secret (1 client 1 secret): bila pemanggil terautentikasi
+ * sebagai SyncConsumer yang sudah memiliki hmac_secret per konsumen,
+ * secret itu yang dipakai. Selain itu (konsumen lawas maupun integrasi
+ * non-sync) fallback ke secret global config kepegawaian.secret_key
+ * agar masa transisi tidak memutus client lama.
  */
 class VerifyHmacSignature
 {
@@ -38,9 +45,10 @@ class VerifyHmacSignature
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $secret = config('kepegawaian.secret_key');
+        $secret = $this->resolveSecret($request);
+
         if (empty($secret)) {
-            Log::critical('KEPEGAWAIAN_HMAC_SECRET tidak dikonfigurasi');
+            Log::critical('HMAC secret tidak dikonfigurasi (per konsumen maupun global)');
 
             return response()->json(['message' => 'Service configuration error'], 500);
         }
@@ -62,5 +70,34 @@ class VerifyHmacSignature
         }
 
         return $next($request);
+    }
+
+    /**
+     * Ambil secret yang berlaku untuk request ini: secret per konsumen
+     * bila pemanggil adalah SyncConsumer yang sudah memilikinya,
+     * selain itu secret global sebagai fallback masa transisi.
+     */
+    private function resolveSecret(Request $request): ?string
+    {
+        $user = $request->user();
+
+        if ($user instanceof SyncConsumer) {
+            try {
+                $consumerSecret = $user->hmac_secret;
+
+                if (is_string($consumerSecret) && $consumerSecret !== '') {
+                    return $consumerSecret;
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Gagal mendekripsi HMAC secret saat verifikasi', [
+                    'consumer_slug' => $user->slug ?? null,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $global = config('kepegawaian.secret_key');
+
+        return is_string($global) && $global !== '' ? $global : null;
     }
 }
