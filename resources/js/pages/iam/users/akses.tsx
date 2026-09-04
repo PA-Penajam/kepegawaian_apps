@@ -117,7 +117,7 @@ export default function Akses() {
                 setSelectedRoleId('');
             },
         });
-    }, [user.id, selectedRoleId, addRoleForm]);
+    }, [user.id, selectedAppId, selectedRoleId, addRoleForm]);
 
     const handleRevokeAkses = useCallback(
         (roleId: number, roleName: string) => {
@@ -148,10 +148,12 @@ export default function Akses() {
             <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold uppercase tracking-tight">
+                        <h1 className="text-2xl font-bold tracking-tight uppercase">
                             Akses User: {user.name}
                         </h1>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">{user.email}</p>
+                        <p className="mt-1 text-sm font-medium text-muted-foreground">
+                            {user.email}
+                        </p>
                     </div>
                 </div>
 
@@ -232,7 +234,7 @@ export default function Akses() {
 
                 {/* Daftar Akses by Application */}
                 {groupedAkses.length === 0 ? (
-                    <div className="text-center py-12 font-medium text-muted-foreground">
+                    <div className="py-12 text-center font-medium text-muted-foreground">
                         User ini belum memiliki akses IAM.
                     </div>
                 ) : (
@@ -249,20 +251,33 @@ export default function Akses() {
                                     </Badge>
                                 </div>
 
-                                <div className="rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden">
+                                <div className="overflow-hidden rounded-xl border-2 border-black bg-background shadow-[4px_4px_0_rgba(0,0,0,1)]">
                                     <Table>
                                         <TableHeader>
-                                            <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
-                                                <TableHead className="font-black uppercase text-xs tracking-wider">Role</TableHead>
-                                                <TableHead className="font-black uppercase text-xs tracking-wider">Permissions</TableHead>
-                                                <TableHead className="font-black uppercase text-xs tracking-wider">Diberikan Oleh</TableHead>
-                                                <TableHead className="font-black uppercase text-xs tracking-wider">Tanggal</TableHead>
-                                                <TableHead className="font-black uppercase text-xs tracking-wider text-center w-[100px]">Aksi</TableHead>
+                                            <TableRow className="border-b-2 border-black bg-muted/30 hover:bg-muted/30">
+                                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                                    Role
+                                                </TableHead>
+                                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                                    Permissions
+                                                </TableHead>
+                                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                                    Diberikan Oleh
+                                                </TableHead>
+                                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                                    Tanggal
+                                                </TableHead>
+                                                <TableHead className="w-[100px] text-center text-xs font-black tracking-wider uppercase">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {appAkses.map((a) => (
-                                                <TableRow key={a.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
+                                                <TableRow
+                                                    key={a.id}
+                                                    className="border-b border-black/10 transition-colors hover:bg-muted/20"
+                                                >
                                                     <TableCell className="font-medium">
                                                         {a.role.nama}
                                                     </TableCell>
@@ -339,8 +354,10 @@ export default function Akses() {
                                                                 aria-label={`Cabut akses ${a.role.nama}`}
                                                                 onClick={() =>
                                                                     handleRevokeAkses(
-                                                                        a.role.id,
-                                                                        a.role.nama,
+                                                                        a.role
+                                                                            .id,
+                                                                        a.role
+                                                                            .nama,
                                                                     )
                                                                 }
                                                             >

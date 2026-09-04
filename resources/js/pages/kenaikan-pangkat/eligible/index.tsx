@@ -46,7 +46,9 @@ const statusBadgeClass: Record<StatusKp, string> = {
 };
 
 function formatTanggal(tanggal: string | null): string {
-    if (tanggal === null) return '-';
+    if (tanggal === null) {
+return '-';
+}
 
     return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(`${tanggal}T00:00:00`));
 }
@@ -94,14 +96,18 @@ export default function EligibleKenaikanPangkatPage({ pegawaiList, stats, bulanO
                 <div className="flex flex-col gap-3 rounded-xl border-2 border-black bg-card p-4 shadow-[4px_4px_0_rgba(0,0,0,1)] md:flex-row md:items-end">
                     <div className="grid gap-2">
                         <label className="text-sm font-bold">Bulan</label>
-                        <Select value={bulanFilter || 'semua'} onValueChange={(value) => { const next = value === 'semua' ? '' : value; setBulanFilter(next); applyFilters({ bulan: next }); }}>
+                        <Select value={bulanFilter || 'semua'} onValueChange={(value) => {
+ const next = value === 'semua' ? '' : value; setBulanFilter(next); applyFilters({ bulan: next }); 
+}}>
                             <SelectTrigger className="w-40"><SelectValue placeholder="Pilih bulan" /></SelectTrigger>
                             <SelectContent><SelectItem value="semua">Semua Bulan</SelectItem>{bulanOptions.map((bulan) => <SelectItem key={bulan.value} value={bulan.value.toString()}>{bulan.label}</SelectItem>)}</SelectContent>
                         </Select>
                     </div>
                     <div className="grid gap-2">
                         <label className="text-sm font-bold">Tahun</label>
-                        <Select value={tahunFilter || 'semua'} onValueChange={(value) => { const next = value === 'semua' ? '' : value; setTahunFilter(next); applyFilters({ tahun: next }); }}>
+                        <Select value={tahunFilter || 'semua'} onValueChange={(value) => {
+ const next = value === 'semua' ? '' : value; setTahunFilter(next); applyFilters({ tahun: next }); 
+}}>
                             <SelectTrigger className="w-32"><SelectValue placeholder="Pilih tahun" /></SelectTrigger>
                             <SelectContent><SelectItem value="semua">Tahun Berjalan</SelectItem>{tahunOptions.map((tahun) => <SelectItem key={tahun} value={tahun.toString()}>{tahun}</SelectItem>)}</SelectContent>
                         </Select>

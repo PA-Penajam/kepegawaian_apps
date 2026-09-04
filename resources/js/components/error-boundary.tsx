@@ -1,5 +1,6 @@
 import { AlertTriangle, Check, Copy, Home, RefreshCw } from 'lucide-react';
-import React, { Component, type ErrorInfo, type ReactNode } from 'react';
+import React, { Component   } from 'react';
+import type {ErrorInfo, ReactNode} from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Button } from '@/components/ui/button';
 

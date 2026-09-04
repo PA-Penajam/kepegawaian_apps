@@ -1,3 +1,4 @@
+import { AlertTriangle, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,7 +9,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { AlertTriangle, Clock } from 'lucide-react';
 
 interface ApiSecretModalProps {
     apiSecret?: string;
@@ -36,16 +36,24 @@ export function ApiSecretModal({
     acknowledging,
 }: ApiSecretModalProps) {
     const [copied, setCopied] = useState(false);
-    const [secondsLeft, setSecondsLeft] = useState<number>(ttlRemainingSecs ?? 0);
+    const [secondsLeft, setSecondsLeft] = useState<number>(
+        ttlRemainingSecs ?? 0,
+    );
+    const [prevTtlRemainingSecs, setPrevTtlRemainingSecs] = useState<
+        number | undefined
+    >(ttlRemainingSecs);
 
     // Reset countdown ketika props ttlRemainingSecs berubah (mis. recovery click ulang)
-    useEffect(() => {
+    if (prevTtlRemainingSecs !== ttlRemainingSecs) {
+        setPrevTtlRemainingSecs(ttlRemainingSecs);
         setSecondsLeft(ttlRemainingSecs ?? 0);
-    }, [ttlRemainingSecs]);
+    }
 
     // Live countdown setiap detik selama modal terbuka
     useEffect(() => {
-        if (!open || secondsLeft <= 0) return;
+        if (!open || secondsLeft <= 0) {
+            return;
+        }
 
         const intervalId = window.setInterval(() => {
             setSecondsLeft((prev) => Math.max(0, prev - 1));
@@ -67,6 +75,7 @@ export function ApiSecretModal({
     const formatCountdown = (totalSec: number): string => {
         const m = Math.floor(totalSec / 60);
         const s = totalSec % 60;
+
         return `${m} menit ${s.toString().padStart(2, '0')} detik`;
     };
 
@@ -77,17 +86,23 @@ export function ApiSecretModal({
                     <DialogTitle>API Secret Baru</DialogTitle>
                     <DialogDescription>
                         <span className="flex items-start gap-2">
-                            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" aria-hidden="true" />
+                            <AlertTriangle
+                                className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600"
+                                aria-hidden="true"
+                            />
                             <span>
-                                <strong>PENTING</strong> — Simpan secret ini sekarang. Setelah 15 menit,
-                                secret tidak bisa ditampilkan lagi (kecuali regenerasi).
+                                <strong>PENTING</strong> — Simpan secret ini
+                                sekarang. Setelah 15 menit, secret tidak bisa
+                                ditampilkan lagi (kecuali regenerasi).
                             </span>
                         </span>
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="flex items-start gap-2 rounded border bg-muted p-3">
-                    <code className="flex-1 break-all text-sm">{apiSecret}</code>
+                    <code className="flex-1 text-sm break-all">
+                        {apiSecret}
+                    </code>
                     <Button variant="outline" size="sm" onClick={handleCopy}>
                         {copied ? 'Tersalin!' : 'Salin'}
                     </Button>
@@ -101,7 +116,11 @@ export function ApiSecretModal({
                 )}
 
                 <DialogFooter className="flex-col gap-2 sm:flex-row">
-                    <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+                    <Button
+                        variant="outline"
+                        onClick={onClose}
+                        className="w-full sm:w-auto"
+                    >
                         Tutup (tetap bisa recovery)
                     </Button>
                     {onAcknowledge && (
@@ -110,7 +129,9 @@ export function ApiSecretModal({
                             disabled={acknowledging}
                             className="w-full sm:w-auto"
                         >
-                            {acknowledging ? 'Memproses...' : '✓ Saya sudah simpan (hapus dari cache)'}
+                            {acknowledging
+                                ? 'Memproses...'
+                                : '✓ Saya sudah simpan (hapus dari cache)'}
                         </Button>
                     )}
                 </DialogFooter>

@@ -37,6 +37,7 @@ export function NavMain({
             <SidebarMenu>
                 {items.map((item) => {
                     const isActive = isCurrentOrParentUrl(item.href);
+
                     return (
                         <SidebarMenuItem
                             key={item.title}

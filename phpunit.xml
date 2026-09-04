@@ -42,6 +42,6 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
-        <env name="ATTENDANCE_HMAC_SECRET" value="test-secret-key-for-hmac-validation-in-testing-environment"/>
+        <env name="KEPEGAWAIAN_HMAC_SECRET" value="test-secret-key-for-hmac-validation-in-testing-environment"/>
     </php>
 </phpunit>

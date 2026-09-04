@@ -99,6 +99,7 @@ export default function Form({ template }: Props) {
 
     const moveItem = (index: number, direction: -1 | 1) => {
         const targetIndex = index + direction;
+
         if (targetIndex < 0 || targetIndex >= form.data.items.length) {
             return;
         }
@@ -117,6 +118,7 @@ export default function Form({ template }: Props) {
 
         if (isEdit && template) {
             form.put(`${routeBase}/${template.id}`);
+
             return;
         }
 

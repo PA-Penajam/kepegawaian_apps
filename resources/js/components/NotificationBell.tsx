@@ -6,7 +6,6 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
@@ -64,33 +63,53 @@ export function NotificationBell() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Ambil notifikasi dari server
-    const fetchNotifications = useCallback(async () => {
-        try {
-            const response = await fetch('/notifications', {
-                headers: {
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            });
+    // Ambil notifikasi dari server (tanpa setState agar bisa dipanggil dari effect)
+    const fetchNotifications =
+        useCallback(async (): Promise<NotificationsResponse | null> => {
+            try {
+                const response = await fetch('/notifications', {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
 
-            if (response.ok) {
-                const data: NotificationsResponse = await response.json();
-                setNotifications(data.notifications);
-                setUnreadCount(data.unread_count);
+                if (response.ok) {
+                    return await response.json();
+                }
+            } catch {
+                // Gagal fetch notifikasi — abaikan secara silent
             }
-        } catch {
-            // Gagal fetch notifikasi — abaikan secara silent
-        }
+
+            return null;
+        }, []);
+
+    // Terapkan hasil fetch ke state (hanya setelah await, bukan sinkron dalam effect)
+    const applyNotifications = useCallback((data: NotificationsResponse) => {
+        setNotifications(data.notifications);
+        setUnreadCount(data.unread_count);
     }, []);
 
     // Polling setiap 30 detik untuk pembaruan notifikasi
     useEffect(() => {
-        fetchNotifications();
-        const interval = setInterval(fetchNotifications, 30000);
+        let cancelled = false;
 
-        return () => clearInterval(interval);
-    }, [fetchNotifications]);
+        const refresh = async () => {
+            const data = await fetchNotifications();
+
+            if (!cancelled && data) {
+                applyNotifications(data);
+            }
+        };
+
+        refresh();
+        const interval = setInterval(refresh, 30000);
+
+        return () => {
+            cancelled = true;
+            clearInterval(interval);
+        };
+    }, [fetchNotifications, applyNotifications]);
 
     // Tandai satu notifikasi sebagai dibaca
     const markAsRead = async (notification: Notification) => {
@@ -170,15 +189,21 @@ export function NotificationBell() {
     };
 
     return (
-        <DropdownMenu onOpenChange={(open) => {
- if (open) {
-fetchNotifications();
-} 
-}}>
+        <DropdownMenu
+            onOpenChange={(open) => {
+                if (open) {
+                    fetchNotifications().then((data) => {
+                        if (data) {
+                            applyNotifications(data);
+                        }
+                    });
+                }
+            }}
+        >
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"
-                    className="relative inline-flex items-center justify-center rounded-md border-2 border-foreground bg-background p-2 text-foreground shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all hover:bg-accent hover:shadow-[1px_1px_0_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                    className="relative inline-flex items-center justify-center rounded-md border-2 border-foreground bg-background p-2 text-foreground shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all hover:bg-accent hover:shadow-[1px_1px_0_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                     aria-label="Notifikasi"
                 >
                     <Bell className="h-5 w-5" />
@@ -230,14 +255,14 @@ fetchNotifications();
                                 )}
                             >
                                 <div className="flex items-start justify-between gap-2">
-                                    <span className="text-sm font-semibold leading-tight">
+                                    <span className="text-sm leading-tight font-semibold">
                                         {notification.title}
                                     </span>
                                     {!notification.read_at && (
                                         <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                                     )}
                                 </div>
-                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                <p className="line-clamp-2 text-xs text-muted-foreground">
                                     {notification.body}
                                 </p>
                                 <span className="mt-1 text-[10px] text-muted-foreground/70">

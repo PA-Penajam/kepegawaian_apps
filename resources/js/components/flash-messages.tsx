@@ -1,5 +1,11 @@
 import { usePage } from '@inertiajs/react';
-import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
+import {
+    AlertCircle,
+    AlertTriangle,
+    CheckCircle2,
+    Info,
+    X,
+} from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -25,21 +31,6 @@ export function FlashMessages() {
     const shouldReduceMotion = useReducedMotion();
     const lastAddedRef = useRef<{ time: number; text: string } | null>(null);
 
-    useEffect(() => {
-        if (flash?.success) {
-            addMessage('success', flash.success);
-        }
-        if (flash?.error) {
-            addMessage('error', flash.error);
-        }
-        if (flash?.warning) {
-            addMessage('warning', flash.warning);
-        }
-        if (flash?.info) {
-            addMessage('info', flash.info);
-        }
-    }, [flash]);
-
     const addMessage = (type: FlashType, text: string) => {
         const now = Date.now();
 
@@ -62,6 +53,24 @@ export function FlashMessages() {
             setMessages((prev) => prev.filter((m) => m.id !== id));
         }, 5000);
     };
+
+    useEffect(() => {
+        if (flash?.success) {
+            addMessage('success', flash.success);
+        }
+
+        if (flash?.error) {
+            addMessage('error', flash.error);
+        }
+
+        if (flash?.warning) {
+            addMessage('warning', flash.warning);
+        }
+
+        if (flash?.info) {
+            addMessage('info', flash.info);
+        }
+    }, [flash]);
 
     const removeMessage = (id: number) => {
         setMessages((prev) => prev.filter((m) => m.id !== id));
@@ -122,13 +131,17 @@ export function FlashMessages() {
                         exit={
                             shouldReduceMotion
                                 ? { opacity: 0 }
-                                : { opacity: 0, scale: 0.92, transition: { duration: 0.2 } }
+                                : {
+                                      opacity: 0,
+                                      scale: 0.92,
+                                      transition: { duration: 0.2 },
+                                  }
                         }
                         className="pointer-events-auto flex items-start gap-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-lg backdrop-blur-md transition-all dark:border-white/10 dark:bg-card"
                     >
                         {getIcon(message.type)}
                         <div className="min-w-0 flex-1 pt-0.5">
-                            <p className="text-xs leading-relaxed font-medium text-foreground break-words sm:text-sm">
+                            <p className="text-xs leading-relaxed font-medium break-words text-foreground sm:text-sm">
                                 {message.text}
                             </p>
                         </div>

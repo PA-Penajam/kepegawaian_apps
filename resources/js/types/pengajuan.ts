@@ -1,5 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
-
 export type StatusPengajuan = 'pending' | 'approved' | 'rejected';
 
 export type PengajuanListItem = {

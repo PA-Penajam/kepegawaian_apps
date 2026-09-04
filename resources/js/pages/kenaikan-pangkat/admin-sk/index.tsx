@@ -262,18 +262,21 @@ export default function AdminSkIndex({ usulan, filters: initialFilters }: Props)
 
         if (!file) {
             setData('sk_file', null);
+
             return;
         }
 
         if (file.type !== 'application/pdf') {
             setClientError('File SK harus PDF.');
             setData('sk_file', null);
+
             return;
         }
 
         if (file.size > MAX_FILE_SIZE) {
             setClientError('Ukuran file SK maksimal 10MB.');
             setData('sk_file', null);
+
             return;
         }
 
@@ -289,6 +292,7 @@ export default function AdminSkIndex({ usulan, filters: initialFilters }: Props)
 
         if (!data.sk_file) {
             setClientError('Pilih file SK PDF terlebih dahulu.');
+
             return;
         }
 

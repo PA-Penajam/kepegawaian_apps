@@ -1,10 +1,10 @@
+import { usePage } from '@inertiajs/react';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePage } from '@inertiajs/react';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
 import { ConventionHelpPanel } from './convention-help-panel';
 
 interface FormData {
@@ -42,6 +42,7 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
 
     const builderSlug = useMemo(() => {
         const finalAction = action === '__custom__' ? customAction : action;
+
         return [resource, subResource, finalAction].filter(Boolean).join('.');
     }, [resource, subResource, action, customAction]);
 
@@ -65,6 +66,7 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
                         // Pindah ke free: copy builder slug ke field free supaya tidak hilang
                         setData('slug', builderSlug);
                     }
+
                     setMode(v as 'builder' | 'free');
                 }}>
                     <TabsList className="grid w-full grid-cols-2">

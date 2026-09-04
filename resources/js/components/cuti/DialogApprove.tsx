@@ -1,5 +1,9 @@
 import { useForm } from '@inertiajs/react';
-import { verify, approveAtasan, approvePejabat } from '@/actions/App/Http/Controllers/Cuti/ApprovalController';
+import {
+    verify,
+    approveAtasan,
+    approvePejabat,
+} from '@/actions/App/Http/Controllers/Cuti/ApprovalController';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -10,7 +14,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { formatTanggal } from '@/lib/cuti-utils';
 import type { CutiPengajuan, ApproverRole } from '@/types/cuti';
@@ -51,7 +54,6 @@ function getActionLabel(role: ApproverRole): string {
     }
 }
 
-
 export function DialogApprove({ pengajuan, role, open, onClose }: Props) {
     const { data, setData, post, processing, reset } = useForm({
         catatan: '',
@@ -71,7 +73,9 @@ export function DialogApprove({ pengajuan, role, open, onClose }: Props) {
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{getActionLabel(role)} Pengajuan Cuti</DialogTitle>
+                    <DialogTitle>
+                        {getActionLabel(role)} Pengajuan Cuti
+                    </DialogTitle>
                     <DialogDescription>
                         Tinjau dan setujui pengajuan cuti berikut.
                     </DialogDescription>
@@ -81,7 +85,9 @@ export function DialogApprove({ pengajuan, role, open, onClose }: Props) {
                 <div className="space-y-2 rounded-lg border p-3 text-sm">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Nomor</span>
-                        <span className="font-medium">{pengajuan.nomor_pengajuan}</span>
+                        <span className="font-medium">
+                            {pengajuan.nomor_pengajuan}
+                        </span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Pegawai</span>
@@ -90,7 +96,9 @@ export function DialogApprove({ pengajuan, role, open, onClose }: Props) {
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Jenis Cuti</span>
+                        <span className="text-muted-foreground">
+                            Jenis Cuti
+                        </span>
                         <span className="font-medium">
                             {pengajuan.jenis_cuti?.nama ?? '-'}
                         </span>
@@ -98,17 +106,21 @@ export function DialogApprove({ pengajuan, role, open, onClose }: Props) {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Tanggal</span>
                         <span className="font-medium">
-                            {formatTanggal(pengajuan.tanggal_mulai)} — {formatTanggal(pengajuan.tanggal_selesai)}
+                            {formatTanggal(pengajuan.tanggal_mulai)} —{' '}
+                            {formatTanggal(pengajuan.tanggal_selesai)}
                         </span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Durasi</span>
-                        <span className="font-medium">{pengajuan.jumlah_hari_kerja} hari kerja</span>
+                        <span className="font-medium">
+                            {pengajuan.jumlah_hari_kerja} hari kerja
+                        </span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Status</span>
                         <span className="font-medium">
-                            {CutiStateLabels[pengajuan.state] ?? pengajuan.state}
+                            {CutiStateLabels[pengajuan.state] ??
+                                pengajuan.state}
                         </span>
                     </div>
                 </div>

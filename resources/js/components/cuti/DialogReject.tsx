@@ -11,7 +11,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { formatTanggal } from '@/lib/cuti-utils';
 import type { CutiPengajuan } from '@/types/cuti';
@@ -24,7 +23,6 @@ type Props = {
 
 const MIN_ALASAN_LENGTH = 10;
 
-
 export function DialogReject({ pengajuan, open, onClose }: Props) {
     const [localError, setLocalError] = useState('');
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -36,7 +34,9 @@ export function DialogReject({ pengajuan, open, onClose }: Props) {
 
         // Validasi lokal sebelum kirim
         if (data.alasan.trim().length < MIN_ALASAN_LENGTH) {
-            setLocalError(`Alasan penolakan minimal ${MIN_ALASAN_LENGTH} karakter.`);
+            setLocalError(
+                `Alasan penolakan minimal ${MIN_ALASAN_LENGTH} karakter.`,
+            );
 
             return;
         }
@@ -68,7 +68,9 @@ export function DialogReject({ pengajuan, open, onClose }: Props) {
                 <div className="space-y-2 rounded-lg border p-3 text-sm">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Nomor</span>
-                        <span className="font-medium">{pengajuan.nomor_pengajuan}</span>
+                        <span className="font-medium">
+                            {pengajuan.nomor_pengajuan}
+                        </span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Pegawai</span>
@@ -77,7 +79,9 @@ export function DialogReject({ pengajuan, open, onClose }: Props) {
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Jenis Cuti</span>
+                        <span className="text-muted-foreground">
+                            Jenis Cuti
+                        </span>
                         <span className="font-medium">
                             {pengajuan.jenis_cuti?.nama ?? '-'}
                         </span>
@@ -85,19 +89,23 @@ export function DialogReject({ pengajuan, open, onClose }: Props) {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Tanggal</span>
                         <span className="font-medium">
-                            {formatTanggal(pengajuan.tanggal_mulai)} — {formatTanggal(pengajuan.tanggal_selesai)}
+                            {formatTanggal(pengajuan.tanggal_mulai)} —{' '}
+                            {formatTanggal(pengajuan.tanggal_selesai)}
                         </span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Durasi</span>
-                        <span className="font-medium">{pengajuan.jumlah_hari_kerja} hari kerja</span>
+                        <span className="font-medium">
+                            {pengajuan.jumlah_hari_kerja} hari kerja
+                        </span>
                     </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="alasan">
-                            Alasan Penolakan <span className="text-destructive">*</span>
+                            Alasan Penolakan{' '}
+                            <span className="text-destructive">*</span>
                         </Label>
                         <Textarea
                             id="alasan"
@@ -106,8 +114,8 @@ export function DialogReject({ pengajuan, open, onClose }: Props) {
                                 setData('alasan', e.target.value);
 
                                 if (localError) {
-setLocalError('');
-}
+                                    setLocalError('');
+                                }
                             }}
                             placeholder="Tuliskan alasan penolakan (minimal 10 karakter)..."
                             rows={4}
@@ -115,7 +123,9 @@ setLocalError('');
                         />
                         <div className="flex items-center justify-between">
                             {displayError ? (
-                                <p className="text-xs text-destructive">{displayError}</p>
+                                <p className="text-xs text-destructive">
+                                    {displayError}
+                                </p>
                             ) : (
                                 <span />
                             )}
@@ -134,7 +144,11 @@ setLocalError('');
                         >
                             Batal
                         </Button>
-                        <Button type="submit" variant="destructive" processing={processing}>
+                        <Button
+                            type="submit"
+                            variant="destructive"
+                            processing={processing}
+                        >
                             Tolak Pengajuan
                         </Button>
                     </DialogFooter>

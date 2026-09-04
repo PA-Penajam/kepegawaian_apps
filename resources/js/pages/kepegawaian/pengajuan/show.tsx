@@ -1,4 +1,4 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import AlertError from '@/components/alert-error';
 import AppLayout from '@/layouts/app-layout';
 import { errorsToArray } from '@/lib/form-errors';
@@ -11,14 +11,22 @@ type Props = {
     diffItems: DiffItem[];
 };
 
-export default function ValidatorPengajuanShow({ pengajuan, diffItems }: Props) {
+export default function ValidatorPengajuanShow({
+    pengajuan,
+    diffItems,
+}: Props) {
     const rejectForm = useForm({ alasan_penolakan: '' });
 
     return (
-        <AppLayout breadcrumbs={[
-            { title: 'Validasi Pengajuan', href: '/kepegawaian/pengajuan' },
-            { title: pengajuan.domain, href: `/kepegawaian/pengajuan/${pengajuan.id}` },
-        ]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Validasi Pengajuan', href: '/kepegawaian/pengajuan' },
+                {
+                    title: pengajuan.domain,
+                    href: `/kepegawaian/pengajuan/${pengajuan.id}`,
+                },
+            ]}
+        >
             <Head title="Detail Pengajuan" />
             <div className="flex flex-col gap-4 p-4 sm:p-6">
                 <div className="mb-2 text-sm text-muted-foreground">
@@ -27,15 +35,23 @@ export default function ValidatorPengajuanShow({ pengajuan, diffItems }: Props) 
                 {diffItems.map((item) => (
                     <div key={item.field} className="rounded-lg border p-4">
                         <p className="font-medium">{item.label}</p>
-                        <p className="text-sm text-muted-foreground">Sebelum: {String(item.before ?? '-')}</p>
-                        <p className="text-sm">Sesudah: {String(item.after ?? '-')}</p>
+                        <p className="text-sm text-muted-foreground">
+                            Sebelum: {String(item.before ?? '-')}
+                        </p>
+                        <p className="text-sm">
+                            Sesudah: {String(item.after ?? '-')}
+                        </p>
                     </div>
                 ))}
                 {pengajuan.status === 'pending' && (
                     <div className="flex gap-2">
                         <button
                             type="button"
-                            onClick={() => router.post(`/kepegawaian/pengajuan/${pengajuan.id}/approve`)}
+                            onClick={() =>
+                                router.post(
+                                    `/kepegawaian/pengajuan/${pengajuan.id}/approve`,
+                                )
+                            }
                             className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white"
                         >
                             Approve
@@ -43,21 +59,30 @@ export default function ValidatorPengajuanShow({ pengajuan, diffItems }: Props) 
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
-                                rejectForm.post(`/kepegawaian/pengajuan/${pengajuan.id}/reject`);
+                                rejectForm.post(
+                                    `/kepegawaian/pengajuan/${pengajuan.id}/reject`,
+                                );
                             }}
                             className="flex flex-wrap items-center gap-2"
                         >
                             {Object.keys(rejectForm.errors).length > 0 && (
                                 <div className="w-full">
                                     <AlertError
-                                        errors={errorsToArray(rejectForm.errors)}
+                                        errors={errorsToArray(
+                                            rejectForm.errors,
+                                        )}
                                         title="Gagal menolak pengajuan"
                                     />
                                 </div>
                             )}
                             <input
                                 value={rejectForm.data.alasan_penolakan}
-                                onChange={(e) => rejectForm.setData('alasan_penolakan', e.target.value)}
+                                onChange={(e) =>
+                                    rejectForm.setData(
+                                        'alasan_penolakan',
+                                        e.target.value,
+                                    )
+                                }
                                 placeholder="Alasan penolakan (min 10 karakter)"
                                 className="rounded-md border px-3 py-2 text-sm"
                             />

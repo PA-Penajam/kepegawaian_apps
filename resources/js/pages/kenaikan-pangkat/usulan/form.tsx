@@ -50,6 +50,7 @@ export default function UsulanKenaikanPangkatForm({ usulan = null, pegawai, pang
 
         if (isEdit) {
             form.put(update.url(usulan.id), { preserveScroll: true });
+
             return;
         }
 

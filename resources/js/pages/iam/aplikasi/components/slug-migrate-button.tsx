@@ -1,4 +1,6 @@
-import { Button } from '@/components/ui/button';
+import { router, usePage } from '@inertiajs/react';
+import { ArrowRight } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -10,9 +12,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { router, usePage } from '@inertiajs/react';
-import { ArrowRight } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     aplikasiId: string;
@@ -27,15 +27,24 @@ export function SlugMigrateButton({ aplikasiId, permissionId, slug }: Props) {
 
     const suggested = useMemo(() => {
         // Jika slug sudah valid, tidak perlu migrate
-        if (regex.test(slug)) return null;
+        if (regex.test(slug)) {
+return null;
+}
+
         // Hanya tangani kasus yang bisa disarankan otomatis
-        if (slug.includes('.') || slug.includes('_') || !slug.includes('-')) return null;
+        if (slug.includes('.') || slug.includes('_') || !slug.includes('-')) {
+return null;
+}
+
         const pos = slug.lastIndexOf('-');
         const candidate = slug.substring(0, pos) + '.' + slug.substring(pos + 1);
+
         return regex.test(candidate) ? candidate : null;
     }, [slug, regex]);
 
-    if (!suggested) return null;
+    if (!suggested) {
+return null;
+}
 
     const handleMigrate = () => {
         router.post(

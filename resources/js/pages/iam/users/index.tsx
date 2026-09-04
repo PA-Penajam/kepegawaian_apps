@@ -74,6 +74,7 @@ return users.meta;
 
     useEffect(() => {
         const timeout = setTimeout(() => performSearch(search), 400);
+
         return () => clearTimeout(timeout);
     }, [search, performSearch]);
 

@@ -12,6 +12,7 @@ export function setupInertiaErrorListeners(): void {
         if (response.status === 419) {
             // Sesi kedaluwarsa: cegah modal default Inertia dan berikan informasi terarah
             event.preventDefault();
+
             if (
                 window.confirm(
                     'Sesi Anda telah kedaluwarsa demi alasan keamanan. Apakah Anda ingin memuat ulang halaman sekarang untuk login kembali?',

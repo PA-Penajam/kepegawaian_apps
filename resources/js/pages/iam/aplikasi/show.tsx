@@ -3,6 +3,7 @@ import { AlertTriangle, Copy, Key, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AlertError from '@/components/alert-error';
 import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -13,7 +14,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,8 +45,8 @@ import type {
     IamPermission,
 } from '@/types';
 import { PermissionFormFields } from './components/permission-form-fields';
-import { SlugStatusBadge } from './components/slug-status-badge';
 import { SlugMigrateButton } from './components/slug-migrate-button';
+import { SlugStatusBadge } from './components/slug-status-badge';
 
 type Props = {
     aplikasi: IamApplication & { api_key_display?: string };
@@ -63,15 +63,20 @@ type Props = {
 };
 
 export default function Show() {
-    const { aplikasi, flash, permission_audit, recovery_status } = usePage<Props>().props;
+    const { aplikasi, flash, permission_audit, recovery_status } =
+        usePage<Props>().props;
     const { props: pageProps } = usePage();
     const iam = (pageProps as unknown as { iam: { slug_pattern: string } }).iam;
     const [showApiSecretModal, setShowApiSecretModal] = useState(false);
     const [apiSecret, setApiSecret] = useState<string | null>(null);
+    const [prevFlashSecret, setPrevFlashSecret] = useState<string | undefined>(
+        undefined,
+    );
 
     // State untuk controlled dialogs
     const [showAddRoleDialog, setShowAddRoleDialog] = useState(false);
-    const [showAddPermissionDialog, setShowAddPermissionDialog] = useState(false);
+    const [showAddPermissionDialog, setShowAddPermissionDialog] =
+        useState(false);
 
     // State untuk delete confirmations
     const [regenerateConfirm, setRegenerateConfirm] = useState(false);
@@ -97,7 +102,7 @@ export default function Show() {
             .replace(/\s+/g, '-')
             .replace(/-+/g, '-');
         addRoleForm.setData('slug', generated);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [addRoleForm.data.nama]);
 
     // Form untuk tambah permission
@@ -123,25 +128,27 @@ export default function Show() {
     }, [aplikasi.id, recoverForm]);
 
     const handleAcknowledgeSecret = useCallback(() => {
-        acknowledgeForm.post(`/iam/aplikasi/${aplikasi.id}/acknowledge-secret`, {
-            onSuccess: () => {
-                setShowApiSecretModal(false);
-                setApiSecret(null);
+        acknowledgeForm.post(
+            `/iam/aplikasi/${aplikasi.id}/acknowledge-secret`,
+            {
+                onSuccess: () => {
+                    setShowApiSecretModal(false);
+                    setApiSecret(null);
+                },
             },
-        });
+        );
     }, [aplikasi.id, acknowledgeForm]);
 
     // Form untuk delete
     const deleteForm = useForm({});
 
-
-    // Tampilkan modal jika ada flash api_secret_once
-    useEffect(() => {
-        if (flash?.api_secret_once) {
-            setApiSecret(flash.api_secret_once);
-            setShowApiSecretModal(true);
-        }
-    }, [flash]);
+    // Tampilkan modal jika ada flash api_secret_once (adjust state saat render,
+    // bukan di dalam effect, agar sesuai aturan react-hooks set-state-in-effect)
+    if (flash?.api_secret_once && prevFlashSecret !== flash.api_secret_once) {
+        setPrevFlashSecret(flash.api_secret_once);
+        setApiSecret(flash.api_secret_once);
+        setShowApiSecretModal(true);
+    }
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -191,8 +198,8 @@ export default function Show() {
     // Hapus role
     const handleDeleteRole = useCallback(() => {
         if (!deleteRoleConfirm) {
-return;
-}
+            return;
+        }
 
         deleteForm.delete(
             `/iam/aplikasi/${aplikasi.id}/roles/${deleteRoleConfirm.id}`,
@@ -206,22 +213,19 @@ return;
 
     // Form tambah permission
     const handleAddPermission = useCallback(() => {
-        addPermissionForm.post(
-            `/iam/aplikasi/${aplikasi.id}/permissions`,
-            {
-                onSuccess: () => {
-                    addPermissionForm.reset();
-                    setShowAddPermissionDialog(false);
-                },
+        addPermissionForm.post(`/iam/aplikasi/${aplikasi.id}/permissions`, {
+            onSuccess: () => {
+                addPermissionForm.reset();
+                setShowAddPermissionDialog(false);
             },
-        );
+        });
     }, [aplikasi.id, addPermissionForm]);
 
     // Hapus permission
     const handleDeletePermission = useCallback(() => {
         if (!deletePermissionConfirm) {
-return;
-}
+            return;
+        }
 
         deleteForm.delete(
             `/iam/aplikasi/${aplikasi.id}/permissions/${deletePermissionConfirm.id}`,
@@ -232,7 +236,6 @@ return;
             },
         );
     }, [aplikasi.id, deletePermissionConfirm, deleteForm]);
-
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -302,9 +305,12 @@ return;
                                                 handleAddRole();
                                             }}
                                         >
-                                            {Object.keys(addRoleForm.errors).length > 0 && (
+                                            {Object.keys(addRoleForm.errors)
+                                                .length > 0 && (
                                                 <AlertError
-                                                    errors={errorsToArray(addRoleForm.errors)}
+                                                    errors={errorsToArray(
+                                                        addRoleForm.errors,
+                                                    )}
                                                     title="Gagal menambahkan role"
                                                 />
                                             )}
@@ -316,7 +322,8 @@ return;
                                                     <Input
                                                         id="role-nama"
                                                         value={
-                                                            addRoleForm.data.nama
+                                                            addRoleForm.data
+                                                                .nama
                                                         }
                                                         onChange={(e) =>
                                                             addRoleForm.setData(
@@ -327,7 +334,8 @@ return;
                                                         placeholder="Contoh: Admin"
                                                         required
                                                     />
-                                                    {addRoleForm.errors.nama && (
+                                                    {addRoleForm.errors
+                                                        .nama && (
                                                         <p className="text-sm text-destructive">
                                                             {
                                                                 addRoleForm
@@ -343,7 +351,8 @@ return;
                                                     <Input
                                                         id="role-slug"
                                                         value={
-                                                            addRoleForm.data.slug
+                                                            addRoleForm.data
+                                                                .slug
                                                         }
                                                         onChange={(e) =>
                                                             addRoleForm.setData(
@@ -355,9 +364,13 @@ return;
                                                         className="font-mono"
                                                         required
                                                     />
-                                                    {addRoleForm.errors.slug && (
+                                                    {addRoleForm.errors
+                                                        .slug && (
                                                         <p className="text-sm text-destructive">
-                                                            {addRoleForm.errors.slug}
+                                                            {
+                                                                addRoleForm
+                                                                    .errors.slug
+                                                            }
                                                         </p>
                                                     )}
                                                 </div>
@@ -521,7 +534,8 @@ return;
                                                                         <AlertDialogContent>
                                                                             <AlertDialogHeader>
                                                                                 <AlertDialogTitle>
-                                                                                    Hapus Role
+                                                                                    Hapus
+                                                                                    Role
                                                                                 </AlertDialogTitle>
                                                                                 <AlertDialogDescription>
                                                                                     Apakah
@@ -534,7 +548,8 @@ return;
                                                                                     {
                                                                                         deleteRoleConfirm?.nama
                                                                                     }
-                                                                                    "? Tindakan
+                                                                                    "?
+                                                                                    Tindakan
                                                                                     ini
                                                                                     tidak
                                                                                     dapat
@@ -576,23 +591,29 @@ return;
                     {/* Tab Permissions */}
                     <TabsContent value="permissions" className="mt-4">
                         <div className="flex flex-col gap-4">
-                            {(permission_audit?.non_canonical_count ?? 0) > 0 && (
+                            {(permission_audit?.non_canonical_count ?? 0) >
+                                0 && (
                                 <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/30">
                                     <AlertTriangle className="h-4 w-4 text-amber-600" />
-                                    <AlertTitle>Ada permission yang melanggar konvensi</AlertTitle>
+                                    <AlertTitle>
+                                        Ada permission yang melanggar konvensi
+                                    </AlertTitle>
                                     <AlertDescription>
-                                        {permission_audit?.non_canonical_count} permission di aplikasi ini punya slug non-canonical.
-                                        Cek kolom "Status" pada list, atau jalankan{' '}
-                                        <code className="font-mono text-xs">php artisan iam:audit-slugs</code> untuk laporan lengkap.
+                                        {permission_audit?.non_canonical_count}{' '}
+                                        permission di aplikasi ini punya slug
+                                        non-canonical. Cek kolom "Status" pada
+                                        list, atau jalankan{' '}
+                                        <code className="font-mono text-xs">
+                                            php artisan iam:audit-slugs
+                                        </code>{' '}
+                                        untuk laporan lengkap.
                                     </AlertDescription>
                                 </Alert>
                             )}
                             <div className="flex justify-end">
                                 <Dialog
                                     open={showAddPermissionDialog}
-                                    onOpenChange={
-                                        setShowAddPermissionDialog
-                                    }
+                                    onOpenChange={setShowAddPermissionDialog}
                                 >
                                     <DialogTrigger asChild>
                                         <Button size="sm">
@@ -616,22 +637,40 @@ return;
                                                 handleAddPermission();
                                             }}
                                         >
-                                            {Object.keys(addPermissionForm.errors).length > 0 && (
+                                            {Object.keys(
+                                                addPermissionForm.errors,
+                                            ).length > 0 && (
                                                 <AlertError
-                                                    errors={errorsToArray(addPermissionForm.errors)}
+                                                    errors={errorsToArray(
+                                                        addPermissionForm.errors,
+                                                    )}
                                                     title="Gagal menambahkan permission"
                                                 />
                                             )}
                                             <PermissionFormFields
                                                 data={{
-                                                    nama: addPermissionForm.data.nama,
-                                                    slug: addPermissionForm.data.slug,
-                                                    group: addPermissionForm.data.group,
-                                                    keterangan: addPermissionForm.data.keterangan,
+                                                    nama: addPermissionForm.data
+                                                        .nama,
+                                                    slug: addPermissionForm.data
+                                                        .slug,
+                                                    group: addPermissionForm
+                                                        .data.group,
+                                                    keterangan:
+                                                        addPermissionForm.data
+                                                            .keterangan,
                                                 }}
-                                                setData={(key, value) => addPermissionForm.setData(key, value as never)}
-                                                errors={addPermissionForm.errors}
-                                                disabled={addPermissionForm.processing}
+                                                setData={(key, value) =>
+                                                    addPermissionForm.setData(
+                                                        key,
+                                                        value as never,
+                                                    )
+                                                }
+                                                errors={
+                                                    addPermissionForm.errors
+                                                }
+                                                disabled={
+                                                    addPermissionForm.processing
+                                                }
                                             />
                                             <DialogFooter>
                                                 <Button
@@ -648,10 +687,12 @@ return;
                                                 <Button
                                                     type="submit"
                                                     disabled={
-                                                        addPermissionForm.processing
-                                                        || !addPermissionForm.data.slug
-                                                        || !PermissionFormFields.isSlugValid(
-                                                            addPermissionForm.data.slug,
+                                                        addPermissionForm.processing ||
+                                                        !addPermissionForm.data
+                                                            .slug ||
+                                                        !PermissionFormFields.isSlugValid(
+                                                            addPermissionForm
+                                                                .data.slug,
                                                             iam.slug_pattern,
                                                         )
                                                     }
@@ -702,10 +743,16 @@ return;
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-2">
-                                                            <SlugStatusBadge slug={perm.slug} />
+                                                            <SlugStatusBadge
+                                                                slug={perm.slug}
+                                                            />
                                                             <SlugMigrateButton
-                                                                aplikasiId={String(aplikasi.id)}
-                                                                permissionId={String(perm.id)}
+                                                                aplikasiId={String(
+                                                                    aplikasi.id,
+                                                                )}
+                                                                permissionId={String(
+                                                                    perm.id,
+                                                                )}
                                                                 slug={perm.slug}
                                                             />
                                                         </div>
@@ -746,7 +793,8 @@ return;
                                                                         <AlertDialogContent>
                                                                             <AlertDialogHeader>
                                                                                 <AlertDialogTitle>
-                                                                                    Hapus Permission
+                                                                                    Hapus
+                                                                                    Permission
                                                                                 </AlertDialogTitle>
                                                                                 <AlertDialogDescription>
                                                                                     Apakah
@@ -759,7 +807,8 @@ return;
                                                                                     {
                                                                                         deletePermissionConfirm?.nama
                                                                                     }
-                                                                                    "? Tindakan
+                                                                                    "?
+                                                                                    Tindakan
                                                                                     ini
                                                                                     tidak
                                                                                     dapat
@@ -862,36 +911,59 @@ return;
                                         </Button>
                                     </div>
                                 </div>
-                                {recovery_status?.recoverable && !aplikasi.is_system && (
-                                    <div className="rounded-md border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-950/30 p-4">
-                                        <h3 className="mb-2 flex items-center gap-2 font-medium text-amber-900 dark:text-amber-100">
-                                            <Key className="h-4 w-4" aria-hidden="true" />
-                                            Secret bisa dipulihkan
-                                        </h3>
-                                        <p className="mb-3 text-sm text-amber-800 dark:text-amber-200">
-                                            Sisa waktu: {Math.floor(recovery_status.ttl_remaining_secs / 60)} menit{' '}
-                                            {(recovery_status.ttl_remaining_secs % 60).toString().padStart(2, '0')} detik
-                                        </p>
-                                        <div className="flex flex-wrap gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={handleRecoverSecret}
-                                                disabled={recoverForm.processing}
-                                            >
-                                                Tampilkan Ulang Secret
-                                            </Button>
-                                            <Button
-                                                variant="default"
-                                                size="sm"
-                                                onClick={handleAcknowledgeSecret}
-                                                disabled={acknowledgeForm.processing}
-                                            >
-                                                Saya sudah simpan
-                                            </Button>
+                                {recovery_status?.recoverable &&
+                                    !aplikasi.is_system && (
+                                        <div className="rounded-md border-l-4 border-amber-500 bg-amber-50 p-4 dark:bg-amber-950/30">
+                                            <h3 className="mb-2 flex items-center gap-2 font-medium text-amber-900 dark:text-amber-100">
+                                                <Key
+                                                    className="h-4 w-4"
+                                                    aria-hidden="true"
+                                                />
+                                                Secret bisa dipulihkan
+                                            </h3>
+                                            <p className="mb-3 text-sm text-amber-800 dark:text-amber-200">
+                                                Sisa waktu:{' '}
+                                                {Math.floor(
+                                                    recovery_status.ttl_remaining_secs /
+                                                        60,
+                                                )}{' '}
+                                                menit{' '}
+                                                {(
+                                                    recovery_status.ttl_remaining_secs %
+                                                    60
+                                                )
+                                                    .toString()
+                                                    .padStart(2, '0')}{' '}
+                                                detik
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={
+                                                        handleRecoverSecret
+                                                    }
+                                                    disabled={
+                                                        recoverForm.processing
+                                                    }
+                                                >
+                                                    Tampilkan Ulang Secret
+                                                </Button>
+                                                <Button
+                                                    variant="default"
+                                                    size="sm"
+                                                    onClick={
+                                                        handleAcknowledgeSecret
+                                                    }
+                                                    disabled={
+                                                        acknowledgeForm.processing
+                                                    }
+                                                >
+                                                    Saya sudah simpan
+                                                </Button>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
                                 {!aplikasi.is_system && (
                                     <div>
                                         <h3 className="mb-1 text-sm font-medium text-muted-foreground">
@@ -899,7 +971,9 @@ return;
                                         </h3>
                                         <Button
                                             variant="outline"
-                                            onClick={() => setRegenerateConfirm(true)}
+                                            onClick={() =>
+                                                setRegenerateConfirm(true)
+                                            }
                                         >
                                             <Key className="mr-2 h-4 w-4" />
                                             Regenerasi Key
@@ -914,10 +988,10 @@ return;
                                                         Regenerasi API Key
                                                     </AlertDialogTitle>
                                                     <AlertDialogDescription>
-                                                        Apakah Anda yakin
-                                                        ingin meregenerasi API
-                                                        key? API secret lama
-                                                        tidak akan berlaku lagi.
+                                                        Apakah Anda yakin ingin
+                                                        meregenerasi API key?
+                                                        API secret lama tidak
+                                                        akan berlaku lagi.
                                                     </AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>

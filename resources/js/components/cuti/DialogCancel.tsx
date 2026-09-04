@@ -11,7 +11,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { formatTanggal } from '@/lib/cuti-utils';
 import type { CutiPengajuan } from '@/types/cuti';
@@ -22,7 +21,6 @@ type Props = {
     open: boolean;
     onClose: () => void;
 };
-
 
 export function DialogCancel({ pengajuan, open, onClose }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -46,7 +44,11 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{isSudahBerjalan ? 'Cabut Cuti yang Disetujui' : 'Batalkan Pengajuan Cuti'}</DialogTitle>
+                    <DialogTitle>
+                        {isSudahBerjalan
+                            ? 'Cabut Cuti yang Disetujui'
+                            : 'Batalkan Pengajuan Cuti'}
+                    </DialogTitle>
                     <DialogDescription>
                         {isSudahBerjalan
                             ? 'Anda akan mencabut cuti yang sudah disetujui. Saldo yang belum terpakai akan dikembalikan secara proporsional.'
@@ -58,7 +60,9 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
                 <div className="space-y-2 rounded-lg border p-3 text-sm">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Nomor</span>
-                        <span className="font-medium">{pengajuan.nomor_pengajuan}</span>
+                        <span className="font-medium">
+                            {pengajuan.nomor_pengajuan}
+                        </span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Pegawai</span>
@@ -67,7 +71,9 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Jenis Cuti</span>
+                        <span className="text-muted-foreground">
+                            Jenis Cuti
+                        </span>
                         <span className="font-medium">
                             {pengajuan.jenis_cuti?.nama ?? '-'}
                         </span>
@@ -75,13 +81,15 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Tanggal</span>
                         <span className="font-medium">
-                            {formatTanggal(pengajuan.tanggal_mulai)} — {formatTanggal(pengajuan.tanggal_selesai)}
+                            {formatTanggal(pengajuan.tanggal_mulai)} —{' '}
+                            {formatTanggal(pengajuan.tanggal_selesai)}
                         </span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Status</span>
                         <span className="font-medium">
-                            {CutiStateLabels[pengajuan.state] ?? pengajuan.state}
+                            {CutiStateLabels[pengajuan.state] ??
+                                pengajuan.state}
                         </span>
                     </div>
                 </div>
@@ -100,7 +108,8 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="alasan-cancel">
-                            Alasan Pembatalan <span className="text-destructive">*</span>
+                            Alasan Pembatalan{' '}
+                            <span className="text-destructive">*</span>
                         </Label>
                         <Textarea
                             id="alasan-cancel"
@@ -108,10 +117,14 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
                             onChange={(e) => setData('alasan', e.target.value)}
                             placeholder="Tuliskan alasan pembatalan..."
                             rows={3}
-                            className={errors.alasan ? 'border-destructive' : ''}
+                            className={
+                                errors.alasan ? 'border-destructive' : ''
+                            }
                         />
                         {errors.alasan && (
-                            <p className="text-xs text-destructive">{errors.alasan}</p>
+                            <p className="text-xs text-destructive">
+                                {errors.alasan}
+                            </p>
                         )}
                     </div>
 
@@ -124,7 +137,11 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
                         >
                             Batal
                         </Button>
-                        <Button type="submit" variant="destructive" processing={processing}>
+                        <Button
+                            type="submit"
+                            variant="destructive"
+                            processing={processing}
+                        >
                             {isSudahBerjalan ? 'Cabut Cuti' : 'Batalkan Cuti'}
                         </Button>
                     </DialogFooter>

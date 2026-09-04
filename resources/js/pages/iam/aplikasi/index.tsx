@@ -1,9 +1,9 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import AlertError from '@/components/alert-error';
-import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
+import { ApiSecretModal } from '@/components/iam/ApiSecretModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +41,9 @@ export default function Index() {
     const { aplikasi, flash } = usePage<Props>().props;
     const [showApiSecretModal, setShowApiSecretModal] = useState(false);
     const [apiSecret, setApiSecret] = useState<string | null>(null);
+    const [prevFlashSecret, setPrevFlashSecret] = useState<string | undefined>(
+        undefined,
+    );
     const [deleteTarget, setDeleteTarget] = useState<{
         id: number;
         nama: string;
@@ -58,13 +61,13 @@ export default function Index() {
     // Form untuk delete aplikasi
     const deleteForm = useForm({});
 
-    // Tampilkan modal jika ada flash api_secret_once
-    useEffect(() => {
-        if (flash?.api_secret_once) {
-            setApiSecret(flash.api_secret_once);
-            setShowApiSecretModal(true);
-        }
-    }, [flash]);
+    // Tampilkan modal jika ada flash api_secret_once (adjust state saat render,
+    // bukan di dalam effect, agar sesuai aturan react-hooks set-state-in-effect)
+    if (flash?.api_secret_once && prevFlashSecret !== flash.api_secret_once) {
+        setPrevFlashSecret(flash.api_secret_once);
+        setApiSecret(flash.api_secret_once);
+        setShowApiSecretModal(true);
+    }
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -98,14 +101,18 @@ export default function Index() {
             <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold uppercase tracking-tight">
+                        <h1 className="text-2xl font-bold tracking-tight uppercase">
                             Kelola Aplikasi IAM
                         </h1>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">
-                            Daftarkan dan kelola aplikasi yang terintegrasi dengan sistem IAM.
+                        <p className="mt-1 text-sm font-medium text-muted-foreground">
+                            Daftarkan dan kelola aplikasi yang terintegrasi
+                            dengan sistem IAM.
                         </p>
                     </div>
-                    <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                    <Dialog
+                        open={showCreateDialog}
+                        onOpenChange={setShowCreateDialog}
+                    >
                         <DialogTrigger asChild>
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" />
@@ -135,13 +142,17 @@ export default function Index() {
                             >
                                 {Object.keys(createForm.errors).length > 0 && (
                                     <AlertError
-                                        errors={errorsToArray(createForm.errors)}
+                                        errors={errorsToArray(
+                                            createForm.errors,
+                                        )}
                                         title="Gagal mendaftarkan aplikasi"
                                     />
                                 )}
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="nama">Nama Aplikasi</Label>
+                                        <Label htmlFor="nama">
+                                            Nama Aplikasi
+                                        </Label>
                                         <Input
                                             id="nama"
                                             value={createForm.data.nama}
@@ -183,7 +194,9 @@ export default function Index() {
                                         )}
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="url">URL Aplikasi</Label>
+                                        <Label htmlFor="url">
+                                            URL Aplikasi
+                                        </Label>
                                         <Input
                                             id="url"
                                             value={createForm.data.url}
@@ -245,15 +258,25 @@ export default function Index() {
                     </Dialog>
                 </div>
 
-                <div className="rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden">
+                <div className="overflow-hidden rounded-xl border-2 border-black bg-background shadow-[4px_4px_0_rgba(0,0,0,1)]">
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
-                                <TableHead className="font-black uppercase text-xs tracking-wider">Nama</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider">URL</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">Jumlah Role</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">Status</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">Aksi</TableHead>
+                            <TableRow className="border-b-2 border-black bg-muted/30 hover:bg-muted/30">
+                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                    Nama
+                                </TableHead>
+                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                    URL
+                                </TableHead>
+                                <TableHead className="text-center text-xs font-black tracking-wider uppercase">
+                                    Jumlah Role
+                                </TableHead>
+                                <TableHead className="text-center text-xs font-black tracking-wider uppercase">
+                                    Status
+                                </TableHead>
+                                <TableHead className="text-center text-xs font-black tracking-wider uppercase">
+                                    Aksi
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -261,14 +284,17 @@ export default function Index() {
                                 <TableRow>
                                     <TableCell
                                         colSpan={5}
-                                        className="text-center py-12 font-medium text-muted-foreground"
+                                        className="py-12 text-center font-medium text-muted-foreground"
                                     >
                                         Tidak ada aplikasi yang terdaftar.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 aplikasi.map((app) => (
-                                    <TableRow key={app.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
+                                    <TableRow
+                                        key={app.id}
+                                        className="border-b border-black/10 transition-colors hover:bg-muted/20"
+                                    >
                                         <TableCell className="font-bold">
                                             <div className="flex items-center gap-2">
                                                 {app.nama}

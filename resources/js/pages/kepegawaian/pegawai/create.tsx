@@ -52,7 +52,7 @@ export default function PegawaiCreate({
     const [currentStep, setCurrentStep] = useState(1);
     const steps = ['Biodata', 'Kontak & Alamat', 'Kepegawaian'];
 
-    const { data, setData, post, processing, errors, clearErrors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         nama_lengkap: '',
         nip: '',
         nip_lama: '',

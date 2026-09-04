@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Eye, Pencil, Plus } from 'lucide-react';
+import { Eye, Plus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DataTableToolbar } from '@/components/kepegawaian/data-table-toolbar';
 import type { DataTableToolbarFilter } from '@/components/kepegawaian/data-table-toolbar';
@@ -16,7 +16,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { index, show, create, edit } from '@/routes/kepegawaian/pegawai';
+import { index, show, create } from '@/routes/kepegawaian/pegawai';
 import type { BreadcrumbItem } from '@/types';
 import { StatusPegawaiLabels } from '@/types/kepegawaian';
 import type {
@@ -98,6 +98,16 @@ export default function PegawaiIndex({
     const { auth } = usePage().props;
     const canEdit = (auth.user.permissions ?? []).includes('pegawai.update');
     const [searchValue, setSearchValue] = useState(filters.search ?? '');
+    const [prevSearchFilter, setPrevSearchFilter] = useState(
+        filters.search ?? '',
+    );
+
+    // Sinkronkan nilai input pencarian saat filter dari server berubah
+    // (adjust state saat render, bukan di dalam effect)
+    if ((filters.search ?? '') !== prevSearchFilter) {
+        setPrevSearchFilter(filters.search ?? '');
+        setSearchValue(filters.search ?? '');
+    }
 
     const applyFilters = useCallback(
         (changes: Partial<VisitFilters>) => {
@@ -128,10 +138,6 @@ export default function PegawaiIndex({
         },
         [filters],
     );
-
-    useEffect(() => {
-        setSearchValue(filters.search ?? '');
-    }, [filters.search]);
 
     useEffect(() => {
         const normalizedSearch = searchValue.trim();
@@ -395,9 +401,20 @@ export default function PegawaiIndex({
                                         <TableRow key={item.id}>
                                             <TableCell>
                                                 <Avatar className="h-8 w-8">
-                                                    <AvatarImage src={item.foto_url ?? undefined} alt={item.nama_lengkap} />
+                                                    <AvatarImage
+                                                        src={
+                                                            item.foto_url ??
+                                                            undefined
+                                                        }
+                                                        alt={item.nama_lengkap}
+                                                    />
                                                     <AvatarFallback className="text-xs">
-                                                        {item.nama_lengkap.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                                        {item.nama_lengkap
+                                                            .split(' ')
+                                                            .map((n) => n[0])
+                                                            .join('')
+                                                            .substring(0, 2)
+                                                            .toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
                                             </TableCell>

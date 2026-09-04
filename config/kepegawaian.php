@@ -3,14 +3,15 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | HMAC Secret Key untuk Integrasi Attendance
+    | HMAC Secret Key untuk Integrasi API Kepegawaian
     |--------------------------------------------------------------------------
     |
-    | Shared secret untuk verifikasi HMAC-SHA256 dari attendance-qr-system.
-    | Harus sama dengan KEPEGAWAIAN_SECRET_KEY di attendance-qr-system .env
+    | Shared secret untuk verifikasi HMAC-SHA256 dari aplikasi konsumen
+    | (sso-papenajam, wfa-task, attendance-qr-system).
+    | Harus sama dengan KEPEGAWAIAN_HMAC_SECRET di .env tiap konsumen.
     |
     | Generate dengan: php -r "echo bin2hex(random_bytes(32)) . PHP_EOL;"
     |
     */
-    'secret_key' => env('ATTENDANCE_HMAC_SECRET', ''),
+    'secret_key' => env('KEPEGAWAIAN_HMAC_SECRET', ''),
 ];

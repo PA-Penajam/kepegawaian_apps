@@ -1,8 +1,8 @@
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Button } from '@/components/ui/button';
 import { usePage } from '@inertiajs/react';
 import { ChevronDown, ExternalLink, Info } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export function ConventionHelpPanel() {
     const [open, setOpen] = useState(false);

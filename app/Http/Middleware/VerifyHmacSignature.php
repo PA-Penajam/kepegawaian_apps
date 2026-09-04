@@ -40,7 +40,7 @@ class VerifyHmacSignature
 
         $secret = config('kepegawaian.secret_key');
         if (empty($secret)) {
-            Log::critical('ATTENDANCE_HMAC_SECRET tidak dikonfigurasi');
+            Log::critical('KEPEGAWAIAN_HMAC_SECRET tidak dikonfigurasi');
 
             return response()->json(['message' => 'Service configuration error'], 500);
         }
