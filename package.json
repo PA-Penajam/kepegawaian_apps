@@ -28,6 +28,7 @@
         "playwright": "^1.58.2",
         "prettier": "^3.4.2",
         "prettier-plugin-tailwindcss": "^0.6.11",
+        "puppeteer": "^25.10.0",
         "shadcn": "^4.2.0",
         "typescript-eslint": "^8.23.0"
     },
@@ -59,7 +60,6 @@
         "laravel-vite-plugin": "^2.0",
         "lucide-react": "^0.475.0",
         "motion": "^12.38.0",
-        "puppeteer": "^24.42.0",
         "radix-ui": "^1.4.3",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
@@ -80,7 +80,7 @@
         "lightningcss-win32-x64-msvc": "^1.29.1"
     },
     "allowScripts": {
-        "esbuild@0.27.4": true,
-        "puppeteer@24.42.0": true
+        "esbuild@0.28.2": true,
+        "puppeteer@25.10.0": true
     }
 }
