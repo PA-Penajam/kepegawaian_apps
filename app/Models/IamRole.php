@@ -49,9 +49,4 @@ class IamRole extends Model
             'user_id'
         )->withPivot('assigned_at');
     }
-
-    public function pegawai(): BelongsToMany
-    {
-        return $this->users();
-    }
 }

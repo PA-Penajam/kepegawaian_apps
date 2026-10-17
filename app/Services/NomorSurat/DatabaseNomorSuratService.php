@@ -8,7 +8,11 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * PlaceholderNomorSuratService
+ * DatabaseNomorSuratService
+ *
+ * Implementasi produksi NomorSuratService berbasis tabel sequence database.
+ * Sequence dinaikkan atomik di dalam transaksi dengan lockForUpdate,
+ * sehingga aman terhadap request concurrent.
  *
  * Generat nomor surat dengan format MA:
  * {kode_satker}/{nomor_urut}/{klasifikasi}/{bulan_romawi}/{tahun}
@@ -23,7 +27,7 @@ use Illuminate\Support\Facades\DB;
  * Hole policy:
  * - Nomor yang di-release hanya ditandai released, tidak di-reassign
  */
-class PlaceholderNomorSuratService implements NomorSuratService
+class DatabaseNomorSuratService implements NomorSuratService
 {
     public function __construct(
         private readonly string $kodeSatker = 'W1-U1',

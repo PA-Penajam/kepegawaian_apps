@@ -42,10 +42,10 @@ test('login lokal melalui API ditolak dengan forbidden', function () {
     $this->assertGuest();
 });
 
-test('login lokal Filament tidak tersedia', function () {
+test('tidak ada panel admin terpisah di luar aplikasi Inertia', function () {
     expect(Route::has('filament.admin.auth.login'))->toBeFalse();
 });
 
-test('panel admin pengguna tamu diarahkan ke SSO', function () {
-    $this->get('/admin')->assertRedirectContains(route('auth.sso.login'));
+test('path /admin lama tidak lagi melayani panel terpisah', function () {
+    $this->get('/admin')->assertNotFound();
 });

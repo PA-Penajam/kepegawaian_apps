@@ -11,9 +11,7 @@ import {
     ShieldAlert,
     Wrench,
 } from 'lucide-react';
-import { motion } from 'motion/react';
 import AppLogoIcon from '@/components/app-logo-icon';
-import JudicialAuthBackground from '@/components/auth/judicial-background';
 import { Button } from '@/components/ui/button';
 import { home } from '@/routes';
 
@@ -42,7 +40,8 @@ export default function ErrorPage({ status, message }: ErrorPageProps) {
             icon: Lock,
             accentColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
             badgeText: 'Kode 403 • Terlarang',
-            suggestedAction: 'Hubungi administrator kepegawaian jika Anda memerlukan akses tambahan.',
+            suggestedAction:
+                'Hubungi administrator kepegawaian jika Anda memerlukan akses tambahan.',
         },
         404: {
             title: 'Halaman Tidak Ditemukan',
@@ -50,9 +49,11 @@ export default function ErrorPage({ status, message }: ErrorPageProps) {
                 message ||
                 'Alamat halaman yang Anda tuju tidak ditemukan atau mungkin telah dipindahkan ke tautan lain.',
             icon: Search,
-            accentColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+            accentColor:
+                'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
             badgeText: 'Kode 404 • Not Found',
-            suggestedAction: 'Periksa kembali URL atau kembali ke dasbor utama SIMPEG.',
+            suggestedAction:
+                'Periksa kembali URL atau kembali ke dasbor utama SIMPEG.',
         },
         419: {
             title: 'Sesi Telah Kedaluwarsa',
@@ -62,7 +63,8 @@ export default function ErrorPage({ status, message }: ErrorPageProps) {
             icon: Clock,
             accentColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
             badgeText: 'Kode 419 • Sesi Kedaluwarsa',
-            suggestedAction: 'Muat ulang halaman untuk memperbarui sesi login Anda.',
+            suggestedAction:
+                'Muat ulang halaman untuk memperbarui sesi login Anda.',
         },
         429: {
             title: 'Terlalu Banyak Permintaan',
@@ -70,7 +72,8 @@ export default function ErrorPage({ status, message }: ErrorPageProps) {
                 message ||
                 'Sistem mendeteksi terlalu banyak permintaan dalam waktu singkat. Mohon beri jeda beberapa saat sebelum mencoba kembali.',
             icon: ShieldAlert,
-            accentColor: 'text-orange-500 bg-orange-500/10 border-orange-500/20',
+            accentColor:
+                'text-orange-500 bg-orange-500/10 border-orange-500/20',
             badgeText: 'Kode 429 • Rate Limited',
             suggestedAction: 'Tunggu 10–30 detik lalu muat ulang halaman.',
         },
@@ -80,9 +83,11 @@ export default function ErrorPage({ status, message }: ErrorPageProps) {
                 message ||
                 'Terjadi kendala teknis pada peladen sistem. Tim pengelola IT & Kepegawaian telah menerima catatan log untuk penanganan segera.',
             icon: ServerCrash,
-            accentColor: 'text-destructive bg-destructive/10 border-destructive/20',
+            accentColor:
+                'text-destructive bg-destructive/10 border-destructive/20',
             badgeText: 'Kode 500 • Kendala Server',
-            suggestedAction: 'Silakan coba beberapa saat lagi atau laporkan ke helpdesk Kepegawaian & Ortala.',
+            suggestedAction:
+                'Silakan coba beberapa saat lagi atau laporkan ke helpdesk Kepegawaian & Ortala.',
         },
         503: {
             title: 'Layanan Dalam Pemeliharaan',
@@ -92,13 +97,15 @@ export default function ErrorPage({ status, message }: ErrorPageProps) {
             icon: Wrench,
             accentColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
             badgeText: 'Kode 503 • Pemeliharaan',
-            suggestedAction: 'Silakan cek kembali secara berkala dalam beberapa menit.',
+            suggestedAction:
+                'Silakan cek kembali secara berkala dalam beberapa menit.',
         },
     };
 
     const config = errorConfigs[status] || {
         title: 'Terjadi Kendala',
-        description: message || 'Terjadi kesalahan yang tidak terduga pada aplikasi.',
+        description:
+            message || 'Terjadi kesalahan yang tidak terduga pada aplikasi.',
         icon: AlertTriangle,
         accentColor: 'text-destructive bg-destructive/10 border-destructive/20',
         badgeText: `Kode ${status || 'Error'}`,
@@ -108,24 +115,16 @@ export default function ErrorPage({ status, message }: ErrorPageProps) {
     const IconComponent = config.icon;
 
     return (
-        <div className="relative flex min-h-svh w-full flex-col justify-between overflow-x-hidden px-4 py-8 sm:px-6 md:px-8">
+        <div className="flex min-h-svh w-full flex-col justify-between bg-background px-4 py-8 sm:px-6 md:px-8">
             <Head title={`${status} - ${config.title}`} />
 
-            {/* Latar Belakang Kanvas Deep Forest Green */}
-            <JudicialAuthBackground />
-
             {/* Top spacing bar */}
-            <div className="relative z-10 h-4 w-full" aria-hidden="true" />
+            <div className="h-4 w-full" aria-hidden="true" />
 
             {/* Main card center container */}
-            <main className="relative z-10 my-auto flex w-full justify-center">
-                <motion.div
-                    initial={{ opacity: 0, y: 16, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className="w-full max-w-[480px]"
-                >
-                    <div className="flex flex-col gap-6 rounded-2xl border border-white/20 bg-card p-6 shadow-2xl backdrop-blur-md sm:p-8 md:p-9 dark:border-white/10">
+            <main className="my-auto flex w-full justify-center">
+                <div className="w-full max-w-[480px]">
+                    <div className="flex flex-col gap-6 rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8 md:p-9">
                         {/* Header Lambang & Status Badge */}
                         <div className="flex flex-col items-center gap-4 text-center">
                             <Link
@@ -133,7 +132,9 @@ export default function ErrorPage({ status, message }: ErrorPageProps) {
                                 className="group flex flex-col items-center gap-2 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 <AppLogoIcon className="size-14 sm:size-16" />
-                                <span className="sr-only">Beranda SIMPEG PA Penajam</span>
+                                <span className="sr-only">
+                                    Beranda SIMPEG PA Penajam
+                                </span>
                             </Link>
 
                             <div className="flex items-center gap-2">
@@ -157,13 +158,19 @@ export default function ErrorPage({ status, message }: ErrorPageProps) {
 
                         {/* Kotak Petunjuk Aksi */}
                         <div className="rounded-xl border border-border/80 bg-muted/40 p-3.5 text-xs text-muted-foreground">
-                            <p className="font-medium text-foreground">Saran Tindakan:</p>
-                            <p className="mt-0.5 leading-relaxed">{config.suggestedAction}</p>
+                            <p className="font-medium text-foreground">
+                                Saran Tindakan:
+                            </p>
+                            <p className="mt-0.5 leading-relaxed">
+                                {config.suggestedAction}
+                            </p>
                         </div>
 
                         {/* Tombol Aksi Pemulihan */}
                         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-                            {status === 419 || status === 503 || status === 429 ? (
+                            {status === 419 ||
+                            status === 503 ||
+                            status === 429 ? (
                                 <Button
                                     variant="default"
                                     className="w-full gap-2 font-medium"
@@ -209,12 +216,15 @@ export default function ErrorPage({ status, message }: ErrorPageProps) {
                             </span>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             </main>
 
             {/* Footer Institusional */}
-            <footer className="relative z-10 mt-8 text-center text-xs font-medium text-emerald-200/70">
-                <p>© {new Date().getFullYear()} Pengadilan Agama Penajam • Mahkamah Agung RI</p>
+            <footer className="mt-8 text-center text-xs font-medium text-muted-foreground">
+                <p>
+                    © {new Date().getFullYear()} Pengadilan Agama Penajam •
+                    Mahkamah Agung RI
+                </p>
             </footer>
         </div>
     );

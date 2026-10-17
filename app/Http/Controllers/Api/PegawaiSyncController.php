@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\SyncPegawaiRequest;
 use App\Http\Resources\PegawaiApiResource;
 use App\Models\Pegawai;
 use App\Services\Sync\SyncPullRecorder;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * Controller penerbit sinkronisasi data pegawai untuk aplikasi client
@@ -37,15 +37,11 @@ class PegawaiSyncController extends Controller
     /**
      * Ekspor data pegawai untuk sinkronisasi penuh maupun delta.
      */
-    public function index(Request $request, SyncPullRecorder $recorder): JsonResponse
+    public function index(SyncPegawaiRequest $request, SyncPullRecorder $recorder): JsonResponse
     {
         $startedAt = microtime(true);
 
-        $validated = $request->validate([
-            'page' => 'sometimes|integer|min:1',
-            'per_page' => 'sometimes|integer|min:1|max:500',
-            'since' => 'sometimes|nullable|date',
-        ]);
+        $validated = $request->validated();
 
         $perPage = $validated['per_page'] ?? 100;
         $page = $validated['page'] ?? 1;

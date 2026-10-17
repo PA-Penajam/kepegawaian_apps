@@ -30,7 +30,7 @@ class RefRoleController extends Controller
         $roles = IamRole::query()
             ->where('iam_application_id', $appId)
             ->with(['permissions:id'])
-            ->withCount(['permissions', 'pegawai'])
+            ->withCount(['permissions', 'users as pegawai_count'])
             ->when(request('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nama', 'like', "%{$search}%")
@@ -96,7 +96,7 @@ class RefRoleController extends Controller
                 ->orderBy('nama_lengkap')
                 ->paginate(15, ['*'], 'pegawai_page')
                 ->withQueryString(),
-            'assignedPegawaiIds' => $role->pegawai()->pluck('pegawai.id'),
+            'assignedPegawaiIds' => $role->users()->pluck('pegawai.id'),
         ]);
     }
 
@@ -112,7 +112,7 @@ class RefRoleController extends Controller
         }
 
         if ($request->has('pegawai_ids')) {
-            $role->pegawai()->sync($request->input('pegawai_ids', []));
+            $role->users()->sync($request->input('pegawai_ids', []));
         }
 
         return redirect()
@@ -130,7 +130,7 @@ class RefRoleController extends Controller
 
         $this->authorize('delete', $role);
 
-        if ($role->pegawai()->exists()) {
+        if ($role->users()->exists()) {
             return redirect()
                 ->route('referensi.roles.index')
                 ->with('error', 'Role masih memiliki pegawai yang di-assign. Pindahkan pegawai ke role lain terlebih dahulu.');

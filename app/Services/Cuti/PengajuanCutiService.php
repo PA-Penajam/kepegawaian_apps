@@ -7,6 +7,7 @@ use App\Exceptions\Cuti\CrossYearLeaveException;
 use App\Exceptions\Cuti\OverlapPengajuanException;
 use App\Models\Cuti\CutiAlokasiTahunan;
 use App\Models\Cuti\CutiPengajuan;
+use App\Models\Pegawai;
 use App\Services\Cuti\Rules\CutiRuleEngine;
 use App\States\Cuti\DiajukanState;
 use Carbon\Carbon;
@@ -42,6 +43,10 @@ class PengajuanCutiService
 
         return DB::transaction(function () use ($data, $start, $end): CutiPengajuan {
             $tahun = $start->year;
+
+            // Lock baris pegawai untuk men-serialisasi submit concurrent per pegawai,
+            // sehingga generateNomor (count+1) dan guardOverlap aman dari race condition
+            Pegawai::where('nip', $data['pegawai_nip'])->lockForUpdate()->firstOrFail();
 
             // Lock anchor alokasi jika CT (saldo_driven)
             if ($data['jenis_cuti_kode'] === 'CT') {
@@ -103,6 +108,10 @@ class PengajuanCutiService
 
     /**
      * Generate nomor pengajuan dengan format CUTI/YYYY/NIP-pendek/counter.
+     *
+     * Catatan konkurensi: counter berbasis count+1, sehingga pemanggilan
+     * untuk keperluan penyimpanan wajib berada dalam transaksi dengan
+     * lock baris pegawai (lihat submit()).
      */
     public function generateNomor(int $tahun, string $nip): string
     {

@@ -23,8 +23,8 @@ use App\Services\Cuti\Rules\CutiRuleEngine;
 use App\Services\Cuti\Rules\CutiSakitTier1Rule;
 use App\Services\Cuti\Rules\CutiSakitTier2Rule;
 use App\Services\Cuti\Rules\CutiTahunanRule;
+use App\Services\NomorSurat\DatabaseNomorSuratService;
 use App\Services\NomorSurat\NomorSuratService;
-use App\Services\NomorSurat\PlaceholderNomorSuratService;
 use App\Services\Sikep\NullSikepAdapter;
 use App\Services\Sikep\SikepAdapter;
 use Carbon\CarbonImmutable;
@@ -49,7 +49,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(SikepAdapter::class, NullSikepAdapter::class);
 
-        $this->app->bind(NomorSuratService::class, PlaceholderNomorSuratService::class);
+        $this->app->bind(NomorSuratService::class, DatabaseNomorSuratService::class);
 
         $this->app->bind(CutiRuleEngine::class, fn () => new CutiRuleEngine([
             app(CutiTahunanRule::class),

@@ -100,7 +100,7 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
                     <DialogTitle className="flex items-center gap-3">
                         <span
                             aria-hidden="true"
-                            className="animate-seal-stamp flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[color:var(--gold)] bg-primary text-primary-foreground shadow-xs"
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[color:var(--gold)] bg-primary text-primary-foreground shadow-xs"
                         >
                             <ShieldCheck className="h-5 w-5" />
                         </span>
