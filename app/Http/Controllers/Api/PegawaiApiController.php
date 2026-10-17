@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\IndexPegawaiRequest;
 use App\Http\Resources\PegawaiApiResource;
 use App\Models\Pegawai;
 use Illuminate\Http\JsonResponse;
@@ -49,7 +50,7 @@ class PegawaiApiController extends Controller
      *
      * Priority: nip[] diprioritaskan jika search juga dikirim.
      */
-    public function index(Request $request): JsonResponse
+    public function index(IndexPegawaiRequest $request): JsonResponse
     {
         // Batch lookup by NIPs diprioritaskan jika nip[] ada
         if ($request->has('nip')) {
@@ -63,15 +64,9 @@ class PegawaiApiController extends Controller
     /**
      * Batch lookup pegawai berdasarkan array NIPs.
      */
-    private function batchByNips(Request $request): JsonResponse
+    private function batchByNips(IndexPegawaiRequest $request): JsonResponse
     {
-        // Validasi input NIP: array, max 50 items, dan setiap item harus 18 digit
-        $validated = $request->validate([
-            'nip' => 'required|array|max:50',
-            'nip.*' => 'required|string|digits:18',
-        ]);
-
-        $nips = $validated['nip'];
+        $nips = $request->validated('nip');
 
         $pegawaiList = Pegawai::with(['jabatan', 'unitKerja', 'pangkat'])
             ->whereIn('nip', $nips)

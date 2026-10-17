@@ -32,6 +32,10 @@ export type RefRole = {
     keterangan: string | null;
     is_system: boolean;
     permissions?: RefPermission[];
+    /** Jumlah pegawai yang ter-assign (diisi via withCount dengan alias pegawai_count). */
+    pegawai_count?: number;
+    /** Jumlah permission milik role (diisi via withCount). */
+    permissions_count?: number;
     created_at: string;
     updated_at: string;
 };
@@ -61,4 +65,3 @@ export type CrudTableColumn<T> = {
     header: string;
     cell?: (item: T) => ReactNode;
 };
-

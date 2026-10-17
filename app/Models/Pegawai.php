@@ -10,9 +10,6 @@ use App\Enums\StatusPegawai;
 use App\Enums\StatusPerkawinan;
 use App\Models\Concerns\HasActivityLogOptions;
 use App\Traits\Filterable;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Models\Contracts\HasName;
-use Filament\Panel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -28,7 +25,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
-class Pegawai extends Authenticatable implements FilamentUser, HasName
+class Pegawai extends Authenticatable
 {
     use Filterable, HasActivityLogOptions, HasApiTokens, HasFactory, HasUlids, LogsActivity, Notifiable, SoftDeletes, TwoFactorAuthenticatable {
         HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
@@ -272,22 +269,5 @@ class Pegawai extends Authenticatable implements FilamentUser, HasName
         }
 
         return sprintf('%s - %s', $this->pangkat->nama, $this->pangkat->kode);
-    }
-
-    /**
-     * Menentukan apakah user dapat mengakses Filament admin panel.
-     */
-    public function canAccessPanel(Panel $panel): bool
-    {
-        return $panel->getId() === 'admin'
-            && ($this->isAdmin() || $this->isOperator());
-    }
-
-    /**
-     * Nama yang ditampilkan di Filament admin panel.
-     */
-    public function getFilamentName(): string
-    {
-        return $this->nama_lengkap ?? '';
     }
 }

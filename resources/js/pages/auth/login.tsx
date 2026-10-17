@@ -1,6 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
 import { ShieldCheck } from 'lucide-react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import AlertError from '@/components/alert-error';
 import { Button } from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
@@ -14,7 +13,6 @@ export default function Login({ status }: Props) {
     const { flash } = usePage<{
         flash?: { error?: string | null; success?: string | null };
     }>().props;
-    const shouldReduceMotion = useReducedMotion();
 
     return (
         <AuthLayout
@@ -23,44 +21,21 @@ export default function Login({ status }: Props) {
         >
             <Head title="Login SIMPEG" />
 
-            <AnimatePresence>
-                {flash?.error && (
-                    <motion.div
-                        initial={
-                            shouldReduceMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, y: -6 }
-                        }
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                    >
-                        <AlertError
-                            errors={[flash.error]}
-                            title="Autentikasi SSO Gagal"
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {flash?.error && (
+                <AlertError
+                    errors={[flash.error]}
+                    title="Autentikasi SSO Gagal"
+                />
+            )}
 
-            <AnimatePresence>
-                {status && (
-                    <motion.div
-                        initial={
-                            shouldReduceMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, y: 6 }
-                        }
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        role="status"
-                        className="rounded-lg border border-primary/20 bg-primary/10 p-3 text-center text-sm font-medium text-primary"
-                    >
-                        {status}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {status && (
+                <div
+                    role="status"
+                    className="rounded-lg border border-primary/20 bg-primary/10 p-3 text-center text-sm font-medium text-primary"
+                >
+                    {status}
+                </div>
+            )}
 
             <div className="space-y-5">
                 <div className="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed text-muted-foreground">

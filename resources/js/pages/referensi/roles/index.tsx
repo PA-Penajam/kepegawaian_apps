@@ -135,8 +135,8 @@ export default function Index({ roles, permissions, filters }: Props) {
 
     const confirmDelete = () => {
         if (!deleteTarget) {
-return;
-}
+            return;
+        }
 
         deleteForm.delete(toUrl(destroy(deleteTarget.id)), {
             onSuccess: () => setDeleteTarget(null),
@@ -285,7 +285,7 @@ return;
                                             Total Pegawai
                                         </div>
                                         <div className="text-sm font-extrabold">
-                                            {(item as any).pegawai_count ?? 0}
+                                            {item.pegawai_count ?? 0}
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between rounded-md border-2 border-black/10 bg-black/5 p-3 text-sm">
@@ -294,8 +294,7 @@ return;
                                             Permissions
                                         </div>
                                         <div className="text-sm font-extrabold">
-                                            {(item as any).permissions_count ??
-                                                0}
+                                            {item.permissions_count ?? 0}
                                         </div>
                                     </div>
                                 </CardContent>

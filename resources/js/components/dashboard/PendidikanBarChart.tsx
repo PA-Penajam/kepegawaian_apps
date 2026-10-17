@@ -34,10 +34,15 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
     if (active && payload && payload.length) {
         const data = payload[0];
+
+        if (!data) {
+            return null;
+        }
+
         const percentage = data.payload?.pct ?? 0;
 
         return (
-            <div className="bg-popover text-popover-foreground border border-border rounded-md px-3 py-2 shadow-sm">
+            <div className="rounded-md border border-border bg-popover px-3 py-2 text-popover-foreground shadow-sm">
                 <p className="font-semibold">{label}</p>
                 <p className="text-sm text-muted-foreground">
                     {data.value} pegawai ({percentage}%)
@@ -49,25 +54,42 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
     return null;
 }
 
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#0ea5e9'];
+const COLORS = [
+    '#6366f1',
+    '#8b5cf6',
+    '#ec4899',
+    '#f43f5e',
+    '#f97316',
+    '#eab308',
+    '#22c55e',
+    '#14b8a6',
+    '#0ea5e9',
+];
 
 export function PendidikanBarChart({ data }: Props) {
     const chartData = data.map((item, index) => ({
         name: item.pendidikan,
         value: item.count,
         pct: item.percentage,
-        color: COLORS[index % COLORS.length],
+        color: COLORS[index % COLORS.length] ?? COLORS[0],
     }));
 
     return (
-        <ResponsiveContainer width="100%" height={Math.max(200, chartData.length * 40)}>
+        <ResponsiveContainer
+            width="100%"
+            height={Math.max(200, chartData.length * 40)}
+        >
             <BarChart
                 data={chartData}
                 layout="vertical"
                 margin={{ top: 4, right: 48, left: 8, bottom: 0 }}
             >
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
+                <XAxis
+                    type="number"
+                    tick={{ fontSize: 12 }}
+                    allowDecimals={false}
+                />
                 <YAxis
                     type="category"
                     dataKey="name"
@@ -75,7 +97,11 @@ export function PendidikanBarChart({ data }: Props) {
                     width={80}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]} label={{ position: 'right', fontSize: 12 }}>
+                <Bar
+                    dataKey="value"
+                    radius={[0, 4, 4, 0]}
+                    label={{ position: 'right', fontSize: 12 }}
+                >
                     {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}

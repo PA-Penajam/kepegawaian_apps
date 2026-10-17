@@ -32,25 +32,35 @@ class ApprovalController extends Controller
         $query = CutiPengajuan::with(['pegawai:id,nip,nama_lengkap', 'jenisCuti:kode,nama'])
             ->latest('submitted_at');
 
-        // Filter berdasarkan role/permission user
+        // Filter berdasarkan role/permission user.
+        // User dapat memiliki beberapa permission sekaligus, sehingga
+        // kondisi digabung dengan orWhere (bukan elseif berjenjang).
+        $scopes = [];
+
         if ($user->hasPermission('cuti.pengajuan.verify')) {
-            $query->where(function ($q) use ($user) {
-                $q->where('petugas_kepegawaian_current_nip', $user->nip)
-                    ->where('state', 'DIAJUKAN');
-            });
-        } elseif ($user->hasPermission('cuti.pengajuan.approve-langsung')) {
-            $query->where(function ($q) use ($user) {
-                $q->where('atasan_langsung_current_nip', $user->nip)
-                    ->where('state', 'DIVERIFIKASI');
-            });
-        } elseif ($user->hasPermission('cuti.pengajuan.approve-pejabat')) {
-            $query->where(function ($q) use ($user) {
-                $q->where('pejabat_berwenang_current_nip', $user->nip)
-                    ->where('state', 'DISETUJUI_ATASAN');
-            });
-        } else {
+            $scopes[] = fn ($q) => $q->where('petugas_kepegawaian_current_nip', $user->nip)
+                ->where('state', 'DIAJUKAN');
+        }
+
+        if ($user->hasPermission('cuti.pengajuan.approve-langsung')) {
+            $scopes[] = fn ($q) => $q->where('atasan_langsung_current_nip', $user->nip)
+                ->where('state', 'DIVERIFIKASI');
+        }
+
+        if ($user->hasPermission('cuti.pengajuan.approve-pejabat')) {
+            $scopes[] = fn ($q) => $q->where('pejabat_berwenang_current_nip', $user->nip)
+                ->where('state', 'DISETUJUI_ATASAN');
+        }
+
+        if ($scopes === []) {
             // Jika tidak punya permission approval, tampilkan inbox kosong
             $query->whereRaw('1 = 0');
+        } else {
+            $query->where(function ($q) use ($scopes) {
+                foreach ($scopes as $scope) {
+                    $q->orWhere($scope);
+                }
+            });
         }
 
         return Inertia::render('cuti/approval/inbox', [

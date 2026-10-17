@@ -15,7 +15,12 @@ on:
       - workos
 
 permissions:
-  contents: write
+  contents: read
+
+# Batalkan run lama pada ref yang sama agar tidak menumpuk di runner terbatas.
+concurrency:
+  group: linter-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality:
