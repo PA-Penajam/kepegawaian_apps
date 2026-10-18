@@ -87,6 +87,8 @@ class ApprovalController extends Controller
         } catch (TransitionTidakValidException $e) {
             return back()->with('error', $e->getMessage());
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat memverifikasi pengajuan. Silakan coba lagi.');
         }
     }
@@ -110,6 +112,8 @@ class ApprovalController extends Controller
         } catch (TransitionTidakValidException $e) {
             return back()->with('error', $e->getMessage());
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menyetujui pengajuan. Silakan coba lagi.');
         }
     }
@@ -133,6 +137,8 @@ class ApprovalController extends Controller
         } catch (TransitionTidakValidException $e) {
             return back()->with('error', $e->getMessage());
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menyetujui pengajuan. Silakan coba lagi.');
         }
     }
@@ -166,6 +172,8 @@ class ApprovalController extends Controller
         } catch (TransitionTidakValidException $e) {
             return back()->with('error', $e->getMessage());
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menolak pengajuan. Silakan coba lagi.');
         }
     }
@@ -197,6 +205,8 @@ class ApprovalController extends Controller
         } catch (CancelTidakDiizinkanException $e) {
             return back()->with('error', $e->getMessage());
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat membatalkan pengajuan. Silakan coba lagi.');
         }
     }
@@ -220,6 +230,8 @@ class ApprovalController extends Controller
         } catch (AuthorizationException $e) {
             return back()->with('error', 'Anda tidak memiliki izin untuk melakukan reassign approver.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat melakukan reassign approver. Silakan coba lagi.');
         }
     }

@@ -83,6 +83,8 @@ class RiwayatJabatanController extends Controller
             return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai)
                 ->with('success', 'Riwayat jabatan berhasil ditambahkan.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menambahkan riwayat jabatan. Silakan coba lagi.');
         }
     }
@@ -99,6 +101,8 @@ class RiwayatJabatanController extends Controller
             return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai)
                 ->with('success', 'Riwayat jabatan berhasil diperbarui.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat memperbarui riwayat jabatan. Silakan coba lagi.');
         }
     }
@@ -115,6 +119,8 @@ class RiwayatJabatanController extends Controller
             return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai)
                 ->with('success', 'Riwayat jabatan berhasil dihapus.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menghapus riwayat jabatan. Silakan coba lagi.');
         }
     }

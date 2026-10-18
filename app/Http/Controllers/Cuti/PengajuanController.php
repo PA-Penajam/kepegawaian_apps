@@ -98,6 +98,8 @@ class PengajuanController extends Controller
         } catch (OverlapPengajuanException $e) {
             return back()->with('error', $e->getMessage());
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menyimpan pengajuan cuti. Silakan coba lagi.');
         }
     }

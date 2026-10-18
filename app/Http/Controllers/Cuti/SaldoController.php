@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Cuti\AdjustSaldoRequest;
+use App\Http\Requests\Cuti\InitSaldoRequest;
 use App\Models\Cuti\CutiAlokasiTahunan;
 use App\Models\Cuti\CutiPengajuan;
 use App\Models\Pegawai;
@@ -56,26 +58,29 @@ class SaldoController extends Controller
     {
         $tahun = $request->input('tahun', now()->year);
 
-        $alokasiList = CutiAlokasiTahunan::with('pegawai:id,nip,nama_lengkap')
+        $alokasiPaginator = CutiAlokasiTahunan::with('pegawai:id,nip,nama_lengkap')
             ->where('tahun_hak', $tahun)
-            ->paginate(20)
-            ->through(function (CutiAlokasiTahunan $alokasi) {
-                $saldo = $this->saldoService->saldoBucket(
-                    $alokasi->pegawai_nip,
-                    $alokasi->jenis_cuti_kode,
-                    $alokasi->tahun_hak
-                );
+            ->paginate(20);
 
-                return [
-                    'id' => $alokasi->id,
-                    'pegawai_nip' => $alokasi->pegawai_nip,
-                    'pegawai' => $alokasi->pegawai,
-                    'jenis_cuti_kode' => $alokasi->jenis_cuti_kode,
-                    'tahun_hak' => $alokasi->tahun_hak,
-                    'hak_awal' => $alokasi->hak_awal,
-                    'saldo_saat_ini' => $saldo,
-                ];
-            });
+        // Hitung saldo seluruh baris halaman ini dalam satu query agregat (anti N+1)
+        $buckets = $alokasiPaginator->getCollection()->map(fn (CutiAlokasiTahunan $a) => [
+            'nip' => $a->pegawai_nip,
+            'jenis' => $a->jenis_cuti_kode,
+            'tahun' => $a->tahun_hak,
+        ])->all();
+        $saldos = $this->saldoService->saldoBuckets($buckets);
+
+        $alokasiList = $alokasiPaginator->through(function (CutiAlokasiTahunan $alokasi) use ($saldos) {
+            return [
+                'id' => $alokasi->id,
+                'pegawai_nip' => $alokasi->pegawai_nip,
+                'pegawai' => $alokasi->pegawai,
+                'jenis_cuti_kode' => $alokasi->jenis_cuti_kode,
+                'tahun_hak' => $alokasi->tahun_hak,
+                'hak_awal' => $alokasi->hak_awal,
+                'saldo_saat_ini' => $saldos["{$alokasi->pegawai_nip}|{$alokasi->jenis_cuti_kode}|{$alokasi->tahun_hak}"] ?? 0,
+            ];
+        });
 
         return Inertia::render('cuti/saldo/admin-index', [
             'alokasiList' => $alokasiList,
@@ -96,20 +101,9 @@ class SaldoController extends Controller
     /**
      * Menyimpan inisialisasi saldo cuti via SaldoLedgerService::kreditAlokasi.
      */
-    public function adminInitStore(Request $request): RedirectResponse
+    public function adminInitStore(InitSaldoRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'pegawai_nip' => ['required', 'string', 'exists:pegawai,nip'],
-            'jenis_cuti_kode' => ['required', 'string'],
-            'tahun' => ['required', 'integer', 'min:2020'],
-            'jumlah_hari' => ['required', 'integer', 'min:1'],
-            'keterangan' => ['nullable', 'string', 'max:500'],
-        ], [
-            'pegawai_nip.required' => 'NIP pegawai wajib diisi.',
-            'pegawai_nip.exists' => 'NIP pegawai tidak ditemukan.',
-            'jumlah_hari.required' => 'Jumlah hari wajib diisi.',
-            'jumlah_hari.min' => 'Jumlah hari minimal 1.',
-        ]);
+        $validated = $request->validated();
 
         $this->saldoService->kreditAlokasi(
             $validated['pegawai_nip'],
@@ -126,21 +120,9 @@ class SaldoController extends Controller
     /**
      * Melakukan penyesuaian saldo cuti oleh admin.
      */
-    public function adminAdjust(Request $request): RedirectResponse
+    public function adminAdjust(AdjustSaldoRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'pegawai_nip' => ['required', 'string', 'exists:pegawai,nip'],
-            'jenis_cuti_kode' => ['required', 'string'],
-            'tahun' => ['required', 'integer', 'min:2020'],
-            'jumlah_hari' => ['required', 'integer'],
-            'keterangan' => ['required', 'string', 'min:10', 'max:500'],
-        ], [
-            'pegawai_nip.required' => 'NIP pegawai wajib diisi.',
-            'pegawai_nip.exists' => 'NIP pegawai tidak ditemukan.',
-            'jumlah_hari.required' => 'Jumlah hari wajib diisi.',
-            'keterangan.required' => 'Keterangan penyesuaian wajib diisi.',
-            'keterangan.min' => 'Keterangan minimal 10 karakter.',
-        ]);
+        $validated = $request->validated();
 
         $this->saldoService->penyesuaian(
             $validated['pegawai_nip'],

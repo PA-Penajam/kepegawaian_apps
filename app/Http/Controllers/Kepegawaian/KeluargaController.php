@@ -96,6 +96,8 @@ class KeluargaController extends Controller
             return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
                 ->with('success', 'Data keluarga berhasil ditambahkan.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menambahkan data keluarga. Silakan coba lagi.');
         }
     }
@@ -140,6 +142,8 @@ class KeluargaController extends Controller
             return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
                 ->with('success', 'Data keluarga berhasil diperbarui.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat memperbarui data keluarga. Silakan coba lagi.');
         }
     }
@@ -184,6 +188,8 @@ class KeluargaController extends Controller
             return to_route('kepegawaian.pegawai.keluarga.index', $pegawai)
                 ->with('success', 'Data keluarga berhasil dihapus.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menghapus data keluarga. Silakan coba lagi.');
         }
     }

@@ -2,15 +2,16 @@ import { usePage } from '@inertiajs/react';
 import { Calendar, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-// You might need to define or import the PageProps type
+// Props halaman minimal yang dibutuhkan header — izinkan field tambahan
+// dari shared props Inertia tanpa mengorbankan type-safety field yang dipakai.
 interface PageProps {
     auth?: {
         user?: {
             name: string;
-            [key: string]: any;
+            [key: string]: unknown;
         };
     };
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export function DashboardHeader() {

@@ -48,3 +48,35 @@ it('menolak slug role duplikat dalam satu aplikasi', function () {
     $response->assertStatus(302);
     $response->assertSessionHasErrors('slug');
 });
+
+it('menolak permission_ids dari aplikasi lain saat membuat role', function () {
+    $app2 = IamApplication::factory()->create(['is_active' => true]);
+    $permLain = $app2->permissions()->create(['nama' => 'Milik Lain', 'slug' => 'milik.lain']);
+
+    $response = $this->actingAs($this->admin)
+        ->from("/iam/aplikasi/{$this->kepegawaian->id}")
+        ->post("/iam/aplikasi/{$this->kepegawaian->id}/roles", [
+            'nama' => 'Role Cross App',
+            'slug' => 'role-cross-app',
+            'permission_ids' => [$permLain->id],
+        ]);
+
+    $response->assertStatus(302);
+    $response->assertSessionHasErrors('permission_ids.0');
+    $this->assertDatabaseMissing('iam_roles', ['slug' => 'role-cross-app']);
+});
+
+it('membuat role dengan permission se-aplikasi dan menghapus cache aplikasi', function () {
+    $perm = $this->kepegawaian->permissions()->create(['nama' => 'Kelola X', 'slug' => 'kelola.x']);
+
+    $response = $this->actingAs($this->admin)
+        ->from("/iam/aplikasi/{$this->kepegawaian->id}")
+        ->post("/iam/aplikasi/{$this->kepegawaian->id}/roles", [
+            'nama' => 'Pengelola X',
+            'slug' => 'pengelola-x',
+            'permission_ids' => [$perm->id],
+        ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('iam_roles', ['slug' => 'pengelola-x']);
+});

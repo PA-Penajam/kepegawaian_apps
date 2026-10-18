@@ -112,6 +112,8 @@ class SyncConsumerController extends Controller
 
             return response()->json($result);
         } catch (\Throwable $e) {
+            report($e);
+
             $konsumen->update([
                 'last_connection_test_at' => now(),
                 'last_connection_test_status' => 'failed',

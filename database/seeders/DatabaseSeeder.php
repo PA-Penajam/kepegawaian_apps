@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         // Guard: di production, password WAJIB dari env variable
         if (App::isProduction()) {
-            if (empty(env('SEEDER_ADMIN_PASSWORD')) || empty(env('SEEDER_OPERATOR_PASSWORD'))) {
+            if (empty(config('seeding.admin_password')) || empty(config('seeding.operator_password'))) {
                 throw new \RuntimeException('SEEDER_ADMIN_PASSWORD dan SEEDER_OPERATOR_PASSWORD wajib diset di environment production');
             }
         }
@@ -63,7 +63,7 @@ class DatabaseSeeder extends Seeder
         $this->assignCredentialsAndRole(
             nip: $nipAdmin,
             email: 'admin@pa-penajam.go.id',
-            password: env('SEEDER_ADMIN_PASSWORD', 'admin123'),
+            password: config('seeding.admin_password'),
             kepegawaianId: $kepegawaian->id,
             roleSlug: 'admin',
         );
@@ -71,7 +71,7 @@ class DatabaseSeeder extends Seeder
         $this->assignCredentialsAndRole(
             nip: $nipOperator,
             email: 'operator@pa-penajam.go.id',
-            password: env('SEEDER_OPERATOR_PASSWORD', 'operator123'),
+            password: config('seeding.operator_password'),
             kepegawaianId: $kepegawaian->id,
             roleSlug: 'operator',
         );

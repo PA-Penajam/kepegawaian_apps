@@ -6,6 +6,7 @@ import {
     ResponsiveContainer,
     Tooltip,
 } from 'recharts';
+import type { PieLabelRenderProps } from 'recharts';
 
 interface JenisKelaminItem {
     label: string;
@@ -79,7 +80,9 @@ export function JenisKelaminPieChart({ data }: Props) {
                     innerRadius={50}
                     outerRadius={80}
                     dataKey="value"
-                    label={(props: any) => `${props.percentage}%`}
+                    label={(props: PieLabelRenderProps) =>
+                        `${Math.round((props.percent ?? 0) * 100)}%`
+                    }
                     labelLine={false}
                 >
                     {chartData.map((entry, index) => (

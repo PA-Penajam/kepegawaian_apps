@@ -41,6 +41,8 @@ class ProfileController extends Controller
 
             return to_route('profile.edit')->with('success', 'Profil berhasil diperbarui.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat memperbarui profil. Silakan coba lagi.');
         }
     }
@@ -62,6 +64,8 @@ class ProfileController extends Controller
 
             return redirect('/');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menghapus profil. Silakan coba lagi.');
         }
     }

@@ -16,19 +16,28 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, IamPaginatedData, User } from '@/types';
 
+type IamUserRow = User & {
+    iam_roles_count?: number;
+    iam_roles?: Array<{
+        id: number;
+        nama: string;
+        application: {
+            nama: string;
+        };
+    }>;
+};
+
+// Paginator standar Laravel via Inertia menaruh meta di root (current_page,
+// last_page, total), sedangkan API Resource membungkusnya di bawah .meta.
+type UsersProp = IamPaginatedData<IamUserRow> & {
+    meta?: IamPaginatedData<IamUserRow>['meta'];
+    total?: number;
+    current_page?: number;
+    last_page?: number;
+};
+
 type Props = {
-    users: IamPaginatedData<
-        User & {
-            iam_roles_count?: number;
-            iam_roles?: Array<{
-                id: number;
-                nama: string;
-                application: {
-                    nama: string;
-                };
-            }>;
-        }
-    >;
+    users: UsersProp;
     filters: {
         search?: string;
     };
@@ -42,15 +51,13 @@ export default function Index() {
     // sedangkan API Resource membungkusnya di bawah .meta
     const meta = useMemo(() => {
         if (users.meta) {
-return users.meta;
-}
-
-        const raw = users as any;
+            return users.meta;
+        }
 
         return {
-            total: raw.total ?? 0,
-            current_page: raw.current_page ?? 1,
-            last_page: raw.last_page ?? 1,
+            total: users.total ?? 0,
+            current_page: users.current_page ?? 1,
+            last_page: users.last_page ?? 1,
         };
     }, [users]);
 
@@ -65,11 +72,15 @@ return users.meta;
 
     // Debounced search — sesuai pola di halaman Roles
     const performSearch = useCallback((value: string) => {
-        router.get('/iam/users', { search: value || undefined }, {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        });
+        router.get(
+            '/iam/users',
+            { search: value || undefined },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            },
+        );
     }, []);
 
     useEffect(() => {
@@ -86,14 +97,19 @@ return users.meta;
                 {/* Header — gaya Retro Neo-Brutalism */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold uppercase tracking-tight">User Akses</h1>
-                        <p className="text-sm text-muted-foreground mt-1 font-medium">
+                        <h1 className="text-2xl font-bold tracking-tight uppercase">
+                            User Akses
+                        </h1>
+                        <p className="mt-1 text-sm font-medium text-muted-foreground">
                             Kelola hak akses role untuk setiap pengguna.
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="border-2 border-black font-bold text-sm px-3 py-1 shadow-[2px_2px_0_rgba(0,0,0,1)]">
-                            <Users className="w-4 h-4 mr-1.5" />
+                        <Badge
+                            variant="outline"
+                            className="border-2 border-black px-3 py-1 text-sm font-bold shadow-[2px_2px_0_rgba(0,0,0,1)]"
+                        >
+                            <Users className="mr-1.5 h-4 w-4" />
                             {meta.total} Pengguna
                         </Badge>
                     </div>
@@ -105,20 +121,30 @@ return users.meta;
                         placeholder="Cari berdasarkan nama atau NIP..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="max-w-md border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] focus-visible:shadow-none focus-visible:translate-y-[2px] focus-visible:translate-x-[2px] transition-all"
+                        className="max-w-md border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all focus-visible:translate-x-[2px] focus-visible:translate-y-[2px] focus-visible:shadow-none"
                     />
                 </div>
 
                 {/* Table — border tebal ala Neo-Brutalism */}
-                <div className="rounded-xl border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] bg-background overflow-hidden">
+                <div className="overflow-hidden rounded-xl border-2 border-black bg-background shadow-[4px_4px_0_rgba(0,0,0,1)]">
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
-                                <TableHead className="font-black uppercase text-xs tracking-wider">Nama</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider">NIP</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">Jumlah Akses</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider">Akses Aplikasi</TableHead>
-                                <TableHead className="font-black uppercase text-xs tracking-wider text-center">Aksi</TableHead>
+                            <TableRow className="border-b-2 border-black bg-muted/30 hover:bg-muted/30">
+                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                    Nama
+                                </TableHead>
+                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                    NIP
+                                </TableHead>
+                                <TableHead className="text-center text-xs font-black tracking-wider uppercase">
+                                    Jumlah Akses
+                                </TableHead>
+                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                    Akses Aplikasi
+                                </TableHead>
+                                <TableHead className="text-center text-xs font-black tracking-wider uppercase">
+                                    Aksi
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -126,14 +152,17 @@ return users.meta;
                                 <TableRow>
                                     <TableCell
                                         colSpan={5}
-                                        className="text-center py-12 font-medium text-muted-foreground"
+                                        className="py-12 text-center font-medium text-muted-foreground"
                                     >
                                         Tidak ada data pengguna ditemukan.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 users.data.map((user) => (
-                                    <TableRow key={user.id} className="border-b border-black/10 hover:bg-muted/20 transition-colors">
+                                    <TableRow
+                                        key={user.id}
+                                        className="border-b border-black/10 transition-colors hover:bg-muted/20"
+                                    >
                                         <TableCell className="font-bold">
                                             {user.nama_lengkap}
                                         </TableCell>
@@ -142,15 +171,22 @@ return users.meta;
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <Badge
-                                                variant={(user.iam_roles_count ?? 0) > 0 ? 'default' : 'outline'}
+                                                variant={
+                                                    (user.iam_roles_count ??
+                                                        0) > 0
+                                                        ? 'default'
+                                                        : 'outline'
+                                                }
                                                 className={`border-2 border-black font-bold shadow-[2px_2px_0_rgba(0,0,0,1)] ${
-                                                    (user.iam_roles_count ?? 0) > 0
+                                                    (user.iam_roles_count ??
+                                                        0) > 0
                                                         ? ''
                                                         : 'bg-background text-muted-foreground'
                                                 }`}
                                             >
-                                                <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-                                                {user.iam_roles_count ?? 0} akses
+                                                <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                                                {user.iam_roles_count ?? 0}{' '}
+                                                akses
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
@@ -163,9 +199,14 @@ return users.meta;
                                                             <Badge
                                                                 key={role.id}
                                                                 variant="secondary"
-                                                                className="text-xs border-2 border-black/30 font-semibold"
+                                                                className="border-2 border-black/30 text-xs font-semibold"
                                                             >
-                                                                {role.application.nama} / {role.nama}
+                                                                {
+                                                                    role
+                                                                        .application
+                                                                        .nama
+                                                                }{' '}
+                                                                / {role.nama}
                                                             </Badge>
                                                         ))
                                                 ) : (
@@ -174,12 +215,17 @@ return users.meta;
                                                     </span>
                                                 )}
                                                 {user.iam_roles &&
-                                                    user.iam_roles.length > 3 && (
+                                                    user.iam_roles.length >
+                                                        3 && (
                                                         <Badge
                                                             variant="outline"
-                                                            className="text-xs border-2 border-black/30 font-semibold"
+                                                            className="border-2 border-black/30 text-xs font-semibold"
                                                         >
-                                                            +{user.iam_roles.length - 3} lagi
+                                                            +
+                                                            {user.iam_roles
+                                                                .length -
+                                                                3}{' '}
+                                                            lagi
                                                         </Badge>
                                                     )}
                                             </div>
@@ -189,11 +235,13 @@ return users.meta;
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="font-bold gap-1.5 border-2 border-black text-xs h-8"
+                                                    className="h-8 gap-1.5 border-2 border-black text-xs font-bold"
                                                     aria-label={`Lihat akses ${user.nama_lengkap}`}
                                                     asChild
                                                 >
-                                                    <Link href={`/iam/users/${user.id}/akses`}>
+                                                    <Link
+                                                        href={`/iam/users/${user.id}/akses`}
+                                                    >
                                                         <Eye className="h-3.5 w-3.5" />
                                                         Detail
                                                     </Link>

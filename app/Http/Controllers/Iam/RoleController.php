@@ -3,27 +3,20 @@
 namespace App\Http\Controllers\Iam;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Iam\StoreRoleRequest;
+use App\Http\Requests\Iam\UpdateRoleRequest;
 use App\Models\IamApplication;
 use App\Models\IamRole;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class RoleController extends Controller
 {
-    public function store(Request $request, IamApplication $aplikasi): RedirectResponse
+    public function store(StoreRoleRequest $request, IamApplication $aplikasi): RedirectResponse
     {
         try {
-            $data = $request->validate([
-                'nama' => 'required|string|max:100',
-                'slug' => ['required', 'alpha_dash', Rule::unique('iam_roles', 'slug')->where('iam_application_id', $aplikasi->id)],
-                'keterangan' => 'nullable|string',
-                'permission_ids' => 'array',
-                // Scope permission_ids hanya ke permissions milik aplikasi ini
-                'permission_ids.*' => ['exists:iam_permissions,id', Rule::exists('iam_permissions', 'id')->where('iam_application_id', $aplikasi->id)],
-            ]);
+            $data = $request->validated();
 
             // Ambil permission_ids sebelum create (bukan field tabel iam_roles)
             $permissionIds = $data['permission_ids'] ?? [];
@@ -40,11 +33,13 @@ class RoleController extends Controller
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menambahkan role. Silakan coba lagi.');
         }
     }
 
-    public function update(Request $request, IamApplication $aplikasi, IamRole $role): RedirectResponse
+    public function update(UpdateRoleRequest $request, IamApplication $aplikasi, IamRole $role): RedirectResponse
     {
         abort_if($role->is_system, 403, 'Role sistem tidak dapat diubah');
 
@@ -52,13 +47,7 @@ class RoleController extends Controller
         abort_unless($role->iam_application_id === $aplikasi->id, 404);
 
         try {
-            $data = $request->validate([
-                'nama' => 'required|string|max:100',
-                'keterangan' => 'nullable|string',
-                'permission_ids' => 'array',
-                // Scope permission_ids hanya ke permissions milik aplikasi ini
-                'permission_ids.*' => ['exists:iam_permissions,id', Rule::exists('iam_permissions', 'id')->where('iam_application_id', $aplikasi->id)],
-            ]);
+            $data = $request->validated();
 
             // Ambil permission_ids sebelum update (bukan field tabel iam_roles)
             $permissionIds = $data['permission_ids'] ?? [];
@@ -73,6 +62,8 @@ class RoleController extends Controller
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat memperbarui role. Silakan coba lagi.');
         }
     }
@@ -91,6 +82,8 @@ class RoleController extends Controller
 
             return back()->with('success', 'Role berhasil dihapus.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menghapus role. Silakan coba lagi.');
         }
     }

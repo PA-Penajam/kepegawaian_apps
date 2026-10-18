@@ -39,7 +39,7 @@ class AttendanceAppSeeder extends Seeder
         $app = new IamApplication;
         $app->nama = 'Attendance System';
         $app->slug = $slug;
-        $app->url = env('ATTENDANCE_APP_URL', 'http://localhost:3000');
+        $app->url = config('seeding.attendance_app_url');
         $app->deskripsi = 'Sistem absensi QR code PA Penajam';
         $app->is_active = true;
         $app->is_system = false;

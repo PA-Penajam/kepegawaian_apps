@@ -22,6 +22,8 @@ class PermissionController extends Controller
 
             return back()->with('success', 'Permission berhasil ditambahkan.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menambahkan permission. Silakan coba lagi.');
         }
     }
@@ -38,6 +40,8 @@ class PermissionController extends Controller
 
             return back()->with('success', 'Permission berhasil diperbarui.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat memperbarui permission. Silakan coba lagi.');
         }
     }
@@ -54,6 +58,8 @@ class PermissionController extends Controller
 
             return back()->with('success', 'Permission berhasil dihapus.');
         } catch (\Exception $e) {
+            report($e);
+
             return back()->with('error', 'Terjadi kesalahan saat menghapus permission. Silakan coba lagi.');
         }
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\ExchangeCodeRequest;
 use App\Http\Resources\IamValidateResource;
 use App\Models\IamSsoCode;
 use App\Services\IamAuthorizationService;
@@ -50,10 +51,8 @@ class IamController extends Controller
         return response()->json(['message' => 'Token invalidated']);
     }
 
-    public function exchangeCode(Request $request): JsonResponse
+    public function exchangeCode(ExchangeCodeRequest $request): JsonResponse
     {
-        $request->validate(['code' => 'required|string|size:64']);
-
         $app = $request->attributes->get('iam_app');
 
         return DB::transaction(function () use ($request, $app): JsonResponse {

@@ -17,10 +17,39 @@ class SaldoLedgerService
      */
     public function saldoBucket(string $nip, string $jenisKode, int $tahun): int
     {
-        return (int) CutiSaldoLedger::where('pegawai_nip', $nip)
-            ->where('jenis_cuti_kode', $jenisKode)
-            ->where('tahun_hak', $tahun)
-            ->sum('jumlah_hari');
+        return $this->saldoBuckets([['nip' => $nip, 'jenis' => $jenisKode, 'tahun' => $tahun]])["{$nip}|{$jenisKode}|{$tahun}"] ?? 0;
+    }
+
+    /**
+     * Menghitung saldo banyak bucket sekaligus dalam SATU query agregat.
+     *
+     * Dipakai tampilan admin agar N baris alokasi tidak memicu N query SUM.
+     *
+     * @param  array<int, array{nip: string, jenis: string, tahun: int}>  $buckets
+     * @return array<string, int> ["nip|jenis|tahun" => saldo]
+     */
+    public function saldoBuckets(array $buckets): array
+    {
+        if ($buckets === []) {
+            return [];
+        }
+
+        $nips = array_unique(array_column($buckets, 'nip'));
+        $tahuns = array_unique(array_column($buckets, 'tahun'));
+
+        $rows = CutiSaldoLedger::whereIn('pegawai_nip', $nips)
+            ->whereIn('tahun_hak', $tahuns)
+            ->groupBy('pegawai_nip', 'jenis_cuti_kode', 'tahun_hak')
+            ->selectRaw('pegawai_nip, jenis_cuti_kode, tahun_hak, COALESCE(SUM(jumlah_hari), 0) as saldo')
+            ->get();
+
+        $hasil = [];
+
+        foreach ($rows as $row) {
+            $hasil["{$row->pegawai_nip}|{$row->jenis_cuti_kode}|{$row->tahun_hak}"] = (int) $row->saldo;
+        }
+
+        return $hasil;
     }
 
     /**
