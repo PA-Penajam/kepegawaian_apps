@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Kepegawaian;
 
+use App\Enums\HubunganKeluarga;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kepegawaian\StoreKeluargaRequest;
 use App\Http\Requests\Kepegawaian\UpdateKeluargaRequest;
@@ -65,13 +66,7 @@ class KeluargaController extends Controller
         try {
             // Intersepsi operator: jadikan pending request alih-alih store langsung
             if ($request->user()?->isOperator()) {
-                $hubungan = $request->validated('hubungan');
-                $domain = match ($hubungan) {
-                    'Suami', 'Istri' => 'pasangan',
-                    'Anak' => 'anak',
-                    'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
-                    default => 'keluarga_lain',
-                };
+                $domain = $this->resolveDomain($request->validated('hubungan'));
 
                 $this->submitPengajuanPerubahanData->handle(
                     $request->user(),
@@ -112,12 +107,7 @@ class KeluargaController extends Controller
             // Intersepsi operator: jadikan pending request alih-alih update langsung
             if ($request->user()?->isOperator()) {
                 $hubungan = $request->validated('hubungan') ?? $keluarga->getRawOriginal('hubungan');
-                $domain = match ($hubungan) {
-                    'Suami', 'Istri' => 'pasangan',
-                    'Anak' => 'anak',
-                    'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
-                    default => 'keluarga_lain',
-                };
+                $domain = $this->resolveDomain($hubungan);
 
                 $this->submitPengajuanPerubahanData->handle(
                     $request->user(),
@@ -157,13 +147,7 @@ class KeluargaController extends Controller
         try {
             // Intersepsi operator: jadikan pending request alih-alih delete langsung
             if ($request->user()?->isOperator()) {
-                $hubungan = $keluarga->getRawOriginal('hubungan');
-                $domain = match ($hubungan) {
-                    'Suami', 'Istri' => 'pasangan',
-                    'Anak' => 'anak',
-                    'Ayah', 'IbuKandung', 'IbuTiri', 'AyahMertua', 'IbuMertua' => 'orang_tua',
-                    default => 'keluarga_lain',
-                };
+                $domain = $this->resolveDomain($keluarga->getRawOriginal('hubungan'));
 
                 $this->submitPengajuanPerubahanData->handle(
                     $request->user(),
@@ -192,6 +176,21 @@ class KeluargaController extends Controller
 
             return back()->with('error', 'Terjadi kesalahan saat menghapus data keluarga. Silakan coba lagi.');
         }
+    }
+
+    private function resolveDomain(?string $hubungan): string
+    {
+        return match ($hubungan) {
+            HubunganKeluarga::Suami->value, HubunganKeluarga::Istri->value => 'pasangan',
+            HubunganKeluarga::Anak->value => 'anak',
+            HubunganKeluarga::AyahKandung->value,
+            HubunganKeluarga::IbuKandung->value,
+            'Ayah',
+            'IbuTiri',
+            'AyahMertua',
+            'IbuMertua' => 'orang_tua',
+            default => 'keluarga_lain',
+        };
     }
 
     private function ensureBelongsToPegawai(Pegawai $pegawai, Keluarga $keluarga): void

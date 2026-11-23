@@ -6,7 +6,9 @@ use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
 use App\Models\RiwayatPangkat;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -19,6 +21,33 @@ class KgbMonitoringService
         ?string $golongan = null,
         ?string $status = null,
     ): LengthAwarePaginator {
+        return $this->buildUpcomingKgbQuery($months, $unitKerjaId, $golongan, $status)
+            ->paginate($perPage)
+            ->through(fn (Pegawai $pegawai): array => $this->mapKgbRow($pegawai));
+    }
+
+    /**
+     * Mengambil seluruh data KGB untuk ekspor tanpa batas paginasi.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function getUpcomingKgbForExport(
+        int $months = 3,
+        ?string $unitKerjaId = null,
+        ?string $golongan = null,
+        ?string $status = null,
+    ): Collection {
+        return $this->buildUpcomingKgbQuery($months, $unitKerjaId, $golongan, $status)
+            ->get()
+            ->map(fn (Pegawai $pegawai): array => $this->mapKgbRow($pegawai));
+    }
+
+    protected function buildUpcomingKgbQuery(
+        int $months = 3,
+        ?string $unitKerjaId = null,
+        ?string $golongan = null,
+        ?string $status = null,
+    ): Builder {
         $maxSisaHari = $months * 30;
         $driver = DB::connection()->getDriverName();
         $isMySQL = $driver === 'mysql';
@@ -31,7 +60,8 @@ class KgbMonitoringService
             ->select('pegawai.*')
             ->join('riwayat_pangkat as rp_kgb', function ($join) {
                 $join->on('rp_kgb.pegawai_id', '=', 'pegawai.id')
-                    ->where('rp_kgb.is_aktif', true);
+                    ->where('rp_kgb.is_aktif', true)
+                    ->whereNull('rp_kgb.deleted_at');
             })
             ->with([
                 'pangkat',
@@ -81,23 +111,28 @@ class KgbMonitoringService
             $query->orderByRaw("date(rp_kgb.tmt, '+2 years') ASC");
         }
 
-        return $query->paginate($perPage)
-            ->through(function (Pegawai $pegawai): array {
-                $riwayatPangkatAktif = $this->getRiwayatPangkatAktif($pegawai);
-                $statusKgb = $this->getKgbStatus($pegawai);
+        return $query;
+    }
 
-                return [
-                    'id' => $pegawai->id,
-                    'nip' => $pegawai->nip,
-                    'nama_lengkap' => $pegawai->nama_lengkap,
-                    'unit_kerja' => $pegawai->unitKerja?->nama ?? '-',
-                    'pangkat_gol' => $pegawai->nama_pangkat_lengkap,
-                    'tmt_pangkat' => $riwayatPangkatAktif?->tmt?->toDateString(),
-                    'tanggal_kgb_berikutnya' => $statusKgb['tanggal_kgb_berikutnya']->toDateString(),
-                    'sisa_hari' => $statusKgb['sisa_hari'],
-                    'status' => $statusKgb['status'],
-                ];
-            });
+    /**
+     * @return array<string, mixed>
+     */
+    protected function mapKgbRow(Pegawai $pegawai): array
+    {
+        $riwayatPangkatAktif = $this->getRiwayatPangkatAktif($pegawai);
+        $statusKgb = $this->getKgbStatus($pegawai);
+
+        return [
+            'id' => $pegawai->id,
+            'nip' => $pegawai->nip,
+            'nama_lengkap' => $pegawai->nama_lengkap,
+            'unit_kerja' => $pegawai->unitKerja?->nama ?? '-',
+            'pangkat_gol' => $pegawai->nama_pangkat_lengkap,
+            'tmt_pangkat' => $riwayatPangkatAktif?->tmt?->toDateString(),
+            'tanggal_kgb_berikutnya' => $statusKgb['tanggal_kgb_berikutnya']->toDateString(),
+            'sisa_hari' => $statusKgb['sisa_hari'],
+            'status' => $statusKgb['status'],
+        ];
     }
 
     public function getKgbStats(
@@ -133,7 +168,8 @@ class KgbMonitoringService
             ")
             ->join('riwayat_pangkat as rp_kgb', function ($join) {
                 $join->on('rp_kgb.pegawai_id', '=', 'pegawai.id')
-                    ->where('rp_kgb.is_aktif', true);
+                    ->where('rp_kgb.is_aktif', true)
+                    ->whereNull('rp_kgb.deleted_at');
             })
             ->whereIn('status_pegawai', [
                 StatusPegawai::Aktif->value,

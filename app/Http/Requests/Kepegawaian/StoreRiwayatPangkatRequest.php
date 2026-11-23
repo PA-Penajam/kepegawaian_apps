@@ -4,6 +4,7 @@ namespace App\Http\Requests\Kepegawaian;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRiwayatPangkatRequest extends FormRequest
 {
@@ -15,7 +16,7 @@ class StoreRiwayatPangkatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ref_pangkat_id' => ['nullable', 'exists:ref_pangkat,id'],
+            'ref_pangkat_id' => ['nullable', 'string', 'ulid', Rule::exists('ref_pangkat', 'id')->whereNull('deleted_at')],
             'no_sk' => ['required', 'string', 'max:255'],
             'tanggal_sk' => ['required', 'date'],
             'tmt' => ['required', 'date'],

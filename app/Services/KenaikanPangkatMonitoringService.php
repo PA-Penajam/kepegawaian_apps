@@ -7,7 +7,9 @@ use App\Enums\StatusPegawai;
 use App\Models\Pegawai;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class KenaikanPangkatMonitoringService
@@ -19,11 +21,41 @@ class KenaikanPangkatMonitoringService
         ?string $golongan = null,
         ?int $periodeTahun = null,
     ): LengthAwarePaginator {
+        return $this->buildUpcomingKpQuery($periodeBulan, $unitKerjaId, $golongan, $periodeTahun)
+            ->paginate($perPage)
+            ->through(fn (Pegawai $pegawai): array => $this->mapKpRow($pegawai));
+    }
+
+    /**
+     * Mengambil seluruh data monitoring kenaikan pangkat untuk ekspor tanpa batas paginasi.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function getUpcomingKenaikanPangkatForExport(
+        ?int $periodeBulan = null,
+        ?string $unitKerjaId = null,
+        ?string $golongan = null,
+        ?int $periodeTahun = null,
+    ): Collection {
+        return $this->buildUpcomingKpQuery($periodeBulan, $unitKerjaId, $golongan, $periodeTahun)
+            ->get()
+            ->filter(fn (Pegawai $p): bool => $p->riwayatPangkat->isNotEmpty())
+            ->map(fn (Pegawai $pegawai): array => $this->mapKpRow($pegawai))
+            ->values();
+    }
+
+    protected function buildUpcomingKpQuery(
+        ?int $periodeBulan = null,
+        ?string $unitKerjaId = null,
+        ?string $golongan = null,
+        ?int $periodeTahun = null,
+    ): Builder {
         $query = Pegawai::query()
             ->select('pegawai.*')
             ->join('riwayat_pangkat as rp_kp', function ($join) {
                 $join->on('rp_kp.pegawai_id', '=', 'pegawai.id')
-                    ->where('rp_kp.is_aktif', true);
+                    ->where('rp_kp.is_aktif', true)
+                    ->whereNull('rp_kp.deleted_at');
             })
             ->with([
                 'pangkat',
@@ -42,31 +74,35 @@ class KenaikanPangkatMonitoringService
 
         $this->applyPeriodeBulananFilter($query, $periodeBulan, $periodeTahun);
 
-        return $query
-            ->paginate($perPage)
-            ->through(function (Pegawai $pegawai): array {
-                $riwayatPangkatAktif = $pegawai->riwayatPangkat->first();
+        return $query;
+    }
 
-                if ($riwayatPangkatAktif === null) {
-                    return [];
-                }
+    /**
+     * @return array<string, mixed>
+     */
+    protected function mapKpRow(Pegawai $pegawai): array
+    {
+        $riwayatPangkatAktif = $pegawai->riwayatPangkat->first();
 
-                $status = $this->getKpStatus($pegawai);
+        if ($riwayatPangkatAktif === null) {
+            return [];
+        }
 
-                return [
-                    'id' => $pegawai->id,
-                    'nip' => $pegawai->nip,
-                    'nama_lengkap' => $pegawai->nama_lengkap,
-                    'pangkat_saat_ini' => $riwayatPangkatAktif->pangkat?->nama ?? $pegawai->pangkat?->nama,
-                    'pangkat_kode' => $riwayatPangkatAktif->pangkat?->kode ?? $pegawai->pangkat?->kode,
-                    'tmt_pangkat' => $riwayatPangkatAktif->tmt?->toDateString(),
-                    'tmt_kp_berikutnya' => $status['tmt_kp_berikutnya']->toDateString(),
-                    'periode_usul' => $status['periode_usul'],
-                    'batas_usul' => $status['batas_usul']->toDateString(),
-                    'sisa_hari_usul' => $status['sisa_hari_usul'],
-                    'status' => $status['status'],
-                ];
-            });
+        $status = $this->getKpStatus($pegawai);
+
+        return [
+            'id' => $pegawai->id,
+            'nip' => $pegawai->nip,
+            'nama_lengkap' => $pegawai->nama_lengkap,
+            'pangkat_saat_ini' => $riwayatPangkatAktif->pangkat?->nama ?? $pegawai->pangkat?->nama,
+            'pangkat_kode' => $riwayatPangkatAktif->pangkat?->kode ?? $pegawai->pangkat?->kode,
+            'tmt_pangkat' => $riwayatPangkatAktif->tmt?->toDateString(),
+            'tmt_kp_berikutnya' => $status['tmt_kp_berikutnya']->toDateString(),
+            'periode_usul' => $status['periode_usul'],
+            'batas_usul' => $status['batas_usul']->toDateString(),
+            'sisa_hari_usul' => $status['sisa_hari_usul'],
+            'status' => $status['status'],
+        ];
     }
 
     public function getKpStats(
@@ -100,7 +136,8 @@ class KenaikanPangkatMonitoringService
             ")
             ->join('riwayat_pangkat as rp_kp', function ($join) {
                 $join->on('rp_kp.pegawai_id', '=', 'pegawai.id')
-                    ->where('rp_kp.is_aktif', true);
+                    ->where('rp_kp.is_aktif', true)
+                    ->whereNull('rp_kp.deleted_at');
             })
             ->whereNotIn('status_pegawai', [
                 StatusPegawai::Pensiun->value,
@@ -126,12 +163,69 @@ class KenaikanPangkatMonitoringService
 
     public function getAllPeriodeBulanan(int $tahun): array
     {
-        return array_map(fn (int $bulan): array => [
-            'bulan' => $bulan,
-            'tahun' => $tahun,
-            'periode_usul' => sprintf('%s %d', $this->getNamaBulan($bulan), $tahun),
-            'stats' => $this->getKpStats($bulan, $tahun),
-        ], range(1, 12));
+        $today = Carbon::today()->toDateString();
+        $driver = DB::connection()->getDriverName();
+        $isSqlite = $driver === 'sqlite';
+
+        $tmtPlus4Year = $isSqlite
+            ? "date(rp_kp.tmt, '+4 years')"
+            : 'DATE_ADD(rp_kp.tmt, INTERVAL 4 YEAR)';
+        $monthExpr = $isSqlite
+            ? "CAST(strftime('%m', {$tmtPlus4Year}) AS INTEGER)"
+            : "MONTH({$tmtPlus4Year})";
+        $yearExpr = $isSqlite
+            ? "CAST(strftime('%Y', {$tmtPlus4Year}) AS INTEGER)"
+            : "YEAR({$tmtPlus4Year})";
+        $todayForComparison = $isSqlite
+            ? "date('{$today}')"
+            : "'{$today}'";
+        $sixMonthsLater = $isSqlite
+            ? "date('{$today}', '+6 months')"
+            : "DATE_ADD('{$today}', INTERVAL 6 MONTH)";
+
+        $rows = Pegawai::query()
+            ->selectRaw("
+                {$monthExpr} as bulan,
+                COUNT(*) as total,
+                SUM(CASE WHEN {$tmtPlus4Year} <= {$todayForComparison} THEN 1 ELSE 0 END) as sudah_eligible,
+                SUM(CASE WHEN {$tmtPlus4Year} > {$todayForComparison}
+                    AND {$tmtPlus4Year} <= {$sixMonthsLater}
+                    THEN 1 ELSE 0 END) as mendekati_eligible,
+                SUM(CASE WHEN {$tmtPlus4Year} > {$sixMonthsLater}
+                    THEN 1 ELSE 0 END) as belum_eligible
+            ")
+            ->join('riwayat_pangkat as rp_kp', function ($join) {
+                $join->on('rp_kp.pegawai_id', '=', 'pegawai.id')
+                    ->where('rp_kp.is_aktif', true)
+                    ->whereNull('rp_kp.deleted_at');
+            })
+            ->whereNotIn('status_pegawai', [
+                StatusPegawai::Pensiun->value,
+                StatusPegawai::Meninggal->value,
+                StatusPegawai::Diberhentikan->value,
+            ])
+            ->where('status_kepegawaian', '!=', StatusKepegawaian::PPPK->value)
+            ->whereDoesntHave('hukumanDisiplin', fn ($q) => $q->aktif())
+            ->whereRaw("{$yearExpr} = ?", [$tahun])
+            ->groupByRaw($monthExpr)
+            ->get()
+            ->keyBy(fn ($row): int => (int) $row->bulan);
+
+        return array_map(function (int $bulan) use ($tahun, $rows): array {
+            $row = $rows->get($bulan);
+
+            return [
+                'bulan' => $bulan,
+                'tahun' => $tahun,
+                'periode_usul' => sprintf('%s %d', $this->getNamaBulan($bulan), $tahun),
+                'stats' => [
+                    'total' => (int) ($row?->total ?? 0),
+                    'sudahEligible' => (int) ($row?->sudah_eligible ?? 0),
+                    'mendekatiEligible' => (int) ($row?->mendekati_eligible ?? 0),
+                    'belumEligible' => (int) ($row?->belum_eligible ?? 0),
+                ],
+            ];
+        }, range(1, 12));
     }
 
     private function applyPeriodeBulananFilter($query, ?int $periodeBulan, ?int $periodeTahun): void

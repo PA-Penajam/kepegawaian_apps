@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Kepegawaian;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateHukumanDisiplinRequest extends FormRequest
 {
@@ -14,7 +15,7 @@ class UpdateHukumanDisiplinRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ref_jenis_hukuman_disiplin_id' => ['nullable', 'exists:ref_jenis_hukuman_disiplin,id'],
+            'ref_jenis_hukuman_disiplin_id' => ['nullable', 'string', 'ulid', Rule::exists('ref_jenis_hukuman_disiplin', 'id')->whereNull('deleted_at')],
             'no_sk' => ['required', 'string', 'max:100'],
             'tanggal_sk' => ['required', 'date'],
             'tmt_berlaku' => ['required', 'date'],

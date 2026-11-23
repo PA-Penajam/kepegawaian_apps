@@ -2,13 +2,16 @@
 
 use App\Models\Pegawai;
 use App\Models\Penghargaan;
+use App\Models\RefJenisPenghargaan;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\delete;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
+use function Pest\Laravel\postJson;
 use function Pest\Laravel\put;
+use function Pest\Laravel\putJson;
 
 function makePenghargaanPayload(array $overrides = []): array
 {
@@ -155,4 +158,28 @@ test('validasi gagal jika nama penghargaan kosong', function () {
         'nama_penghargaan' => '',
     ]))
         ->assertSessionHasErrors('nama_penghargaan');
+});
+
+test('store dan update penghargaan menolak array ref_jenis_penghargaan_id dengan 422', function () {
+    $operator = Pegawai::factory()->operator()->create();
+    $pegawai = Pegawai::factory()->create();
+    $jenis = RefJenisPenghargaan::factory()->create();
+    $penghargaan = Penghargaan::factory()->create([
+        'pegawai_id' => $pegawai->id,
+        'ref_jenis_penghargaan_id' => $jenis->id,
+    ]);
+
+    actingAs($operator);
+
+    postJson(route('kepegawaian.pegawai.penghargaan.store', $pegawai), makePenghargaanPayload([
+        'ref_jenis_penghargaan_id' => [$jenis->id],
+    ]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('ref_jenis_penghargaan_id');
+
+    putJson(route('kepegawaian.pegawai.penghargaan.update', [$pegawai, $penghargaan]), makePenghargaanPayload([
+        'ref_jenis_penghargaan_id' => [$jenis->id],
+    ]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('ref_jenis_penghargaan_id');
 });

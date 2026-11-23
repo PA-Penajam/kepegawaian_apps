@@ -21,10 +21,13 @@ class MonitoringKgbController extends Controller
 
     public function index(Request $request): Response
     {
-        $perPage = $request->integer('per_page', 15);
-        $unitKerja = $request->string('unit_kerja')->value() ?: null;
-        $golongan = $request->string('golongan')->value() ?: null;
-        $status = $request->string('status')->value() ?: null;
+        $perPage = max(1, min(100, $request->integer('per_page', 15)));
+        $rawUnitKerja = $request->input('unit_kerja');
+        $unitKerja = is_string($rawUnitKerja) && trim($rawUnitKerja) !== '' ? trim($rawUnitKerja) : null;
+        $rawGolongan = $request->input('golongan');
+        $golongan = is_string($rawGolongan) && trim($rawGolongan) !== '' ? trim($rawGolongan) : null;
+        $rawStatus = $request->input('status');
+        $status = is_string($rawStatus) && trim($rawStatus) !== '' ? trim($rawStatus) : null;
 
         return Inertia::render('kepegawaian/monitoring/kgb/index', [
             'pegawaiList' => $this->kgbMonitoringService->getUpcomingKgb(3, $perPage, $unitKerja, $golongan, $status),
@@ -51,9 +54,12 @@ class MonitoringKgbController extends Controller
 
     public function export(Request $request): BinaryFileResponse
     {
-        $unitKerja = $request->string('unit_kerja')->value() ?: null;
-        $golongan = $request->string('golongan')->value() ?: null;
-        $status = $request->string('status')->value() ?: null;
+        $rawUnitKerja = $request->input('unit_kerja');
+        $unitKerja = is_string($rawUnitKerja) && trim($rawUnitKerja) !== '' ? trim($rawUnitKerja) : null;
+        $rawGolongan = $request->input('golongan');
+        $golongan = is_string($rawGolongan) && trim($rawGolongan) !== '' ? trim($rawGolongan) : null;
+        $rawStatus = $request->input('status');
+        $status = is_string($rawStatus) && trim($rawStatus) !== '' ? trim($rawStatus) : null;
 
         return Excel::download(
             new KgbMonitoringExport($unitKerja, $golongan, $status),

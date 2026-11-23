@@ -35,19 +35,16 @@ class KgbMonitoringExport implements FromCollection, WithHeadings, WithMapping
      */
     public function collection()
     {
-        $service = new KgbMonitoringService;
+        $service = app(KgbMonitoringService::class);
 
-        // Get paginated data first
-        $paginatedData = $service->getUpcomingKgb(
+        $rows = $service->getUpcomingKgbForExport(
             $this->months,
-            100, // per page cukup besar untuk ekspor
             $this->unitKerjaId,
             $this->golongan,
             $this->status
         );
 
-        // Convert to simple collection for export
-        return collect($paginatedData->items())->map(function ($item) {
+        return $rows->map(function (array $item) {
             return (object) [
                 'nip' => $item['nip'] ?? '',
                 'nama_lengkap' => $item['nama_lengkap'] ?? '',

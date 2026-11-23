@@ -21,12 +21,16 @@ class PengajuanPerubahanDataPolicy
     public function approve(Pegawai $user, PengajuanPerubahanData $pengajuan): bool
     {
         return $user->hasPermission('pengajuan-perubahan.validate')
-            && $pengajuan->status === StatusPengajuanPerubahanData::Pending;
+            && $pengajuan->status === StatusPengajuanPerubahanData::Pending
+            && $pengajuan->pengaju_id !== $user->id
+            && $pengajuan->subject_pegawai_id !== $user->id;
     }
 
     public function reject(Pegawai $user, PengajuanPerubahanData $pengajuan): bool
     {
         return $user->hasPermission('pengajuan-perubahan.validate')
-            && $pengajuan->status === StatusPengajuanPerubahanData::Pending;
+            && $pengajuan->status === StatusPengajuanPerubahanData::Pending
+            && $pengajuan->pengaju_id !== $user->id
+            && $pengajuan->subject_pegawai_id !== $user->id;
     }
 }

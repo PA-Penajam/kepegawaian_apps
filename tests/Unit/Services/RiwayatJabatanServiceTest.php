@@ -89,3 +89,18 @@ test('syncRiwayatAktif deactivates other records and updates pegawai references'
     expect($pegawai->refresh()->ref_jabatan_id)->toBe($riwayatJabatan->ref_jabatan_id);
     expect($pegawai->ref_unit_kerja_id)->toBe($riwayatJabatan->ref_unit_kerja_id);
 });
+
+test('delete active riwayat jabatan clears denormalized pegawai jabatan and unit kerja', function () {
+    $pegawai = Pegawai::factory()->create();
+    $service = new RiwayatJabatanService;
+    $riwayat = $service->store($pegawai, makeRiwayatJabatanData(['is_aktif' => true]));
+
+    expect($pegawai->refresh()->ref_jabatan_id)->not->toBeNull();
+
+    $service->delete($riwayat, $pegawai);
+
+    expect($pegawai->refresh()->ref_jabatan_id)->toBeNull()
+        ->and($pegawai->ref_unit_kerja_id)->toBeNull()
+        ->and(RiwayatJabatan::withTrashed()->find($riwayat->id)?->is_aktif)->toBeFalse()
+        ->and(RiwayatJabatan::withTrashed()->find($riwayat->id)?->trashed())->toBeTrue();
+});

@@ -46,23 +46,87 @@ class PermissionSikepP1Seeder extends Seeder
             ['slug' => 'checklist.submission.validate-item', 'nama' => 'Validasi Item Checklist', 'group' => 'checklist-submission', 'keterangan' => 'Memvalidasi item checklist (oleh sekretaris)'],
         ];
 
-        // 3. Upsert permission (idempotent)
+        // 3. Upsert permission (idempotent) dan simpan peta slug => id untuk aplikasi ini
+        $permissionIdsBySlug = [];
         foreach ($permissions as $p) {
-            IamPermission::updateOrCreate(
+            $perm = IamPermission::updateOrCreate(
                 ['iam_application_id' => $appId, 'slug' => $p['slug']],
                 $p
             );
+            $permissionIdsBySlug[$p['slug']] = $perm->id;
         }
 
-        // 4. Mapping role -> permission (graceful jika role tidak ada)
-        $roleSlugs = ['kasubbag_kepegawaian', 'sekretaris', 'ketua_pengadilan', 'admin_kepegawaian', 'pegawai'];
+        // 4. Mapping role -> permission (selaras dengan slug kanonik IamSeeder + legacy opsional)
+        $roleSlugs = [
+            'admin',
+            'operator',
+            'validator',
+            'viewer',
+            'kasubbag_kepegawaian',
+            'sekretaris',
+            'ketua_pengadilan',
+            'admin_kepegawaian',
+            'pegawai',
+        ];
 
         $roles = IamRole::where('iam_application_id', $appId)
             ->whereIn('slug', $roleSlugs)
             ->get()
             ->keyBy('slug');
 
-        // ===== KASUBBAG KEPEGAWAIAN =====
+        // ===== ADMIN (semua 19 permission P1) =====
+        if ($roles->has('admin')) {
+            $r = $roles['admin']->id;
+            foreach ($permissions as $p) {
+                self::assignPermission($r, $p['slug'], $appId, $permissionIdsBySlug);
+            }
+        }
+
+        // ===== OPERATOR (kelola usulan & checklist template/submission, TANPA monitoring KP) =====
+        if ($roles->has('operator')) {
+            $r = $roles['operator']->id;
+            $slugs = [
+                'kenaikan-pangkat.usulan.view',
+                'kenaikan-pangkat.usulan.create',
+                'kenaikan-pangkat.usulan.update',
+                'kenaikan-pangkat.usulan.delete',
+                'kenaikan-pangkat.usulan.submit',
+                'kenaikan-pangkat.usulan.upload-sk',
+                'kenaikan-pangkat.usulan.finalize',
+                'checklist.template.view',
+                'checklist.template.create',
+                'checklist.template.update',
+                'checklist.template.delete',
+                'checklist.submission.view',
+                'checklist.submission.update-item',
+            ];
+            foreach ($slugs as $s) {
+                self::assignPermission($r, $s, $appId, $permissionIdsBySlug);
+            }
+        }
+
+        // ===== VALIDATOR =====
+        if ($roles->has('validator')) {
+            $r = $roles['validator']->id;
+            $slugs = [
+                'kenaikan-pangkat.usulan.view',
+                'kenaikan-pangkat.usulan.verifikasi-kasubbag',
+                'kenaikan-pangkat.usulan.verifikasi-sekretaris',
+                'checklist.submission.view',
+                'checklist.submission.validate-item',
+            ];
+            foreach ($slugs as $s) {
+                self::assignPermission($r, $s, $appId, $permissionIdsBySlug);
+            }
+        }
+
+        // ===== VIEWER =====
+        if ($roles->has('viewer')) {
+            $r = $roles['viewer']->id;
+            self::assignPermission($r, 'kenaikan-pangkat.usulan.view', $appId, $permissionIdsBySlug);
+        }
+
+        // ===== KASUBBAG KEPEGAWAIAN (legacy opsional) =====
         if ($roles->has('kasubbag_kepegawaian')) {
             $r = $roles['kasubbag_kepegawaian']->id;
             $slugs = [
@@ -71,49 +135,56 @@ class PermissionSikepP1Seeder extends Seeder
                 'checklist.submission.view', 'checklist.submission.update-item', 'checklist.submission.validate-item',
             ];
             foreach ($slugs as $s) {
-                self::assignPermission($r, $s);
+                self::assignPermission($r, $s, $appId, $permissionIdsBySlug);
             }
         }
 
-        // ===== SEKRETARIS =====
+        // ===== SEKRETARIS (legacy opsional) =====
         if ($roles->has('sekretaris')) {
             $r = $roles['sekretaris']->id;
             $slugs = ['kenaikan-pangkat.usulan.view', 'kenaikan-pangkat.usulan.verifikasi-sekretaris', 'checklist.submission.view', 'checklist.submission.validate-item'];
             foreach ($slugs as $s) {
-                self::assignPermission($r, $s);
+                self::assignPermission($r, $s, $appId, $permissionIdsBySlug);
             }
         }
 
-        // ===== KETUA PENGADILAN =====
+        // ===== KETUA PENGADILAN (legacy opsional) =====
         if ($roles->has('ketua_pengadilan')) {
             $r = $roles['ketua_pengadilan']->id;
             $slugs = ['kenaikan-pangkat.usulan.view', 'kenaikan-pangkat.usulan.tanda-tangan-ketua', 'kenaikan-pangkat.usulan.kirim-biro'];
             foreach ($slugs as $s) {
-                self::assignPermission($r, $s);
+                self::assignPermission($r, $s, $appId, $permissionIdsBySlug);
             }
         }
 
-        // ===== ADMIN KEPEGAWAIAN (semua) =====
+        // ===== ADMIN KEPEGAWAIAN (legacy opsional) =====
         if ($roles->has('admin_kepegawaian')) {
             $r = $roles['admin_kepegawaian']->id;
             foreach ($permissions as $p) {
-                self::assignPermission($r, $p['slug']);
+                self::assignPermission($r, $p['slug'], $appId, $permissionIdsBySlug);
             }
         }
 
-        // ===== PEGAWAI (hanya view) =====
+        // ===== PEGAWAI (legacy opsional) =====
         if ($roles->has('pegawai')) {
             $r = $roles['pegawai']->id;
-            self::assignPermission($r, 'kenaikan-pangkat.usulan.view');
+            self::assignPermission($r, 'kenaikan-pangkat.usulan.view', $appId, $permissionIdsBySlug);
         }
     }
 
-    private static function assignPermission(int $roleId, string $slug): void
+    /**
+     * @param  array<string, string>  $permissionIdsBySlug
+     */
+    private static function assignPermission(string $roleId, string $slug, string $appId, array $permissionIdsBySlug = []): void
     {
-        $perm = IamPermission::where('slug', $slug)->first();
-        if ($perm) {
+        $permId = $permissionIdsBySlug[$slug] ?? IamPermission::query()
+            ->where('iam_application_id', $appId)
+            ->where('slug', $slug)
+            ->value('id');
+
+        if ($permId !== null) {
             IamRolePermission::updateOrCreate(
-                ['iam_role_id' => $roleId, 'iam_permission_id' => $perm->id]
+                ['iam_role_id' => $roleId, 'iam_permission_id' => $permId]
             );
         }
     }

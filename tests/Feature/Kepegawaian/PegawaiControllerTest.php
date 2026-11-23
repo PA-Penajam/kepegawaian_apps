@@ -268,12 +268,13 @@ test('operators submitting pegawai update creates pending request instead of dir
         'ref_jabatan_id' => $references['jabatan']->id,
         'ref_unit_kerja_id' => $references['unitKerja']->id,
     ]);
-    $payload = makePegawaiPayload([
-        'nip' => $pegawai->nip,
+    $payload = array_merge($pegawai->toArray(), [
+        'tanggal_lahir' => $pegawai->tanggal_lahir?->toDateString(),
+        'tmt_cpns' => $pegawai->tmt_cpns?->toDateString(),
+        'tmt_pns' => $pegawai->tmt_pns?->toDateString(),
+        'tanggal_masuk' => $pegawai->tanggal_masuk?->toDateString(),
+        'tanggal_pensiun_bup' => $pegawai->tanggal_pensiun_bup?->toDateString(),
         'nama_lengkap' => 'Nama Pegawai Diperbarui',
-        'ref_pangkat_id' => $references['pangkat']->id,
-        'ref_jabatan_id' => $references['jabatan']->id,
-        'ref_unit_kerja_id' => $references['unitKerja']->id,
     ]);
 
     actingAs($user);
@@ -293,6 +294,33 @@ test('operators submitting pegawai update creates pending request instead of dir
         'domain' => 'profil_pribadi',
         'status' => 'pending',
     ]);
+});
+
+test('operator ditolak secara eksplisit saat mencoba mengubah field non-profil atau password', function () {
+    $user = Pegawai::factory()->operator()->create();
+    $references = createPegawaiReferences();
+    $pegawai = Pegawai::factory()->create([
+        'status_pegawai' => 'aktif',
+        'ref_pangkat_id' => $references['pangkat']->id,
+        'ref_jabatan_id' => $references['jabatan']->id,
+        'ref_unit_kerja_id' => $references['unitKerja']->id,
+    ]);
+    $payload = array_merge($pegawai->toArray(), [
+        'tanggal_lahir' => $pegawai->tanggal_lahir?->toDateString(),
+        'tmt_cpns' => $pegawai->tmt_cpns?->toDateString(),
+        'tmt_pns' => $pegawai->tmt_pns?->toDateString(),
+        'tanggal_masuk' => $pegawai->tanggal_masuk?->toDateString(),
+        'tanggal_pensiun_bup' => $pegawai->tanggal_pensiun_bup?->toDateString(),
+        'status_pegawai' => 'pensiun',
+    ]);
+
+    actingAs($user);
+
+    from(route('kepegawaian.pegawai.edit', $pegawai))
+        ->put(route('kepegawaian.pegawai.update', $pegawai), $payload)
+        ->assertSessionHasErrors(['status_pegawai']);
+
+    expect($pegawai->refresh()->status_pegawai->value)->toBe('aktif');
 });
 
 test('operators can soft delete a pegawai', function () {

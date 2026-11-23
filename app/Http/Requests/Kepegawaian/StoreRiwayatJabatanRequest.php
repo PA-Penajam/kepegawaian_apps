@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Kepegawaian;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRiwayatJabatanRequest extends FormRequest
 {
@@ -14,8 +15,8 @@ class StoreRiwayatJabatanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ref_jabatan_id' => ['nullable', 'ulid', 'exists:ref_jabatan,id'],
-            'ref_unit_kerja_id' => ['nullable', 'ulid', 'exists:ref_unit_kerja,id'],
+            'ref_jabatan_id' => ['nullable', 'ulid', Rule::exists('ref_jabatan', 'id')->whereNull('deleted_at')],
+            'ref_unit_kerja_id' => ['nullable', 'ulid', Rule::exists('ref_unit_kerja', 'id')->whereNull('deleted_at')],
             'no_sk' => ['required', 'string', 'max:255'],
             'tanggal_sk' => ['required', 'date'],
             'tmt' => ['required', 'date'],

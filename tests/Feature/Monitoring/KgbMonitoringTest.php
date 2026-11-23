@@ -96,7 +96,7 @@ test('service melewati pegawai tanpa riwayat pangkat aktif dan status pegawai ya
 test('controller index menampilkan inertia monitoring kgb', function () {
     Carbon::setTestNow('2026-01-01');
 
-    $user = Pegawai::factory()->operator()->create();
+    $user = Pegawai::factory()->admin()->create();
     createPegawaiWithAktifPangkat('2026-01-31', [
         'nama_lengkap' => 'Operator Monitor',
     ]);
@@ -123,7 +123,7 @@ test('controller index menampilkan inertia monitoring kgb', function () {
 test('controller mengembalikan data pegawai dalam format paginasi', function () {
     Carbon::setTestNow('2026-01-01');
 
-    $user = Pegawai::factory()->operator()->create();
+    $user = Pegawai::factory()->admin()->create();
 
     // Buat 20 pegawai dengan KGB segera agar melebihi default per_page 15
     foreach (range(1, 20) as $i) {
@@ -289,4 +289,14 @@ test('controller kgb meneruskan filter ke service dan kembali ke view', function
                 ->etc()
             )
         );
+});
+
+test('operator dan viewer tanpa izin monitoring.view ditolak 403 pada monitoring kgb', function () {
+    $operator = Pegawai::factory()->operator()->create();
+    $viewer = Pegawai::factory()->create();
+
+    actingAs($operator)->get(route('monitoring.kgb.index'))->assertForbidden();
+    actingAs($operator)->get(route('monitoring.kgb.export'))->assertForbidden();
+    actingAs($viewer)->get(route('monitoring.kgb.index'))->assertForbidden();
+    actingAs($viewer)->get(route('monitoring.kgb.export'))->assertForbidden();
 });

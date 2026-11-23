@@ -36,7 +36,7 @@ function makeKgbPegawai(string $nextKgbDate, array $pegawai = []): Pegawai
 }
 
 it('menampilkan empty state inertia ketika tidak ada data monitoring kgb', function (): void {
-    $user = Pegawai::factory()->operator()->create();
+    $user = Pegawai::factory()->admin()->create();
 
     actingAs($user)
         ->get(route('monitoring.kgb.index'))
@@ -68,7 +68,7 @@ it('melempar exception ketika status kgb dihitung untuk pegawai tanpa riwayat ak
 });
 
 it('mempertahankan total data dan halaman kedua untuk dataset besar', function (): void {
-    $user = Pegawai::factory()->operator()->create();
+    $user = Pegawai::factory()->admin()->create();
 
     foreach (range(1, 31) as $index) {
         makeKgbPegawai('2026-05-01', ['nama_lengkap' => "Pegawai KGB {$index}"]);

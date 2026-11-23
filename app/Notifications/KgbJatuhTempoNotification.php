@@ -19,7 +19,28 @@ class KgbJatuhTempoNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database', 'mail'];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        $tanggal = $this->kgbDate->translatedFormat('d F Y');
+
+        return [
+            'title' => $this->sisaHari <= 0
+                ? "KGB Sudah Jatuh Tempo — {$tanggal}"
+                : "Pengingat KGB Mendekati Jatuh Tempo — {$tanggal}",
+            'body' => $this->sisaHari <= 0
+                ? "Kenaikan Gaji Berkala (KGB) Anda telah jatuh tempo pada {$tanggal}."
+                : "Kenaikan Gaji Berkala (KGB) Anda akan jatuh tempo pada {$tanggal} ({$this->sisaHari} hari lagi).",
+            'link' => '/self-service',
+            'kgb_date' => $this->kgbDate->toDateString(),
+            'sisa_hari' => $this->sisaHari,
+            'status' => $this->status,
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage

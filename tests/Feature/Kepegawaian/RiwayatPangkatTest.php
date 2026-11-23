@@ -10,7 +10,9 @@ use function Pest\Laravel\actingAs;
 use function Pest\Laravel\delete;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
+use function Pest\Laravel\postJson;
 use function Pest\Laravel\put;
+use function Pest\Laravel\putJson;
 
 function riwayatPangkatIndexUrl(Pegawai $pegawai): string
 {
@@ -259,4 +261,25 @@ test('viewer role is forbidden from riwayat pangkat page', function () {
 
     get(riwayatPangkatIndexUrl($pegawai))
         ->assertForbidden();
+});
+
+test('store and update riwayat pangkat reject array ref_pangkat_id with 422', function () {
+    $user = Pegawai::factory()->operator()->create();
+    $pegawai = Pegawai::factory()->create();
+    $pangkat = RefPangkat::factory()->create();
+    $riwayatId = insertRiwayatPangkat($pegawai, $pangkat);
+
+    actingAs($user);
+
+    postJson(riwayatPangkatIndexUrl($pegawai), makeRiwayatPangkatPayload($pangkat, [
+        'ref_pangkat_id' => [$pangkat->id],
+    ]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('ref_pangkat_id');
+
+    putJson(riwayatPangkatItemUrl($pegawai, $riwayatId), makeRiwayatPangkatPayload($pangkat, [
+        'ref_pangkat_id' => [$pangkat->id],
+    ]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('ref_pangkat_id');
 });

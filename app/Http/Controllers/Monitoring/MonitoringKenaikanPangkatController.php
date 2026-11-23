@@ -19,12 +19,13 @@ class MonitoringKenaikanPangkatController extends Controller
 
     public function index(Request $request): Response
     {
-        22 | $periodeBulan = $request->integer('bulan') ?: ($request->integer('periode_bulan') ?: null);
-        23 | $periodeTahun = $request->integer('tahun') ?: ($request->integer('periode_tahun') ?: null);
+        $periodeBulan = $request->integer('bulan') ?: ($request->integer('periode_bulan') ?: null);
         $periodeTahun = $request->integer('tahun') ?: ($request->integer('periode_tahun') ?: now()->year);
-        24 | $perPage = $request->input('per_page', 15);
-        $unitKerja = $request->string('unit_kerja')->value() ?: null;
-        $golongan = $request->string('golongan')->value() ?: null;
+        $perPage = max(1, min(100, $request->integer('per_page', 15)));
+        $rawUnitKerja = $request->input('unit_kerja');
+        $unitKerja = is_string($rawUnitKerja) && trim($rawUnitKerja) !== '' ? trim($rawUnitKerja) : null;
+        $rawGolongan = $request->input('golongan');
+        $golongan = is_string($rawGolongan) && trim($rawGolongan) !== '' ? trim($rawGolongan) : null;
         $list = $this->service->getUpcomingKenaikanPangkat($periodeBulan, $perPage, $unitKerja, $golongan, $periodeTahun);
         $stats = $this->service->getKpStats($periodeBulan, $periodeTahun, $unitKerja, $golongan);
 
@@ -61,9 +62,11 @@ class MonitoringKenaikanPangkatController extends Controller
     public function export(Request $request): BinaryFileResponse
     {
         $periodeBulan = $request->integer('bulan') ?: ($request->integer('periode_bulan') ?: null);
-        $periodeTahun = $request->integer('tahun') ?: ($request->integer('periode_tahun') ?: null);
-        $unitKerja = $request->string('unit_kerja')->value() ?: null;
-        $golongan = $request->string('golongan')->value() ?: null;
+        $periodeTahun = $request->integer('tahun') ?: ($request->integer('periode_tahun') ?: now()->year);
+        $rawUnitKerja = $request->input('unit_kerja');
+        $unitKerja = is_string($rawUnitKerja) && trim($rawUnitKerja) !== '' ? trim($rawUnitKerja) : null;
+        $rawGolongan = $request->input('golongan');
+        $golongan = is_string($rawGolongan) && trim($rawGolongan) !== '' ? trim($rawGolongan) : null;
 
         return Excel::download(
             new KenaikanPangkatMonitoringExport($periodeBulan, $periodeTahun, $unitKerja, $golongan),

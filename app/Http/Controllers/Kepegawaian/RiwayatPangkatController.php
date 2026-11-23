@@ -125,7 +125,7 @@ class RiwayatPangkatController extends Controller
         abort_unless($riwayatPangkat->pegawai_id === $pegawai->id, 404);
 
         try {
-            $riwayatPangkat->delete();
+            $this->riwayatPangkatService->delete($riwayatPangkat, $pegawai);
 
             return to_route('kepegawaian.pegawai.riwayat-pangkat.index', $pegawai)
                 ->with('success', 'Riwayat pangkat berhasil dihapus.');

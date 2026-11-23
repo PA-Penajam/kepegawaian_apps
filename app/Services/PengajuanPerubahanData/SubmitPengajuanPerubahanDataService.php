@@ -79,7 +79,6 @@ class SubmitPengajuanPerubahanDataService
 
             return array_filter([
                 'nama_lengkap' => $targetPegawai->nama_lengkap,
-                'nik' => $targetPegawai->nik ?? null,
                 'tempat_lahir' => $targetPegawai->tempat_lahir ?? null,
                 'tanggal_lahir' => $targetPegawai->tanggal_lahir?->toDateString() ?? null,
                 'status_perkawinan' => $targetPegawai->status_perkawinan?->value ?? $targetPegawai->getRawOriginal('status_perkawinan'),

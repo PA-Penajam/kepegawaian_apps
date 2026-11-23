@@ -4,6 +4,7 @@ namespace App\Console\Commands\Pegawai;
 
 use App\Imports\PegawaiImport;
 use Illuminate\Console\Command;
+use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ImportPegawaiCommand extends Command
@@ -14,7 +15,7 @@ class ImportPegawaiCommand extends Command
 
     public function handle(): int
     {
-        $filePath = $this->argument('file');
+        $filePath = (string) $this->argument('file');
 
         if (! file_exists($filePath)) {
             $this->error("File tidak ditemukan: {$filePath}");
@@ -22,10 +23,23 @@ class ImportPegawaiCommand extends Command
             return self::FAILURE;
         }
 
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $readerType = match ($extension) {
+            'xlsx' => ExcelFormat::XLSX,
+            'csv' => ExcelFormat::CSV,
+            default => null,
+        };
+
+        if ($readerType === null) {
+            $this->error("Format file impor '.{$extension}' tidak didukung. Gunakan file berformat .xlsx atau .csv.");
+
+            return self::FAILURE;
+        }
+
         $this->info("Memulai import data pegawai dari: {$filePath}...");
 
         $import = new PegawaiImport;
-        Excel::import($import, $filePath);
+        Excel::import($import, $filePath, null, $readerType);
 
         $this->newLine();
         $this->info('✅ Proses import selesai.');

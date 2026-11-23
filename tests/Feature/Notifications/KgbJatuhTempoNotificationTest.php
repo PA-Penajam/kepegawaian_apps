@@ -33,7 +33,7 @@ test('notification contains correct subject for jatuh tempo kgb', function () {
 
     $mailData = $notification->toMail(createPegawaiWithKgb('2026-01-15'));
 
-    expect($mailData->subject)->toBe('KGB Sudah Jatuh Tempo — 15 January 2026');
+    expect($mailData->subject)->toBe('KGB Sudah Jatuh Tempo — 15 Januari 2026');
 
     Carbon::setTestNow();
 });
@@ -50,7 +50,7 @@ test('notification contains correct subject for mendekati kgb', function () {
 
     $mailData = $notification->toMail(createPegawaiWithKgb('2026-03-15'));
 
-    expect($mailData->subject)->toBe('Pengingat KGB Mendekati Jatuh Tempo — 15 March 2026');
+    expect($mailData->subject)->toBe('Pengingat KGB Mendekati Jatuh Tempo — 15 Maret 2026');
 
     Carbon::setTestNow();
 });
@@ -80,5 +80,27 @@ test('command runs successfully without errors', function () {
 test('command shows correct count when no notifications sent', function () {
     $this->artisan('kgb:notify')
         ->expectsOutput('Notifikasi KGB terkirim ke 0 pegawai.')
+        ->assertSuccessful();
+});
+
+test('command melakukan deduplikasi notifikasi untuk tanggal kgb yang sama', function () {
+    Carbon::setTestNow('2026-01-01');
+
+    createPegawaiWithKgb('2026-01-20');
+
+    $this->artisan('kgb:notify')
+        ->expectsOutput('Notifikasi KGB terkirim ke 1 pegawai.')
+        ->assertSuccessful();
+
+    $this->artisan('kgb:notify')
+        ->expectsOutput('Notifikasi KGB terkirim ke 0 pegawai.')
+        ->assertSuccessful();
+
+    Carbon::setTestNow();
+});
+
+test('jadwal kgb notify terdaftar di console schedule', function () {
+    $this->artisan('schedule:list')
+        ->expectsOutputToContain('kgb:notify')
         ->assertSuccessful();
 });

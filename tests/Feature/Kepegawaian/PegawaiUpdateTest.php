@@ -137,9 +137,10 @@ it('operator update biodata menjadi pending request alih-alih update langsung', 
     ]);
 });
 
-it('dapat memperbarui password pegawai secara eksplisit dan menyimpannya dalam bentuk hash', function () {
+it('mengabaikan payload password pada mode sso-only saat admin memperbarui pegawai', function () {
+    $originalPassword = $this->pegawai->password;
     $data = $this->pegawai->toArray();
-    $data['nama_lengkap'] = 'Nama Dengan Sandi Baru';
+    $data['nama_lengkap'] = 'Nama Diperbarui Tanpa Ubah Sandi';
     $data['password'] = 'SandiBaru123!';
     $data['password_confirmation'] = 'SandiBaru123!';
 
@@ -150,8 +151,9 @@ it('dapat memperbarui password pegawai secara eksplisit dan menyimpannya dalam b
 
     $updated = $this->pegawai->refresh();
 
-    expect($updated->nama_lengkap)->toBe('Nama Dengan Sandi Baru')
-        ->and(Hash::check('SandiBaru123!', (string) $updated->password))->toBeTrue();
+    expect($updated->nama_lengkap)->toBe('Nama Diperbarui Tanpa Ubah Sandi')
+        ->and($updated->password)->toBe($originalPassword)
+        ->and(Hash::check('SandiBaru123!', (string) $updated->password))->toBeFalse();
 });
 
 it('mengabaikan percobaan mass assignment pada atribut password', function () {
@@ -163,4 +165,29 @@ it('mengabaikan percobaan mass assignment pada atribut password', function () {
 
     expect($this->pegawai->password)->toBe($originalPassword)
         ->and(Hash::check('SandiInjeksi123!', (string) $this->pegawai->password))->toBeFalse();
+});
+
+it('mencabut seluruh token Sanctum milik pegawai saat status dinonaktifkan atau dihapus', function () {
+    $pegawai = Pegawai::factory()->create(['status_pegawai' => StatusPegawai::Aktif->value]);
+    $pegawai->createToken('sso:attendance', ['app:attendance']);
+    expect($pegawai->tokens()->count())->toBe(1);
+
+    $data = $pegawai->toArray();
+    $data['status_pegawai'] = StatusPegawai::Pensiun->value;
+
+    $this->actingAs($this->user)
+        ->put(route('kepegawaian.pegawai.update', $pegawai), $data)
+        ->assertRedirect(route('kepegawaian.pegawai.show', $pegawai));
+
+    expect($pegawai->tokens()->count())->toBe(0);
+
+    $pegawaiKedua = Pegawai::factory()->create(['status_pegawai' => StatusPegawai::Aktif->value]);
+    $pegawaiKedua->createToken('sso:attendance', ['app:attendance']);
+    expect($pegawaiKedua->tokens()->count())->toBe(1);
+
+    $this->actingAs($this->user)
+        ->delete(route('kepegawaian.pegawai.destroy', $pegawaiKedua))
+        ->assertRedirect(route('kepegawaian.pegawai.index'));
+
+    expect($pegawaiKedua->tokens()->count())->toBe(0);
 });

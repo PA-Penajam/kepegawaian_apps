@@ -31,7 +31,7 @@ class PegawaiApiResource extends JsonResource
             'jabatan' => $this->jabatan?->nama ?? null,
             'unit_kerja' => $this->unitKerja?->nama ?? null,
             'status_pegawai' => $this->status_pegawai?->value ?? null,
-            'foto_url' => $this->foto ? asset('storage/'.$this->foto) : null,
+            'foto_url' => $this->foto_url,
             'pangkat_nama' => $this->pangkat?->nama ?? null,
             'pangkat_kode' => $this->pangkat?->kode ?? null,
             'pangkat_golongan' => $this->pangkat

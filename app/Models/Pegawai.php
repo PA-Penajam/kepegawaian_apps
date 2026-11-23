@@ -20,14 +20,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
-use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class Pegawai extends Authenticatable
 {
-    use Filterable, HasActivityLogOptions, HasApiTokens, HasFactory, HasUlids, LogsActivity, Notifiable, SoftDeletes, TwoFactorAuthenticatable {
+    use Filterable, HasActivityLogOptions, HasApiTokens, HasFactory, HasUlids, LogsActivity, Notifiable, SoftDeletes {
         HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
     }
 
@@ -42,7 +40,7 @@ class Pegawai extends Authenticatable
         'tmt_cpns', 'tmt_pns', 'pendidikan_terakhir', 'tanggal_masuk',
         'tanggal_pensiun_bup', 'ref_pangkat_id', 'ref_jabatan_id', 'ref_unit_kerja_id',
         'no_karpeg', 'no_karis_karsu', 'npwp', 'no_bpjs_kesehatan',
-        'no_bpjs_ketenagakerjaan', 'no_taspen', 'foto', 'keterangan',
+        'no_bpjs_ketenagakerjaan', 'no_taspen', 'keterangan',
     ];
 
     // Field sensitif (password) sengaja TIDAK mass-assignable.
@@ -113,17 +111,17 @@ class Pegawai extends Authenticatable
 
     public function riwayatDiklat(): HasMany
     {
-        return $this->hasMany('App\\Models\\RiwayatDiklat', 'pegawai_id');
+        return $this->hasMany(RiwayatDiklat::class, 'pegawai_id');
     }
 
     public function riwayatPendidikan(): HasMany
     {
-        return $this->hasMany('App\\Models\\RiwayatPendidikan', 'pegawai_id');
+        return $this->hasMany(RiwayatPendidikan::class, 'pegawai_id');
     }
 
     public function riwayatPangkat(): HasMany
     {
-        return $this->hasMany('App\\Models\\RiwayatPangkat', 'pegawai_id');
+        return $this->hasMany(RiwayatPangkat::class, 'pegawai_id');
     }
 
     public function dokumenPegawai(): HasMany
@@ -153,7 +151,9 @@ class Pegawai extends Authenticatable
     private function loadPermissions(): array
     {
         if ($this->cachedPermissions === null) {
+            $appSlug = (string) config('iam.app_slug', 'kepegawaian');
             $this->cachedPermissions = $this->iamRoles()
+                ->whereHas('application', fn (Builder $query): Builder => $query->where('slug', $appSlug))
                 ->with('permissions')
                 ->get()
                 ->flatMap(fn ($role) => $role->permissions->pluck('slug'))
@@ -217,10 +217,12 @@ class Pegawai extends Authenticatable
      */
     private function hasKepegawaianRole(string $slug): bool
     {
+        $appSlug = (string) config('iam.app_slug', 'kepegawaian');
+
         return $this->iamRoles()
             ->where('iam_roles.slug', $slug)
-            ->whereHas('application', function (Builder $query): void {
-                $query->where('slug', 'kepegawaian');
+            ->whereHas('application', function (Builder $query) use ($appSlug): void {
+                $query->where('slug', $appSlug);
             })
             ->exists();
     }
@@ -258,8 +260,8 @@ class Pegawai extends Authenticatable
     protected function fotoUrl(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->foto !== null
-                ? Storage::disk('public')->url($this->foto)
+            get: fn () => ($this->exists && filled($this->foto))
+                ? route('kepegawaian.pegawai.foto.show', $this)
                 : null,
         );
     }

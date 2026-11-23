@@ -19,10 +19,10 @@ class DokumenPegawai extends Model
 
     protected $fillable = [
         'pegawai_id',
+        'ref_jenis_dokumen_id',
         'jenis_dokumen',
         'nomor_dokumen',
         'tanggal_dokumen',
-        'file_path',
         'keterangan',
     ];
 
@@ -37,5 +37,10 @@ class DokumenPegawai extends Model
     public function pegawai(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class);
+    }
+
+    public function jenisDokumen(): BelongsTo
+    {
+        return $this->belongsTo(RefJenisDokumen::class, 'ref_jenis_dokumen_id');
     }
 }

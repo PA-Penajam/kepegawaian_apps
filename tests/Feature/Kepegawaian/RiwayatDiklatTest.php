@@ -10,7 +10,9 @@ use function Pest\Laravel\delete;
 use function Pest\Laravel\from;
 use function Pest\Laravel\get;
 use function Pest\Laravel\patch;
+use function Pest\Laravel\patchJson;
 use function Pest\Laravel\post;
+use function Pest\Laravel\postJson;
 
 function riwayatDiklatIndexUrl(Pegawai $pegawai): string
 {
@@ -164,4 +166,28 @@ test('pegawai has many riwayat diklat records', function () {
     ]);
 
     expect($pegawai->riwayatDiklat)->toHaveCount(2);
+});
+
+test('store and update riwayat diklat reject array ref_jenis_diklat_id with 422', function () {
+    $pegawai = Pegawai::factory()->create();
+    $user = Pegawai::factory()->operator()->create();
+    $jenisDiklat = RefJenisDiklat::factory()->create();
+    $riwayatDiklat = RiwayatDiklat::factory()->create([
+        'pegawai_id' => $pegawai->id,
+        'ref_jenis_diklat_id' => $jenisDiklat->id,
+    ]);
+
+    actingAs($user);
+
+    postJson(riwayatDiklatIndexUrl($pegawai), makeRiwayatDiklatPayload([
+        'ref_jenis_diklat_id' => [$jenisDiklat->id],
+    ]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('ref_jenis_diklat_id');
+
+    patchJson(riwayatDiklatItemUrl($pegawai, $riwayatDiklat), makeRiwayatDiklatPayload([
+        'ref_jenis_diklat_id' => [$jenisDiklat->id],
+    ]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('ref_jenis_diklat_id');
 });

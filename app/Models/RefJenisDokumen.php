@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\RefJenisDokumenFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RefJenisDokumen extends Model
@@ -24,5 +25,10 @@ class RefJenisDokumen extends Model
         return [
             'deleted_at' => 'datetime',
         ];
+    }
+
+    public function dokumenPegawai(): HasMany
+    {
+        return $this->hasMany(DokumenPegawai::class, 'ref_jenis_dokumen_id');
     }
 }

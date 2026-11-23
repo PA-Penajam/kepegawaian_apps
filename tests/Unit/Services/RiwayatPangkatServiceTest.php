@@ -93,3 +93,30 @@ it('update menyimpan data aktif lalu sinkronisasi status riwayat', function () {
         ->and($oldActive->refresh()->is_aktif)->toBeFalse()
         ->and($pegawai->refresh()->ref_pangkat_id)->toBe($secondPangkat->id);
 });
+
+it('delete riwayat pangkat aktif meresync ref_pangkat_id ke null jika tidak ada riwayat aktif tersisa', function () {
+    $service = new RiwayatPangkatService;
+    $pangkatLama = RefPangkat::factory()->create();
+    $pangkatAktif = RefPangkat::factory()->create();
+    $pegawai = Pegawai::factory()->create([
+        'ref_pangkat_id' => $pangkatAktif->id,
+    ]);
+
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawai->id,
+        'ref_pangkat_id' => $pangkatLama->id,
+        'is_aktif' => false,
+    ]);
+
+    $aktif = RiwayatPangkat::factory()->create([
+        'pegawai_id' => $pegawai->id,
+        'ref_pangkat_id' => $pangkatAktif->id,
+        'is_aktif' => true,
+    ]);
+
+    $service->delete($aktif, $pegawai);
+
+    expect($pegawai->refresh()->ref_pangkat_id)->toBeNull()
+        ->and(RiwayatPangkat::withTrashed()->find($aktif->id)?->is_aktif)->toBeFalse()
+        ->and(RiwayatPangkat::withTrashed()->find($aktif->id)?->trashed())->toBeTrue();
+});

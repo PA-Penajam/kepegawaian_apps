@@ -12,11 +12,14 @@ use function Pest\Laravel\get;
 
 function signInAsPegawaiAdmin(): Pegawai
 {
-    // Admin diberi nama "Zzzz Admin" agar selalu muncul di akhir saat sort asc,
-    // dan status Pensiun agar tidak mengganggu filter status Aktif
+    // Admin harus berstatus Aktif agar lolos middleware EnsurePegawaiIsActive (F-27);
+    // relasi referensi dikosongkan agar tidak mengganggu filter golongan/jabatan/unit kerja.
     $admin = Pegawai::factory()->admin()->create([
         'nama_lengkap' => 'Zzzz Admin Test',
-        'status_pegawai' => StatusPegawai::Pensiun->value,
+        'status_pegawai' => StatusPegawai::Aktif->value,
+        'ref_pangkat_id' => null,
+        'ref_jabatan_id' => null,
+        'ref_unit_kerja_id' => null,
     ]);
     actingAs($admin);
 
@@ -160,7 +163,7 @@ test('filter by status pegawai returns only matching records', function () {
         'nama_lengkap' => 'Pegawai Aktif',
         'status_pegawai' => StatusPegawai::Aktif->value,
     ]);
-    createPegawaiListEntry($references, [
+    $pensiun = createPegawaiListEntry($references, [
         'nama_lengkap' => 'Pegawai Pensiun',
         'status_pegawai' => StatusPegawai::Pensiun->value,
     ]);
@@ -169,9 +172,10 @@ test('filter by status pegawai returns only matching records', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('filters.status_pegawai', StatusPegawai::Aktif->value)
-            ->where('pegawai.total', 1)
-            ->has('pegawai.data', 1)
-            ->where('pegawai.data.0.id', $target->id));
+            ->where('pegawai.total', 2)
+            ->has('pegawai.data', 2)
+            ->where('pegawai.data', fn ($rows): bool => collect($rows)->contains('id', $target->id)
+                && ! collect($rows)->contains('id', $pensiun->id)));
 });
 
 test('sort by nama ascending returns alphabetical order', function () {

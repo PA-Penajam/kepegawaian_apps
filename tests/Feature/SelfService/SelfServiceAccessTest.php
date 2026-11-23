@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\DokumenPegawai;
 use App\Models\Pegawai;
+use App\Models\RefJenisDokumen;
 use App\Models\RiwayatPangkat;
 use Carbon\Carbon;
 use Database\Seeders\RefJabatanSeeder;
@@ -60,6 +62,44 @@ it('linked_user_can_access_self_service_detail', function (): void {
         );
 });
 
+it('self_service_detail_serializes_jenis_dokumen_as_string_when_relation_loaded', function (): void {
+    $pegawai = Pegawai::factory()->viewer()->create();
+    $refJenisDokumen = RefJenisDokumen::factory()->create([
+        'nama' => 'SK CPNS',
+    ]);
+
+    DokumenPegawai::factory()->create([
+        'pegawai_id' => $pegawai->id,
+        'ref_jenis_dokumen_id' => $refJenisDokumen->id,
+        'jenis_dokumen' => 'SK_CPNS',
+        'nomor_dokumen' => 'DOC-001',
+    ]);
+
+    DokumenPegawai::factory()->create([
+        'pegawai_id' => $pegawai->id,
+        'ref_jenis_dokumen_id' => null,
+        'jenis_dokumen' => 'KTP',
+        'nomor_dokumen' => 'DOC-002',
+    ]);
+
+    actingAs($pegawai)
+        ->get(route('self-service.detail'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('self-service/detail')
+            ->where('pegawai.id', $pegawai->id)
+            ->has('pegawai.dokumen_pegawai', 2)
+            ->where('pegawai.dokumen_pegawai.0.jenis_dokumen', fn ($value) => is_string($value))
+            ->where('pegawai.dokumen_pegawai.1.jenis_dokumen', fn ($value) => is_string($value))
+            ->where('pegawai.dokumen_pegawai', function ($items): bool {
+                $values = collect($items)->pluck('jenis_dokumen')->all();
+
+                return in_array('SK CPNS', $values, true)
+                    && in_array('KTP', $values, true);
+            }),
+        );
+});
+
 it('viewer_cannot_access_kepegawaian_routes', function (): void {
     $pegawai = Pegawai::factory()->viewer()->create();
 
@@ -90,5 +130,46 @@ it('self_service_shows_own_pegawai_data_not_others', function (): void {
             ->component('self-service/index')
             ->where('pegawai.id', $myPegawai->id)
             ->where('pegawai.nama_lengkap', 'Pegawai Saya')
+        );
+});
+
+it('self_service_index_returns_kgb_and_kp_for_more_than_15_employees_and_handles_missing_riwayat', function (): void {
+    Carbon::setTestNow('2026-01-01');
+
+    foreach (range(1, 18) as $index) {
+        $other = Pegawai::factory()->viewer()->create(['nama_lengkap' => "ASN Urut {$index}"]);
+        RiwayatPangkat::factory()->create([
+            'pegawai_id' => $other->id,
+            'ref_pangkat_id' => $other->ref_pangkat_id,
+            'tmt' => '2024-01-15',
+            'is_aktif' => true,
+        ]);
+    }
+
+    $target = Pegawai::factory()->viewer()->create(['nama_lengkap' => 'Zebra Pegawai Ke-19']);
+    RiwayatPangkat::factory()->create([
+        'pegawai_id' => $target->id,
+        'ref_pangkat_id' => $target->ref_pangkat_id,
+        'tmt' => '2023-06-01',
+        'is_aktif' => true,
+    ]);
+
+    actingAs($target)
+        ->get(route('self-service.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('self-service/index')
+            ->where('kgbInfo.tanggal_kgb_berikutnya', '2025-06-01')
+            ->where('kpInfo.tmt_kp_berikutnya', '2027-06-01'),
+        );
+
+    $tanpaRiwayat = Pegawai::factory()->viewer()->create();
+    actingAs($tanpaRiwayat)
+        ->get(route('self-service.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('self-service/index')
+            ->where('kgbInfo', null)
+            ->where('kpInfo', null),
         );
 });

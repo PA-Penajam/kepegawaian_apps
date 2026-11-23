@@ -107,14 +107,14 @@ class RiwayatJabatanController extends Controller
         }
     }
 
-    public function destroy(Pegawai $pegawai, RiwayatJabatan $riwayatJabatan): RedirectResponse
+    public function destroy(Pegawai $pegawai, RiwayatJabatan $riwayatJabatan, RiwayatJabatanService $service): RedirectResponse
     {
         Gate::authorize('update', $pegawai);
 
         abort_unless($riwayatJabatan->pegawai_id === $pegawai->id, 404);
 
         try {
-            $riwayatJabatan->delete();
+            $service->delete($riwayatJabatan, $pegawai);
 
             return to_route('kepegawaian.pegawai.riwayat-jabatan.index', $pegawai)
                 ->with('success', 'Riwayat jabatan berhasil dihapus.');

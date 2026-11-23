@@ -18,19 +18,45 @@ use App\Models\RefJabatan;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
 use App\Services\PengajuanPerubahanData\SubmitPengajuanPerubahanDataService;
+use BackedEnum;
+use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PegawaiController extends Controller
 {
+    /** @var array<int, string> */
+    private const OPERATOR_PROFILE_FIELDS = [
+        'nama_lengkap',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'status_perkawinan',
+        'alamat',
+        'no_telepon',
+        'email',
+    ];
+
+    /** @var array<int, string> */
+    private const DATE_FIELDS = [
+        'tanggal_lahir',
+        'tmt_cpns',
+        'tmt_pns',
+        'tanggal_masuk',
+        'tanggal_pensiun_bup',
+    ];
+
     public function __construct(
         private SubmitPengajuanPerubahanDataService $submitPengajuanPerubahanData
     ) {}
@@ -42,32 +68,50 @@ class PegawaiController extends Controller
     {
         Gate::authorize('viewAny', Pegawai::class);
 
-        $sortBy = match ($request->input('sort_by')) {
+        $rawSortBy = $request->input('sort_by');
+        $sortByInput = is_string($rawSortBy) ? $rawSortBy : null;
+        $sortBy = match ($sortByInput) {
             'nama' => 'nama_lengkap',
             'nip' => 'nip',
             default => null,
         };
 
-        $sortDirection = strtolower((string) $request->input('sort_dir', 'asc')) === 'desc'
+        $rawSortDir = $request->input('sort_dir');
+        $sortDirection = is_string($rawSortDir) && strtolower($rawSortDir) === 'desc'
             ? 'desc'
             : 'asc';
 
+        $rawSearch = $request->input('search');
+        $search = is_string($rawSearch) ? $rawSearch : null;
+
+        $rawUnitKerja = $request->input('unit_kerja');
+        $unitKerja = is_string($rawUnitKerja) && $rawUnitKerja !== '' ? $rawUnitKerja : null;
+
+        $rawStatusPegawai = $request->input('status_pegawai');
+        $statusPegawai = is_string($rawStatusPegawai) && $rawStatusPegawai !== '' ? $rawStatusPegawai : null;
+
+        $rawJabatan = $request->input('jabatan');
+        $jabatan = is_string($rawJabatan) && $rawJabatan !== '' ? $rawJabatan : null;
+
+        $rawGolongan = $request->input('golongan');
+        $golongan = is_string($rawGolongan) && $rawGolongan !== '' ? $rawGolongan : null;
+
         $pegawai = Pegawai::query()
             ->with(['pangkat', 'jabatan', 'unitKerja'])
-            ->search($request->input('search'), ['nip', 'nama_lengkap'])
+            ->search($search, ['nip', 'nama_lengkap'])
             ->filter([
-                'ref_unit_kerja_id' => $request->input('unit_kerja'),
-                'status_pegawai' => $request->input('status_pegawai'),
+                'ref_unit_kerja_id' => $unitKerja,
+                'status_pegawai' => $statusPegawai,
             ])
-            ->when($request->filled('jabatan'), function ($query) use ($request): void {
-                $query->where('ref_jabatan_id', $request->input('jabatan'));
+            ->when($jabatan !== null, function ($query) use ($jabatan): void {
+                $query->where('ref_jabatan_id', $jabatan);
             })
-            ->when($request->filled('golongan'), function ($query) use ($request): void {
-                $query->whereHas('pangkat', function ($pangkatQuery) use ($request): void {
-                    $pangkatQuery->where('kode', $request->input('golongan'));
+            ->when($golongan !== null, function ($query) use ($golongan): void {
+                $query->whereHas('pangkat', function ($pangkatQuery) use ($golongan): void {
+                    $pangkatQuery->where('kode', $golongan);
                 });
             })
-            ->when($request->input('sort_by') === 'pangkat', function ($query) use ($sortDirection): void {
+            ->when($sortByInput === 'pangkat', function ($query) use ($sortDirection): void {
                 $query->orderBy(
                     RefPangkat::query()
                         ->select('kode')
@@ -76,7 +120,7 @@ class PegawaiController extends Controller
                     $sortDirection,
                 );
             })
-            ->when($request->input('sort_by') === 'jabatan', function ($query) use ($sortDirection): void {
+            ->when($sortByInput === 'jabatan', function ($query) use ($sortDirection): void {
                 $query->orderBy(
                     RefJabatan::query()
                         ->select('nama')
@@ -92,13 +136,13 @@ class PegawaiController extends Controller
         return Inertia::render('kepegawaian/pegawai/index', [
             'pegawai' => $pegawai,
             'filters' => [
-                'search' => $request->input('search'),
-                'golongan' => $request->input('golongan'),
-                'jabatan' => $request->input('jabatan'),
-                'unit_kerja' => $request->input('unit_kerja'),
-                'status_pegawai' => $request->input('status_pegawai'),
-                'sort_by' => $request->input('sort_by'),
-                'sort_dir' => $request->input('sort_dir'),
+                'search' => $search,
+                'golongan' => $golongan,
+                'jabatan' => $jabatan,
+                'unit_kerja' => $unitKerja,
+                'status_pegawai' => $statusPegawai,
+                'sort_by' => $sortByInput,
+                'sort_dir' => is_string($rawSortDir) ? $rawSortDir : null,
             ],
             'refJabatan' => RefJabatan::query()
                 ->select(['id', 'nama'])
@@ -203,8 +247,11 @@ class PegawaiController extends Controller
         Gate::authorize('update', $pegawai);
 
         try {
-            // Intersepsi operator: jadikan pending request alih-alih update langsung
+            // Intersepsi operator: tolak perubahan field non-profil secara eksplisit,
+            // lalu jadikan perubahan profil sebagai pengajuan pending.
             if ($request->user()?->isOperator()) {
+                $this->ensureOperatorOnlyModifiesProfileFields($request, $pegawai);
+
                 $this->submitPengajuanPerubahanData->handle(
                     $request->user(),
                     [
@@ -215,7 +262,7 @@ class PegawaiController extends Controller
                         'subject_pegawai_id' => $pegawai->id,
                         'after_payload' => Arr::only(
                             $request->safe()->except(['password', 'password_confirmation']),
-                            ['nama_lengkap', 'tempat_lahir', 'tanggal_lahir', 'status_perkawinan', 'alamat', 'no_telepon', 'email']
+                            self::OPERATOR_PROFILE_FIELDS
                         ),
                         'lampiran' => [],
                     ],
@@ -227,18 +274,19 @@ class PegawaiController extends Controller
             }
 
             DB::transaction(function () use ($request, $pegawai): void {
+                // Mode SSO-only: abaikan field password agar kredensial lokal tidak berubah
                 $pegawai->fill($request->safe()->except(['password', 'password_confirmation']));
-
-                if ($request->filled('password')) {
-                    // password bukan fillable; set eksplisit dalam transaksi yang sama
-                    $pegawai->password = $request->validated('password');
-                }
-
                 $pegawai->save();
+
+                if ($pegawai->status_pegawai !== StatusPegawai::Aktif) {
+                    $this->invalidatePegawaiSessions($pegawai);
+                }
             });
 
             return to_route('kepegawaian.pegawai.show', $pegawai)
                 ->with('success', 'Data pegawai berhasil diperbarui.');
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             report($e);
 
@@ -254,7 +302,10 @@ class PegawaiController extends Controller
         Gate::authorize('delete', $pegawai);
 
         try {
-            $pegawai->delete();
+            DB::transaction(function () use ($pegawai): void {
+                $this->invalidatePegawaiSessions($pegawai);
+                $pegawai->delete();
+            });
 
             return to_route('kepegawaian.pegawai.index')
                 ->with('success', 'Data pegawai berhasil dihapus.');
@@ -266,27 +317,116 @@ class PegawaiController extends Controller
     }
 
     /**
+     * Tampilkan foto pegawai dari disk lokal secara terotorisasi.
+     * Pegawai yang bersangkutan diizinkan memuat fotonya sendiri pada self-service.
+     */
+    public function showFoto(Request $request, Pegawai $pegawai): StreamedResponse
+    {
+        if (! $request->user()?->is($pegawai)) {
+            Gate::authorize('view', $pegawai);
+        }
+
+        if (blank($pegawai->foto) || ! Storage::disk('local')->exists($pegawai->foto)) {
+            abort(404, 'Foto pegawai tidak ditemukan.');
+        }
+
+        return Storage::disk('local')->response($pegawai->foto);
+    }
+
+    /**
      * Update foto pegawai.
      */
     public function updateFoto(UpdateFotoPegawaiRequest $request, Pegawai $pegawai): RedirectResponse
     {
         try {
             $path = "fotos/{$pegawai->id}.webp";
+            $oldPath = $pegawai->foto;
 
             $manager = new ImageManager(new Driver);
             $image = $manager->read($request->file('foto')->getRealPath());
             $image->coverDown(400, 400, 'center');
             $encoded = $image->toWebp(quality: 80);
 
-            Storage::disk('public')->put($path, $encoded->toString());
+            Storage::disk('local')->put($path, $encoded->toString());
 
-            $pegawai->update(['foto' => $path]);
+            if (filled($oldPath) && $oldPath !== $path && Storage::disk('local')->exists($oldPath)) {
+                Storage::disk('local')->delete($oldPath);
+            }
+
+            $pegawai->forceFill(['foto' => $path])->save();
 
             return back()->with('success', 'Foto pegawai berhasil diperbarui.');
         } catch (\Exception $e) {
             report($e);
 
             return back()->with('error', 'Terjadi kesalahan saat mengunggah foto. Pastikan file gambar valid dan silakan coba lagi.');
+        }
+    }
+
+    /**
+     * Memastikan operator hanya mengubah kolom profil pribadi yang diizinkan.
+     */
+    private function ensureOperatorOnlyModifiesProfileFields(UpdatePegawaiRequest $request, Pegawai $pegawai): void
+    {
+        $errors = [];
+
+        if ($request->filled('password')) {
+            $errors['password'] = ['Operator tidak memiliki izin untuk mengubah kata sandi pegawai.'];
+        }
+
+        $validated = $request->safe()->except(['password', 'password_confirmation']);
+
+        foreach ($validated as $field => $incomingValue) {
+            if (in_array($field, self::OPERATOR_PROFILE_FIELDS, true)) {
+                continue;
+            }
+
+            $existingRaw = $pegawai->getAttribute($field);
+            $existingNorm = $this->normalizeFieldForComparison($field, $existingRaw);
+            $incomingNorm = $this->normalizeFieldForComparison($field, $incomingValue);
+
+            if ($existingNorm !== $incomingNorm) {
+                $errors[$field] = ["Operator tidak memiliki izin untuk mengubah kolom {$field} secara langsung."];
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
+
+    private function normalizeFieldForComparison(string $field, mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof BackedEnum) {
+            return (string) $value->value;
+        }
+
+        if ($value instanceof CarbonInterface) {
+            return $value->toDateString();
+        }
+
+        if (in_array($field, self::DATE_FIELDS, true)) {
+            return Carbon::parse((string) $value)->toDateString();
+        }
+
+        return (string) $value;
+    }
+
+    /**
+     * Mengosongkan remember token, mencabut token Sanctum, dan menghapus sesi database aktif milik pegawai.
+     */
+    private function invalidatePegawaiSessions(Pegawai $pegawai): void
+    {
+        $pegawai->forceFill(['remember_token' => null])->saveQuietly();
+        $pegawai->tokens()->delete();
+
+        $sessionTable = (string) config('session.table', 'sessions');
+        if (Schema::hasTable($sessionTable)) {
+            DB::table($sessionTable)->where('user_id', $pegawai->id)->delete();
         }
     }
 

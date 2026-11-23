@@ -17,15 +17,15 @@ class UpdatePegawaiRequest extends StorePegawaiRequest
             && ($this->user()?->can('update', $pegawai) ?? false);
     }
 
+    /**
+     * Aturan validasi pembaruan pegawai; mutasi password lokal diabaikan pada mode SSO-only.
+     *
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $pegawai = $this->route('pegawai');
 
-        return array_merge(
-            $this->pegawaiRules($pegawai instanceof Pegawai ? $pegawai : null),
-            [
-                'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            ],
-        );
+        return $this->pegawaiRules($pegawai instanceof Pegawai ? $pegawai : null);
     }
 }

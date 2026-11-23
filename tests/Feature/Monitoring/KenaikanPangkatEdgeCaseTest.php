@@ -39,7 +39,7 @@ function makeKpPegawai(string $tmt, array $pegawai = []): Pegawai
 }
 
 it('menampilkan empty state inertia ketika monitoring kp kosong', function (): void {
-    $user = Pegawai::factory()->operator()->create();
+    $user = Pegawai::factory()->admin()->create();
 
     actingAs($user)
         ->get(route('monitoring.kenaikan-pangkat.index'))
@@ -65,7 +65,7 @@ it('melempar exception ketika status kp dihitung untuk pegawai tanpa riwayat akt
 });
 
 it('mempertahankan metadata pagination untuk dataset kp besar', function (): void {
-    $user = Pegawai::factory()->operator()->create();
+    $user = Pegawai::factory()->admin()->create();
 
     foreach (range(1, 31) as $index) {
         makeKpPegawai('2022-04-01', ['nama_lengkap' => "Pegawai KP {$index}"]);

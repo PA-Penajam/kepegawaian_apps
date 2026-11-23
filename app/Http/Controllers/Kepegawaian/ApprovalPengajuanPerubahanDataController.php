@@ -12,6 +12,7 @@ use App\Services\PengajuanPerubahanData\PengajuanPerubahanDataDiffService;
 use App\Services\PengajuanPerubahanData\RejectPengajuanPerubahanDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,12 +28,18 @@ class ApprovalPengajuanPerubahanDataController extends Controller
                 ->where('status', StatusPengajuanPerubahanData::Pending)
                 ->latest('submitted_at')
                 ->paginate(10)
-                ->through(fn (PengajuanPerubahanData $item) => [
+                ->withQueryString()
+                ->through(fn (PengajuanPerubahanData $item): array => [
                     'id' => $item->id,
+                    'nomor_pengajuan' => $item->nomor_pengajuan,
                     'domain' => $item->domain,
                     'aksi' => $item->aksi,
+                    'status' => $item->status instanceof StatusPengajuanPerubahanData
+                        ? $item->status->value
+                        : (string) $item->status,
                     'submitted_at' => $item->submitted_at?->toDateTimeString(),
                     'pengaju' => $item->pengaju ? [
+                        'id' => $item->pengaju->id,
                         'nama_lengkap' => $item->pengaju->nama_lengkap,
                         'nip' => $item->pengaju->nip,
                     ] : null,
@@ -52,7 +59,15 @@ class ApprovalPengajuanPerubahanDataController extends Controller
 
     public function approve(ApprovePengajuanPerubahanDataRequest $request, PengajuanPerubahanData $pengajuan, ApprovePengajuanPerubahanDataService $service): RedirectResponse
     {
-        $service->handle($pengajuan, $request->user());
+        Gate::authorize('approve', $pengajuan);
+
+        try {
+            $service->handle($pengajuan, $request->user());
+        } catch (\DomainException $e) {
+            throw ValidationException::withMessages([
+                'pengajuan' => $e->getMessage(),
+            ]);
+        }
 
         return to_route('kepegawaian.pengajuan.show', $pengajuan)
             ->with('success', 'Pengajuan telah disetujui.');
@@ -60,7 +75,15 @@ class ApprovalPengajuanPerubahanDataController extends Controller
 
     public function reject(RejectPengajuanPerubahanDataRequest $request, PengajuanPerubahanData $pengajuan, RejectPengajuanPerubahanDataService $service): RedirectResponse
     {
-        $service->handle($pengajuan, $request->user(), $request->validated('alasan_penolakan'));
+        Gate::authorize('reject', $pengajuan);
+
+        try {
+            $service->handle($pengajuan, $request->user(), $request->validated('alasan_penolakan'));
+        } catch (\DomainException $e) {
+            throw ValidationException::withMessages([
+                'pengajuan' => $e->getMessage(),
+            ]);
+        }
 
         return to_route('kepegawaian.pengajuan.show', $pengajuan)
             ->with('success', 'Pengajuan telah ditolak.');

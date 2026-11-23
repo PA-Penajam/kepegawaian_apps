@@ -8,6 +8,7 @@ use App\Models\RefUnitKerja;
 use App\Models\RiwayatPangkat;
 use App\Services\KenaikanPangkatMonitoringService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -107,7 +108,7 @@ test('it filters monitoring list by monthly promotion period', function () {
 test('controller mengembalikan data kp dalam format paginasi', function () {
     Carbon::setTestNow('2026-01-01');
 
-    $user = Pegawai::factory()->operator()->create();
+    $user = Pegawai::factory()->admin()->create();
 
     // Buat 20 pegawai yang eligible KP (TMT 4+ tahun lalu)
     foreach (range(1, 20) as $i) {
@@ -377,4 +378,35 @@ test('controller kp meneruskan filter dan filterOptions ke view', function () {
                 ->etc()
             )
         );
+});
+
+test('operator dan viewer tanpa izin monitoring kp ditolak 403', function () {
+    $operator = Pegawai::factory()->operator()->create();
+    $viewer = Pegawai::factory()->create();
+
+    actingAs($operator)->get(route('monitoring.kenaikan-pangkat.index'))->assertForbidden();
+    actingAs($operator)->get(route('monitoring.kenaikan-pangkat.export'))->assertForbidden();
+    actingAs($viewer)->get(route('monitoring.kenaikan-pangkat.index'))->assertForbidden();
+    actingAs($viewer)->get(route('monitoring.kenaikan-pangkat.export'))->assertForbidden();
+});
+
+test('getAllPeriodeBulanan hanya menjalankan satu query agregat utama', function () {
+    Carbon::setTestNow('2026-01-15');
+
+    foreach (range(1, 6) as $month) {
+        createPegawaiDenganPangkatAktif(Carbon::create(2022, $month, 1)->toDateString());
+    }
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    $periods = app(KenaikanPangkatMonitoringService::class)->getAllPeriodeBulanan(2026);
+    $queries = DB::getQueryLog();
+
+    DB::disableQueryLog();
+
+    expect($periods)->toHaveCount(12)
+        ->and(count($queries))->toBe(1);
+
+    Carbon::setTestNow();
 });

@@ -2,9 +2,6 @@
 
 namespace App\Exports;
 
-use App\Enums\StatusKepegawaian;
-use App\Enums\StatusPegawai;
-use App\Models\Pegawai;
 use App\Services\KenaikanPangkatMonitoringService;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -27,50 +24,24 @@ class KenaikanPangkatMonitoringExport implements FromCollection, WithHeadings, W
     {
         $service = app(KenaikanPangkatMonitoringService::class);
 
-        $query = Pegawai::query()
-            ->select('pegawai.*')
-            ->join('riwayat_pangkat as rp_kp', function ($join) {
-                $join->on('rp_kp.pegawai_id', '=', 'pegawai.id')
-                    ->where('rp_kp.is_aktif', true);
-            })
-            ->with([
-                'riwayatPangkat' => fn ($q) => $q->aktif()->with('pangkat')->orderByDesc('tmt'),
-            ])
-            ->whereNotIn('status_pegawai', [
-                StatusPegawai::Pensiun->value,
-                StatusPegawai::Meninggal->value,
-                StatusPegawai::Diberhentikan->value,
-            ])
-            ->where('status_kepegawaian', '!=', StatusKepegawaian::PPPK->value)
-            ->whereDoesntHave('hukumanDisiplin', fn ($q) => $q->aktif())
-            ->when($this->unitKerjaId !== null, fn ($q) => $q->where('pegawai.ref_unit_kerja_id', $this->unitKerjaId))
-            ->when($this->golongan !== null, fn ($q) => $q->byGolongan($this->golongan))
-            ->orderBy('nama_lengkap');
-
-        if ($this->periodeBulan !== null || $this->periodeTahun !== null) {
-            $query->whereIn('pegawai.id', $service
-                ->getUpcomingKenaikanPangkat($this->periodeBulan, PHP_INT_MAX, $this->unitKerjaId, $this->golongan, $this->periodeTahun)
-                ->pluck('id'));
-        }
-
-        return $query->get()
-            ->filter(fn (Pegawai $p) => $p->riwayatPangkat->isNotEmpty())
-            ->map(function (Pegawai $pegawai) use ($service): array {
-                $riwayatAktif = $pegawai->riwayatPangkat->first();
-                $status = $service->getKpStatus($pegawai);
-
-                return [
-                    'nip' => $pegawai->nip ?? '-',
-                    'nama_lengkap' => $pegawai->nama_lengkap,
-                    'pangkat_saat_ini' => $riwayatAktif->pangkat?->nama ?? '-',
-                    'tmt_pangkat' => $riwayatAktif->tmt?->toDateString() ?? '-',
-                    'tmt_kp_berikutnya' => $status['tmt_kp_berikutnya']->toDateString(),
-                    'periode_usul' => $status['periode_usul'],
-                    'batas_usul' => $status['batas_usul']->toDateString(),
-                    'sisa_hari_usul' => $status['sisa_hari_usul'],
-                    'status' => $status['status'],
-                ];
-            });
+        return $service
+            ->getUpcomingKenaikanPangkatForExport(
+                $this->periodeBulan,
+                $this->unitKerjaId,
+                $this->golongan,
+                $this->periodeTahun,
+            )
+            ->map(fn (array $row): array => [
+                'nip' => $row['nip'] ?? '-',
+                'nama_lengkap' => $row['nama_lengkap'],
+                'pangkat_saat_ini' => $row['pangkat_saat_ini'] ?? '-',
+                'tmt_pangkat' => $row['tmt_pangkat'] ?? '-',
+                'tmt_kp_berikutnya' => $row['tmt_kp_berikutnya'],
+                'periode_usul' => $row['periode_usul'],
+                'batas_usul' => $row['batas_usul'],
+                'sisa_hari_usul' => $row['sisa_hari_usul'],
+                'status' => $row['status'],
+            ]);
     }
 
     public function headings(): array

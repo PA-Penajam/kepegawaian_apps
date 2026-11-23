@@ -4,6 +4,7 @@ namespace App\Http\Requests\Kepegawaian;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRiwayatDiklatRequest extends FormRequest
 {
@@ -20,7 +21,7 @@ class StoreRiwayatDiklatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ref_jenis_diklat_id' => ['nullable', 'exists:ref_jenis_diklat,id'],
+            'ref_jenis_diklat_id' => ['nullable', 'string', 'ulid', Rule::exists('ref_jenis_diklat', 'id')->whereNull('deleted_at')],
             'nama_diklat' => ['required', 'string', 'max:255'],
             'penyelenggara' => ['required', 'string', 'max:255'],
             'tempat' => ['nullable', 'string', 'max:255'],

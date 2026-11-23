@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Kepegawaian;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePenghargaanRequest extends FormRequest
 {
@@ -14,7 +15,7 @@ class UpdatePenghargaanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ref_jenis_penghargaan_id' => ['nullable', 'exists:ref_jenis_penghargaan,id'],
+            'ref_jenis_penghargaan_id' => ['nullable', 'string', 'ulid', Rule::exists('ref_jenis_penghargaan', 'id')->whereNull('deleted_at')],
             'nama_penghargaan' => ['required', 'string', 'max:255'],
             'no_sk' => ['nullable', 'string', 'max:100'],
             'tanggal_sk' => ['nullable', 'date'],

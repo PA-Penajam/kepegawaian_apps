@@ -9,7 +9,9 @@ use function Pest\Laravel\actingAs;
 use function Pest\Laravel\delete;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
+use function Pest\Laravel\postJson;
 use function Pest\Laravel\put;
+use function Pest\Laravel\putJson;
 
 function makeHukumanDisiplinPayload(?RefJenisHukumanDisiplin $jenis = null, array $overrides = []): array
 {
@@ -210,4 +212,30 @@ test('operator dapat menghapus hukuman disiplin secara soft delete', function ()
 
     expect(HukumanDisiplin::query()->find($hukumanDisiplin->id))->toBeNull();
     expect(HukumanDisiplin::query()->withTrashed()->find($hukumanDisiplin->id)?->trashed())->toBeTrue();
+});
+
+test('store dan update hukuman disiplin menolak array ref_jenis_hukuman_disiplin_id dengan 422', function () {
+    $operator = Pegawai::factory()->operator()->create();
+    $pegawai = Pegawai::factory()->create();
+    $jenis = RefJenisHukumanDisiplin::factory()->create();
+    $hukumanDisiplin = HukumanDisiplin::factory()->create([
+        'pegawai_id' => $pegawai->id,
+        'ref_jenis_hukuman_disiplin_id' => $jenis->id,
+    ]);
+
+    actingAs($operator);
+
+    postJson(
+        route('kepegawaian.pegawai.hukuman-disiplin.store', $pegawai),
+        makeHukumanDisiplinPayload($jenis, ['ref_jenis_hukuman_disiplin_id' => [$jenis->id]]),
+    )
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('ref_jenis_hukuman_disiplin_id');
+
+    putJson(
+        route('kepegawaian.pegawai.hukuman-disiplin.update', [$pegawai, $hukumanDisiplin]),
+        makeHukumanDisiplinPayload($jenis, ['ref_jenis_hukuman_disiplin_id' => [$jenis->id]]),
+    )
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('ref_jenis_hukuman_disiplin_id');
 });
