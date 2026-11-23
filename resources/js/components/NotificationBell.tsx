@@ -203,12 +203,12 @@ export function NotificationBell() {
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"
-                    className="relative inline-flex items-center justify-center rounded-md border-2 border-foreground bg-background p-2 text-foreground shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all hover:bg-accent hover:shadow-[1px_1px_0_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    className="relative inline-flex items-center justify-center rounded-md border border-border bg-background p-2 text-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                     aria-label="Notifikasi"
                 >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-foreground bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                        <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border border-background bg-destructive px-1 text-[10px] font-bold text-destructive-foreground shadow-xs">
                             {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                     )}
@@ -217,10 +217,10 @@ export function NotificationBell() {
 
             <DropdownMenuContent
                 align="end"
-                className="w-80 border-2 border-foreground shadow-[4px_4px_0_rgba(0,0,0,1)]"
+                className="w-80 border border-border shadow-lg"
             >
                 {/* Header */}
-                <DropdownMenuLabel className="flex items-center justify-between border-b-2 border-foreground px-4 py-3">
+                <DropdownMenuLabel className="flex items-center justify-between border-b border-border px-4 py-3">
                     <span className="text-sm font-bold">Notifikasi</span>
                     {unreadCount > 0 && (
                         <button
@@ -251,7 +251,8 @@ export function NotificationBell() {
                                 onClick={() => markAsRead(notification)}
                                 className={cn(
                                     'flex flex-col gap-0.5 border-b border-border px-4 py-3 text-left',
-                                    !notification.read_at && 'bg-accent/50',
+                                    !notification.read_at &&
+                                        'bg-primary/5 dark:bg-primary/10',
                                 )}
                             >
                                 <div className="flex items-start justify-between gap-2">

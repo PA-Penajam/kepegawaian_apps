@@ -3,6 +3,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -20,7 +21,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, PaginatedData } from '@/types';
 
 type ChecklistTemplate = {
     id: string;
@@ -29,14 +30,6 @@ type ChecklistTemplate = {
     jenis: string;
     aktif: boolean;
     items_count: number;
-};
-
-type PaginatedData<T> = {
-    data: T[];
-    meta: {
-        current_page: number;
-        last_page: number;
-    };
 };
 
 type Props = {
@@ -50,7 +43,9 @@ type Props = {
 const routeBase = '/admin/checklist-template';
 
 export default function Index({ templates, filters, domains }: Props) {
-    const [deleteTarget, setDeleteTarget] = useState<ChecklistTemplate | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<ChecklistTemplate | null>(
+        null,
+    );
     const deleteForm = useForm({});
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
@@ -87,8 +82,10 @@ export default function Index({ templates, filters, domains }: Props) {
             <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold uppercase tracking-tight">Checklist Template</h1>
-                        <p className="mt-1 text-sm font-medium text-muted-foreground">
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Checklist Template
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Kelola template dan item checklist berkas.
                         </p>
                     </div>
@@ -101,8 +98,11 @@ export default function Index({ templates, filters, domains }: Props) {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <Select value={filters.jenis ?? 'semua'} onValueChange={handleFilter}>
-                        <SelectTrigger className="w-full max-w-xs border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)]">
+                    <Select
+                        value={filters.jenis ?? 'semua'}
+                        onValueChange={handleFilter}
+                    >
+                        <SelectTrigger className="w-full max-w-xs">
                             <SelectValue placeholder="Filter jenis" />
                         </SelectTrigger>
                         <SelectContent>
@@ -116,16 +116,26 @@ export default function Index({ templates, filters, domains }: Props) {
                     </Select>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border-2 border-black bg-background shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                     <Table>
                         <TableHeader>
-                            <TableRow className="border-b-2 border-black bg-muted/30 hover:bg-muted/30">
-                                <TableHead className="text-xs font-black uppercase tracking-wider">Kode</TableHead>
-                                <TableHead className="text-xs font-black uppercase tracking-wider">Nama</TableHead>
-                                <TableHead className="text-xs font-black uppercase tracking-wider">Jenis</TableHead>
-                                <TableHead className="text-xs font-black uppercase tracking-wider">Aktif</TableHead>
-                                <TableHead className="text-xs font-black uppercase tracking-wider">Items</TableHead>
-                                <TableHead className="w-[100px] text-center text-xs font-black uppercase tracking-wider">
+                            <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                    Kode
+                                </TableHead>
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                    Nama
+                                </TableHead>
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                    Jenis
+                                </TableHead>
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                    Aktif
+                                </TableHead>
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                    Jumlah Item
+                                </TableHead>
+                                <TableHead className="w-[100px] text-center text-xs font-semibold tracking-wider text-foreground uppercase">
                                     Aksi
                                 </TableHead>
                             </TableRow>
@@ -133,27 +143,73 @@ export default function Index({ templates, filters, domains }: Props) {
                         <TableBody>
                             {templates.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="py-12 text-center font-medium text-muted-foreground">
+                                    <TableCell
+                                        colSpan={6}
+                                        className="py-12 text-center font-medium text-muted-foreground"
+                                    >
                                         Tidak ada template checklist ditemukan.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 templates.data.map((template) => (
-                                    <TableRow key={template.id} className="border-b border-black/10 hover:bg-muted/20">
-                                        <TableCell className="font-mono font-bold">{template.kode}</TableCell>
-                                        <TableCell className="font-bold">{template.nama}</TableCell>
+                                    <TableRow
+                                        key={template.id}
+                                        className="border-b border-border transition-colors hover:bg-muted/40"
+                                    >
+                                        <TableCell className="font-mono font-semibold">
+                                            {template.kode}
+                                        </TableCell>
+                                        <TableCell className="font-semibold">
+                                            {template.nama}
+                                        </TableCell>
                                         <TableCell>{template.jenis}</TableCell>
-                                        <TableCell>{template.aktif ? 'Aktif' : 'Nonaktif'}</TableCell>
-                                        <TableCell>{template.items_count}</TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                variant={
+                                                    template.aktif
+                                                        ? 'default'
+                                                        : 'secondary'
+                                                }
+                                            >
+                                                {template.aktif
+                                                    ? 'Aktif'
+                                                    : 'Nonaktif'}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="tnum">
+                                            {template.items_count}
+                                        </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-center gap-2">
-                                                <Button variant="ghost" size="icon" asChild>
-                                                    <Link href={`${routeBase}/${template.id}/edit`}>
-                                                        <Pencil className="h-4 w-4" />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={`Edit ${template.nama}`}
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={`${routeBase}/${template.id}/edit`}
+                                                    >
+                                                        <Pencil
+                                                            className="h-4 w-4"
+                                                            aria-hidden="true"
+                                                        />
                                                     </Link>
                                                 </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(template)}>
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label={`Hapus ${template.nama}`}
+                                                    onClick={() =>
+                                                        setDeleteTarget(
+                                                            template,
+                                                        )
+                                                    }
+                                                >
+                                                    <Trash2
+                                                        className="h-4 w-4 text-destructive"
+                                                        aria-hidden="true"
+                                                    />
                                                 </Button>
                                             </div>
                                         </TableCell>
@@ -164,12 +220,17 @@ export default function Index({ templates, filters, domains }: Props) {
                     </Table>
                 </div>
 
-                <PaginationWrapper meta={templates.meta} />
+                <PaginationWrapper
+                    links={templates.links}
+                    lastPage={templates.last_page}
+                />
             </div>
 
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
-                onOpenChange={(open) => !open && setDeleteTarget(null)}
+                onOpenChange={(open) =>
+                    !open && !deleteForm.processing && setDeleteTarget(null)
+                }
                 title="Hapus Checklist Template"
                 description="Apakah Anda yakin ingin menghapus checklist template"
                 itemName={deleteTarget?.nama}

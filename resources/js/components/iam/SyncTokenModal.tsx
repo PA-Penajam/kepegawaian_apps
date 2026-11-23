@@ -33,6 +33,7 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
     const [showSecret, setShowSecret] = useState(false);
     const [copied, setCopied] = useState<CopyTarget | null>(null);
     const [confirmed, setConfirmed] = useState(false);
+    const [showCloseWarning, setShowCloseWarning] = useState(false);
 
     const envSnippet = useMemo(() => {
         if (!token) {
@@ -56,7 +57,7 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
             `KEPEGAWAIAN_BASE_URL=${baseUrl}\n` +
             `KEPEGAWAIAN_SYNC_TOKEN=${shownToken}\n` +
             `KEPEGAWAIAN_HMAC_SECRET=${shownSecret}\n` +
-            `# Endpoint: GET ${baseUrl}/api/v1/pegawai/sync + header X-Timestamp & X-Signature`
+            `# Endpoint: GET ${baseUrl}/api/v1/pegawai/sync + header X-Timestamp, X-Nonce & X-Signature`
         );
     }, [token]);
 
@@ -81,15 +82,27 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
         }
     };
 
+    const handleClose = () => {
+        // Reset state internal modal sebelum ditutup agar pembukaan ulang bersih
+        setConfirmed(false);
+        setShowCloseWarning(false);
+        setShowToken(false);
+        setShowSecret(false);
+        setCopied(null);
+        onClose();
+    };
+
     const handleOpenChange = (open: boolean) => {
         // Kunci modal sampai admin mengonfirmasi sudah menyimpan — sama
         // seperti pola client-credentials-modal di sso-papenajam.
         if (!open && !confirmed) {
+            setShowCloseWarning(true);
+
             return;
         }
 
         if (!open) {
-            onClose();
+            handleClose();
         }
     };
 
@@ -111,8 +124,8 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
                             </span>
                         </span>
                     </DialogTitle>
-                    <DialogDescription>
-                        <span className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                    <DialogDescription asChild>
+                        <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
                             <AlertTriangle
                                 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
                                 aria-hidden="true"
@@ -124,12 +137,12 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
                                 akan dapat melihatnya kembali setelah modal ini
                                 ditutup.
                             </span>
-                        </span>
+                        </div>
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">
-                    <div className="space-y-3.5 rounded-xl border bg-muted/40 p-4">
+                    <div className="space-y-3.5 rounded-lg border border-border bg-muted/40 p-4">
                         <div>
                             <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Slug Konsumen
@@ -140,7 +153,7 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
                                     readOnly
                                     value={token.consumer_slug}
                                     aria-label="Slug konsumen"
-                                    className="tnum flex-1 rounded-lg border bg-card px-3 py-2 font-mono text-xs select-all focus:outline-none focus-visible:ring-2"
+                                    className="tnum flex-1 rounded-md border border-input bg-card px-3 py-2 font-mono text-xs shadow-xs select-all focus:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 />
                                 <Button
                                     type="button"
@@ -182,7 +195,7 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
                                         readOnly
                                         value={token.plaintext}
                                         aria-label="Token sinkronisasi baru"
-                                        className="tnum flex-1 rounded-lg border bg-card px-3 py-2 font-mono text-xs font-semibold break-all select-all focus:outline-none focus-visible:ring-2"
+                                        className="tnum flex-1 rounded-md border border-input bg-card px-3 py-2 font-mono text-xs font-semibold break-all shadow-xs select-all focus:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                     />
                                     <Button
                                         type="button"
@@ -227,7 +240,7 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
                                         readOnly
                                         value={token.hmac_secret}
                                         aria-label="HMAC secret baru per konsumen"
-                                        className="tnum flex-1 rounded-lg border bg-card px-3 py-2 font-mono text-xs font-semibold break-all select-all focus:outline-none focus-visible:ring-2"
+                                        className="tnum flex-1 rounded-md border border-input bg-card px-3 py-2 font-mono text-xs font-semibold break-all shadow-xs select-all focus:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                     />
                                     <Button
                                         type="button"
@@ -268,7 +281,7 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
                         )}
                     </div>
 
-                    <div className="overflow-hidden rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         <div className="flex items-center justify-between bg-slate-950 px-3.5 py-2">
                             <span className="font-mono text-xs text-slate-400">
                                 Format .env Siap Pakai
@@ -305,13 +318,20 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
 
                     <label
                         htmlFor="sync-confirm"
-                        className="flex cursor-pointer items-start gap-2.5 rounded-lg border bg-muted/40 p-3 select-none"
+                        className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-border bg-muted/40 p-3 select-none"
                     >
                         <input
                             id="sync-confirm"
                             type="checkbox"
                             checked={confirmed}
-                            onChange={(e) => setConfirmed(e.target.checked)}
+                            onChange={(e) => {
+                                const checked = e.target.checked;
+                                setConfirmed(checked);
+
+                                if (checked) {
+                                    setShowCloseWarning(false);
+                                }
+                            }}
                             className="mt-0.5 rounded border-input"
                         />
                         <span className="text-xs leading-normal font-medium">
@@ -322,9 +342,24 @@ export function SyncTokenModal({ token, onClose }: SyncTokenModalProps) {
                     </label>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    {!confirmed ? (
+                        <p
+                            role={showCloseWarning ? 'alert' : undefined}
+                            className={
+                                showCloseWarning
+                                    ? 'text-xs font-medium text-destructive'
+                                    : 'text-xs text-muted-foreground'
+                            }
+                        >
+                            Centang kotak konfirmasi penyimpanan kredensial di
+                            atas terlebih dahulu sebelum menutup jendela ini.
+                        </p>
+                    ) : (
+                        <span />
+                    )}
                     <Button
-                        onClick={onClose}
+                        onClick={handleClose}
                         disabled={!confirmed}
                         className={
                             !confirmed ? 'cursor-not-allowed opacity-50' : ''

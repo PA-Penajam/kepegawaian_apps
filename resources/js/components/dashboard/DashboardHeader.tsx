@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 interface PageProps {
     auth?: {
         user?: {
-            name: string;
+            nama_lengkap: string;
             [key: string]: unknown;
         };
     };
@@ -16,7 +16,7 @@ interface PageProps {
 
 export function DashboardHeader() {
     const { auth } = usePage<PageProps>().props;
-    const userName = auth?.user?.name || 'Pengguna';
+    const userName = auth?.user?.nama_lengkap || 'Pengguna';
 
     const getGreeting = () => {
         const hour = new Date().getHours();

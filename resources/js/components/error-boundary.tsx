@@ -1,6 +1,6 @@
 import { AlertTriangle, Check, Copy, Home, RefreshCw } from 'lucide-react';
-import React, { Component   } from 'react';
-import type {ErrorInfo, ReactNode} from 'react';
+import React, { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Button } from '@/components/ui/button';
 
@@ -31,7 +31,11 @@ export class ErrorBoundary extends Component<Props, State> {
     public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
         this.setState({ errorInfo });
         // Log ke console untuk keperluan investigasi teknis
-        console.error('SIMPEG React Error Boundary mendeteksi kendala:', error, errorInfo);
+        console.error(
+            'SIMPEG React Error Boundary mendeteksi kendala:',
+            error,
+            errorInfo,
+        );
     }
 
     private handleCopyError = (): void => {
@@ -77,16 +81,21 @@ URL: ${window.location.href}`;
                                 Terjadi Kesalahan Tampilan
                             </h1>
                             <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                                Aplikasi mengalami kendala saat memuat komponen ini. Data Anda aman dan tidak terpengaruh di sistem server.
+                                Aplikasi mengalami kendala saat memuat komponen
+                                ini. Data Anda aman dan tidak terpengaruh di
+                                sistem server.
                             </p>
                         </div>
 
                         {/* Ringkasan Kesalahan */}
                         {this.state.error && (
                             <div className="mt-5 rounded-xl border border-destructive/20 bg-destructive/5 p-3.5 text-xs text-destructive">
-                                <p className="font-semibold">Pesan Kesalahan:</p>
+                                <p className="font-semibold">
+                                    Pesan Kesalahan:
+                                </p>
                                 <p className="mt-1 font-mono text-xs leading-relaxed break-all">
-                                    {this.state.error.message || 'Unknown render exception'}
+                                    {this.state.error.message ||
+                                        'Unknown render exception'}
                                 </p>
                             </div>
                         )}
@@ -122,7 +131,9 @@ URL: ${window.location.href}`;
                                 {this.state.copied ? (
                                     <>
                                         <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" />
-                                        <span className="text-emerald-600 dark:text-emerald-400">Tersalin</span>
+                                        <span className="text-emerald-600 dark:text-emerald-400">
+                                            Tersalin
+                                        </span>
                                     </>
                                 ) : (
                                     <>

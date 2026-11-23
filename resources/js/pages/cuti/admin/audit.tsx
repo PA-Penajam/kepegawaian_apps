@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { Fragment, useCallback, useState } from 'react';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,10 @@ type Props = {
     filters: { from?: string; to?: string; aktor?: string };
 };
 
-export default function CutiAuditIndex({ activities, filters: initialFilters }: Props) {
+export default function CutiAuditIndex({
+    activities,
+    filters: initialFilters,
+}: Props) {
     const [filters, setFilters] = useState({
         from: initialFilters.from ?? '',
         to: initialFilters.to ?? '',
@@ -45,7 +48,9 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
     const applyFilters = useCallback(() => {
         router.get(
             adminCuti.audit.index(),
-            Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '')),
+            Object.fromEntries(
+                Object.entries(filters).filter(([, v]) => v !== ''),
+            ),
             { preserveState: true, replace: true },
         );
     }, [filters]);
@@ -74,7 +79,10 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
             return <Badge variant="secondary">{description}</Badge>;
         }
 
-        if (description.includes('deleted') || description.includes('dihapus')) {
+        if (
+            description.includes('deleted') ||
+            description.includes('dihapus')
+        ) {
             return <Badge variant="destructive">{description}</Badge>;
         }
 
@@ -87,8 +95,10 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
                 <div>
-                    <h1 className="text-2xl font-bold uppercase tracking-tight">Audit Log Cuti</h1>
-                    <p className="text-sm text-muted-foreground mt-1 font-medium">
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                        Audit Log Cuti
+                    </h1>
+                    <p className="mt-1 text-sm text-muted-foreground">
                         Lacak semua perubahan pada modul cuti.
                     </p>
                 </div>
@@ -105,7 +115,12 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
                                 type="date"
                                 className="w-44"
                                 value={filters.from}
-                                onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))}
+                                onChange={(e) =>
+                                    setFilters((f) => ({
+                                        ...f,
+                                        from: e.target.value,
+                                    }))
+                                }
                             />
                         </div>
                         <div className="space-y-1">
@@ -115,20 +130,36 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
                                 type="date"
                                 className="w-44"
                                 value={filters.to}
-                                onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))}
+                                onChange={(e) =>
+                                    setFilters((f) => ({
+                                        ...f,
+                                        to: e.target.value,
+                                    }))
+                                }
                             />
                         </div>
                         <div className="space-y-1">
-                            <Label htmlFor="filter-aktor">Aktor (NIP/Nama)</Label>
+                            <Label htmlFor="filter-aktor">
+                                Aktor (NIP/Nama)
+                            </Label>
                             <Input
                                 id="filter-aktor"
                                 className="w-48"
                                 placeholder="Cari aktor..."
                                 value={filters.aktor}
-                                onChange={(e) => setFilters((f) => ({ ...f, aktor: e.target.value }))}
+                                onChange={(e) =>
+                                    setFilters((f) => ({
+                                        ...f,
+                                        aktor: e.target.value,
+                                    }))
+                                }
                             />
                         </div>
-                        <Button variant="outline" size="sm" onClick={applyFilters}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={applyFilters}
+                        >
                             Terapkan
                         </Button>
                     </CardContent>
@@ -137,117 +168,201 @@ export default function CutiAuditIndex({ activities, filters: initialFilters }: 
                 {/* Tabel Audit Log */}
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle className="text-base">Aktivitas Modul Cuti</CardTitle>
-                        <Badge variant="secondary">{activities.total} log</Badge>
+                        <CardTitle className="text-base">
+                            Aktivitas Modul Cuti
+                        </CardTitle>
+                        <Badge variant="secondary" className="tnum">
+                            {activities.total} log
+                        </Badge>
                     </CardHeader>
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-muted/30 border-b-2 border-black hover:bg-muted/30">
+                                <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
                                     <TableHead className="w-8" />
-                                    <TableHead className="font-black uppercase text-xs tracking-wider w-44">Waktu</TableHead>
-                                    <TableHead className="font-black uppercase text-xs tracking-wider">Aktor</TableHead>
-                                    <TableHead className="font-black uppercase text-xs tracking-wider">Aktivitas</TableHead>
-                                    <TableHead className="font-black uppercase text-xs tracking-wider">Subjek</TableHead>
-                                    <TableHead className="font-black uppercase text-xs tracking-wider">Perubahan</TableHead>
+                                    <TableHead className="w-44 text-xs font-semibold tracking-wider text-foreground uppercase">
+                                        Waktu
+                                    </TableHead>
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                        Aktor
+                                    </TableHead>
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                        Aktivitas
+                                    </TableHead>
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                        Subjek
+                                    </TableHead>
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                        Perubahan
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {activities.data.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-12 font-medium text-muted-foreground">
+                                        <TableCell
+                                            colSpan={6}
+                                            className="py-12 text-center font-medium text-muted-foreground"
+                                        >
                                             Tidak ada aktivitas
                                         </TableCell>
                                     </TableRow>
                                 )}
                                 {activities.data.map((item) => {
-                                    const isExpanded = expandedRows.has(item.id);
+                                    const isExpanded = expandedRows.has(
+                                        item.id,
+                                    );
+                                    const changes =
+                                        item.attribute_changes ??
+                                        item.properties;
+                                    const changedAttributes =
+                                        changes?.attributes ?? {};
+                                    const oldAttributes = changes?.old ?? {};
                                     const hasChanges =
-                                        item.properties.attributes &&
-                                        Object.keys(item.properties.attributes).length > 0;
+                                        Object.keys(changedAttributes).length >
+                                        0;
 
                                     return (
-                                        <>
+                                        <Fragment key={item.id}>
                                             <TableRow
-                                                key={item.id}
-                                                className={`border-b border-black/10 hover:bg-muted/20 transition-colors ${hasChanges ? 'cursor-pointer' : ''}`}
-                                                onClick={() => hasChanges && toggleRow(item.id)}
+                                                className={`border-b border-border transition-colors hover:bg-muted/40 ${hasChanges ? 'cursor-pointer' : ''}`}
+                                                onClick={() =>
+                                                    hasChanges &&
+                                                    toggleRow(item.id)
+                                                }
                                             >
                                                 <TableCell>
-                                                    {hasChanges && (
-                                                        isExpanded
-                                                            ? <ChevronDown className="h-4 w-4" />
-                                                            : <ChevronRight className="h-4 w-4" />
-                                                    )}
+                                                    {hasChanges &&
+                                                        (isExpanded ? (
+                                                            <ChevronDown className="h-4 w-4" />
+                                                        ) : (
+                                                            <ChevronRight className="h-4 w-4" />
+                                                        ))}
                                                 </TableCell>
-                                                <TableCell className="text-xs text-muted-foreground">
-                                                    {formatTanggalDateTime(item.created_at)}
+                                                <TableCell className="tnum text-xs text-muted-foreground">
+                                                    {formatTanggalDateTime(
+                                                        item.created_at,
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>
                                                     {item.causer ? (
                                                         <div>
-                                                            <span className="text-sm font-medium">{item.causer.nama}</span>
-                                                            <span className="ml-1 text-xs text-muted-foreground">
-                                                                ({item.causer.nip})
+                                                            <span className="text-sm font-medium">
+                                                                {
+                                                                    item.causer
+                                                                        .nama
+                                                                }
+                                                            </span>
+                                                            <span className="tnum ml-1 text-xs text-muted-foreground">
+                                                                (
+                                                                {
+                                                                    item.causer
+                                                                        .nip
+                                                                }
+                                                                )
                                                             </span>
                                                         </div>
                                                     ) : (
-                                                        <span className="text-sm text-muted-foreground">Sistem</span>
+                                                        <span className="text-sm text-muted-foreground">
+                                                            Sistem
+                                                        </span>
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {getDescriptionBadge(item.description)}
+                                                    {getDescriptionBadge(
+                                                        item.description,
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <span className="font-mono text-xs">{item.subject_type}</span>
+                                                    <span className="font-mono text-xs">
+                                                        {item.subject_type}
+                                                    </span>
                                                     {item.subject_id && (
                                                         <span className="ml-1 text-xs text-muted-foreground">
-                                                            #{item.subject_id.slice(0, 8)}
+                                                            #
+                                                            {item.subject_id.slice(
+                                                                0,
+                                                                8,
+                                                            )}
                                                         </span>
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {hasChanges && !isExpanded && (
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {Object.keys(item.properties.attributes!).length} field diubah
-                                                        </span>
-                                                    )}
+                                                    {hasChanges &&
+                                                        !isExpanded && (
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {
+                                                                    Object.keys(
+                                                                        changedAttributes,
+                                                                    ).length
+                                                                }{' '}
+                                                                field diubah
+                                                            </span>
+                                                        )}
                                                 </TableCell>
                                             </TableRow>
 
                                             {/* Baris detail perubahan */}
                                             {isExpanded && hasChanges && (
-                                                <TableRow key={`${item.id}-detail`}>
+                                                <TableRow
+                                                    key={`${item.id}-detail`}
+                                                >
                                                     <TableCell />
                                                     <TableCell colSpan={5}>
                                                         <div className="space-y-1 rounded-md bg-muted/50 p-3">
-                                                            {Object.entries(item.properties.attributes!).map(([key, newVal]) => (
-                                                                <div key={key} className="flex gap-2 text-xs">
-                                                                    <span className="w-36 shrink-0 font-mono text-muted-foreground">
-                                                                        {key}
-                                                                    </span>
-                                                                    {item.properties.old && key in item.properties.old ? (
-                                                                        <>
-                                                                            <span className="text-red-500 line-through">
-                                                                                {String(item.properties.old[key] ?? '')}
-                                                                            </span>
-                                                                            <span>&rarr;</span>
-                                                                            <span className="text-green-600">
-                                                                                {String(newVal)}
-                                                                            </span>
-                                                                        </>
-                                                                    ) : (
-                                                                        <span className="text-green-600">
-                                                                            {String(newVal)}
+                                                            {Object.entries(
+                                                                changedAttributes,
+                                                            ).map(
+                                                                ([
+                                                                    key,
+                                                                    newVal,
+                                                                ]) => (
+                                                                    <div
+                                                                        key={
+                                                                            key
+                                                                        }
+                                                                        className="flex gap-2 text-xs"
+                                                                    >
+                                                                        <span className="w-36 shrink-0 font-mono text-muted-foreground">
+                                                                            {
+                                                                                key
+                                                                            }
                                                                         </span>
-                                                                    )}
-                                                                </div>
-                                                            ))}
+                                                                        {key in
+                                                                        oldAttributes ? (
+                                                                            <>
+                                                                                <span className="text-red-700 line-through dark:text-red-400">
+                                                                                    {String(
+                                                                                        oldAttributes[
+                                                                                            key
+                                                                                        ] ??
+                                                                                            '',
+                                                                                    )}
+                                                                                </span>
+                                                                                <span>
+                                                                                    &rarr;
+                                                                                </span>
+                                                                                <span className="text-emerald-700 dark:text-emerald-400">
+                                                                                    {String(
+                                                                                        newVal,
+                                                                                    )}
+                                                                                </span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <span className="text-emerald-700 dark:text-emerald-400">
+                                                                                {String(
+                                                                                    newVal,
+                                                                                )}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                ),
+                                                            )}
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
                                             )}
-                                        </>
+                                        </Fragment>
                                     );
                                 })}
                             </TableBody>

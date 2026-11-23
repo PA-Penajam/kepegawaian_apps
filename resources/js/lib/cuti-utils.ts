@@ -67,7 +67,9 @@ export function formatTanggal(dateStr: string | null | undefined): string {
  * @param dateStr - String tanggal-waktu dari backend (bisa null atau undefined)
  * @returns Tanggal dan waktu dalam format "DD Bulan YYYY, HH:mm", atau string kosong jika input tidak valid
  */
-export function formatTanggalDateTime(dateStr: string | null | undefined): string {
+export function formatTanggalDateTime(
+    dateStr: string | null | undefined,
+): string {
     // Kembalikan string kosong jika input kosong atau falsy
     if (!dateStr) {
         return '';

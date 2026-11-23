@@ -1,6 +1,7 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Download, Upload } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import adminSk from '@/routes/kenaikan-pangkat/admin-sk';
 import type { BreadcrumbItem } from '@/types';
 import type { KepegawaianPaginatedData } from '@/types/kepegawaian';
@@ -88,6 +90,9 @@ type UploadForm = {
     sk_file: File | null;
     nomor_sk: string;
     tanggal_sk: string;
+    tmt_pangkat_baru: string;
+    masa_kerja_tahun: string;
+    masa_kerja_bulan: string;
 };
 
 function formatTanggal(value?: string | null): string {
@@ -103,7 +108,13 @@ function formatTanggal(value?: string | null): string {
 }
 
 function getTanggalKirimBiro(item: UsulanKenaikanPangkat): string | null {
-    return item.tanggal_kirim_biro ?? item.dikirim_ke_biro_at ?? item.tanggal_dikirim_biro ?? item.submitted_at ?? null;
+    return (
+        item.tanggal_kirim_biro ??
+        item.dikirim_ke_biro_at ??
+        item.tanggal_dikirim_biro ??
+        item.submitted_at ??
+        null
+    );
 }
 
 function getUmurHari(item: UsulanKenaikanPangkat): string {
@@ -128,7 +139,9 @@ function formatPangkat(pangkat?: Pangkat | null): string {
         return '-';
     }
 
-    const golongan = [pangkat.golongan, pangkat.ruang].filter(Boolean).join('/');
+    const golongan = [pangkat.golongan, pangkat.ruang]
+        .filter(Boolean)
+        .join('/');
     const kode = pangkat.kode ? `${pangkat.kode} ` : '';
     const nama = pangkat.nama ?? '-';
 
@@ -155,48 +168,93 @@ function UsulanTable({
     return (
         <Table>
             <TableHeader>
-                <TableRow className="border-b-2 border-black bg-muted/30 hover:bg-muted/30 dark:border-white/20">
-                    <TableHead className="text-xs font-black tracking-wider uppercase">Pegawai</TableHead>
-                    <TableHead className="text-xs font-black tracking-wider uppercase">Pangkat</TableHead>
-                    <TableHead className="text-xs font-black tracking-wider uppercase">Tanggal Kirim Biro</TableHead>
-                    <TableHead className="text-xs font-black tracking-wider uppercase">Umur</TableHead>
-                    {isTerbit && <TableHead className="text-xs font-black tracking-wider uppercase">Nomor SK</TableHead>}
-                    {isTerbit && <TableHead className="text-xs font-black tracking-wider uppercase">Tanggal SK</TableHead>}
-                    <TableHead className="text-right text-xs font-black tracking-wider uppercase">Aksi</TableHead>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                        Pegawai
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                        Pangkat
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                        Tanggal Kirim Biro
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                        Umur
+                    </TableHead>
+                    {isTerbit && (
+                        <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                            Nomor SK
+                        </TableHead>
+                    )}
+                    {isTerbit && (
+                        <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                            Tanggal SK
+                        </TableHead>
+                    )}
+                    <TableHead className="text-right text-xs font-semibold tracking-wider text-foreground uppercase">
+                        Aksi
+                    </TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {data.length === 0 && (
                     <TableRow>
-                        <TableCell colSpan={isTerbit ? 7 : 5} className="py-12 text-center font-medium text-muted-foreground">
+                        <TableCell
+                            colSpan={isTerbit ? 7 : 5}
+                            className="py-12 text-center font-medium text-muted-foreground"
+                        >
                             {emptyText}
                         </TableCell>
                     </TableRow>
                 )}
 
                 {data.map((item) => (
-                    <TableRow key={item.id} className="border-b border-black/10 transition-colors hover:bg-muted/20 dark:border-white/10">
+                    <TableRow key={item.id}>
                         <TableCell>
                             <div className="flex flex-col gap-1">
-                                <span className="font-semibold">{getNamaPegawai(item)}</span>
-                                <span className="text-xs text-muted-foreground">{item.pegawai?.nip ?? 'NIP -'}</span>
+                                <span className="font-semibold">
+                                    {getNamaPegawai(item)}
+                                </span>
+                                <span className="tnum text-xs text-muted-foreground">
+                                    {item.pegawai?.nip ?? 'NIP -'}
+                                </span>
                             </div>
                         </TableCell>
                         <TableCell>{getPangkatTujuan(item)}</TableCell>
-                        <TableCell>{formatTanggal(getTanggalKirimBiro(item))}</TableCell>
                         <TableCell>
-                            <Badge variant="outline">{getUmurHari(item)}</Badge>
+                            {formatTanggal(getTanggalKirimBiro(item))}
                         </TableCell>
-                        {isTerbit && <TableCell className="font-mono text-xs">{item.nomor_sk ?? '-'}</TableCell>}
-                        {isTerbit && <TableCell>{formatTanggal(item.tanggal_sk)}</TableCell>}
+                        <TableCell>
+                            <Badge variant="outline" className="tnum">
+                                {getUmurHari(item)}
+                            </Badge>
+                        </TableCell>
+                        {isTerbit && (
+                            <TableCell className="tnum font-mono text-xs">
+                                {item.nomor_sk ?? '-'}
+                            </TableCell>
+                        )}
+                        {isTerbit && (
+                            <TableCell>
+                                {formatTanggal(item.tanggal_sk)}
+                            </TableCell>
+                        )}
                         <TableCell className="text-right">
                             {item.state === 'MENUNGGU_SK' ? (
-                                <Button size="sm" onClick={() => onUpload(item)}>
+                                <Button
+                                    size="sm"
+                                    onClick={() => onUpload(item)}
+                                >
                                     <Upload className="size-4" />
                                     Upload SK
                                 </Button>
                             ) : (
-                                <Button size="sm" variant="outline" asChild disabled={!item.sk_file_path}>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    asChild
+                                    disabled={!item.sk_file_path}
+                                >
                                     <a href={adminSk.downloadSk.url(item)}>
                                         <Download className="size-4" />
                                         Download
@@ -211,19 +269,43 @@ function UsulanTable({
     );
 }
 
-export default function AdminSkIndex({ usulan, filters: initialFilters }: Props) {
+export default function AdminSkIndex({
+    usulan,
+    filters: initialFilters,
+}: Props) {
     const { flash } = usePage<PageProps>().props;
-    const [selectedState, setSelectedState] = useState<KenaikanPangkatState | 'all'>(initialFilters.state ?? 'all');
-    const [selectedUsulan, setSelectedUsulan] = useState<UsulanKenaikanPangkat | null>(null);
+    const [selectedState, setSelectedState] = useState<
+        KenaikanPangkatState | 'all'
+    >(initialFilters.state ?? 'all');
+    const [selectedUsulan, setSelectedUsulan] =
+        useState<UsulanKenaikanPangkat | null>(null);
     const [clientError, setClientError] = useState<string | null>(null);
-    const { data, setData, post, processing, errors, reset, clearErrors, recentlySuccessful } = useForm<UploadForm>({
+    const {
+        data,
+        setData,
+        post,
+        processing,
+        errors,
+        reset,
+        clearErrors,
+        recentlySuccessful,
+    } = useForm<UploadForm>({
         sk_file: null,
         nomor_sk: '',
         tanggal_sk: '',
+        tmt_pangkat_baru: '',
+        masa_kerja_tahun: '',
+        masa_kerja_bulan: '',
     });
 
-    const menungguSk = useMemo(() => usulan.data.filter((item) => item.state === 'MENUNGGU_SK'), [usulan.data]);
-    const skTerbit = useMemo(() => usulan.data.filter((item) => item.state === 'SELESAI_SK_TERBIT'), [usulan.data]);
+    const menungguSk = useMemo(
+        () => usulan.data.filter((item) => item.state === 'MENUNGGU_SK'),
+        [usulan.data],
+    );
+    const skTerbit = useMemo(
+        () => usulan.data.filter((item) => item.state === 'SELESAI_SK_TERBIT'),
+        [usulan.data],
+    );
     const showSuccessToast = Boolean(flash?.success) || recentlySuccessful;
 
     function applyStateFilter(nextState: KenaikanPangkatState | 'all') {
@@ -312,28 +394,43 @@ export default function AdminSkIndex({ usulan, filters: initialFilters }: Props)
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
                 {showSuccessToast && (
-                    <div className="fixed top-4 right-4 z-50 rounded-xl border-2 border-green-700 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800 shadow-[4px_4px_0_rgba(0,0,0,1)] dark:border-green-400 dark:bg-green-950 dark:text-green-100">
-                        {flash?.success ?? 'SK kenaikan pangkat berhasil diunggah.'}
+                    <div className="fixed top-4 right-4 z-50 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg dark:border-emerald-800 dark:bg-emerald-950/90 dark:text-emerald-200">
+                        {flash?.success ??
+                            'SK kenaikan pangkat berhasil diunggah.'}
                     </div>
                 )}
 
                 <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight uppercase">Admin SK Kenaikan Pangkat</h1>
-                        <p className="mt-1 text-sm font-medium text-muted-foreground">
-                            Kelola upload dan arsip SK final usulan kenaikan pangkat.
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Admin SK Kenaikan Pangkat
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Kelola upload dan arsip SK final usulan kenaikan
+                            pangkat.
                         </p>
                     </div>
                     <div className="w-full space-y-1 md:w-64">
                         <Label htmlFor="state-filter">Filter State</Label>
-                        <Select value={selectedState} onValueChange={(value) => applyStateFilter(value as KenaikanPangkatState | 'all')}>
+                        <Select
+                            value={selectedState}
+                            onValueChange={(value) =>
+                                applyStateFilter(
+                                    value as KenaikanPangkatState | 'all',
+                                )
+                            }
+                        >
                             <SelectTrigger id="state-filter">
                                 <SelectValue placeholder="Pilih state" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua</SelectItem>
-                                <SelectItem value="MENUNGGU_SK">MenungguSK</SelectItem>
-                                <SelectItem value="SELESAI_SK_TERBIT">SelesaiSKTerbit</SelectItem>
+                                <SelectItem value="MENUNGGU_SK">
+                                    MenungguSK
+                                </SelectItem>
+                                <SelectItem value="SELESAI_SK_TERBIT">
+                                    SelesaiSKTerbit
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -342,7 +439,9 @@ export default function AdminSkIndex({ usulan, filters: initialFilters }: Props)
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-base">Menunggu SK</CardTitle>
-                        <Badge variant="secondary">{menungguSk.length} usulan</Badge>
+                        <Badge variant="secondary">
+                            {menungguSk.length} usulan
+                        </Badge>
                     </CardHeader>
                     <CardContent className="p-0">
                         <UsulanTable
@@ -357,7 +456,9 @@ export default function AdminSkIndex({ usulan, filters: initialFilters }: Props)
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-base">SK Terbit</CardTitle>
-                        <Badge variant="secondary">{skTerbit.length} usulan</Badge>
+                        <Badge variant="secondary">
+                            {skTerbit.length} usulan
+                        </Badge>
                     </CardHeader>
                     <CardContent className="p-0">
                         <UsulanTable
@@ -369,30 +470,55 @@ export default function AdminSkIndex({ usulan, filters: initialFilters }: Props)
                     </CardContent>
                 </Card>
 
-                <PaginationWrapper links={usulan.links} lastPage={usulan.last_page} />
+                <PaginationWrapper
+                    links={usulan.links}
+                    lastPage={usulan.last_page}
+                />
             </div>
 
-            <Dialog open={Boolean(selectedUsulan)} onOpenChange={(open) => !open && closeUploadModal()}>
+            <Dialog
+                open={Boolean(selectedUsulan)}
+                onOpenChange={(open) => !open && closeUploadModal()}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Upload SK Final</DialogTitle>
                         <DialogDescription>
-                            Upload 1 file PDF SK untuk {selectedUsulan ? getNamaPegawai(selectedUsulan) : 'usulan ini'}.
+                            Upload 1 file PDF SK untuk{' '}
+                            {selectedUsulan
+                                ? getNamaPegawai(selectedUsulan)
+                                : 'usulan ini'}
+                            .
                         </DialogDescription>
                     </DialogHeader>
 
                     <form className="space-y-4" onSubmit={submitUpload}>
+                        {Object.keys(errors).length > 0 && (
+                            <AlertError
+                                errors={errorsToArray(errors)}
+                                title="Gagal mengunggah SK final"
+                            />
+                        )}
+
                         <div className="space-y-2">
-                            <Label htmlFor="sk_file">File SK (PDF, maks 10MB)</Label>
+                            <Label htmlFor="sk_file">
+                                File SK (PDF, maks 10MB)
+                            </Label>
                             <Input
                                 id="sk_file"
                                 type="file"
                                 accept="application/pdf,.pdf"
-                                onChange={(event) => handleFileChange(event.target.files?.[0] ?? null)}
+                                onChange={(event) =>
+                                    handleFileChange(
+                                        event.target.files?.[0] ?? null,
+                                    )
+                                }
                                 disabled={processing}
                             />
                             {(clientError || errors.sk_file) && (
-                                <p className="text-sm font-medium text-destructive">{clientError ?? errors.sk_file}</p>
+                                <p className="text-sm font-medium text-destructive dark:text-red-400">
+                                    {clientError ?? errors.sk_file}
+                                </p>
                             )}
                         </div>
 
@@ -401,11 +527,17 @@ export default function AdminSkIndex({ usulan, filters: initialFilters }: Props)
                             <Input
                                 id="nomor_sk"
                                 value={data.nomor_sk}
-                                onChange={(event) => setData('nomor_sk', event.target.value)}
+                                onChange={(event) =>
+                                    setData('nomor_sk', event.target.value)
+                                }
                                 disabled={processing}
                                 required
                             />
-                            {errors.nomor_sk && <p className="text-sm font-medium text-destructive">{errors.nomor_sk}</p>}
+                            {errors.nomor_sk && (
+                                <p className="text-sm font-medium text-destructive dark:text-red-400">
+                                    {errors.nomor_sk}
+                                </p>
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -414,18 +546,111 @@ export default function AdminSkIndex({ usulan, filters: initialFilters }: Props)
                                 id="tanggal_sk"
                                 type="date"
                                 value={data.tanggal_sk}
-                                onChange={(event) => setData('tanggal_sk', event.target.value)}
+                                onChange={(event) =>
+                                    setData('tanggal_sk', event.target.value)
+                                }
                                 disabled={processing}
                                 required
                             />
-                            {errors.tanggal_sk && <p className="text-sm font-medium text-destructive">{errors.tanggal_sk}</p>}
+                            {errors.tanggal_sk && (
+                                <p className="text-sm font-medium text-destructive dark:text-red-400">
+                                    {errors.tanggal_sk}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="tmt_pangkat_baru">
+                                TMT Pangkat Baru
+                            </Label>
+                            <Input
+                                id="tmt_pangkat_baru"
+                                type="date"
+                                value={data.tmt_pangkat_baru}
+                                onChange={(event) =>
+                                    setData(
+                                        'tmt_pangkat_baru',
+                                        event.target.value,
+                                    )
+                                }
+                                disabled={processing}
+                                required
+                            />
+                            {errors.tmt_pangkat_baru && (
+                                <p className="text-sm font-medium text-destructive dark:text-red-400">
+                                    {errors.tmt_pangkat_baru}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="masa_kerja_tahun">
+                                    Masa Kerja (Tahun)
+                                </Label>
+                                <Input
+                                    id="masa_kerja_tahun"
+                                    type="number"
+                                    min={0}
+                                    value={data.masa_kerja_tahun}
+                                    onChange={(event) =>
+                                        setData(
+                                            'masa_kerja_tahun',
+                                            event.target.value,
+                                        )
+                                    }
+                                    disabled={processing}
+                                    required
+                                />
+                                {errors.masa_kerja_tahun && (
+                                    <p className="text-sm font-medium text-destructive dark:text-red-400">
+                                        {errors.masa_kerja_tahun}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="masa_kerja_bulan">
+                                    Masa Kerja (Bulan)
+                                </Label>
+                                <Input
+                                    id="masa_kerja_bulan"
+                                    type="number"
+                                    min={0}
+                                    max={11}
+                                    value={data.masa_kerja_bulan}
+                                    onChange={(event) =>
+                                        setData(
+                                            'masa_kerja_bulan',
+                                            event.target.value,
+                                        )
+                                    }
+                                    disabled={processing}
+                                    required
+                                />
+                                {errors.masa_kerja_bulan && (
+                                    <p className="text-sm font-medium text-destructive dark:text-red-400">
+                                        {errors.masa_kerja_bulan}
+                                    </p>
+                                )}
+                            </div>
                         </div>
 
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={closeUploadModal} disabled={processing}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={closeUploadModal}
+                                disabled={processing}
+                            >
                                 Batal
                             </Button>
-                            <Button type="submit" disabled={processing || selectedUsulan?.state !== 'MENUNGGU_SK'}>
+                            <Button
+                                type="submit"
+                                disabled={
+                                    processing ||
+                                    selectedUsulan?.state !== 'MENUNGGU_SK'
+                                }
+                            >
                                 {processing ? 'Mengunggah...' : 'Upload SK'}
                             </Button>
                         </DialogFooter>

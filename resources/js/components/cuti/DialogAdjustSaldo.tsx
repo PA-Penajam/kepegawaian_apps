@@ -1,4 +1,6 @@
 import { useForm } from '@inertiajs/react';
+import { useEffect, useRef } from 'react';
+import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { errorsToArray } from '@/lib/form-errors';
 import adminCuti from '@/routes/admin/cuti';
 
 type Props = {
@@ -27,19 +30,60 @@ export function DialogAdjustSaldo({
     open,
     onClose,
 }: Props) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        pegawai_nip: pegawai.nip,
-        jenis_cuti_kode: 'CT',
-        tahun: new Date().getFullYear(),
-        jumlah_hari: 0,
-        keterangan: '',
-    });
+    const { data, setData, post, processing, errors, reset, clearErrors } =
+        useForm({
+            pegawai_nip: pegawai.nip,
+            jenis_cuti_kode: 'CT',
+            tahun: new Date().getFullYear(),
+            jumlah_hari: 0,
+            keterangan: '',
+        });
+
+    const prevPegawaiNipRef = useRef(pegawai.nip);
+
+    useEffect(() => {
+        if (!open) {
+            reset();
+            clearErrors();
+
+            return;
+        }
+
+        if (prevPegawaiNipRef.current !== pegawai.nip) {
+            prevPegawaiNipRef.current = pegawai.nip;
+            reset();
+            clearErrors();
+        }
+
+        setData('pegawai_nip', pegawai.nip);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, pegawai.nip]);
+
+    const nonFieldErrors = errorsToArray(
+        Object.fromEntries(
+            Object.entries(errors).filter(
+                ([key]) =>
+                    !['tahun', 'jumlah_hari', 'keterangan'].includes(key),
+            ),
+        ),
+    );
+
+    function handleClose() {
+        if (processing) {
+            return;
+        }
+
+        reset();
+        clearErrors();
+        onClose();
+    }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         post(adminCuti.saldo.adjust.url(), {
             onSuccess: () => {
                 reset();
+                clearErrors();
                 onClose();
             },
             preserveScroll: true,
@@ -50,7 +94,7 @@ export function DialogAdjustSaldo({
     const saldoSetelah = currentSaldo + (data.jumlah_hari ?? 0);
 
     return (
-        <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+        <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Penyesuaian Saldo Cuti</DialogTitle>
@@ -61,6 +105,12 @@ export function DialogAdjustSaldo({
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {nonFieldErrors.length > 0 && (
+                        <AlertError
+                            errors={nonFieldErrors}
+                            title="Gagal menyesuaikan saldo"
+                        />
+                    )}
                     {/* Informasi saldo saat ini */}
                     <div className="space-y-2 rounded-lg border bg-muted/50 p-3">
                         <p className="text-sm text-muted-foreground">
@@ -142,7 +192,7 @@ export function DialogAdjustSaldo({
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={onClose}
+                            onClick={handleClose}
                             disabled={processing}
                         >
                             Batal

@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { Pencil, Plus, Trash2, Users, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import { toUrl } from '@/lib/utils';
 import {
     index as rolesIndex,
@@ -49,7 +51,15 @@ type Props = {
 };
 
 export default function Index({ roles, permissions, filters }: Props) {
-    const [search, setSearch] = useState(filters.search ?? '');
+    const [search, setSearch] = useState(filters?.search ?? '');
+    const [prevSearchFilter, setPrevSearchFilter] = useState(
+        filters?.search ?? '',
+    );
+
+    if ((filters?.search ?? '') !== prevSearchFilter) {
+        setPrevSearchFilter(filters?.search ?? '');
+        setSearch(filters?.search ?? '');
+    }
 
     // State for Modals
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -113,21 +123,28 @@ export default function Index({ roles, permissions, filters }: Props) {
         );
     }, [permissions]);
 
-    const handleSearch = useCallback(() => {
-        router.get(
-            toUrl(rolesIndex()),
-            { search },
-            { preserveState: true, preserveScroll: true },
-        );
-    }, [search]);
+    const handleSearch = useCallback((value: string) => {
+        router.get(toUrl(rolesIndex()), value ? { search: value } : {}, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    }, []);
 
     useEffect(() => {
+        const normalizedSearch = search.trim();
+        const currentSearch = (filters?.search ?? '').trim();
+
+        if (normalizedSearch === currentSearch) {
+            return undefined;
+        }
+
         const timeout = setTimeout(() => {
-            handleSearch();
+            handleSearch(normalizedSearch);
         }, 300);
 
         return () => clearTimeout(timeout);
-    }, [search, handleSearch]);
+    }, [search, filters?.search, handleSearch]);
 
     const handleDelete = (role: RefRole) => {
         setDeleteTarget(role);
@@ -150,13 +167,16 @@ export default function Index({ roles, permissions, filters }: Props) {
         setIsCreateOpen(true);
     };
 
+    const closeCreateModal = () => {
+        setIsCreateOpen(false);
+        resetCreate();
+        clearErrorsCreate();
+    };
+
     const submitCreate = (e: React.FormEvent) => {
         e.preventDefault();
         postCreate(toUrl(store()), {
-            onSuccess: () => {
-                setIsCreateOpen(false);
-                resetCreate();
-            },
+            onSuccess: () => closeCreateModal(),
         });
     };
 
@@ -173,6 +193,7 @@ export default function Index({ roles, permissions, filters }: Props) {
     const closeEditModal = () => {
         setEditingRole(null);
         resetEdit();
+        clearErrorsEdit();
     };
 
     const submitEdit = (e: React.FormEvent) => {
@@ -214,13 +235,13 @@ export default function Index({ roles, permissions, filters }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Roles" />
 
-            <div className="flex flex-col gap-6 p-4">
+            <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight uppercase">
+                        <h1 className="text-2xl font-semibold tracking-tight">
                             Roles
                         </h1>
-                        <p className="mt-1 text-sm font-medium text-muted-foreground">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Manajemen hak akses pengguna.
                         </p>
                     </div>
@@ -231,13 +252,13 @@ export default function Index({ roles, permissions, filters }: Props) {
                         placeholder="Cari role berdasarkan nama atau keterangan..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="max-w-md border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all focus-visible:translate-x-[2px] focus-visible:translate-y-[2px] focus-visible:shadow-none"
+                        className="max-w-md"
                     />
                 </div>
 
                 <div className="mt-2 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {roles.data.length === 0 ? (
-                        <div className="col-span-full border-2 border-dashed border-black bg-muted/30 py-10 text-center">
+                        <div className="col-span-full rounded-xl border border-dashed border-border bg-muted/30 py-10 text-center">
                             <p className="font-medium text-muted-foreground">
                                 Tidak ada data role ditemukan.
                             </p>
@@ -246,23 +267,23 @@ export default function Index({ roles, permissions, filters }: Props) {
                         roles.data.map((item) => (
                             <Card
                                 key={item.id}
-                                className="group relative flex flex-col gap-0 overflow-hidden pt-0 transition-all hover:-translate-y-1"
+                                className="group relative flex flex-col gap-0 overflow-hidden pt-0 transition-shadow hover:shadow-md"
                             >
-                                <CardHeader className="border-b-2 border-black/10 bg-muted/10 pt-6 pb-4">
+                                <CardHeader className="border-b border-border bg-muted/30 pt-6 pb-4">
                                     <div className="mb-2 flex items-start justify-between gap-2">
-                                        <CardTitle className="line-clamp-1 text-xl font-black capitalize">
+                                        <CardTitle className="line-clamp-1 text-lg font-semibold capitalize">
                                             {item.nama}
                                         </CardTitle>
                                         {item.is_system && (
                                             <Badge
                                                 variant="secondary"
-                                                className="shrink-0 border-2 border-black font-bold shadow-none"
+                                                className="shrink-0 font-medium"
                                             >
                                                 Sistem
                                             </Badge>
                                         )}
                                     </div>
-                                    <CardDescription className="line-clamp-2 min-h-[40px] text-sm font-medium text-foreground/80">
+                                    <CardDescription className="line-clamp-2 min-h-[40px] text-sm text-muted-foreground">
                                         {item.keterangan ||
                                             (item.nama.toLowerCase() === 'admin'
                                                 ? 'Memiliki kontrol penuh atas referensi sistem, parameter, dan tata kelola hak akses pengguna (IAM).'
@@ -279,28 +300,28 @@ export default function Index({ roles, permissions, filters }: Props) {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="flex flex-grow flex-col gap-3 py-4">
-                                    <div className="flex items-center justify-between rounded-md border-2 border-black/10 bg-black/5 p-3 text-sm">
-                                        <div className="flex items-center gap-2 font-bold text-foreground/80">
+                                    <div className="flex items-center justify-between rounded-md border border-border bg-muted/40 p-3 text-sm">
+                                        <div className="flex items-center gap-2 font-medium text-muted-foreground">
                                             <Users className="h-4 w-4" />
                                             Total Pegawai
                                         </div>
-                                        <div className="text-sm font-extrabold">
+                                        <div className="tnum text-sm font-semibold">
                                             {item.pegawai_count ?? 0}
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-between rounded-md border-2 border-black/10 bg-black/5 p-3 text-sm">
-                                        <div className="flex items-center gap-2 font-bold text-foreground/80">
+                                    <div className="flex items-center justify-between rounded-md border border-border bg-muted/40 p-3 text-sm">
+                                        <div className="flex items-center gap-2 font-medium text-muted-foreground">
                                             <ShieldCheck className="h-4 w-4" />
                                             Permissions
                                         </div>
-                                        <div className="text-sm font-extrabold">
+                                        <div className="tnum text-sm font-semibold">
                                             {item.permissions_count ?? 0}
                                         </div>
                                     </div>
                                 </CardContent>
                                 <CardFooter className="mt-auto flex justify-between gap-2 px-6 pt-0 pb-6">
                                     <Button
-                                        className="h-9 flex-1 gap-2 px-0 text-xs font-bold"
+                                        className="h-9 flex-1 gap-2 px-0 text-xs font-medium"
                                         variant="outline"
                                         onClick={() => openEditModal(item)}
                                     >
@@ -308,7 +329,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                                         Edit
                                     </Button>
                                     <Button
-                                        className="h-9 flex-1 gap-2 px-0 text-xs font-bold"
+                                        className="h-9 flex-1 gap-2 px-0 text-xs font-medium"
                                         variant="default"
                                         asChild
                                     >
@@ -321,9 +342,13 @@ export default function Index({ roles, permissions, filters }: Props) {
                                         <Button
                                             variant="destructive"
                                             className="px-3"
+                                            aria-label={`Hapus role ${item.nama}`}
                                             onClick={() => handleDelete(item)}
                                         >
-                                            <Trash2 className="h-4 w-4" />
+                                            <Trash2
+                                                className="h-4 w-4"
+                                                aria-hidden="true"
+                                            />
                                         </Button>
                                     )}
                                 </CardFooter>
@@ -332,17 +357,17 @@ export default function Index({ roles, permissions, filters }: Props) {
                     )}
 
                     <Card
-                        className="group m-0 box-border flex min-h-[300px] cursor-pointer flex-col items-center justify-center gap-0 border-4 border-dashed border-black/30 bg-muted/20 pt-0 shadow-none transition-colors hover:border-black/60 hover:bg-muted/40"
+                        className="group m-0 box-border flex min-h-[300px] cursor-pointer flex-col items-center justify-center gap-0 border border-dashed border-border bg-muted/20 pt-0 shadow-none transition-colors hover:border-primary/60 hover:bg-muted/40"
                         onClick={openCreateModal}
                     >
                         <CardContent className="flex h-full flex-col items-center justify-center p-6 pt-6 text-center select-none">
-                            <div className="mb-4 rounded-full border-2 border-black bg-primary p-4 text-primary-foreground shadow-[4px_4px_0_rgba(0,0,0,1)] transition-transform group-hover:scale-110 group-hover:shadow-[6px_6px_0_rgba(0,0,0,1)]">
-                                <Plus className="h-8 w-8 stroke-[3] text-black" />
+                            <div className="mb-4 rounded-full border border-primary/20 bg-primary p-4 text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
+                                <Plus className="h-8 w-8 stroke-[2.5] text-primary-foreground" />
                             </div>
-                            <h3 className="mt-2 text-xl font-black uppercase">
+                            <h3 className="mt-2 text-lg font-semibold tracking-tight">
                                 Tambah Role Baru
                             </h3>
-                            <p className="mt-2 text-sm font-medium text-foreground/70">
+                            <p className="mt-2 text-sm text-muted-foreground">
                                 Buat hak akses kustom baru untuk pegawai
                             </p>
                         </CardContent>
@@ -359,7 +384,9 @@ export default function Index({ roles, permissions, filters }: Props) {
 
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
-                onOpenChange={(open) => !open && setDeleteTarget(null)}
+                onOpenChange={(open) =>
+                    !open && !deleteForm.processing && setDeleteTarget(null)
+                }
                 title="Hapus Role"
                 description="Apakah Anda yakin ingin menghapus role"
                 itemName={deleteTarget?.nama}
@@ -368,17 +395,29 @@ export default function Index({ roles, permissions, filters }: Props) {
             />
 
             {/* Modal Tambah Role */}
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogContent className="top-[50%] max-h-[90vh] max-w-2xl overflow-y-auto border-4 border-black shadow-[8px_8px_0_rgba(0,0,0,1)]">
+            <Dialog
+                open={isCreateOpen}
+                onOpenChange={(open) => !open && closeCreateModal()}
+            >
+                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black tracking-tight uppercase">
+                        <DialogTitle className="text-lg font-semibold tracking-tight">
                             Tambah Role Baru
                         </DialogTitle>
                     </DialogHeader>
                     <form onSubmit={submitCreate} className="mt-2 space-y-6">
+                        {Object.keys(errorsCreate).length > 0 && (
+                            <AlertError
+                                errors={errorsToArray(errorsCreate)}
+                                title="Gagal membuat role"
+                            />
+                        )}
                         <div className="space-y-2">
-                            <Label htmlFor="nama" className="font-bold">
-                                Nama <span className="text-destructive">*</span>
+                            <Label htmlFor="nama">
+                                Nama{' '}
+                                <span className="text-destructive dark:text-red-400">
+                                    *
+                                </span>
                             </Label>
                             <Input
                                 id="nama"
@@ -387,19 +426,16 @@ export default function Index({ roles, permissions, filters }: Props) {
                                     setCreateData('nama', e.target.value)
                                 }
                                 placeholder="Masukkan nama role"
-                                className="border-2 border-black transition-all focus-visible:shadow-[2px_2px_0_rgba(0,0,0,1)]"
                             />
                             {errorsCreate.nama && (
-                                <p className="text-sm font-semibold text-destructive">
+                                <p className="text-sm font-medium text-destructive dark:text-red-400">
                                     {errorsCreate.nama}
                                 </p>
                             )}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="keterangan" className="font-bold">
-                                Keterangan
-                            </Label>
+                            <Label htmlFor="keterangan">Keterangan</Label>
                             <Textarea
                                 id="keterangan"
                                 value={createData.keterangan}
@@ -408,10 +444,9 @@ export default function Index({ roles, permissions, filters }: Props) {
                                 }
                                 placeholder="Masukkan keterangan (opsional)"
                                 rows={3}
-                                className="border-2 border-black transition-all focus-visible:shadow-[2px_2px_0_rgba(0,0,0,1)]"
                             />
                             {errorsCreate.keterangan && (
-                                <p className="text-sm font-semibold text-destructive">
+                                <p className="text-sm font-medium text-destructive dark:text-red-400">
                                     {errorsCreate.keterangan}
                                 </p>
                             )}
@@ -419,15 +454,15 @@ export default function Index({ roles, permissions, filters }: Props) {
 
                         {(permissions || []).length > 0 && (
                             <div className="space-y-4">
-                                <Label className="font-bold">Permissions</Label>
+                                <Label>Permissions</Label>
                                 <div className="grid gap-4 p-1 md:grid-cols-2">
                                     {Object.entries(groupedPermissions).map(
                                         ([group, perms]) => (
                                             <div
                                                 key={group}
-                                                className="space-y-2 rounded-xl border-2 border-black/20 bg-muted/10 p-3"
+                                                className="space-y-2 rounded-xl border border-border bg-muted/30 p-3"
                                             >
-                                                <h3 className="text-sm font-black tracking-wider text-primary uppercase">
+                                                <h3 className="text-xs font-semibold tracking-wider text-primary uppercase">
                                                     {group}
                                                 </h3>
                                                 <div className="mt-2 space-y-2">
@@ -451,7 +486,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                                                             />
                                                             <Label
                                                                 htmlFor={`create-perm-${permission.id}`}
-                                                                className="cursor-pointer text-sm leading-snug font-semibold"
+                                                                className="cursor-pointer text-sm leading-snug font-medium"
                                                             >
                                                                 {
                                                                     permission.nama
@@ -477,7 +512,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setIsCreateOpen(false)}
+                                onClick={closeCreateModal}
                             >
                                 Batal
                             </Button>
@@ -494,21 +529,26 @@ export default function Index({ roles, permissions, filters }: Props) {
                 open={!!editingRole}
                 onOpenChange={(open) => !open && closeEditModal()}
             >
-                <DialogContent className="top-[50%] max-h-[90vh] max-w-2xl overflow-y-auto border-4 border-black shadow-[8px_8px_0_rgba(0,0,0,1)]">
+                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black tracking-tight uppercase">
+                        <DialogTitle className="text-lg font-semibold tracking-tight">
                             Edit Role/Hak Akses
                         </DialogTitle>
                     </DialogHeader>
                     {editingRole && (
                         <form onSubmit={submitEdit} className="mt-2 space-y-6">
+                            {Object.keys(errorsEdit).length > 0 && (
+                                <AlertError
+                                    errors={errorsToArray(errorsEdit)}
+                                    title="Gagal memperbarui role"
+                                />
+                            )}
                             <div className="space-y-2">
-                                <Label
-                                    htmlFor="edit-nama"
-                                    className="font-bold"
-                                >
+                                <Label htmlFor="edit-nama">
                                     Nama{' '}
-                                    <span className="text-destructive">*</span>
+                                    <span className="text-destructive dark:text-red-400">
+                                        *
+                                    </span>
                                 </Label>
                                 <Input
                                     id="edit-nama"
@@ -517,21 +557,17 @@ export default function Index({ roles, permissions, filters }: Props) {
                                         setEditData('nama', e.target.value)
                                     }
                                     placeholder="Masukkan nama role"
-                                    className="border-2 border-black transition-all focus-visible:shadow-[2px_2px_0_rgba(0,0,0,1)]"
                                     disabled={editingRole.is_system}
                                 />
                                 {errorsEdit.nama && (
-                                    <p className="text-sm font-semibold text-destructive">
+                                    <p className="text-sm font-medium text-destructive dark:text-red-400">
                                         {errorsEdit.nama}
                                     </p>
                                 )}
                             </div>
 
                             <div className="space-y-2">
-                                <Label
-                                    htmlFor="edit-keterangan"
-                                    className="font-bold"
-                                >
+                                <Label htmlFor="edit-keterangan">
                                     Keterangan
                                 </Label>
                                 <Textarea
@@ -545,10 +581,9 @@ export default function Index({ roles, permissions, filters }: Props) {
                                     }
                                     placeholder="Masukkan keterangan (opsional)"
                                     rows={3}
-                                    className="border-2 border-black transition-all focus-visible:shadow-[2px_2px_0_rgba(0,0,0,1)]"
                                 />
                                 {errorsEdit.keterangan && (
-                                    <p className="text-sm font-semibold text-destructive">
+                                    <p className="text-sm font-medium text-destructive dark:text-red-400">
                                         {errorsEdit.keterangan}
                                     </p>
                                 )}
@@ -556,17 +591,15 @@ export default function Index({ roles, permissions, filters }: Props) {
 
                             {(permissions || []).length > 0 && (
                                 <div className="space-y-4">
-                                    <Label className="font-bold">
-                                        Permissions
-                                    </Label>
+                                    <Label>Permissions</Label>
                                     <div className="grid gap-4 p-1 md:grid-cols-2">
                                         {Object.entries(groupedPermissions).map(
                                             ([group, perms]) => (
                                                 <div
                                                     key={group}
-                                                    className="space-y-2 rounded-xl border-2 border-black/20 bg-muted/10 p-3"
+                                                    className="space-y-2 rounded-xl border border-border bg-muted/30 p-3"
                                                 >
-                                                    <h3 className="text-sm font-black tracking-wider text-primary uppercase">
+                                                    <h3 className="text-xs font-semibold tracking-wider text-primary uppercase">
                                                         {group}
                                                     </h3>
                                                     <div className="mt-2 space-y-2">
@@ -593,7 +626,7 @@ export default function Index({ roles, permissions, filters }: Props) {
                                                                     />
                                                                     <Label
                                                                         htmlFor={`edit-perm-${permission.id}`}
-                                                                        className="cursor-pointer text-sm leading-snug font-semibold"
+                                                                        className="cursor-pointer text-sm leading-snug font-medium"
                                                                     >
                                                                         {
                                                                             permission.nama
@@ -616,20 +649,15 @@ export default function Index({ roles, permissions, filters }: Props) {
                                     </div>
                                 </div>
                             )}
-                            <DialogFooter className="mt-6 gap-2 border-t-2 border-black/10 pt-2 sm:gap-0">
+                            <DialogFooter className="mt-6 gap-2 border-t border-border pt-4 sm:gap-0">
                                 <Button
                                     type="button"
                                     variant="outline"
                                     onClick={closeEditModal}
-                                    className="font-bold"
                                 >
                                     Batal
                                 </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={processingEdit}
-                                    className="font-bold"
-                                >
+                                <Button type="submit" disabled={processingEdit}>
                                     Perbarui Role
                                 </Button>
                             </DialogFooter>

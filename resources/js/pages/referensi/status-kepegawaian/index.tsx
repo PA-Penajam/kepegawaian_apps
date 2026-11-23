@@ -34,7 +34,16 @@ type Props = {
 };
 
 export default function Index({ statusKepegawaian, filters }: Props) {
-    const [search, setSearch] = useState(filters.search ?? '');
+    const [search, setSearch] = useState(filters?.search ?? '');
+    const [prevSearchFilter, setPrevSearchFilter] = useState(
+        filters?.search ?? '',
+    );
+
+    if ((filters?.search ?? '') !== prevSearchFilter) {
+        setPrevSearchFilter(filters?.search ?? '');
+        setSearch(filters?.search ?? '');
+    }
+
     const [deleteTarget, setDeleteTarget] = useState<{
         id: string;
         nama: string;
@@ -53,21 +62,28 @@ export default function Index({ statusKepegawaian, filters }: Props) {
         [],
     );
 
-    const handleSearch = useCallback(() => {
+    const handleSearch = useCallback((value: string) => {
         router.get(
             statusKepegawaianIndex.url(),
-            { search },
-            { preserveState: true, preserveScroll: true },
+            value ? { search: value } : {},
+            { preserveState: true, preserveScroll: true, replace: true },
         );
-    }, [search]);
+    }, []);
 
     useEffect(() => {
+        const normalizedSearch = search.trim();
+        const currentSearch = (filters?.search ?? '').trim();
+
+        if (normalizedSearch === currentSearch) {
+            return undefined;
+        }
+
         const timeout = setTimeout(() => {
-            handleSearch();
+            handleSearch(normalizedSearch);
         }, 300);
 
         return () => clearTimeout(timeout);
-    }, [search, handleSearch]);
+    }, [search, filters?.search, handleSearch]);
 
     const handleDelete = (id: string, nama: string) => {
         setDeleteTarget({ id, nama });
@@ -75,8 +91,8 @@ export default function Index({ statusKepegawaian, filters }: Props) {
 
     const confirmDelete = () => {
         if (!deleteTarget) {
-return;
-}
+            return;
+        }
 
         deleteForm.delete(destroy.url(deleteTarget.id), {
             onSuccess: () => setDeleteTarget(null),
@@ -90,10 +106,10 @@ return;
             <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight uppercase">
+                        <h1 className="text-2xl font-semibold tracking-tight">
                             Status Kepegawaian
                         </h1>
-                        <p className="mt-1 text-sm font-medium text-muted-foreground">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Kelola status kepegawaian pegawai dalam sistem.
                         </p>
                     </div>
@@ -110,24 +126,24 @@ return;
                         placeholder="Cari status kepegawaian..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="max-w-md border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all focus-visible:translate-x-[2px] focus-visible:translate-y-[2px] focus-visible:shadow-none"
+                        className="max-w-md"
                     />
                 </div>
 
-                <div className="overflow-hidden rounded-xl border-2 border-black bg-background shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                     <Table>
                         <TableHeader>
-                            <TableRow className="border-b-2 border-black bg-muted/30 hover:bg-muted/30">
-                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                            <TableRow className="bg-muted/50 hover:bg-muted/50">
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                     Kode
                                 </TableHead>
-                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                     Nama
                                 </TableHead>
-                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                     Keterangan
                                 </TableHead>
-                                <TableHead className="w-[100px] text-center text-xs font-black tracking-wider uppercase">
+                                <TableHead className="w-[100px] text-center text-xs font-semibold tracking-wider text-foreground uppercase">
                                     Aksi
                                 </TableHead>
                             </TableRow>
@@ -145,11 +161,8 @@ return;
                                 </TableRow>
                             ) : (
                                 statusKepegawaian.data.map((item) => (
-                                    <TableRow
-                                        key={item.id}
-                                        className="border-b border-black/10 transition-colors hover:bg-muted/20"
-                                    >
-                                        <TableCell className="font-bold">
+                                    <TableRow key={item.id}>
+                                        <TableCell className="tnum font-semibold">
                                             {item.kode}
                                         </TableCell>
                                         <TableCell className="font-medium">
@@ -163,15 +176,20 @@ return;
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
+                                                    aria-label={`Edit ${item.nama}`}
                                                     asChild
                                                 >
                                                     <Link href={edit(item.id)}>
-                                                        <Pencil className="h-4 w-4" />
+                                                        <Pencil
+                                                            className="h-4 w-4"
+                                                            aria-hidden="true"
+                                                        />
                                                     </Link>
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
+                                                    aria-label={`Hapus ${item.nama}`}
                                                     onClick={() =>
                                                         handleDelete(
                                                             item.id,
@@ -179,7 +197,10 @@ return;
                                                         )
                                                     }
                                                 >
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                    <Trash2
+                                                        className="h-4 w-4 text-destructive"
+                                                        aria-hidden="true"
+                                                    />
                                                 </Button>
                                             </div>
                                         </TableCell>
@@ -198,7 +219,9 @@ return;
 
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
-                onOpenChange={(open) => !open && setDeleteTarget(null)}
+                onOpenChange={(open) =>
+                    !open && !deleteForm.processing && setDeleteTarget(null)
+                }
                 title="Hapus Status Kepegawaian"
                 description="Apakah Anda yakin ingin menghapus status kepegawaian"
                 itemName={deleteTarget?.nama}

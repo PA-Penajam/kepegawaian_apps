@@ -4,6 +4,8 @@ import {
     approveAtasan,
     approvePejabat,
 } from '@/actions/App/Http/Controllers/Cuti/ApprovalController';
+import AlertError from '@/components/alert-error';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -16,6 +18,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { formatTanggal } from '@/lib/cuti-utils';
+import { errorsToArray } from '@/lib/form-errors';
 import type { CutiPengajuan, ApproverRole } from '@/types/cuti';
 import { CutiStateLabels } from '@/types/cuti';
 
@@ -55,22 +58,35 @@ function getActionLabel(role: ApproverRole): string {
 }
 
 export function DialogApprove({ pengajuan, role, open, onClose }: Props) {
-    const { data, setData, post, processing, reset } = useForm({
-        catatan: '',
-    });
+    const { data, setData, post, processing, errors, reset, clearErrors } =
+        useForm({
+            catatan: '',
+        });
+
+    function handleClose() {
+        clearErrors();
+        reset();
+        onClose();
+    }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         post(getApproveUrl(role, pengajuan.id), {
             onSuccess: () => {
-                reset();
-                onClose();
+                handleClose();
             },
         });
     }
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <Dialog
+            open={open}
+            onOpenChange={(isOpen) => {
+                if (!isOpen && !processing) {
+                    handleClose();
+                }
+            }}
+        >
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>
@@ -126,22 +142,40 @@ export function DialogApprove({ pengajuan, role, open, onClose }: Props) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {Object.keys(errors).length > 0 && (
+                        <AlertError
+                            errors={errorsToArray(errors)}
+                            title="Gagal menyetujui pengajuan cuti"
+                        />
+                    )}
+
                     <div className="space-y-2">
                         <Label htmlFor="catatan">Catatan (opsional)</Label>
                         <Textarea
                             id="catatan"
                             value={data.catatan}
-                            onChange={(e) => setData('catatan', e.target.value)}
+                            onChange={(e) => {
+                                setData('catatan', e.target.value);
+
+                                if (errors.catatan) {
+                                    clearErrors('catatan');
+                                }
+                            }}
                             placeholder="Tambahkan catatan jika diperlukan..."
                             rows={3}
+                            aria-invalid={Boolean(errors.catatan)}
+                            className={
+                                errors.catatan ? 'border-destructive' : ''
+                            }
                         />
+                        <InputError message={errors.catatan} />
                     </div>
 
                     <DialogFooter>
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={onClose}
+                            onClick={handleClose}
                             disabled={processing}
                         >
                             Batal

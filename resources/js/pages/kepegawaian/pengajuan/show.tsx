@@ -1,4 +1,4 @@
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import AlertError from '@/components/alert-error';
 import AppLayout from '@/layouts/app-layout';
 import { errorsToArray } from '@/lib/form-errors';
@@ -15,6 +15,7 @@ export default function ValidatorPengajuanShow({
     pengajuan,
     diffItems,
 }: Props) {
+    const approveForm = useForm({});
     const rejectForm = useForm({ alasan_penolakan: '' });
 
     return (
@@ -44,56 +45,65 @@ export default function ValidatorPengajuanShow({
                     </div>
                 ))}
                 {pengajuan.status === 'pending' && (
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            onClick={() =>
-                                router.post(
-                                    `/kepegawaian/pengajuan/${pengajuan.id}/approve`,
-                                )
-                            }
-                            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white"
-                        >
-                            Approve
-                        </button>
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                rejectForm.post(
-                                    `/kepegawaian/pengajuan/${pengajuan.id}/reject`,
-                                );
-                            }}
-                            className="flex flex-wrap items-center gap-2"
-                        >
-                            {Object.keys(rejectForm.errors).length > 0 && (
-                                <div className="w-full">
-                                    <AlertError
-                                        errors={errorsToArray(
-                                            rejectForm.errors,
-                                        )}
-                                        title="Gagal menolak pengajuan"
-                                    />
-                                </div>
-                            )}
-                            <input
-                                value={rejectForm.data.alasan_penolakan}
-                                onChange={(e) =>
-                                    rejectForm.setData(
-                                        'alasan_penolakan',
-                                        e.target.value,
+                    <div className="flex flex-col gap-3">
+                        {Object.keys(approveForm.errors).length > 0 && (
+                            <AlertError
+                                errors={errorsToArray(approveForm.errors)}
+                                title="Gagal menyetujui pengajuan"
+                            />
+                        )}
+                        <div className="flex flex-wrap items-start gap-2">
+                            <button
+                                type="button"
+                                disabled={approveForm.processing}
+                                onClick={() =>
+                                    approveForm.post(
+                                        `/kepegawaian/pengajuan/${pengajuan.id}/approve`,
                                     )
                                 }
-                                placeholder="Alasan penolakan (min 10 karakter)"
-                                className="rounded-md border px-3 py-2 text-sm"
-                            />
-                            <button
-                                type="submit"
-                                disabled={rejectForm.processing}
-                                className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground"
+                                className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                             >
-                                Reject
+                                Approve
                             </button>
-                        </form>
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    rejectForm.post(
+                                        `/kepegawaian/pengajuan/${pengajuan.id}/reject`,
+                                    );
+                                }}
+                                className="flex flex-wrap items-center gap-2"
+                            >
+                                {Object.keys(rejectForm.errors).length > 0 && (
+                                    <div className="w-full">
+                                        <AlertError
+                                            errors={errorsToArray(
+                                                rejectForm.errors,
+                                            )}
+                                            title="Gagal menolak pengajuan"
+                                        />
+                                    </div>
+                                )}
+                                <input
+                                    value={rejectForm.data.alasan_penolakan}
+                                    onChange={(e) =>
+                                        rejectForm.setData(
+                                            'alasan_penolakan',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="Alasan penolakan (min 10 karakter)"
+                                    className="rounded-md border px-3 py-2 text-sm"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={rejectForm.processing}
+                                    className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground"
+                                >
+                                    Reject
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 )}
             </div>

@@ -30,7 +30,9 @@ export default function PengajuanCreate({ jenisCutiList, saldoData }: Props) {
                         </Link>
                     </Button>
                     <div>
-                        <h1 className="text-xl font-semibold tracking-tight">Ajukan Cuti Baru</h1>
+                        <h1 className="text-xl font-semibold tracking-tight">
+                            Ajukan Cuti Baru
+                        </h1>
                         <p className="text-sm text-muted-foreground">
                             Isi formulir di bawah untuk mengajukan cuti.
                         </p>
@@ -40,10 +42,15 @@ export default function PengajuanCreate({ jenisCutiList, saldoData }: Props) {
                 {/* Form */}
                 <Card className="max-w-2xl">
                     <CardHeader>
-                        <CardTitle className="text-base">Formulir Pengajuan Cuti</CardTitle>
+                        <CardTitle className="text-base">
+                            Formulir Pengajuan Cuti
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <FormPengajuan jenisCutiList={jenisCutiList} saldoData={saldoData} />
+                        <FormPengajuan
+                            jenisCutiList={jenisCutiList}
+                            saldoData={saldoData}
+                        />
                     </CardContent>
                 </Card>
             </div>

@@ -33,51 +33,74 @@ type Props = {
 };
 
 /**
- * Menentukan role approver berdasarkan permissions user.
+ * Menentukan role approver per baris berdasarkan state pengajuan, NIP current approver, dan permissions user.
  */
-function resolveRole(permissions: string[]): ApproverRole {
-    if (permissions.includes('cuti.pengajuan.approve-pejabat')) {
-        return 'pejabat_berwenang';
+function resolveRowRole(
+    item: CutiPengajuan,
+    userNip: string,
+    permissions: string[],
+): ApproverRole | null {
+    if (
+        item.state === 'DIAJUKAN' &&
+        permissions.includes('cuti.pengajuan.verify') &&
+        item.petugas_kepegawaian_current_nip === userNip
+    ) {
+        return 'petugas_kepegawaian';
     }
 
-    if (permissions.includes('cuti.pengajuan.approve-langsung')) {
+    if (
+        item.state === 'DIVERIFIKASI' &&
+        permissions.includes('cuti.pengajuan.approve-langsung') &&
+        item.atasan_langsung_current_nip === userNip
+    ) {
         return 'atasan_langsung';
     }
 
-    return 'petugas_kepegawaian';
-}
+    if (
+        item.state === 'DISETUJUI_ATASAN' &&
+        permissions.includes('cuti.pengajuan.approve-pejabat') &&
+        item.pejabat_berwenang_current_nip === userNip
+    ) {
+        return 'pejabat_berwenang';
+    }
 
-/**
- * Format tanggal ke format singkat Indonesia.
- */
+    return null;
+}
 
 /**
  * Label tombol aksi berdasarkan role.
  */
 function getApproveButtonLabel(role: ApproverRole): string {
     if (role === 'petugas_kepegawaian') {
-return 'Verifikasi';
-}
+        return 'Verifikasi';
+    }
 
     return 'Setujui';
 }
 
 export default function InboxPage({ pengajuanList }: Props) {
     const { auth } = usePage<{ auth: Auth }>().props;
-    const role = resolveRole(auth.user.permissions ?? []);
+    const userNip = auth.user.nip;
+    const permissions = auth.user.permissions ?? [];
 
-    // State untuk dialog approve & reject
-    const [selectedPengajuan, setSelectedPengajuan] = useState<CutiPengajuan | null>(null);
+    // State untuk dialog approve & reject beserta role per baris
+    const [selectedPengajuan, setSelectedPengajuan] =
+        useState<CutiPengajuan | null>(null);
+    const [selectedRole, setSelectedRole] = useState<ApproverRole>(
+        'petugas_kepegawaian',
+    );
     const [showApproveDialog, setShowApproveDialog] = useState(false);
     const [showRejectDialog, setShowRejectDialog] = useState(false);
 
-    function handleOpenApprove(pengajuan: CutiPengajuan) {
+    function handleOpenApprove(pengajuan: CutiPengajuan, role: ApproverRole) {
         setSelectedPengajuan(pengajuan);
+        setSelectedRole(role);
         setShowApproveDialog(true);
     }
 
-    function handleOpenReject(pengajuan: CutiPengajuan) {
+    function handleOpenReject(pengajuan: CutiPengajuan, role: ApproverRole) {
         setSelectedPengajuan(pengajuan);
+        setSelectedRole(role);
         setShowRejectDialog(true);
     }
 
@@ -113,64 +136,105 @@ export default function InboxPage({ pengajuanList }: Props) {
                                     <TableHead>Pegawai</TableHead>
                                     <TableHead>Jenis Cuti</TableHead>
                                     <TableHead>Tanggal</TableHead>
-                                    <TableHead className="text-center">Durasi</TableHead>
+                                    <TableHead className="text-center">
+                                        Durasi
+                                    </TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Aksi</TableHead>
+                                    <TableHead className="text-right">
+                                        Aksi
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {items.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell className="font-medium">
-                                            {item.nomor_pengajuan}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div>
-                                                <p className="font-medium">
-                                                    {item.pegawai?.nama_lengkap ?? '-'}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {item.pegawai?.nip ?? '-'}
-                                                </p>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {item.jenis_cuti?.nama ?? '-'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="text-sm">
-                                                {formatTanggal(item.tanggal_mulai)} — {formatTanggal(item.tanggal_selesai)}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            {item.jumlah_hari_kerja} hari
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={CutiStateBadgeVariant[item.state as CutiState] ?? 'outline'}
-                                            >
-                                                {CutiStateLabels[item.state as CutiState] ?? item.state}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => handleOpenApprove(item)}
+                                {items.map((item) => {
+                                    const rowRole = resolveRowRole(
+                                        item,
+                                        userNip,
+                                        permissions,
+                                    );
+
+                                    return (
+                                        <TableRow key={item.id}>
+                                            <TableCell className="font-medium">
+                                                {item.nomor_pengajuan}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div>
+                                                    <p className="font-medium">
+                                                        {item.pegawai
+                                                            ?.nama_lengkap ??
+                                                            '-'}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {item.pegawai?.nip ??
+                                                            '-'}
+                                                    </p>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                {item.jenis_cuti?.nama ?? '-'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="text-sm">
+                                                    {formatTanggal(
+                                                        item.tanggal_mulai,
+                                                    )}{' '}
+                                                    —{' '}
+                                                    {formatTanggal(
+                                                        item.tanggal_selesai,
+                                                    )}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {item.jumlah_hari_kerja} hari
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant={
+                                                        CutiStateBadgeVariant[
+                                                            item.state as CutiState
+                                                        ] ?? 'outline'
+                                                    }
                                                 >
-                                                    {getApproveButtonLabel(role)}
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="destructive"
-                                                    onClick={() => handleOpenReject(item)}
-                                                >
-                                                    Tolak
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                                    {CutiStateLabels[
+                                                        item.state as CutiState
+                                                    ] ?? item.state}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {rowRole ? (
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                handleOpenApprove(
+                                                                    item,
+                                                                    rowRole,
+                                                                )
+                                                            }
+                                                        >
+                                                            {getApproveButtonLabel(
+                                                                rowRole,
+                                                            )}
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="destructive"
+                                                            onClick={() =>
+                                                                handleOpenReject(
+                                                                    item,
+                                                                    rowRole,
+                                                                )
+                                                            }
+                                                        >
+                                                            Tolak
+                                                        </Button>
+                                                    </div>
+                                                ) : null}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
 
@@ -199,7 +263,7 @@ export default function InboxPage({ pengajuanList }: Props) {
             {selectedPengajuan && showApproveDialog && (
                 <DialogApprove
                     pengajuan={selectedPengajuan}
-                    role={role}
+                    role={selectedRole}
                     open={showApproveDialog}
                     onClose={handleCloseDialogs}
                 />
@@ -209,6 +273,7 @@ export default function InboxPage({ pengajuanList }: Props) {
             {selectedPengajuan && showRejectDialog && (
                 <DialogReject
                     pengajuan={selectedPengajuan}
+                    role={selectedRole}
                     open={showRejectDialog}
                     onClose={handleCloseDialogs}
                 />

@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import type { FormEventHandler} from 'react';
+import type { FormEventHandler } from 'react';
 import { useMemo, useState } from 'react';
 import AlertError from '@/components/alert-error';
 import InputError from '@/components/input-error';
@@ -29,25 +29,28 @@ type Props = {
  * Menggunakan Inertia useForm untuk submit data termasuk file lampiran.
  */
 export function FormPengajuan({ jenisCutiList, saldoData }: Props) {
-    const { data, setData, post, processing, errors, reset, progress } = useForm<{
-        jenis_cuti_kode: string;
-        tanggal_mulai: string;
-        tanggal_selesai: string;
-        alasan: string;
-        alamat_selama_cuti: string;
-        nomor_telp_selama_cuti: string;
-        lampiran: File[];
-    }>({
-        jenis_cuti_kode: '',
-        tanggal_mulai: '',
-        tanggal_selesai: '',
-        alasan: '',
-        alamat_selama_cuti: '',
-        nomor_telp_selama_cuti: '',
-        lampiran: [],
-    });
+    const { data, setData, post, processing, errors, reset, progress } =
+        useForm<{
+            jenis_cuti_kode: string;
+            tanggal_mulai: string;
+            tanggal_selesai: string;
+            alasan: string;
+            alamat_selama_cuti: string;
+            nomor_telp_selama_cuti: string;
+            lampiran: File[];
+        }>({
+            jenis_cuti_kode: '',
+            tanggal_mulai: '',
+            tanggal_selesai: '',
+            alasan: '',
+            alamat_selama_cuti: '',
+            nomor_telp_selama_cuti: '',
+            lampiran: [],
+        });
 
-    const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
+    const [clientErrors, setClientErrors] = useState<Record<string, string>>(
+        {},
+    );
 
     // Jenis cuti yang dipilih saat ini
     const selectedJenis = useMemo(
@@ -56,7 +59,9 @@ export function FormPengajuan({ jenisCutiList, saldoData }: Props) {
     );
 
     // Saldo tersedia untuk jenis yang dipilih
-    const saldoTersedia = data.jenis_cuti_kode ? saldoData[data.jenis_cuti_kode] : undefined;
+    const saldoTersedia = data.jenis_cuti_kode
+        ? saldoData[data.jenis_cuti_kode]
+        : undefined;
 
     // Validasi client-side
     const validateForm = (): boolean => {
@@ -86,7 +91,8 @@ export function FormPengajuan({ jenisCutiList, saldoData }: Props) {
             minDate.setHours(0, 0, 0, 0);
 
             if (mulai < minDate) {
-                errs.tanggal_mulai = 'Cuti tahunan harus diajukan minimal 3 hari sebelumnya.';
+                errs.tanggal_mulai =
+                    'Cuti tahunan harus diajukan minimal 3 hari sebelumnya.';
             }
         }
 
@@ -96,12 +102,14 @@ export function FormPengajuan({ jenisCutiList, saldoData }: Props) {
             const tahunSelesai = new Date(data.tanggal_selesai).getFullYear();
 
             if (tahunMulai !== tahunSelesai) {
-                errs.tanggal_selesai = 'Tanggal mulai dan selesai harus dalam tahun yang sama.';
+                errs.tanggal_selesai =
+                    'Tanggal mulai dan selesai harus dalam tahun yang sama.';
             }
 
             // Selesai >= mulai
             if (new Date(data.tanggal_selesai) < new Date(data.tanggal_mulai)) {
-                errs.tanggal_selesai = 'Tanggal selesai tidak boleh sebelum tanggal mulai.';
+                errs.tanggal_selesai =
+                    'Tanggal selesai tidak boleh sebelum tanggal mulai.';
             }
         }
 
@@ -114,8 +122,8 @@ export function FormPengajuan({ jenisCutiList, saldoData }: Props) {
         e.preventDefault();
 
         if (!validateForm()) {
-return;
-}
+            return;
+        }
 
         post('/cuti/pengajuan', {
             forceFormData: true,
@@ -133,7 +141,8 @@ return;
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            {(Object.keys(errors).length > 0 || Object.keys(clientErrors).length > 0) && (
+            {(Object.keys(errors).length > 0 ||
+                Object.keys(clientErrors).length > 0) && (
                 <AlertError
                     errors={[
                         ...errorsToArray(errors),
@@ -160,11 +169,18 @@ return;
                         ))}
                     </SelectContent>
                 </Select>
-                <InputError message={clientErrors.jenis_cuti_kode || errors.jenis_cuti_kode} />
+                <InputError
+                    message={
+                        clientErrors.jenis_cuti_kode || errors.jenis_cuti_kode
+                    }
+                />
                 {/* Tampilkan saldo jika jenis saldo_driven */}
                 {selectedJenis?.saldo_driven && saldoTersedia !== undefined && (
                     <p className="text-xs text-muted-foreground">
-                        Saldo tersedia: <span className="font-semibold">{saldoTersedia} hari</span>
+                        Saldo tersedia:{' '}
+                        <span className="font-semibold">
+                            {saldoTersedia} hari
+                        </span>
                     </p>
                 )}
             </div>
@@ -177,9 +193,15 @@ return;
                         id="tanggal_mulai"
                         type="date"
                         value={data.tanggal_mulai}
-                        onChange={(e) => setData('tanggal_mulai', e.target.value)}
+                        onChange={(e) =>
+                            setData('tanggal_mulai', e.target.value)
+                        }
                     />
-                    <InputError message={clientErrors.tanggal_mulai || errors.tanggal_mulai} />
+                    <InputError
+                        message={
+                            clientErrors.tanggal_mulai || errors.tanggal_mulai
+                        }
+                    />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="tanggal_selesai">Tanggal Selesai</Label>
@@ -187,9 +209,16 @@ return;
                         id="tanggal_selesai"
                         type="date"
                         value={data.tanggal_selesai}
-                        onChange={(e) => setData('tanggal_selesai', e.target.value)}
+                        onChange={(e) =>
+                            setData('tanggal_selesai', e.target.value)
+                        }
                     />
-                    <InputError message={clientErrors.tanggal_selesai || errors.tanggal_selesai} />
+                    <InputError
+                        message={
+                            clientErrors.tanggal_selesai ||
+                            errors.tanggal_selesai
+                        }
+                    />
                 </div>
             </div>
 
@@ -209,12 +238,15 @@ return;
             {/* Alamat Selama Cuti */}
             <div className="space-y-2">
                 <Label htmlFor="alamat_selama_cuti">
-                    Alamat Selama Cuti <span className="text-muted-foreground">(opsional)</span>
+                    Alamat Selama Cuti{' '}
+                    <span className="text-muted-foreground">(opsional)</span>
                 </Label>
                 <Input
                     id="alamat_selama_cuti"
                     value={data.alamat_selama_cuti}
-                    onChange={(e) => setData('alamat_selama_cuti', e.target.value)}
+                    onChange={(e) =>
+                        setData('alamat_selama_cuti', e.target.value)
+                    }
                     placeholder="Alamat yang bisa dihubungi selama cuti"
                 />
                 <InputError message={errors.alamat_selama_cuti} />
@@ -223,12 +255,15 @@ return;
             {/* Nomor Telepon */}
             <div className="space-y-2">
                 <Label htmlFor="nomor_telp_selama_cuti">
-                    No. Telepon Selama Cuti <span className="text-muted-foreground">(opsional)</span>
+                    No. Telepon Selama Cuti{' '}
+                    <span className="text-muted-foreground">(opsional)</span>
                 </Label>
                 <Input
                     id="nomor_telp_selama_cuti"
                     value={data.nomor_telp_selama_cuti}
-                    onChange={(e) => setData('nomor_telp_selama_cuti', e.target.value)}
+                    onChange={(e) =>
+                        setData('nomor_telp_selama_cuti', e.target.value)
+                    }
                     placeholder="08xxxxxxxxxx"
                 />
                 <InputError message={errors.nomor_telp_selama_cuti} />

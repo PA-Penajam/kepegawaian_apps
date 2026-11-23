@@ -1,5 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem } from '@/types';
 
 type PegawaiSummary = {
@@ -111,6 +115,12 @@ export default function RiwayatDiklatPage({
         null,
     );
     const [form, setForm] = useState<RiwayatDiklatForm>(emptyForm);
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [submitting, setSubmitting] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<RiwayatDiklatItem | null>(
+        null,
+    );
+    const [deleting, setDeleting] = useState(false);
 
     const breadcrumbs = useMemo<BreadcrumbItem[]>(
         () => [
@@ -133,12 +143,14 @@ export default function RiwayatDiklatPage({
     const openCreateDialog = () => {
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
     const openEditDialog = (item: RiwayatDiklatItem) => {
         setEditingItem(item);
         setForm(toFormState(item));
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
@@ -146,12 +158,21 @@ export default function RiwayatDiklatPage({
         setIsDialogOpen(false);
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
     };
 
     const submitForm = () => {
         const requestOptions = {
             preserveScroll: true,
-            onSuccess: () => closeDialog(),
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
+            onSuccess: () => {
+                setFormErrors({});
+                closeDialog();
+            },
+            onError: (errors: Record<string, string>) => {
+                setFormErrors(errors);
+            },
         };
 
         if (editingItem !== null) {
@@ -163,13 +184,16 @@ export default function RiwayatDiklatPage({
         router.post(storeUrl, toPayload(form), requestOptions);
     };
 
-    const handleDelete = (item: RiwayatDiklatItem) => {
-        if (!window.confirm('Hapus riwayat diklat ini?')) {
+    const confirmDelete = () => {
+        if (deleteTarget === null) {
             return;
         }
 
-        router.delete(item.delete_url, {
+        router.delete(deleteTarget.delete_url, {
             preserveScroll: true,
+            onStart: () => setDeleting(true),
+            onFinish: () => setDeleting(false),
+            onSuccess: () => setDeleteTarget(null),
         });
     };
 
@@ -283,7 +307,9 @@ export default function RiwayatDiklatPage({
                                                         type="button"
                                                         variant="destructive"
                                                         onClick={() =>
-                                                            handleDelete(item)
+                                                            setDeleteTarget(
+                                                                item,
+                                                            )
                                                         }
                                                     >
                                                         Hapus
@@ -299,7 +325,14 @@ export default function RiwayatDiklatPage({
                 </div>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open && !submitting) {
+                        closeDialog();
+                    }
+                }}
+            >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>
@@ -311,6 +344,13 @@ export default function RiwayatDiklatPage({
                             Isi data lengkap riwayat diklat/pelatihan.
                         </DialogDescription>
                     </DialogHeader>
+
+                    {Object.keys(formErrors).length > 0 && (
+                        <AlertError
+                            errors={errorsToArray(formErrors)}
+                            title="Gagal menyimpan riwayat diklat"
+                        />
+                    )}
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
@@ -335,6 +375,9 @@ export default function RiwayatDiklatPage({
                                     </option>
                                 ))}
                             </select>
+                            <InputError
+                                message={formErrors.ref_jenis_diklat_id}
+                            />
                         </div>
 
                         <div className="grid gap-2">
@@ -349,6 +392,7 @@ export default function RiwayatDiklatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.nama_diklat} />
                         </div>
 
                         <div className="grid gap-2">
@@ -365,6 +409,7 @@ export default function RiwayatDiklatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.penyelenggara} />
                         </div>
 
                         <div className="grid gap-2">
@@ -379,6 +424,7 @@ export default function RiwayatDiklatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tempat} />
                         </div>
 
                         <div className="grid gap-2">
@@ -396,6 +442,7 @@ export default function RiwayatDiklatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tanggal_mulai} />
                         </div>
 
                         <div className="grid gap-2">
@@ -413,6 +460,7 @@ export default function RiwayatDiklatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tanggal_selesai} />
                         </div>
 
                         <div className="grid gap-2">
@@ -428,6 +476,7 @@ export default function RiwayatDiklatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.jam_pelajaran} />
                         </div>
 
                         <div className="grid gap-2">
@@ -442,6 +491,7 @@ export default function RiwayatDiklatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.no_sertifikat} />
                         </div>
 
                         <div className="grid gap-2">
@@ -459,6 +509,9 @@ export default function RiwayatDiklatPage({
                                     }))
                                 }
                             />
+                            <InputError
+                                message={formErrors.tanggal_sertifikat}
+                            />
                         </div>
 
                         <div className="grid gap-2 sm:col-span-2">
@@ -475,6 +528,7 @@ export default function RiwayatDiklatPage({
                                 }
                                 className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
+                            <InputError message={formErrors.keterangan} />
                         </div>
                     </div>
 
@@ -483,15 +537,34 @@ export default function RiwayatDiklatPage({
                             type="button"
                             variant="outline"
                             onClick={closeDialog}
+                            disabled={submitting}
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={submitForm}>
-                            Simpan
+                        <Button
+                            type="button"
+                            onClick={submitForm}
+                            processing={submitting}
+                        >
+                            {submitting ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDeleteDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open && !deleting) {
+                        setDeleteTarget(null);
+                    }
+                }}
+                title="Hapus Riwayat Diklat"
+                description="Apakah Anda yakin ingin menghapus riwayat diklat"
+                itemName={deleteTarget?.nama_diklat}
+                onConfirm={confirmDelete}
+                processing={deleting}
+            />
         </AppLayout>
     );
 }

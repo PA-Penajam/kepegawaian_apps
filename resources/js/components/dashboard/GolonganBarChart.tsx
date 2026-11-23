@@ -44,9 +44,9 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         const percentage = data.payload?.percentage ?? 0;
 
         return (
-            <div className="rounded border border-gray-300 bg-white px-3 py-2 shadow-sm">
+            <div className="rounded-md border border-border bg-popover px-3 py-2 text-popover-foreground shadow-sm">
                 <p className="font-semibold">{label}</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                     {data.value} pegawai ({percentage}%)
                 </p>
             </div>

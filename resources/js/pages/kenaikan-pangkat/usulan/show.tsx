@@ -1,4 +1,4 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, router, useForm } from '@inertiajs/react';
 import {
     ArrowLeft,
     CheckCircle2,
@@ -8,12 +8,25 @@ import {
     History,
     Pencil,
     RotateCcw,
+    Send,
+    Trash2,
     Upload,
     XCircle,
 } from 'lucide-react';
+import { useState } from 'react';
+import AlertError from '@/components/alert-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -25,7 +38,21 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
+import {
+    batalkan as batalkanRoute,
+    submit as submitRoute,
+} from '@/routes/kenaikan-pangkat/usulan';
+import {
+    upload as uploadChecklistRoute,
+    validate as validateChecklistRoute,
+} from '@/routes/kenaikan-pangkat/usulan/checklist';
+import {
+    destroy as destroyLampiranRoute,
+    store as storeLampiranRoute,
+} from '@/routes/kenaikan-pangkat/usulan/lampiran';
 import type { BreadcrumbItem } from '@/types';
 
 type PegawaiSummary = {
@@ -52,6 +79,12 @@ type ChecklistItem = {
     catatan?: string | null;
     file_original_name?: string | null;
     uploaded_at?: string | null;
+    item?: {
+        id: string;
+        kode?: string | null;
+        nama?: string | null;
+        wajib?: boolean | null;
+    } | null;
 };
 
 type ChecklistSubmission = {
@@ -64,11 +97,13 @@ type ChecklistSubmission = {
 
 type Lampiran = {
     id: string;
+    jenis?: string | null;
     nama_file_asli?: string | null;
     file_original_name?: string | null;
     jenis_lampiran?: string | null;
     mime_type?: string | null;
     size_bytes?: number | null;
+    file_size?: number | null;
     created_at?: string | null;
 };
 
@@ -134,7 +169,9 @@ type UsulanKenaikanPangkat = {
 type Policy = {
     update?: boolean;
     batalkan?: boolean;
+    submit?: boolean;
     uploadChecklist?: boolean;
+    validateChecklist?: boolean;
     uploadLampiran?: boolean;
 };
 
@@ -147,7 +184,10 @@ type Props = {
     timeline?: TimelineEntry[];
     policy?: Policy;
     stateLabels?: Record<string, string>;
-    stateBadgeVariants?: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'>;
+    stateBadgeVariants?: Record<
+        string,
+        'default' | 'secondary' | 'destructive' | 'outline'
+    >;
     timelineIcons?: TimelineIconMap;
 };
 
@@ -210,7 +250,9 @@ function formatPangkat(pangkat?: PangkatSummary | null): string {
         return '-';
     }
 
-    const golongan = [pangkat.golongan, pangkat.ruang].filter(Boolean).join('/');
+    const golongan = [pangkat.golongan, pangkat.ruang]
+        .filter(Boolean)
+        .join('/');
     const label = [pangkat.kode, pangkat.nama].filter(Boolean).join(' - ');
 
     return golongan ? `${label} (${golongan})` : label || '-';
@@ -243,14 +285,22 @@ function humanize(value?: string | null): string {
         .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function statusVariant(status?: string | null): 'default' | 'secondary' | 'destructive' | 'outline' {
+function statusVariant(
+    status?: string | null,
+): 'default' | 'secondary' | 'destructive' | 'outline' {
     const normalized = status?.toLowerCase();
 
-    if (['valid', 'approved', 'disetujui', 'selesai', 'lengkap'].includes(normalized ?? '')) {
+    if (
+        ['valid', 'approved', 'disetujui', 'selesai', 'lengkap'].includes(
+            normalized ?? '',
+        )
+    ) {
         return 'default';
     }
 
-    if (['invalid', 'rejected', 'ditolak', 'kurang'].includes(normalized ?? '')) {
+    if (
+        ['invalid', 'rejected', 'ditolak', 'kurang'].includes(normalized ?? '')
+    ) {
         return 'destructive';
     }
 
@@ -280,7 +330,10 @@ function getChronologicalTimeline(
     approverHistory: TimelineEntry[] = [],
     explicitTimeline: TimelineEntry[] = [],
 ): TimelineEntry[] {
-    const entries = explicitTimeline.length > 0 ? explicitTimeline : [...stateHistory, ...approverHistory];
+    const entries =
+        explicitTimeline.length > 0
+            ? explicitTimeline
+            : [...stateHistory, ...approverHistory];
 
     return [...entries].sort((first, second) => {
         const firstTime = new Date(first.created_at ?? '').getTime() || 0;
@@ -308,19 +361,47 @@ export default function UsulanKenaikanPangkatShow({
         timeline ?? [],
     );
     const progress = Math.round(
-        checklistSubmission?.persentase ?? checklistSubmission?.persentase_kelengkapan ?? 0,
+        checklistSubmission?.persentase ??
+            checklistSubmission?.persentase_kelengkapan ??
+            0,
     );
-    const canEdit = Boolean(policy?.update && ['DRAFT', 'PERLU_PERBAIKAN'].includes(usulan.state));
-    const canCancel = Boolean(policy?.batalkan && ['DRAFT', 'DIAJUKAN', 'PERLU_PERBAIKAN'].includes(usulan.state));
+    const canEdit = Boolean(
+        policy?.update && ['DRAFT', 'PERLU_PERBAIKAN'].includes(usulan.state),
+    );
+    const canCancel = Boolean(
+        policy?.batalkan &&
+        ['DRAFT', 'DIAJUKAN', 'PERLU_PERBAIKAN'].includes(usulan.state),
+    );
+    const canSubmit = Boolean(
+        policy?.submit && ['DRAFT', 'PERLU_PERBAIKAN'].includes(usulan.state),
+    );
     const canUploadChecklist = Boolean(
-        policy?.uploadChecklist && ['DRAFT', 'PERLU_PERBAIKAN'].includes(usulan.state),
+        policy?.uploadChecklist &&
+        ['DRAFT', 'PERLU_PERBAIKAN'].includes(usulan.state),
     );
+    const canValidateChecklist = Boolean(policy?.validateChecklist);
     const canUploadLampiran = Boolean(
-        policy?.uploadLampiran && ['DRAFT', 'PERLU_PERBAIKAN'].includes(usulan.state),
+        policy?.uploadLampiran &&
+        ['DRAFT', 'PERLU_PERBAIKAN'].includes(usulan.state),
     );
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const cancelForm = useForm({ alasan: '' });
+
+    function closeCancelDialog() {
+        if (cancelForm.processing) {
+            return;
+        }
+
+        setCancelDialogOpen(false);
+        cancelForm.clearErrors();
+        cancelForm.reset();
+    }
     const stateLabel = stateLabels[usulan.state] ?? humanize(usulan.state);
-    const suratPengantar = (usulan.pdfs ?? []).find((pdf) => pdf.jenis_pdf === 'surat_pengantar');
-    const hasSkFinal = usulan.state === 'SELESAI_SK_TERBIT' && Boolean(usulan.nomor_sk);
+    const suratPengantar = (usulan.pdfs ?? []).find(
+        (pdf) => pdf.jenis_pdf === 'surat_pengantar',
+    );
+    const hasSkFinal =
+        usulan.state === 'SELESAI_SK_TERBIT' && Boolean(usulan.nomor_sk);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -336,32 +417,49 @@ export default function UsulanKenaikanPangkatShow({
                         <div className="space-y-2">
                             <div className="flex flex-wrap items-center gap-2">
                                 <h1 className="text-xl font-semibold tracking-tight">
-                                    {usulan.pegawai?.nama_lengkap ?? 'Pegawai tidak tersedia'}
+                                    {usulan.pegawai?.nama_lengkap ??
+                                        'Pegawai tidak tersedia'}
                                 </h1>
-                                <Badge variant={stateBadgeVariants[usulan.state] ?? 'outline'}>{stateLabel}</Badge>
+                                <Badge
+                                    variant={
+                                        stateBadgeVariants[usulan.state] ??
+                                        'outline'
+                                    }
+                                >
+                                    {stateLabel}
+                                </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                {formatPangkat(usulan.pangkat_asal)} → {formatPangkat(usulan.pangkat_tujuan)}
+                                {formatPangkat(usulan.pangkat_asal)} →{' '}
+                                {formatPangkat(usulan.pangkat_tujuan)}
                             </p>
                             <p className="font-mono text-sm text-muted-foreground">
-                                {formatPeriode(usulan.periode_usul_bulan, usulan.periode_usul_tahun)} ·{' '}
-                                {usulan.nomor_usulan ?? 'Belum ada nomor'}
+                                {formatPeriode(
+                                    usulan.periode_usul_bulan,
+                                    usulan.periode_usul_tahun,
+                                )}{' '}
+                                · {usulan.nomor_usulan ?? 'Belum ada nomor'}
                             </p>
                         </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                        {suratPengantar && usulan.state === 'DITANDATANGANI_KETUA' && (
-                            <Button variant="outline" size="sm" asChild>
-                                <a href={`/kenaikan-pangkat/admin-sk/pdf/${suratPengantar.id}/download`}>
-                                    <Download className="h-4 w-4" />
-                                    Surat Pengantar PDF
-                                </a>
-                            </Button>
-                        )}
+                        {suratPengantar &&
+                            usulan.state === 'DITANDATANGANI_KETUA' && (
+                                <Button variant="outline" size="sm" asChild>
+                                    <a
+                                        href={`/kenaikan-pangkat/admin-sk/pdf/${suratPengantar.id}/download`}
+                                    >
+                                        <Download className="h-4 w-4" />
+                                        Surat Pengantar PDF
+                                    </a>
+                                </Button>
+                            )}
                         {hasSkFinal && (
                             <Button variant="outline" size="sm" asChild>
-                                <a href={`/kenaikan-pangkat/admin-sk/${usulan.id}/download-sk`}>
+                                <a
+                                    href={`/kenaikan-pangkat/admin-sk/${usulan.id}/download-sk`}
+                                >
                                     <Download className="h-4 w-4" />
                                     SK Final
                                 </a>
@@ -386,20 +484,66 @@ export default function UsulanKenaikanPangkatShow({
                             </CardHeader>
                             <CardContent className="space-y-5">
                                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                    <Info label="NIP" value={usulan.pegawai?.nip ?? '-'} />
-                                    <Info label="Periode" value={formatPeriode(usulan.periode_usul_bulan, usulan.periode_usul_tahun)} />
-                                    <Info label="Tanggal Usulan" value={formatDate(usulan.tanggal_usulan)} />
-                                    <Info label="Pangkat Asal" value={formatPangkat(usulan.pangkat_asal)} />
-                                    <Info label="Pangkat Tujuan" value={formatPangkat(usulan.pangkat_tujuan)} />
-                                    <Info label="TMT Pangkat Asal" value={formatDate(usulan.tmt_pangkat_asal)} />
-                                    <Info label="Diajukan" value={formatDateTime(usulan.submitted_at)} />
-                                    <Info label="Finalisasi" value={formatDateTime(usulan.finalized_at)} />
-                                    <Info label="Nomor SK" value={usulan.nomor_sk ?? '-'} />
+                                    <Info
+                                        label="NIP"
+                                        value={usulan.pegawai?.nip ?? '-'}
+                                    />
+                                    <Info
+                                        label="Periode"
+                                        value={formatPeriode(
+                                            usulan.periode_usul_bulan,
+                                            usulan.periode_usul_tahun,
+                                        )}
+                                    />
+                                    <Info
+                                        label="Tanggal Usulan"
+                                        value={formatDate(
+                                            usulan.tanggal_usulan,
+                                        )}
+                                    />
+                                    <Info
+                                        label="Pangkat Asal"
+                                        value={formatPangkat(
+                                            usulan.pangkat_asal,
+                                        )}
+                                    />
+                                    <Info
+                                        label="Pangkat Tujuan"
+                                        value={formatPangkat(
+                                            usulan.pangkat_tujuan,
+                                        )}
+                                    />
+                                    <Info
+                                        label="TMT Pangkat Asal"
+                                        value={formatDate(
+                                            usulan.tmt_pangkat_asal,
+                                        )}
+                                    />
+                                    <Info
+                                        label="Diajukan"
+                                        value={formatDateTime(
+                                            usulan.submitted_at,
+                                        )}
+                                    />
+                                    <Info
+                                        label="Finalisasi"
+                                        value={formatDateTime(
+                                            usulan.finalized_at,
+                                        )}
+                                    />
+                                    <Info
+                                        label="Nomor SK"
+                                        value={usulan.nomor_sk ?? '-'}
+                                    />
                                 </div>
 
-                                {(usulan.catatan_pengusul || usulan.catatan_penolakan) && <Separator />}
+                                {(usulan.catatan_pengusul ||
+                                    usulan.catatan_penolakan) && <Separator />}
                                 {usulan.catatan_pengusul && (
-                                    <Info label="Catatan Pengusul" value={usulan.catatan_pengusul} />
+                                    <Info
+                                        label="Catatan Pengusul"
+                                        value={usulan.catatan_pengusul}
+                                    />
                                 )}
                                 {usulan.catatan_penolakan && (
                                     <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-900 dark:bg-red-950/40">
@@ -415,22 +559,67 @@ export default function UsulanKenaikanPangkatShow({
                                 <Separator />
                                 <div className="flex flex-wrap gap-2">
                                     {canEdit && (
-                                        <Button variant="outline" size="sm" asChild>
-                                            <Link href={`/kenaikan-pangkat/usulan/${usulan.id}/edit`}>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            asChild
+                                        >
+                                            <Link
+                                                href={`/kenaikan-pangkat/usulan/${usulan.id}/edit`}
+                                            >
                                                 <Pencil className="h-4 w-4" />
                                                 Edit
                                             </Link>
                                         </Button>
                                     )}
-                                    {canCancel && (
-                                        <Form action={`/kenaikan-pangkat/usulan/${usulan.id}/batalkan`} method="post">
-                                            {({ processing }) => (
-                                                <Button variant="destructive" size="sm" disabled={processing}>
-                                                    <RotateCcw className="h-4 w-4" />
-                                                    Batalkan
-                                                </Button>
+                                    {canSubmit && (
+                                        <Form
+                                            action={submitRoute.url(usulan.id)}
+                                            method="post"
+                                        >
+                                            {({ processing, errors }) => (
+                                                <div className="flex flex-col gap-1">
+                                                    <Button
+                                                        type="submit"
+                                                        size="sm"
+                                                        disabled={
+                                                            processing ||
+                                                            progress < 100
+                                                        }
+                                                    >
+                                                        <Send className="h-4 w-4" />
+                                                        {processing
+                                                            ? 'Mengajukan...'
+                                                            : 'Ajukan Usulan'}
+                                                    </Button>
+                                                    {errors.checklist && (
+                                                        <p className="text-sm font-medium text-destructive">
+                                                            {errors.checklist}
+                                                        </p>
+                                                    )}
+                                                    {errors.usulan && (
+                                                        <p className="text-sm font-medium text-destructive">
+                                                            {errors.usulan}
+                                                        </p>
+                                                    )}
+                                                </div>
                                             )}
                                         </Form>
+                                    )}
+                                    {canCancel && (
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => {
+                                                cancelForm.clearErrors();
+                                                cancelForm.reset();
+                                                setCancelDialogOpen(true);
+                                            }}
+                                        >
+                                            <RotateCcw className="h-4 w-4" />
+                                            Batalkan
+                                        </Button>
                                     )}
                                 </div>
                             </CardContent>
@@ -445,58 +634,178 @@ export default function UsulanKenaikanPangkatShow({
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-muted-foreground">Persentase kelengkapan</span>
-                                        <span className="font-medium">{progress}%</span>
+                                        <span className="text-muted-foreground">
+                                            Persentase kelengkapan
+                                        </span>
+                                        <span className="font-medium">
+                                            {progress}%
+                                        </span>
                                     </div>
                                     <Progress value={progress} />
                                 </div>
 
                                 <div className="space-y-3">
-                                    {(checklistSubmission?.items ?? []).map((item) => (
-                                        <div key={item.id} className="rounded-lg border p-4 dark:border-border">
-                                            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                                                <div className="space-y-1">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <p className="font-medium">
-                                                            {item.nama_berkas ?? item.nama ?? 'Berkas'}
-                                                        </p>
-                                                        {item.wajib && <Badge variant="secondary">Wajib</Badge>}
-                                                        <Badge variant={statusVariant(item.status_kelengkapan ?? item.status)}>
-                                                            {humanize(item.status_kelengkapan ?? item.status)}
-                                                        </Badge>
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {item.file_original_name ?? 'Belum ada file'}
-                                                    </p>
-                                                    {item.catatan && (
-                                                        <p className="text-sm text-muted-foreground">Catatan: {item.catatan}</p>
-                                                    )}
-                                                </div>
-                                                {canUploadChecklist && (
-                                                    <Form
-                                                        action={`/kenaikan-pangkat/usulan/${usulan.id}/checklist/${item.id}/upload`}
-                                                        method="post"
-                                                        encType="multipart/form-data"
-                                                    >
-                                                        {({ processing }) => (
+                                    {(checklistSubmission?.items ?? []).map(
+                                        (item) => {
+                                            const itemNama =
+                                                item.item?.nama ??
+                                                item.nama_berkas ??
+                                                item.nama ??
+                                                'Berkas';
+                                            const itemWajib = Boolean(
+                                                item.item?.wajib ?? item.wajib,
+                                            );
+
+                                            return (
+                                                <div
+                                                    key={item.id}
+                                                    className="rounded-lg border p-4 dark:border-border"
+                                                >
+                                                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                                        <div className="space-y-1">
                                                             <div className="flex flex-wrap items-center gap-2">
-                                                                <input
-                                                                    type="file"
-                                                                    name="file"
-                                                                    className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-input/30"
-                                                                />
-                                                                <Button size="sm" disabled={processing}>
-                                                                    <Upload className="h-4 w-4" />
-                                                                    Upload
-                                                                </Button>
+                                                                <p className="font-medium">
+                                                                    {itemNama}
+                                                                </p>
+                                                                {itemWajib && (
+                                                                    <Badge variant="secondary">
+                                                                        Wajib
+                                                                    </Badge>
+                                                                )}
+                                                                <Badge
+                                                                    variant={statusVariant(
+                                                                        item.status_kelengkapan ??
+                                                                            item.status,
+                                                                    )}
+                                                                >
+                                                                    {humanize(
+                                                                        item.status_kelengkapan ??
+                                                                            item.status,
+                                                                    )}
+                                                                </Badge>
                                                             </div>
-                                                        )}
-                                                    </Form>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {(checklistSubmission?.items ?? []).length === 0 && <EmptyState text="Checklist belum tersedia." />}
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {item.file_original_name ??
+                                                                    'Belum ada file'}
+                                                            </p>
+                                                            {item.catatan && (
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    Catatan:{' '}
+                                                                    {
+                                                                        item.catatan
+                                                                    }
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            {canUploadChecklist && (
+                                                                <Form
+                                                                    action={uploadChecklistRoute.url(
+                                                                        {
+                                                                            usulan: usulan.id,
+                                                                            item: item.id,
+                                                                        },
+                                                                    )}
+                                                                    method="post"
+                                                                    encType="multipart/form-data"
+                                                                >
+                                                                    {({
+                                                                        processing,
+                                                                        errors,
+                                                                    }) => (
+                                                                        <div className="space-y-1">
+                                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                                <input
+                                                                                    type="file"
+                                                                                    name="file"
+                                                                                    className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-input/30"
+                                                                                />
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    disabled={
+                                                                                        processing
+                                                                                    }
+                                                                                >
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    Upload
+                                                                                </Button>
+                                                                            </div>
+                                                                            {errors.file && (
+                                                                                <p className="text-sm font-medium text-destructive">
+                                                                                    {
+                                                                                        errors.file
+                                                                                    }
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </Form>
+                                                            )}
+                                                            {canValidateChecklist && (
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    <Button
+                                                                        type="button"
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        onClick={() =>
+                                                                            router.post(
+                                                                                validateChecklistRoute.url(
+                                                                                    {
+                                                                                        usulan: usulan.id,
+                                                                                        item: item.id,
+                                                                                    },
+                                                                                ),
+                                                                                {
+                                                                                    status: 'valid',
+                                                                                },
+                                                                                {
+                                                                                    preserveScroll: true,
+                                                                                },
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <CheckCircle2 className="h-4 w-4" />
+                                                                        Valid
+                                                                    </Button>
+                                                                    <Button
+                                                                        type="button"
+                                                                        size="sm"
+                                                                        variant="destructive"
+                                                                        onClick={() =>
+                                                                            router.post(
+                                                                                validateChecklistRoute.url(
+                                                                                    {
+                                                                                        usulan: usulan.id,
+                                                                                        item: item.id,
+                                                                                    },
+                                                                                ),
+                                                                                {
+                                                                                    status: 'tidak_valid',
+                                                                                    catatan:
+                                                                                        'Berkas tidak sesuai.',
+                                                                                },
+                                                                                {
+                                                                                    preserveScroll: true,
+                                                                                },
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <XCircle className="h-4 w-4" />
+                                                                        Tidak
+                                                                        Valid
+                                                                    </Button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        },
+                                    )}
+                                    {(checklistSubmission?.items ?? [])
+                                        .length === 0 && (
+                                        <EmptyState text="Checklist belum tersedia." />
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
@@ -510,21 +819,33 @@ export default function UsulanKenaikanPangkatShow({
                             <CardContent className="space-y-4">
                                 {canUploadLampiran && (
                                     <Form
-                                        action={`/kenaikan-pangkat/usulan/${usulan.id}/lampiran`}
+                                        action={storeLampiranRoute.url(
+                                            usulan.id,
+                                        )}
                                         method="post"
                                         encType="multipart/form-data"
                                     >
-                                        {({ processing }) => (
-                                            <div className="flex flex-wrap items-center gap-2 rounded-lg border p-3 dark:border-border">
-                                                <input
-                                                    type="file"
-                                                    name="file"
-                                                    className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-input/30"
-                                                />
-                                                <Button size="sm" disabled={processing}>
-                                                    <Upload className="h-4 w-4" />
-                                                    Upload Tambahan
-                                                </Button>
+                                        {({ processing, errors }) => (
+                                            <div className="space-y-2 rounded-lg border p-3 dark:border-border">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <input
+                                                        type="file"
+                                                        name="file"
+                                                        className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-input/30"
+                                                    />
+                                                    <Button
+                                                        size="sm"
+                                                        disabled={processing}
+                                                    >
+                                                        <Upload className="h-4 w-4" />
+                                                        Upload Tambahan
+                                                    </Button>
+                                                </div>
+                                                {errors.file && (
+                                                    <p className="text-sm font-medium text-destructive">
+                                                        {errors.file}
+                                                    </p>
+                                                )}
                                             </div>
                                         )}
                                     </Form>
@@ -532,22 +853,66 @@ export default function UsulanKenaikanPangkatShow({
 
                                 <div className="space-y-3">
                                     {lampiranItems.map((file) => (
-                                        <div key={file.id} className="flex items-center justify-between rounded-lg border p-3 dark:border-border">
+                                        <div
+                                            key={file.id}
+                                            className="flex items-center justify-between rounded-lg border p-3 dark:border-border"
+                                        >
                                             <div className="flex items-center gap-3">
                                                 <FileText className="h-5 w-5 text-muted-foreground" />
                                                 <div>
                                                     <p className="text-sm font-medium">
-                                                        {file.nama_file_asli ?? file.file_original_name ?? 'Lampiran'}
+                                                        {file.nama_file_asli ??
+                                                            file.file_original_name ??
+                                                            'Lampiran'}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
-                                                        {humanize(file.jenis_lampiran)} · {formatFileSize(file.size_bytes)} ·{' '}
-                                                        {formatDateTime(file.created_at)}
+                                                        {humanize(
+                                                            file.jenis ??
+                                                                file.jenis_lampiran,
+                                                        )}{' '}
+                                                        ·{' '}
+                                                        {formatFileSize(
+                                                            file.size_bytes ??
+                                                                file.file_size,
+                                                        )}{' '}
+                                                        ·{' '}
+                                                        {formatDateTime(
+                                                            file.created_at,
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>
+                                            {canUploadLampiran && (
+                                                <Button
+                                                    type="button"
+                                                    size="icon-sm"
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        router.delete(
+                                                            destroyLampiranRoute.url(
+                                                                {
+                                                                    usulan: usulan.id,
+                                                                    lampiran:
+                                                                        file.id,
+                                                                },
+                                                            ),
+                                                            {
+                                                                preserveScroll: true,
+                                                            },
+                                                        )
+                                                    }
+                                                >
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                    <span className="sr-only">
+                                                        Hapus Lampiran
+                                                    </span>
+                                                </Button>
+                                            )}
                                         </div>
                                     ))}
-                                    {lampiranItems.length === 0 && <EmptyState text="Lampiran belum tersedia." />}
+                                    {lampiranItems.length === 0 && (
+                                        <EmptyState text="Lampiran belum tersedia." />
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
@@ -561,34 +926,64 @@ export default function UsulanKenaikanPangkatShow({
                             <CardContent>
                                 <div className="space-y-4">
                                     {timelineItems.map((entry) => {
-                                        const Icon = iconFor(timelineIcons[entry.action ?? entry.to_state ?? entry.state ?? '']);
+                                        const Icon = iconFor(
+                                            timelineIcons[
+                                                entry.action ??
+                                                    entry.to_state ??
+                                                    entry.state ??
+                                                    ''
+                                            ],
+                                        );
 
                                         return (
-                                            <div key={entry.id} className="flex gap-3">
+                                            <div
+                                                key={entry.id}
+                                                className="flex gap-3"
+                                            >
                                                 <div className="mt-0.5 rounded-full bg-muted p-2 text-muted-foreground dark:bg-input/30">
                                                     <Icon className="h-4 w-4" />
                                                 </div>
                                                 <div className="min-w-0 flex-1 rounded-lg border p-3 dark:border-border">
                                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                                         <p className="font-medium">
-                                                            {humanize(entry.action ?? entry.to_state ?? entry.state)}
+                                                            {humanize(
+                                                                entry.action ??
+                                                                    entry.to_state ??
+                                                                    entry.state,
+                                                            )}
                                                         </p>
                                                         <span className="text-xs text-muted-foreground">
-                                                            {formatDateTime(entry.created_at)}
+                                                            {formatDateTime(
+                                                                entry.created_at,
+                                                            )}
                                                         </span>
                                                     </div>
                                                     <p className="mt-1 text-sm text-muted-foreground">
-                                                        {[entry.from_state, entry.to_state].filter(Boolean).map(humanize).join(' → ') ||
-                                                            entry.actor?.nama_lengkap ||
-                                                            entry.approver?.nama_lengkap ||
+                                                        {[
+                                                            entry.from_state,
+                                                            entry.to_state,
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .map(humanize)
+                                                            .join(' → ') ||
+                                                            entry.actor
+                                                                ?.nama_lengkap ||
+                                                            entry.approver
+                                                                ?.nama_lengkap ||
                                                             '-'}
                                                     </p>
-                                                    {entry.catatan && <p className="mt-2 text-sm">{entry.catatan}</p>}
+                                                    {entry.catatan && (
+                                                        <p className="mt-2 text-sm">
+                                                            {entry.catatan}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
                                     })}
-                                    {timelineItems.length === 0 && <EmptyState text="Timeline belum tersedia." />}
+                                    {timelineItems.length === 0 && (
+                                        <EmptyState text="Timeline belum tersedia." />
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
@@ -611,16 +1006,48 @@ export default function UsulanKenaikanPangkatShow({
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {(usulan.approval_steps ?? defaultApprovalSteps()).map((step, index) => (
-                                            <TableRow key={step.id ?? step.role ?? index}>
-                                                <TableCell>{step.urutan ?? index + 1}</TableCell>
-                                                <TableCell>{humanize(step.nama_role ?? step.role)}</TableCell>
+                                        {(
+                                            usulan.approval_steps ??
+                                            defaultApprovalSteps()
+                                        ).map((step, index) => (
+                                            <TableRow
+                                                key={
+                                                    step.id ??
+                                                    step.role ??
+                                                    index
+                                                }
+                                            >
                                                 <TableCell>
-                                                    <Badge variant={statusVariant(step.status)}>{humanize(step.status ?? 'menunggu')}</Badge>
+                                                    {step.urutan ?? index + 1}
                                                 </TableCell>
-                                                <TableCell>{step.approver?.nama_lengkap ?? '-'}</TableCell>
                                                 <TableCell>
-                                                    {formatDateTime(step.processed_at ?? step.approved_at ?? step.rejected_at)}
+                                                    {humanize(
+                                                        step.nama_role ??
+                                                            step.role,
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        variant={statusVariant(
+                                                            step.status,
+                                                        )}
+                                                    >
+                                                        {humanize(
+                                                            step.status ??
+                                                                'menunggu',
+                                                        )}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {step.approver
+                                                        ?.nama_lengkap ?? '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {formatDateTime(
+                                                        step.processed_at ??
+                                                            step.approved_at ??
+                                                            step.rejected_at,
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -631,6 +1058,99 @@ export default function UsulanKenaikanPangkatShow({
                     </TabsContent>
                 </Tabs>
             </div>
+
+            <Dialog
+                open={cancelDialogOpen}
+                onOpenChange={(open) => {
+                    if (open) {
+                        setCancelDialogOpen(true);
+                    } else {
+                        closeCancelDialog();
+                    }
+                }}
+            >
+                <DialogContent>
+                    <form
+                        className="space-y-4"
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            cancelForm.post(batalkanRoute.url(usulan.id), {
+                                preserveScroll: true,
+                                onSuccess: () => {
+                                    closeCancelDialog();
+                                },
+                            });
+                        }}
+                    >
+                        <DialogHeader>
+                            <DialogTitle>
+                                Batalkan Usulan Kenaikan Pangkat
+                            </DialogTitle>
+                            <DialogDescription>
+                                Tuliskan alasan pembatalan usulan kenaikan
+                                pangkat ini.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {Object.keys(cancelForm.errors).length > 0 && (
+                            <AlertError
+                                errors={errorsToArray(cancelForm.errors)}
+                                title="Gagal membatalkan usulan"
+                            />
+                        )}
+
+                        <div className="space-y-2">
+                            <Label htmlFor="alasan-batalkan">
+                                Alasan Pembatalan
+                            </Label>
+                            <Textarea
+                                id="alasan-batalkan"
+                                name="alasan"
+                                value={cancelForm.data.alasan}
+                                onChange={(event) => {
+                                    cancelForm.setData(
+                                        'alasan',
+                                        event.target.value,
+                                    );
+
+                                    if (cancelForm.errors.alasan) {
+                                        cancelForm.clearErrors('alasan');
+                                    }
+                                }}
+                                placeholder="Tuliskan alasan pembatalan usulan..."
+                                required
+                                aria-invalid={Boolean(cancelForm.errors.alasan)}
+                                disabled={cancelForm.processing}
+                            />
+                            {cancelForm.errors.alasan && (
+                                <p className="text-sm font-medium text-destructive">
+                                    {cancelForm.errors.alasan}
+                                </p>
+                            )}
+                        </div>
+
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={closeCancelDialog}
+                                disabled={cancelForm.processing}
+                            >
+                                Tutup
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="destructive"
+                                disabled={cancelForm.processing}
+                            >
+                                {cancelForm.processing
+                                    ? 'Membatalkan...'
+                                    : 'Konfirmasi Batalkan'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

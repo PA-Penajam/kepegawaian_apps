@@ -113,6 +113,17 @@ export default function Show() {
         keterangan: '',
     });
 
+    const { setData: setAddPermissionField } = addPermissionForm;
+    const handlePermissionSetData = useCallback(
+        <K extends 'nama' | 'slug' | 'group' | 'keterangan'>(
+            key: K,
+            value: string,
+        ) => {
+            setAddPermissionField(key, value as never);
+        },
+        [setAddPermissionField],
+    );
+
     // Catatan: slug permission dikelola oleh PermissionFormFields (builder/free mode)
     // useEffect auto-generate slug dari nama sudah dihapus untuk menghindari konflik
 
@@ -179,18 +190,31 @@ export default function Show() {
 
     const handleRegenerateKey = useCallback(() => {
         regenerateForm.post(`/iam/aplikasi/${aplikasi.id}/regenerate-key`, {
-            onSuccess: () => {
+            onFinish: () => {
                 setRegenerateConfirm(false);
             },
         });
     }, [aplikasi.id, regenerateForm]);
 
+    const openAddRoleDialog = () => {
+        addRoleForm.reset();
+        addRoleForm.clearErrors();
+        setShowAddRoleDialog(true);
+    };
+
+    const closeAddRoleDialog = () => {
+        setShowAddRoleDialog(false);
+        addRoleForm.reset();
+        addRoleForm.clearErrors();
+    };
+
     // Form tambah role
     const handleAddRole = useCallback(() => {
         addRoleForm.post(`/iam/aplikasi/${aplikasi.id}/roles`, {
             onSuccess: () => {
-                addRoleForm.reset();
                 setShowAddRoleDialog(false);
+                addRoleForm.reset();
+                addRoleForm.clearErrors();
             },
         });
     }, [aplikasi.id, addRoleForm]);
@@ -204,19 +228,32 @@ export default function Show() {
         deleteForm.delete(
             `/iam/aplikasi/${aplikasi.id}/roles/${deleteRoleConfirm.id}`,
             {
-                onSuccess: () => {
+                onFinish: () => {
                     setDeleteRoleConfirm(null);
                 },
             },
         );
     }, [aplikasi.id, deleteRoleConfirm, deleteForm]);
 
+    const openAddPermissionDialog = () => {
+        addPermissionForm.reset();
+        addPermissionForm.clearErrors();
+        setShowAddPermissionDialog(true);
+    };
+
+    const closeAddPermissionDialog = () => {
+        setShowAddPermissionDialog(false);
+        addPermissionForm.reset();
+        addPermissionForm.clearErrors();
+    };
+
     // Form tambah permission
     const handleAddPermission = useCallback(() => {
         addPermissionForm.post(`/iam/aplikasi/${aplikasi.id}/permissions`, {
             onSuccess: () => {
-                addPermissionForm.reset();
                 setShowAddPermissionDialog(false);
+                addPermissionForm.reset();
+                addPermissionForm.clearErrors();
             },
         });
     }, [aplikasi.id, addPermissionForm]);
@@ -230,7 +267,7 @@ export default function Show() {
         deleteForm.delete(
             `/iam/aplikasi/${aplikasi.id}/permissions/${deletePermissionConfirm.id}`,
             {
-                onSuccess: () => {
+                onFinish: () => {
                     setDeletePermissionConfirm(null);
                 },
             },
@@ -281,7 +318,11 @@ export default function Show() {
                             <div className="flex justify-end">
                                 <Dialog
                                     open={showAddRoleDialog}
-                                    onOpenChange={setShowAddRoleDialog}
+                                    onOpenChange={(open) =>
+                                        open
+                                            ? openAddRoleDialog()
+                                            : closeAddRoleDialog()
+                                    }
                                 >
                                     <DialogTrigger asChild>
                                         <Button size="sm">
@@ -336,7 +377,7 @@ export default function Show() {
                                                     />
                                                     {addRoleForm.errors
                                                         .nama && (
-                                                        <p className="text-sm text-destructive">
+                                                        <p className="text-sm text-destructive dark:text-red-400">
                                                             {
                                                                 addRoleForm
                                                                     .errors.nama
@@ -366,7 +407,7 @@ export default function Show() {
                                                     />
                                                     {addRoleForm.errors
                                                         .slug && (
-                                                        <p className="text-sm text-destructive">
+                                                        <p className="text-sm text-destructive dark:text-red-400">
                                                             {
                                                                 addRoleForm
                                                                     .errors.slug
@@ -394,7 +435,7 @@ export default function Show() {
                                                     />
                                                     {addRoleForm.errors
                                                         .keterangan && (
-                                                        <p className="text-sm text-destructive">
+                                                        <p className="text-sm text-destructive dark:text-red-400">
                                                             {
                                                                 addRoleForm
                                                                     .errors
@@ -408,11 +449,7 @@ export default function Show() {
                                                 <Button
                                                     variant="outline"
                                                     type="button"
-                                                    onClick={() =>
-                                                        setShowAddRoleDialog(
-                                                            false,
-                                                        )
-                                                    }
+                                                    onClick={closeAddRoleDialog}
                                                 >
                                                     Batal
                                                 </Button>
@@ -526,12 +563,23 @@ export default function Show() {
                                                                             open: boolean,
                                                                         ) =>
                                                                             !open &&
+                                                                            !deleteForm.processing &&
                                                                             setDeleteRoleConfirm(
                                                                                 null,
                                                                             )
                                                                         }
                                                                     >
-                                                                        <AlertDialogContent>
+                                                                        <AlertDialogContent
+                                                                            onEscapeKeyDown={(
+                                                                                e,
+                                                                            ) => {
+                                                                                if (
+                                                                                    deleteForm.processing
+                                                                                ) {
+                                                                                    e.preventDefault();
+                                                                                }
+                                                                            }}
+                                                                        >
                                                                             <AlertDialogHeader>
                                                                                 <AlertDialogTitle>
                                                                                     Hapus
@@ -557,13 +605,29 @@ export default function Show() {
                                                                                 </AlertDialogDescription>
                                                                             </AlertDialogHeader>
                                                                             <AlertDialogFooter>
-                                                                                <AlertDialogCancel>
+                                                                                <AlertDialogCancel
+                                                                                    disabled={
+                                                                                        deleteForm.processing
+                                                                                    }
+                                                                                >
                                                                                     Batal
                                                                                 </AlertDialogCancel>
                                                                                 <AlertDialogAction
-                                                                                    onClick={
-                                                                                        handleDeleteRole
-                                                                                    }
+                                                                                    variant="destructive"
+                                                                                    className="text-white"
+                                                                                    onClick={(
+                                                                                        e,
+                                                                                    ) => {
+                                                                                        e.preventDefault();
+
+                                                                                        if (
+                                                                                            deleteForm.processing
+                                                                                        ) {
+                                                                                            return;
+                                                                                        }
+
+                                                                                        handleDeleteRole();
+                                                                                    }}
                                                                                     disabled={
                                                                                         deleteForm.processing
                                                                                     }
@@ -613,7 +677,11 @@ export default function Show() {
                             <div className="flex justify-end">
                                 <Dialog
                                     open={showAddPermissionDialog}
-                                    onOpenChange={setShowAddPermissionDialog}
+                                    onOpenChange={(open) =>
+                                        open
+                                            ? openAddPermissionDialog()
+                                            : closeAddPermissionDialog()
+                                    }
                                 >
                                     <DialogTrigger asChild>
                                         <Button size="sm">
@@ -659,11 +727,8 @@ export default function Show() {
                                                         addPermissionForm.data
                                                             .keterangan,
                                                 }}
-                                                setData={(key, value) =>
-                                                    addPermissionForm.setData(
-                                                        key,
-                                                        value as never,
-                                                    )
+                                                setData={
+                                                    handlePermissionSetData
                                                 }
                                                 errors={
                                                     addPermissionForm.errors
@@ -676,10 +741,8 @@ export default function Show() {
                                                 <Button
                                                     variant="outline"
                                                     type="button"
-                                                    onClick={() =>
-                                                        setShowAddPermissionDialog(
-                                                            false,
-                                                        )
+                                                    onClick={
+                                                        closeAddPermissionDialog
                                                     }
                                                 >
                                                     Batal
@@ -785,12 +848,23 @@ export default function Show() {
                                                                             open: boolean,
                                                                         ) =>
                                                                             !open &&
+                                                                            !deleteForm.processing &&
                                                                             setDeletePermissionConfirm(
                                                                                 null,
                                                                             )
                                                                         }
                                                                     >
-                                                                        <AlertDialogContent>
+                                                                        <AlertDialogContent
+                                                                            onEscapeKeyDown={(
+                                                                                e,
+                                                                            ) => {
+                                                                                if (
+                                                                                    deleteForm.processing
+                                                                                ) {
+                                                                                    e.preventDefault();
+                                                                                }
+                                                                            }}
+                                                                        >
                                                                             <AlertDialogHeader>
                                                                                 <AlertDialogTitle>
                                                                                     Hapus
@@ -816,13 +890,29 @@ export default function Show() {
                                                                                 </AlertDialogDescription>
                                                                             </AlertDialogHeader>
                                                                             <AlertDialogFooter>
-                                                                                <AlertDialogCancel>
+                                                                                <AlertDialogCancel
+                                                                                    disabled={
+                                                                                        deleteForm.processing
+                                                                                    }
+                                                                                >
                                                                                     Batal
                                                                                 </AlertDialogCancel>
                                                                                 <AlertDialogAction
-                                                                                    onClick={
-                                                                                        handleDeletePermission
-                                                                                    }
+                                                                                    variant="destructive"
+                                                                                    className="text-white"
+                                                                                    onClick={(
+                                                                                        e,
+                                                                                    ) => {
+                                                                                        e.preventDefault();
+
+                                                                                        if (
+                                                                                            deleteForm.processing
+                                                                                        ) {
+                                                                                            return;
+                                                                                        }
+
+                                                                                        handleDeletePermission();
+                                                                                    }}
                                                                                     disabled={
                                                                                         deleteForm.processing
                                                                                     }
@@ -980,9 +1070,26 @@ export default function Show() {
                                         </Button>
                                         <AlertDialog
                                             open={regenerateConfirm}
-                                            onOpenChange={setRegenerateConfirm}
+                                            onOpenChange={(open) => {
+                                                if (
+                                                    !open &&
+                                                    regenerateForm.processing
+                                                ) {
+                                                    return;
+                                                }
+
+                                                setRegenerateConfirm(open);
+                                            }}
                                         >
-                                            <AlertDialogContent>
+                                            <AlertDialogContent
+                                                onEscapeKeyDown={(e) => {
+                                                    if (
+                                                        regenerateForm.processing
+                                                    ) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                            >
                                                 <AlertDialogHeader>
                                                     <AlertDialogTitle>
                                                         Regenerasi API Key
@@ -995,13 +1102,25 @@ export default function Show() {
                                                     </AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
-                                                    <AlertDialogCancel>
+                                                    <AlertDialogCancel
+                                                        disabled={
+                                                            regenerateForm.processing
+                                                        }
+                                                    >
                                                         Batal
                                                     </AlertDialogCancel>
                                                     <AlertDialogAction
-                                                        onClick={
-                                                            handleRegenerateKey
-                                                        }
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+
+                                                            if (
+                                                                regenerateForm.processing
+                                                            ) {
+                                                                return;
+                                                            }
+
+                                                            handleRegenerateKey();
+                                                        }}
                                                         disabled={
                                                             regenerateForm.processing
                                                         }

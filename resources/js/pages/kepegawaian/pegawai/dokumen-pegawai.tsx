@@ -1,5 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem } from '@/types';
 
 type PegawaiSummary = {
@@ -20,22 +24,31 @@ type PegawaiSummary = {
     nama_lengkap: string;
 };
 
+type RefJenisDokumenOption = {
+    id: string;
+    nama: string;
+};
+
 type DokumenItem = {
     id: string;
+    ref_jenis_dokumen_id?: string | null;
     jenis_dokumen: string;
     nomor_dokumen?: string | null;
     tanggal_dokumen?: string | null;
     file_path?: string | null;
+    has_file?: boolean;
+    download_url?: string | null;
     keterangan?: string | null;
     update_url: string;
     delete_url: string;
 };
 
 type DokumenForm = {
+    ref_jenis_dokumen_id: string;
     jenis_dokumen: string;
     nomor_dokumen: string;
     tanggal_dokumen: string;
-    file_path: string;
+    file: File | null;
     keterangan: string;
 };
 
@@ -43,31 +56,63 @@ type Props = {
     pegawai: PegawaiSummary;
     storeUrl: string;
     dokumen: DokumenItem[];
+    refJenisDokumen?: RefJenisDokumenOption[];
 };
 
 const emptyForm = (): DokumenForm => ({
+    ref_jenis_dokumen_id: '',
     jenis_dokumen: '',
     nomor_dokumen: '',
     tanggal_dokumen: '',
-    file_path: '',
+    file: null,
     keterangan: '',
 });
 
 const toFormState = (item: DokumenItem): DokumenForm => ({
+    ref_jenis_dokumen_id: item.ref_jenis_dokumen_id ?? '',
     jenis_dokumen: item.jenis_dokumen,
     nomor_dokumen: item.nomor_dokumen ?? '',
     tanggal_dokumen: item.tanggal_dokumen ?? '',
-    file_path: item.file_path ?? '',
+    file: null,
     keterangan: item.keterangan ?? '',
 });
 
 const toPayload = (form: DokumenForm) => ({
+    ref_jenis_dokumen_id: form.ref_jenis_dokumen_id || '',
     jenis_dokumen: form.jenis_dokumen,
-    nomor_dokumen: form.nomor_dokumen || null,
-    tanggal_dokumen: form.tanggal_dokumen || null,
-    file_path: form.file_path || null,
-    keterangan: form.keterangan || null,
+    nomor_dokumen: form.nomor_dokumen || '',
+    tanggal_dokumen: form.tanggal_dokumen || '',
+    keterangan: form.keterangan || '',
+    ...(form.file !== null ? { file: form.file } : {}),
 });
+
+const stripControlChars = (value: string): string =>
+    Array.from(value)
+        .filter((char) => {
+            const code = char.charCodeAt(0);
+
+            return code > 0x1f && code !== 0x7f;
+        })
+        .join('');
+
+/**
+ * Menyaring tautan unduhan agar skema berbahaya (javascript:, data:, vbscript:)
+ * tidak pernah dirender sebagai link aktif di DOM dan hanya path internal relatif
+ * yang diizinkan.
+ */
+const resolveSafeDownloadUrl = (item: DokumenItem): string | null => {
+    const rawUrl = item.download_url ?? '';
+    const sanitized = stripControlChars(rawUrl).trim();
+
+    if (
+        sanitized === '' ||
+        /^(?:javascript|data|vbscript):/i.test(sanitized.replace(/\s+/g, ''))
+    ) {
+        return null;
+    }
+
+    return /^\/(?![/\\])/.test(sanitized) ? sanitized : null;
+};
 
 const jenisDokumenOptions = [
     { value: 'KTP', label: 'KTP' },
@@ -87,10 +132,15 @@ export default function DokumenPegawaiPage({
     pegawai,
     storeUrl,
     dokumen,
+    refJenisDokumen = [],
 }: Props) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<DokumenItem | null>(null);
     const [form, setForm] = useState<DokumenForm>(emptyForm);
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [submitting, setSubmitting] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<DokumenItem | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const breadcrumbs = useMemo<BreadcrumbItem[]>(
         () => [
@@ -113,12 +163,14 @@ export default function DokumenPegawaiPage({
     const openCreateDialog = () => {
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
     const openEditDialog = (item: DokumenItem) => {
         setEditingItem(item);
         setForm(toFormState(item));
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
@@ -126,16 +178,33 @@ export default function DokumenPegawaiPage({
         setIsDialogOpen(false);
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
     };
 
     const submitForm = () => {
         const requestOptions = {
+            forceFormData: true,
             preserveScroll: true,
-            onSuccess: () => closeDialog(),
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
+            onSuccess: () => {
+                setFormErrors({});
+                closeDialog();
+            },
+            onError: (errors: Record<string, string>) => {
+                setFormErrors(errors);
+            },
         };
 
         if (editingItem !== null) {
-            router.put(editingItem.update_url, toPayload(form), requestOptions);
+            router.post(
+                editingItem.update_url,
+                {
+                    ...toPayload(form),
+                    _method: 'put',
+                },
+                requestOptions,
+            );
 
             return;
         }
@@ -143,13 +212,16 @@ export default function DokumenPegawaiPage({
         router.post(storeUrl, toPayload(form), requestOptions);
     };
 
-    const handleDelete = (item: DokumenItem) => {
-        if (!window.confirm('Hapus dokumen ini?')) {
+    const confirmDelete = () => {
+        if (deleteTarget === null) {
             return;
         }
 
-        router.delete(item.delete_url, {
+        router.delete(deleteTarget.delete_url, {
             preserveScroll: true,
+            onStart: () => setDeleting(true),
+            onFinish: () => setDeleting(false),
+            onSuccess: () => setDeleteTarget(null),
         });
     };
 
@@ -221,57 +293,70 @@ export default function DokumenPegawaiPage({
                                         </td>
                                     </tr>
                                 ) : (
-                                    dokumen.map((item) => (
-                                        <tr key={item.id}>
-                                            <td className="px-4 py-3">
-                                                <div className="font-medium">
-                                                    {item.jenis_dokumen}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {item.nomor_dokumen ?? '-'}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {item.tanggal_dokumen ?? '-'}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {item.file_path ? (
-                                                    <a
-                                                        href={item.file_path}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-primary hover:underline"
-                                                    >
-                                                        Lihat File
-                                                    </a>
-                                                ) : (
-                                                    '-'
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex justify-end gap-2">
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            openEditDialog(item)
-                                                        }
-                                                    >
-                                                        Ubah
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        onClick={() =>
-                                                            handleDelete(item)
-                                                        }
-                                                    >
-                                                        Hapus
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    dokumen.map((item) => {
+                                        const safeDownloadUrl =
+                                            resolveSafeDownloadUrl(item);
+
+                                        return (
+                                            <tr key={item.id}>
+                                                <td className="px-4 py-3">
+                                                    <div className="font-medium">
+                                                        {item.jenis_dokumen}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    {item.nomor_dokumen ?? '-'}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    {item.tanggal_dokumen ??
+                                                        '-'}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    {safeDownloadUrl !==
+                                                    null ? (
+                                                        <a
+                                                            href={
+                                                                safeDownloadUrl
+                                                            }
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-primary hover:underline"
+                                                        >
+                                                            Lihat File
+                                                        </a>
+                                                    ) : (
+                                                        '-'
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                openEditDialog(
+                                                                    item,
+                                                                )
+                                                            }
+                                                        >
+                                                            Ubah
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            onClick={() =>
+                                                                setDeleteTarget(
+                                                                    item,
+                                                                )
+                                                            }
+                                                        >
+                                                            Hapus
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>
@@ -279,7 +364,14 @@ export default function DokumenPegawaiPage({
                 </div>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open && !submitting) {
+                        closeDialog();
+                    }
+                }}
+            >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>
@@ -292,6 +384,13 @@ export default function DokumenPegawaiPage({
                         </DialogDescription>
                     </DialogHeader>
 
+                    {Object.keys(formErrors).length > 0 && (
+                        <AlertError
+                            errors={errorsToArray(formErrors)}
+                            title="Gagal menyimpan dokumen pegawai"
+                        />
+                    )}
+
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2 sm:col-span-2">
                             <Label htmlFor="jenis_dokumen">
@@ -300,24 +399,47 @@ export default function DokumenPegawaiPage({
                             <select
                                 id="jenis_dokumen"
                                 value={form.jenis_dokumen}
-                                onChange={(event) =>
+                                onChange={(event) => {
+                                    const selectedNama = event.target.value;
+                                    const matchedRef = refJenisDokumen.find(
+                                        (opt) =>
+                                            opt.nama.toLowerCase() ===
+                                            selectedNama
+                                                .replace(/_/g, ' ')
+                                                .toLowerCase(),
+                                    );
                                     setForm((current) => ({
                                         ...current,
-                                        jenis_dokumen: event.target.value,
-                                    }))
-                                }
+                                        jenis_dokumen: selectedNama,
+                                        ref_jenis_dokumen_id:
+                                            matchedRef?.id ?? '',
+                                    }));
+                                }}
                                 className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
                                 <option value="">Pilih jenis dokumen</option>
-                                {jenisDokumenOptions.map((option) => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </option>
-                                ))}
+                                {refJenisDokumen.length > 0
+                                    ? refJenisDokumen.map((option) => (
+                                          <option
+                                              key={option.id}
+                                              value={option.nama}
+                                          >
+                                              {option.nama}
+                                          </option>
+                                      ))
+                                    : jenisDokumenOptions.map((option) => (
+                                          <option
+                                              key={option.value}
+                                              value={option.value}
+                                          >
+                                              {option.label}
+                                          </option>
+                                      ))}
                             </select>
+                            <InputError message={formErrors.jenis_dokumen} />
+                            <InputError
+                                message={formErrors.ref_jenis_dokumen_id}
+                            />
                         </div>
 
                         <div className="grid gap-2">
@@ -332,6 +454,7 @@ export default function DokumenPegawaiPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.nomor_dokumen} />
                         </div>
 
                         <div className="grid gap-2">
@@ -349,20 +472,32 @@ export default function DokumenPegawaiPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tanggal_dokumen} />
                         </div>
 
                         <div className="grid gap-2 sm:col-span-2">
-                            <Label htmlFor="file_path">File Path</Label>
+                            <Label htmlFor="file">
+                                Berkas Dokumen (PDF, JPG, PNG, maks. 10 MB)
+                                {editingItem === null ? ' *' : ''}
+                            </Label>
                             <Input
-                                id="file_path"
-                                value={form.file_path}
+                                id="file"
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                                 onChange={(event) =>
                                     setForm((current) => ({
                                         ...current,
-                                        file_path: event.target.value,
+                                        file: event.target.files?.[0] ?? null,
                                     }))
                                 }
                             />
+                            {editingItem !== null && (
+                                <p className="text-xs text-muted-foreground">
+                                    Biarkan kosong jika tidak ingin mengganti
+                                    berkas yang sudah tersimpan.
+                                </p>
+                            )}
+                            <InputError message={formErrors.file} />
                         </div>
 
                         <div className="grid gap-2 sm:col-span-2">
@@ -379,6 +514,7 @@ export default function DokumenPegawaiPage({
                                 }
                                 className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
+                            <InputError message={formErrors.keterangan} />
                         </div>
                     </div>
 
@@ -387,15 +523,38 @@ export default function DokumenPegawaiPage({
                             type="button"
                             variant="outline"
                             onClick={closeDialog}
+                            disabled={submitting}
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={submitForm}>
-                            Simpan
+                        <Button
+                            type="button"
+                            onClick={submitForm}
+                            processing={submitting}
+                        >
+                            {submitting ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDeleteDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open && !deleting) {
+                        setDeleteTarget(null);
+                    }
+                }}
+                title="Hapus Dokumen Pegawai"
+                description="Apakah Anda yakin ingin menghapus dokumen"
+                itemName={
+                    deleteTarget?.nomor_dokumen
+                        ? `${deleteTarget.jenis_dokumen} (${deleteTarget.nomor_dokumen})`
+                        : deleteTarget?.jenis_dokumen
+                }
+                onConfirm={confirmDelete}
+                processing={deleting}
+            />
         </AppLayout>
     );
 }

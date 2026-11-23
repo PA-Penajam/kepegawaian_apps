@@ -2,7 +2,10 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     Calendar,
     CalendarDays,
+    ClipboardCheck,
+    FileCheck,
     FileText,
+    History,
     Inbox,
     LayoutGrid,
     RefreshCcw,
@@ -12,6 +15,7 @@ import {
     ShieldCheck,
     TrendingUp,
     User,
+    UserCheck,
     Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -27,8 +31,14 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import activityLog from '@/routes/activity-log';
+import checklistTemplate from '@/routes/admin/checklist-template';
 import aplikasi from '@/routes/iam/aplikasi';
 import users from '@/routes/iam/users';
+import { eligible } from '@/routes/kenaikan-pangkat';
+import adminSk from '@/routes/kenaikan-pangkat/admin-sk';
+import approval from '@/routes/kenaikan-pangkat/approval';
+import usulan from '@/routes/kenaikan-pangkat/usulan';
 import { index as selfServiceIndex } from '@/routes/self-service';
 import type { Auth, NavItem } from '@/types';
 
@@ -68,7 +78,9 @@ export function AppSidebar() {
           ]
         : [];
 
-    const validatorNavItems: NavItem[] = hasPermission('pengajuan-perubahan.validate')
+    const validatorNavItems: NavItem[] = hasPermission(
+        'pengajuan-perubahan.validate',
+    )
         ? [
               {
                   title: 'Validasi Pengajuan',
@@ -79,20 +91,82 @@ export function AppSidebar() {
           ]
         : [];
 
-    const monitoringNavItems: NavItem[] = hasPermission('monitoring.view')
-        ? [
-              {
-                  title: 'KGB',
-                  href: '/kepegawaian/monitoring/kgb',
-                  icon: Calendar,
-              },
-              {
-                  title: 'Kenaikan Pangkat',
-                  href: '/kepegawaian/monitoring/kenaikan-pangkat',
-                  icon: TrendingUp,
-              },
-          ]
-        : [];
+    const monitoringNavItems: NavItem[] = [
+        ...(hasPermission('monitoring.view')
+            ? [
+                  {
+                      title: 'KGB',
+                      href: '/kepegawaian/monitoring/kgb',
+                      icon: Calendar,
+                  },
+              ]
+            : []),
+        ...(hasAnyPermission(
+            'monitoring.view',
+            'kenaikan-pangkat.monitoring.view',
+        )
+            ? [
+                  {
+                      title: 'Kenaikan Pangkat',
+                      href: '/kepegawaian/monitoring/kenaikan-pangkat',
+                      icon: TrendingUp,
+                  },
+              ]
+            : []),
+    ];
+
+    const kenaikanPangkatNavItems: NavItem[] = [
+        ...(hasPermission('kenaikan-pangkat.usulan.view')
+            ? [
+                  {
+                      title: 'Usulan KP',
+                      href: usulan.index.url(),
+                      icon: TrendingUp,
+                  },
+                  {
+                      title: 'Pegawai Eligible KP',
+                      href: eligible.url(),
+                      icon: UserCheck,
+                  },
+              ]
+            : []),
+        ...(hasAnyPermission(
+            'kenaikan-pangkat.usulan.verifikasi-kasubbag',
+            'kenaikan-pangkat.usulan.verifikasi-sekretaris',
+            'kenaikan-pangkat.usulan.tanda-tangan-ketua',
+            'kenaikan-pangkat.usulan.kirim-biro',
+        )
+            ? [
+                  {
+                      title: 'Inbox Approval KP',
+                      href: approval.inbox.url(),
+                      icon: Inbox,
+                  },
+              ]
+            : []),
+        ...(hasPermission('kenaikan-pangkat.usulan.view') &&
+        hasAnyPermission(
+            'kenaikan-pangkat.usulan.upload-sk',
+            'kenaikan-pangkat.usulan.finalize',
+        )
+            ? [
+                  {
+                      title: 'Admin SK KP',
+                      href: adminSk.index.url(),
+                      icon: FileCheck,
+                  },
+              ]
+            : []),
+        ...(hasPermission('checklist.template.view')
+            ? [
+                  {
+                      title: 'Checklist Template',
+                      href: checklistTemplate.index.url(),
+                      icon: ClipboardCheck,
+                  },
+              ]
+            : []),
+    ];
 
     const referensiNavItems: NavItem[] = hasAnyPermission(
         'referensi.view',
@@ -124,13 +198,18 @@ export function AppSidebar() {
 
     const cutiNavItems: NavItem[] = hasAnyPermission(
         'cuti.pengajuan.view-own',
+        'cuti.saldo.view-own',
         'cuti.pengajuan.verify',
         'cuti.pengajuan.approve-langsung',
         'cuti.pengajuan.approve-pejabat',
         'cuti.saldo.view-all',
+        'cuti.audit.view',
     )
         ? [
-              ...(hasPermission('cuti.pengajuan.view-own')
+              ...(hasAnyPermission(
+                  'cuti.pengajuan.view-own',
+                  'cuti.saldo.view-own',
+              )
                   ? [
                         {
                             title: 'Cuti Saya',
@@ -159,6 +238,10 @@ export function AppSidebar() {
                             href: '/admin/cuti/saldo',
                             icon: Settings,
                         },
+                    ]
+                  : []),
+              ...(hasPermission('cuti.audit.view')
+                  ? [
                         {
                             title: 'Audit Cuti',
                             href: '/admin/cuti/audit',
@@ -185,6 +268,11 @@ export function AppSidebar() {
                   title: 'User Akses',
                   href: users.index.url(),
                   icon: Users,
+              },
+              {
+                  title: 'Activity Log',
+                  href: activityLog.index.url(),
+                  icon: History,
               },
           ]
         : [];
@@ -213,6 +301,12 @@ export function AppSidebar() {
                 ) : null}
                 {monitoringNavItems.length > 0 ? (
                     <NavMain items={monitoringNavItems} title="Monitoring" />
+                ) : null}
+                {kenaikanPangkatNavItems.length > 0 ? (
+                    <NavMain
+                        items={kenaikanPangkatNavItems}
+                        title="Kenaikan Pangkat"
+                    />
                 ) : null}
                 {referensiNavItems.length > 0 ? (
                     <NavMain items={referensiNavItems} title="Referensi" />

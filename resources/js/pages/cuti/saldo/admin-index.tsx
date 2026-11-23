@@ -87,10 +87,10 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight uppercase">
+                    <h1 className="text-2xl font-semibold tracking-tight">
                         Kelola Saldo Cuti
                     </h1>
-                    <p className="mt-1 text-sm font-medium text-muted-foreground">
+                    <p className="mt-1 text-sm text-muted-foreground">
                         Kelola dan sesuaikan saldo cuti pegawai.
                     </p>
                 </div>
@@ -130,30 +130,30 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                         <CardTitle className="text-base">
                             Saldo Cuti Tahun {tahun}
                         </CardTitle>
-                        <Badge variant="secondary">
+                        <Badge variant="secondary" className="tnum">
                             {alokasiList.total} data
                         </Badge>
                     </CardHeader>
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
-                                <TableRow className="border-b-2 border-black bg-muted/30 hover:bg-muted/30">
-                                    <TableHead className="text-xs font-black tracking-wider uppercase">
+                                <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                         NIP
                                     </TableHead>
-                                    <TableHead className="text-xs font-black tracking-wider uppercase">
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                         Nama Pegawai
                                     </TableHead>
-                                    <TableHead className="text-xs font-black tracking-wider uppercase">
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                         Jenis
                                     </TableHead>
-                                    <TableHead className="text-right text-xs font-black tracking-wider uppercase">
+                                    <TableHead className="text-right text-xs font-semibold tracking-wider text-foreground uppercase">
                                         Hak Awal
                                     </TableHead>
-                                    <TableHead className="text-right text-xs font-black tracking-wider uppercase">
+                                    <TableHead className="text-right text-xs font-semibold tracking-wider text-foreground uppercase">
                                         Saldo Saat Ini
                                     </TableHead>
-                                    <TableHead className="text-right text-xs font-black tracking-wider uppercase">
+                                    <TableHead className="text-right text-xs font-semibold tracking-wider text-foreground uppercase">
                                         Aksi
                                     </TableHead>
                                 </TableRow>
@@ -173,9 +173,9 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                                 {alokasiList.data.map((item) => (
                                     <TableRow
                                         key={item.id}
-                                        className="border-b border-black/10 transition-colors hover:bg-muted/20"
+                                        className="border-b border-border transition-colors hover:bg-muted/40"
                                     >
-                                        <TableCell className="font-mono text-sm">
+                                        <TableCell className="tnum font-mono text-sm">
                                             {item.pegawai_nip}
                                         </TableCell>
                                         <TableCell>
@@ -186,10 +186,10 @@ export default function AdminSaldoIndex({ alokasiList, tahun }: Props) {
                                                 {item.jenis_cuti_kode}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right">
+                                        <TableCell className="tnum text-right">
                                             {item.hak_awal}
                                         </TableCell>
-                                        <TableCell className="text-right font-semibold">
+                                        <TableCell className="tnum text-right font-semibold">
                                             {item.saldo_saat_ini}
                                         </TableCell>
                                         <TableCell className="text-right">

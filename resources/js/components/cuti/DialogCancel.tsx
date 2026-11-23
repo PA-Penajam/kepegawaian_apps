@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { AlertTriangle } from 'lucide-react';
 import { cancel } from '@/actions/App/Http/Controllers/Cuti/ApprovalController';
+import AlertError from '@/components/alert-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -13,6 +14,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { formatTanggal } from '@/lib/cuti-utils';
+import { errorsToArray } from '@/lib/form-errors';
 import type { CutiPengajuan } from '@/types/cuti';
 import { CutiStateLabels } from '@/types/cuti';
 
@@ -23,25 +25,43 @@ type Props = {
 };
 
 export function DialogCancel({ pengajuan, open, onClose }: Props) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        alasan: '',
-    });
+    const { data, setData, post, processing, errors, reset, clearErrors } =
+        useForm({
+            alasan: '',
+        });
 
     // Cek apakah cuti sudah berjalan (state DISETUJUI)
     const isSudahBerjalan = pengajuan.state === 'DISETUJUI';
+
+    const nonAlasanErrors = errorsToArray(
+        Object.fromEntries(
+            Object.entries(errors).filter(([key]) => key !== 'alasan'),
+        ),
+    );
+
+    function handleClose() {
+        if (processing) {
+            return;
+        }
+
+        reset();
+        clearErrors();
+        onClose();
+    }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         post(cancel.url(pengajuan.id), {
             onSuccess: () => {
                 reset();
+                clearErrors();
                 onClose();
             },
         });
     }
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>
@@ -106,6 +126,12 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {nonAlasanErrors.length > 0 && (
+                        <AlertError
+                            errors={nonAlasanErrors}
+                            title="Gagal membatalkan pengajuan"
+                        />
+                    )}
                     <div className="space-y-2">
                         <Label htmlFor="alasan-cancel">
                             Alasan Pembatalan{' '}
@@ -132,7 +158,7 @@ export function DialogCancel({ pengajuan, open, onClose }: Props) {
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={onClose}
+                            onClick={handleClose}
                             disabled={processing}
                         >
                             Batal

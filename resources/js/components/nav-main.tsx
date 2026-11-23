@@ -54,7 +54,9 @@ export function NavMain({
                                 </Link>
                             </SidebarMenuButton>
                             {item.badge != null && (
-                                <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                                <SidebarMenuBadge>
+                                    {item.badge}
+                                </SidebarMenuBadge>
                             )}
                         </SidebarMenuItem>
                     );

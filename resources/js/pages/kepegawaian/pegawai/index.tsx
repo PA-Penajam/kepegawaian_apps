@@ -283,7 +283,7 @@ export default function PegawaiIndex({
                     )}
                 </div>
 
-                <div className="space-y-4 rounded-xl border-2 border-foreground bg-card p-4 drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
                     <DataTableToolbar
                         searchValue={searchValue}
                         onSearchChange={setSearchValue}
@@ -293,15 +293,17 @@ export default function PegawaiIndex({
                         onClear={clearFilters}
                     />
 
-                    <div className="overflow-x-auto rounded-xl border-2 border-foreground">
+                    <div className="overflow-x-auto rounded-xl border border-border">
                         <Table>
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-12">Foto</TableHead>
-                                    <TableHead>
+                                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                                    <TableHead className="w-12 text-xs font-semibold tracking-wider text-foreground uppercase">
+                                        Foto
+                                    </TableHead>
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                         <button
                                             type="button"
-                                            className="flex items-center gap-1 text-left font-medium"
+                                            className="flex items-center gap-1 text-left font-semibold uppercase"
                                             onClick={() => handleSort('nip')}
                                         >
                                             NIP
@@ -314,10 +316,10 @@ export default function PegawaiIndex({
                                             </span>
                                         </button>
                                     </TableHead>
-                                    <TableHead>
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                         <button
                                             type="button"
-                                            className="flex items-center gap-1 text-left font-medium"
+                                            className="flex items-center gap-1 text-left font-semibold uppercase"
                                             onClick={() => handleSort('nama')}
                                         >
                                             Nama
@@ -330,10 +332,10 @@ export default function PegawaiIndex({
                                             </span>
                                         </button>
                                     </TableHead>
-                                    <TableHead>
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                         <button
                                             type="button"
-                                            className="flex items-center gap-1 text-left font-medium"
+                                            className="flex items-center gap-1 text-left font-semibold uppercase"
                                             onClick={() =>
                                                 handleSort('pangkat')
                                             }
@@ -348,10 +350,10 @@ export default function PegawaiIndex({
                                             </span>
                                         </button>
                                     </TableHead>
-                                    <TableHead>
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                         <button
                                             type="button"
-                                            className="flex items-center gap-1 text-left font-medium"
+                                            className="flex items-center gap-1 text-left font-semibold uppercase"
                                             onClick={() =>
                                                 handleSort('jabatan')
                                             }
@@ -366,9 +368,13 @@ export default function PegawaiIndex({
                                             </span>
                                         </button>
                                     </TableHead>
-                                    <TableHead>Unit Kerja</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                        Unit Kerja
+                                    </TableHead>
+                                    <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                        Status
+                                    </TableHead>
+                                    <TableHead className="text-right text-xs font-semibold tracking-wider text-foreground uppercase">
                                         Aksi
                                     </TableHead>
                                 </TableRow>
@@ -418,7 +424,7 @@ export default function PegawaiIndex({
                                                     </AvatarFallback>
                                                 </Avatar>
                                             </TableCell>
-                                            <TableCell className="font-medium">
+                                            <TableCell className="tnum font-medium">
                                                 {item.nip ?? '-'}
                                             </TableCell>
                                             <TableCell>
@@ -443,10 +449,10 @@ export default function PegawaiIndex({
                                                     className={
                                                         item.status_pegawai ===
                                                         'mutasi_keluar'
-                                                            ? 'border-black bg-yellow-200 text-black hover:bg-yellow-200'
+                                                            ? 'border-amber-200 bg-amber-100 text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-200 dark:hover:bg-amber-950/60'
                                                             : item.status_pegawai ===
                                                                 'diberhentikan'
-                                                              ? 'border-black bg-orange-200 text-black hover:bg-orange-200'
+                                                              ? 'border-orange-200 bg-orange-100 text-orange-800 hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-950/60 dark:text-orange-200 dark:hover:bg-orange-950/60'
                                                               : ''
                                                     }
                                                 >

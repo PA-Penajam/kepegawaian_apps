@@ -36,8 +36,8 @@ interface PaginationWrapperProps {
 
 function defaultBuildHref(page: number): string {
     if (typeof window === 'undefined') {
-return `?page=${page}`;
-}
+        return `?page=${page}`;
+    }
 
     const params = new URLSearchParams(window.location.search);
     params.set('page', String(page));
@@ -57,8 +57,15 @@ export function PaginationWrapper({
                 <Pagination>
                     <PaginationContent>
                         {links.map((link, i) => {
-                            const isPrevious = link.label.includes('Previous');
-                            const isNext = link.label.includes('Next');
+                            const isPrevious =
+                                link.label.includes('Previous') ||
+                                link.label.includes('Sebelumnya') ||
+                                i === 0;
+                            const isNext =
+                                link.label.includes('Next') ||
+                                link.label.includes('Berikutnya') ||
+                                link.label.includes('Selanjutnya') ||
+                                i === links.length - 1;
                             const isEllipsis = link.label === '...';
 
                             if (isPrevious) {
@@ -66,11 +73,7 @@ export function PaginationWrapper({
                                     <PaginationItem key={i}>
                                         <PaginationPrevious
                                             href={link.url ?? '#'}
-                                            className={
-                                                !link.url
-                                                    ? 'pointer-events-none opacity-50'
-                                                    : ''
-                                            }
+                                            disabled={!link.url}
                                         />
                                     </PaginationItem>
                                 );
@@ -81,11 +84,7 @@ export function PaginationWrapper({
                                     <PaginationItem key={i}>
                                         <PaginationNext
                                             href={link.url ?? '#'}
-                                            className={
-                                                !link.url
-                                                    ? 'pointer-events-none opacity-50'
-                                                    : ''
-                                            }
+                                            disabled={!link.url}
                                         />
                                     </PaginationItem>
                                 );
@@ -104,6 +103,7 @@ export function PaginationWrapper({
                                     <PaginationLink
                                         href={link.url ?? '#'}
                                         isActive={link.active}
+                                        disabled={!link.url}
                                     >
                                         {link.label}
                                     </PaginationLink>

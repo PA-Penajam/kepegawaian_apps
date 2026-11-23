@@ -23,15 +23,17 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { create, edit, index, show } from '@/routes/kenaikan-pangkat/usulan';
-import type { BreadcrumbItem, IamPaginatedData } from '@/types';
+import type { BreadcrumbItem, KepegawaianPaginatedData } from '@/types';
 
 type UsulanRow = {
     id: string;
-    pegawai: { nip: string | null; nama_lengkap: string };
+    pegawai: { nip: string | null; nama_lengkap: string } | null;
     pangkat_asal: { nama: string; kode: string } | null;
     pangkat_tujuan: { nama: string; kode: string } | null;
-    periode_bulan: number;
-    periode_tahun: number;
+    periode_usul_bulan?: number;
+    periode_usul_tahun?: number;
+    periode_bulan?: number;
+    periode_tahun?: number;
     state: string;
     checklist_progress?: {
         completed: number;
@@ -40,7 +42,7 @@ type UsulanRow = {
     } | null;
 };
 type Props = {
-    usulanList: IamPaginatedData<UsulanRow>;
+    usulanList: KepegawaianPaginatedData<UsulanRow>;
     filters: {
         state?: string[] | string | null;
         bulan?: number | null;
@@ -55,12 +57,29 @@ type Props = {
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Usulan Kenaikan Pangkat', href: index() },
 ];
-const stateClasses = [
-    'border-slate-200 bg-slate-100 text-slate-700',
-    'border-blue-200 bg-blue-50 text-blue-700',
-    'border-amber-200 bg-amber-50 text-amber-700',
-    'border-emerald-200 bg-emerald-50 text-emerald-700',
-];
+const STATE_BADGE_CLASSES: Record<string, string> = {
+    DRAFT: 'border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200',
+    DIAJUKAN:
+        'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-200',
+    DIVERIFIKASI_KASUBBAG:
+        'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-200',
+    DIVERIFIKASI_SEKRETARIS:
+        'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-200',
+    DITANDATANGANI_KETUA:
+        'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/60 dark:text-violet-200',
+    DIKIRIM_BIRO:
+        'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-200',
+    MENUNGGU_SK:
+        'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-200',
+    SELESAI_SK_TERBIT:
+        'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200',
+    PERLU_PERBAIKAN:
+        'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-950/60 dark:text-orange-200',
+    DITOLAK:
+        'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/60 dark:text-red-200',
+    DIBATALKAN:
+        'border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+};
 
 function normalizeState(value: Props['filters']['state']): string {
     if (Array.isArray(value)) {
@@ -131,7 +150,7 @@ export default function UsulanKenaikanPangkatIndex({
                         </Link>
                     </Button>
                 </div>
-                <Card className="border-2 border-foreground bg-card shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                <Card className="py-0">
                     <CardContent className="grid gap-4 p-4 md:grid-cols-4">
                         <div className="relative md:col-span-1">
                             <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
@@ -220,16 +239,26 @@ export default function UsulanKenaikanPangkatIndex({
                         </Select>
                     </CardContent>
                 </Card>
-                <div className="overflow-hidden rounded-xl border-2 border-foreground bg-background shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead>Pegawai</TableHead>
-                                <TableHead>Pangkat</TableHead>
-                                <TableHead>Periode</TableHead>
-                                <TableHead>State</TableHead>
-                                <TableHead>Progres checklist</TableHead>
-                                <TableHead className="text-right">
+                            <TableRow className="bg-muted/50 hover:bg-muted/50">
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                    Pegawai
+                                </TableHead>
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                    Pangkat
+                                </TableHead>
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                    Periode
+                                </TableHead>
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                    State
+                                </TableHead>
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                    Progres checklist
+                                </TableHead>
+                                <TableHead className="text-right text-xs font-semibold tracking-wider text-foreground uppercase">
                                     Aksi
                                 </TableHead>
                             </TableRow>
@@ -245,20 +274,30 @@ export default function UsulanKenaikanPangkatIndex({
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                usulanList.data.map((usulan, indexRow) => {
+                                usulanList.data.map((usulan) => {
                                     const progress = usulan.checklist_progress;
+                                    const periodeBulan =
+                                        usulan.periode_usul_bulan ??
+                                        usulan.periode_bulan ??
+                                        '-';
+                                    const periodeTahun =
+                                        usulan.periode_usul_tahun ??
+                                        usulan.periode_tahun ??
+                                        '-';
+                                    const canEdit = [
+                                        'DRAFT',
+                                        'PERLU_PERBAIKAN',
+                                    ].includes(usulan.state);
 
                                     return (
                                         <TableRow key={usulan.id}>
                                             <TableCell>
                                                 <div className="font-medium">
-                                                    {
-                                                        usulan.pegawai
-                                                            .nama_lengkap
-                                                    }
+                                                    {usulan.pegawai
+                                                        ?.nama_lengkap ?? '-'}
                                                 </div>
-                                                <div className="text-sm text-muted-foreground">
-                                                    {usulan.pegawai.nip ?? '-'}
+                                                <div className="tnum text-sm text-muted-foreground">
+                                                    {usulan.pegawai?.nip ?? '-'}
                                                 </div>
                                             </TableCell>
                                             <TableCell>
@@ -275,17 +314,16 @@ export default function UsulanKenaikanPangkatIndex({
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                {usulan.periode_bulan}/
-                                                {usulan.periode_tahun}
+                                                {periodeBulan}/{periodeTahun}
                                             </TableCell>
                                             <TableCell>
                                                 <Badge
                                                     variant="outline"
                                                     className={
-                                                        stateClasses[
-                                                            indexRow %
-                                                                stateClasses.length
-                                                        ]
+                                                        STATE_BADGE_CLASSES[
+                                                            usulan.state
+                                                        ] ??
+                                                        STATE_BADGE_CLASSES.DRAFT
                                                     }
                                                 >
                                                     {stateLabels[
@@ -303,7 +341,7 @@ export default function UsulanKenaikanPangkatIndex({
                                                         </div>
                                                         <div className="mt-1 h-2 rounded-full bg-muted">
                                                             <div
-                                                                className="h-2 rounded-full bg-emerald-500"
+                                                                className="h-2 rounded-full bg-emerald-600 dark:bg-emerald-500"
                                                                 style={{
                                                                     width: `${progress.percentage}%`,
                                                                 }}
@@ -332,22 +370,24 @@ export default function UsulanKenaikanPangkatIndex({
                                                             </span>
                                                         </Link>
                                                     </Button>
-                                                    <Button
-                                                        asChild
-                                                        size="icon"
-                                                        variant="ghost"
-                                                    >
-                                                        <Link
-                                                            href={edit(
-                                                                usulan.id,
-                                                            )}
+                                                    {canEdit && (
+                                                        <Button
+                                                            asChild
+                                                            size="icon"
+                                                            variant="ghost"
                                                         >
-                                                            <Pencil className="h-4 w-4" />
-                                                            <span className="sr-only">
-                                                                Edit
-                                                            </span>
-                                                        </Link>
-                                                    </Button>
+                                                            <Link
+                                                                href={edit(
+                                                                    usulan.id,
+                                                                )}
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                                <span className="sr-only">
+                                                                    Edit
+                                                                </span>
+                                                            </Link>
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -357,7 +397,10 @@ export default function UsulanKenaikanPangkatIndex({
                         </TableBody>
                     </Table>
                 </div>
-                <PaginationWrapper meta={usulanList.meta} />
+                <PaginationWrapper
+                    links={usulanList.links}
+                    lastPage={usulanList.last_page}
+                />
             </div>
         </AppLayout>
     );

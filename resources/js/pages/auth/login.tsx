@@ -21,7 +21,7 @@ export default function Login({ status }: Props) {
         >
             <Head title="Login SIMPEG" />
 
-            {flash?.error && (
+            {typeof flash?.error === 'string' && flash.error.trim() !== '' && (
                 <AlertError
                     errors={[flash.error]}
                     title="Autentikasi SSO Gagal"

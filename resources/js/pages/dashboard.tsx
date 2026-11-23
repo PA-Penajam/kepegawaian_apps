@@ -1,14 +1,20 @@
 import { Deferred, Head, Link } from '@inertiajs/react';
 import { AlertCircle, TrendingUp, UserPlus, Users } from 'lucide-react';
+import { lazy, Suspense } from 'react';
 import { DashboardDistribusiSkeleton } from '@/components/dashboard/DashboardDistribusiSkeleton';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { DashboardHeavySection } from '@/components/dashboard/DashboardHeavySection';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { FastDashboardStats } from '@/hooks/use-dashboard-stats';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
+
+const DashboardHeavySection = lazy(() =>
+    import('@/components/dashboard/DashboardHeavySection').then((module) => ({
+        default: module.DashboardHeavySection,
+    })),
+);
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard() },
@@ -31,7 +37,7 @@ export default function Dashboard({ fastStats }: Props) {
                             <CardTitle className="text-sm font-medium">
                                 Total Pegawai Aktif
                             </CardTitle>
-                            <Users className="h-4 w-4 text-accent" />
+                            <Users className="h-4 w-4 text-primary" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
@@ -52,7 +58,7 @@ export default function Dashboard({ fastStats }: Props) {
                             <CardTitle className="text-sm font-medium">
                                 Pegawai Baru (Bulan Ini)
                             </CardTitle>
-                            <UserPlus className="h-4 w-4 text-accent" />
+                            <UserPlus className="h-4 w-4 text-primary" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
@@ -106,7 +112,7 @@ export default function Dashboard({ fastStats }: Props) {
                             <CardTitle className="text-sm font-medium">
                                 KP Eligible
                             </CardTitle>
-                            <TrendingUp className="h-4 w-4 text-accent" />
+                            <TrendingUp className="h-4 w-4 text-primary" />
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center justify-between">
@@ -120,7 +126,7 @@ export default function Dashboard({ fastStats }: Props) {
                                 {fastStats.kp_eligible_count > 0 && (
                                     <Badge
                                         variant="default"
-                                        className="bg-accent hover:bg-accent/90"
+                                        className="bg-accent text-accent-foreground hover:bg-accent/90"
                                     >
                                         Eligible
                                     </Badge>
@@ -142,7 +148,9 @@ export default function Dashboard({ fastStats }: Props) {
                     data="heavyStats"
                     fallback={<DashboardDistribusiSkeleton />}
                 >
-                    <DashboardHeavySection />
+                    <Suspense fallback={<DashboardDistribusiSkeleton />}>
+                        <DashboardHeavySection />
+                    </Suspense>
                 </Deferred>
             </div>
         </AppLayout>

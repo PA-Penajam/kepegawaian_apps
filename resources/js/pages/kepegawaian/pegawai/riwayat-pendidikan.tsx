@@ -1,5 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem } from '@/types';
 import type { JenjangPendidikan } from '@/types/kepegawaian';
 
@@ -98,6 +102,11 @@ export default function RiwayatPendidikanPage({
     const [editingItem, setEditingItem] =
         useState<RiwayatPendidikanItem | null>(null);
     const [form, setForm] = useState<RiwayatPendidikanForm>(emptyForm);
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [submitting, setSubmitting] = useState(false);
+    const [deleteTarget, setDeleteTarget] =
+        useState<RiwayatPendidikanItem | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const breadcrumbs = useMemo<BreadcrumbItem[]>(
         () => [
@@ -120,12 +129,14 @@ export default function RiwayatPendidikanPage({
     const openCreateDialog = () => {
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
     const openEditDialog = (item: RiwayatPendidikanItem) => {
         setEditingItem(item);
         setForm(toFormState(item));
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
@@ -133,12 +144,21 @@ export default function RiwayatPendidikanPage({
         setIsDialogOpen(false);
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
     };
 
     const submitForm = () => {
         const requestOptions = {
             preserveScroll: true,
-            onSuccess: () => closeDialog(),
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
+            onSuccess: () => {
+                setFormErrors({});
+                closeDialog();
+            },
+            onError: (errors: Record<string, string>) => {
+                setFormErrors(errors);
+            },
         };
 
         if (editingItem !== null) {
@@ -150,13 +170,16 @@ export default function RiwayatPendidikanPage({
         router.post(storeUrl, toPayload(form), requestOptions);
     };
 
-    const handleDelete = (item: RiwayatPendidikanItem) => {
-        if (!window.confirm('Hapus riwayat pendidikan ini?')) {
+    const confirmDelete = () => {
+        if (deleteTarget === null) {
             return;
         }
 
-        router.delete(item.delete_url, {
+        router.delete(deleteTarget.delete_url, {
             preserveScroll: true,
+            onStart: () => setDeleting(true),
+            onFinish: () => setDeleting(false),
+            onSuccess: () => setDeleteTarget(null),
         });
     };
 
@@ -274,7 +297,9 @@ export default function RiwayatPendidikanPage({
                                                         type="button"
                                                         variant="destructive"
                                                         onClick={() =>
-                                                            handleDelete(item)
+                                                            setDeleteTarget(
+                                                                item,
+                                                            )
                                                         }
                                                     >
                                                         Hapus
@@ -290,7 +315,14 @@ export default function RiwayatPendidikanPage({
                 </div>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open && !submitting) {
+                        closeDialog();
+                    }
+                }}
+            >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>
@@ -302,6 +334,13 @@ export default function RiwayatPendidikanPage({
                             Simpan riwayat pendidikan formal pegawai.
                         </DialogDescription>
                     </DialogHeader>
+
+                    {Object.keys(formErrors).length > 0 && (
+                        <AlertError
+                            errors={errorsToArray(formErrors)}
+                            title="Gagal menyimpan riwayat pendidikan"
+                        />
+                    )}
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2 sm:col-span-2">
@@ -328,6 +367,7 @@ export default function RiwayatPendidikanPage({
                                     </option>
                                 ))}
                             </select>
+                            <InputError message={formErrors.jenjang} />
                         </div>
 
                         <div className="grid gap-2 sm:col-span-2">
@@ -342,6 +382,7 @@ export default function RiwayatPendidikanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.nama_sekolah} />
                         </div>
 
                         <div className="grid gap-2">
@@ -356,6 +397,7 @@ export default function RiwayatPendidikanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.jurusan} />
                         </div>
 
                         <div className="grid gap-2">
@@ -371,6 +413,7 @@ export default function RiwayatPendidikanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tahun_lulus} />
                         </div>
 
                         <div className="grid gap-2">
@@ -385,6 +428,7 @@ export default function RiwayatPendidikanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.no_ijazah} />
                         </div>
 
                         <div className="grid gap-2">
@@ -402,6 +446,7 @@ export default function RiwayatPendidikanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tanggal_ijazah} />
                         </div>
 
                         <div className="grid gap-2 sm:col-span-2">
@@ -418,6 +463,7 @@ export default function RiwayatPendidikanPage({
                                 }
                                 className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
+                            <InputError message={formErrors.keterangan} />
                         </div>
                     </div>
 
@@ -426,15 +472,34 @@ export default function RiwayatPendidikanPage({
                             type="button"
                             variant="outline"
                             onClick={closeDialog}
+                            disabled={submitting}
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={submitForm}>
-                            Simpan
+                        <Button
+                            type="button"
+                            onClick={submitForm}
+                            processing={submitting}
+                        >
+                            {submitting ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDeleteDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open && !deleting) {
+                        setDeleteTarget(null);
+                    }
+                }}
+                title="Hapus Riwayat Pendidikan"
+                description="Apakah Anda yakin ingin menghapus riwayat pendidikan di"
+                itemName={deleteTarget?.nama_sekolah}
+                onConfirm={confirmDelete}
+                processing={deleting}
+            />
         </AppLayout>
     );
 }

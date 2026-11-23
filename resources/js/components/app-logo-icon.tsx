@@ -9,11 +9,28 @@ export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
             {...props}
         >
             <defs>
-                <linearGradient id="shieldGrad" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="var(--color-primary, #1e4a38)" />
+                <linearGradient
+                    id="shieldGrad"
+                    x1="8"
+                    y1="4"
+                    x2="56"
+                    y2="60"
+                    gradientUnits="userSpaceOnUse"
+                >
+                    <stop
+                        offset="0%"
+                        stopColor="var(--color-primary, #1e4a38)"
+                    />
                     <stop offset="100%" stopColor="#0d281e" />
                 </linearGradient>
-                <linearGradient id="goldGrad" x1="16" y1="12" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+                <linearGradient
+                    id="goldGrad"
+                    x1="16"
+                    y1="12"
+                    x2="48"
+                    y2="48"
+                    gradientUnits="userSpaceOnUse"
+                >
                     <stop offset="0%" stopColor="#f7d070" />
                     <stop offset="50%" stopColor="#d4a337" />
                     <stop offset="100%" stopColor="#9a6e1a" />
@@ -57,20 +74,34 @@ export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
             />
 
             {/* Left Balance Scale */}
-            <path d="M20 22L16 31" stroke="url(#goldGrad)" strokeWidth="1.2" strokeLinecap="round" />
-            <path d="M20 22L24 31" stroke="url(#goldGrad)" strokeWidth="1.2" strokeLinecap="round" />
             <path
-                d="M14 31C14 34 26 34 26 31H14Z"
-                fill="url(#goldGrad)"
+                d="M20 22L16 31"
+                stroke="url(#goldGrad)"
+                strokeWidth="1.2"
+                strokeLinecap="round"
             />
+            <path
+                d="M20 22L24 31"
+                stroke="url(#goldGrad)"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+            />
+            <path d="M14 31C14 34 26 34 26 31H14Z" fill="url(#goldGrad)" />
 
             {/* Right Balance Scale */}
-            <path d="M44 22L40 31" stroke="url(#goldGrad)" strokeWidth="1.2" strokeLinecap="round" />
-            <path d="M44 22L48 31" stroke="url(#goldGrad)" strokeWidth="1.2" strokeLinecap="round" />
             <path
-                d="M38 31C38 34 50 34 50 31H38Z"
-                fill="url(#goldGrad)"
+                d="M44 22L40 31"
+                stroke="url(#goldGrad)"
+                strokeWidth="1.2"
+                strokeLinecap="round"
             />
+            <path
+                d="M44 22L48 31"
+                stroke="url(#goldGrad)"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+            />
+            <path d="M38 31C38 34 50 34 50 31H38Z" fill="url(#goldGrad)" />
 
             {/* Base Pedestal */}
             <path

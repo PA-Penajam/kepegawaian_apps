@@ -32,9 +32,7 @@ export const CutiStateLabels: Record<CutiState, string> = {
 };
 
 export type ApproverRole =
-    | 'petugas_kepegawaian'
-    | 'atasan_langsung'
-    | 'pejabat_berwenang';
+    'petugas_kepegawaian' | 'atasan_langsung' | 'pejabat_berwenang';
 
 // === Model Types ===
 
@@ -93,6 +91,9 @@ export type CutiPengajuan = {
     alamat_selama_cuti: string | null;
     nomor_telp_selama_cuti: string | null;
     state: CutiState;
+    petugas_kepegawaian_current_nip?: string | null;
+    atasan_langsung_current_nip?: string | null;
+    pejabat_berwenang_current_nip?: string | null;
     submitted_at: string | null;
     approved_at: string | null;
     rejected_at: string | null;
@@ -157,7 +158,14 @@ export type ActivityLogEntry = {
     causer_type?: string;
     causer_id?: string;
     causer?: { nip: string; nama: string };
-    properties: { old?: Record<string, unknown>; attributes?: Record<string, unknown> };
+    attribute_changes?: {
+        old?: Record<string, unknown>;
+        attributes?: Record<string, unknown>;
+    };
+    properties: {
+        old?: Record<string, unknown>;
+        attributes?: Record<string, unknown>;
+    };
     created_at: string;
 };
 
@@ -167,7 +175,10 @@ export type ActivityLogPaginated = KepegawaianPaginatedData<ActivityLogEntry>;
 export type CutiPaginatedData<T> = KepegawaianPaginatedData<T>;
 
 // Badge variant mapping berdasarkan state
-export const CutiStateBadgeVariant: Record<CutiState, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+export const CutiStateBadgeVariant: Record<
+    CutiState,
+    'default' | 'secondary' | 'destructive' | 'outline'
+> = {
     DRAFT: 'outline',
     DIAJUKAN: 'secondary',
     DIVERIFIKASI: 'secondary',

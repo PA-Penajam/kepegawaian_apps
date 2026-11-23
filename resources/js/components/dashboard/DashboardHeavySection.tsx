@@ -31,7 +31,7 @@ export function DashboardHeavySection() {
                 <Card className="h-full">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Building2 className="h-5 w-5 text-accent" />
+                            <Building2 className="h-5 w-5 text-primary" />
                             Top Unit Kerja
                         </CardTitle>
                         <CardDescription>
@@ -72,7 +72,7 @@ export function DashboardHeavySection() {
                 <Card className="h-full">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Briefcase className="h-5 w-5 text-accent" />
+                            <Briefcase className="h-5 w-5 text-primary" />
                             Top Jabatan
                         </CardTitle>
                         <CardDescription>
@@ -114,7 +114,7 @@ export function DashboardHeavySection() {
                 <Card className="h-full">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <GraduationCap className="h-5 w-5 text-accent" />
+                            <GraduationCap className="h-5 w-5 text-primary" />
                             Distribusi Pendidikan
                         </CardTitle>
                         <CardDescription>
@@ -137,7 +137,7 @@ export function DashboardHeavySection() {
                 <Card className="h-full">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 truncate text-base">
-                            <UserCircle className="h-5 w-5 shrink-0 text-accent" />
+                            <UserCircle className="h-5 w-5 shrink-0 text-primary" />
                             Golongan
                         </CardTitle>
                         <CardDescription className="truncate">

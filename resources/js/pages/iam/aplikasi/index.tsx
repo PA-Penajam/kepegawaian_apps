@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -94,6 +93,18 @@ export default function Index() {
         });
     }, [deleteTarget, deleteForm]);
 
+    const openCreateDialog = () => {
+        createForm.reset();
+        createForm.clearErrors();
+        setShowCreateDialog(true);
+    };
+
+    const closeCreateDialog = () => {
+        setShowCreateDialog(false);
+        createForm.reset();
+        createForm.clearErrors();
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kelola Aplikasi IAM" />
@@ -101,17 +112,19 @@ export default function Index() {
             <div className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight uppercase">
+                        <h1 className="text-2xl font-semibold tracking-tight">
                             Kelola Aplikasi IAM
                         </h1>
-                        <p className="mt-1 text-sm font-medium text-muted-foreground">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Daftarkan dan kelola aplikasi yang terintegrasi
                             dengan sistem IAM.
                         </p>
                     </div>
                     <Dialog
                         open={showCreateDialog}
-                        onOpenChange={setShowCreateDialog}
+                        onOpenChange={(open) =>
+                            open ? openCreateDialog() : closeCreateDialog()
+                        }
                     >
                         <DialogTrigger asChild>
                             <Button>
@@ -134,8 +147,7 @@ export default function Index() {
                                     e.preventDefault();
                                     createForm.post('/iam/aplikasi', {
                                         onSuccess: () => {
-                                            createForm.reset();
-                                            setShowCreateDialog(false);
+                                            closeCreateDialog();
                                         },
                                     });
                                 }}
@@ -166,7 +178,7 @@ export default function Index() {
                                             required
                                         />
                                         {createForm.errors.nama && (
-                                            <p className="text-sm text-destructive">
+                                            <p className="text-sm text-destructive dark:text-red-400">
                                                 {createForm.errors.nama}
                                             </p>
                                         )}
@@ -183,12 +195,12 @@ export default function Index() {
                                                 )
                                             }
                                             placeholder="Contoh: aplikasi-keuangan"
-                                            pattern="[a-z0-9-]+"
+                                            pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
                                             title="Hanya huruf kecil, angka, dan tanda hubung"
                                             required
                                         />
                                         {createForm.errors.slug && (
-                                            <p className="text-sm text-destructive">
+                                            <p className="text-sm text-destructive dark:text-red-400">
                                                 {createForm.errors.slug}
                                             </p>
                                         )}
@@ -211,7 +223,7 @@ export default function Index() {
                                             required
                                         />
                                         {createForm.errors.url && (
-                                            <p className="text-sm text-destructive">
+                                            <p className="text-sm text-destructive dark:text-red-400">
                                                 {createForm.errors.url}
                                             </p>
                                         )}
@@ -232,18 +244,20 @@ export default function Index() {
                                             placeholder="Deskripsi singkat aplikasi"
                                         />
                                         {createForm.errors.deskripsi && (
-                                            <p className="text-sm text-destructive">
+                                            <p className="text-sm text-destructive dark:text-red-400">
                                                 {createForm.errors.deskripsi}
                                             </p>
                                         )}
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <DialogClose asChild>
-                                        <Button variant="outline" type="button">
-                                            Batal
-                                        </Button>
-                                    </DialogClose>
+                                    <Button
+                                        variant="outline"
+                                        type="button"
+                                        onClick={closeCreateDialog}
+                                    >
+                                        Batal
+                                    </Button>
                                     <Button
                                         type="submit"
                                         disabled={createForm.processing}
@@ -258,23 +272,23 @@ export default function Index() {
                     </Dialog>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border-2 border-black bg-background shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                     <Table>
                         <TableHeader>
-                            <TableRow className="border-b-2 border-black bg-muted/30 hover:bg-muted/30">
-                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                            <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                     Nama
                                 </TableHead>
-                                <TableHead className="text-xs font-black tracking-wider uppercase">
+                                <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
                                     URL
                                 </TableHead>
-                                <TableHead className="text-center text-xs font-black tracking-wider uppercase">
+                                <TableHead className="text-center text-xs font-semibold tracking-wider text-foreground uppercase">
                                     Jumlah Role
                                 </TableHead>
-                                <TableHead className="text-center text-xs font-black tracking-wider uppercase">
+                                <TableHead className="text-center text-xs font-semibold tracking-wider text-foreground uppercase">
                                     Status
                                 </TableHead>
-                                <TableHead className="text-center text-xs font-black tracking-wider uppercase">
+                                <TableHead className="text-center text-xs font-semibold tracking-wider text-foreground uppercase">
                                     Aksi
                                 </TableHead>
                             </TableRow>
@@ -293,9 +307,9 @@ export default function Index() {
                                 aplikasi.map((app) => (
                                     <TableRow
                                         key={app.id}
-                                        className="border-b border-black/10 transition-colors hover:bg-muted/20"
+                                        className="border-b border-border transition-colors hover:bg-muted/40"
                                     >
-                                        <TableCell className="font-bold">
+                                        <TableCell className="font-semibold">
                                             <div className="flex items-center gap-2">
                                                 {app.nama}
                                                 {app.is_system && (
@@ -315,7 +329,7 @@ export default function Index() {
                                                 {app.url}
                                             </a>
                                         </TableCell>
-                                        <TableCell className="text-center">
+                                        <TableCell className="tnum text-center">
                                             {app.roles_count ?? 0}
                                         </TableCell>
                                         <TableCell className="text-center">
@@ -338,9 +352,9 @@ export default function Index() {
                                                     >
                                                         <Badge
                                                             variant="outline"
-                                                            className="border-amber-500 bg-amber-50 text-amber-900 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-100"
+                                                            className="border-amber-500 bg-amber-50 text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200 dark:hover:bg-amber-950/60"
                                                         >
-                                                            Recoverable
+                                                            Dapat Dipulihkan
                                                         </Badge>
                                                     </Link>
                                                 )}
@@ -410,7 +424,9 @@ export default function Index() {
 
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
-                onOpenChange={(open) => !open && setDeleteTarget(null)}
+                onOpenChange={(open) =>
+                    !open && !deleteForm.processing && setDeleteTarget(null)
+                }
                 title="Hapus Aplikasi"
                 description="Apakah Anda yakin ingin menghapus aplikasi"
                 itemName={deleteTarget?.nama}

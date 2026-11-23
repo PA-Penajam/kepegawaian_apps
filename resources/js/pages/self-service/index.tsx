@@ -383,10 +383,13 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
                     <Card className="border-dashed shadow-sm">
                         <CardContent className="flex h-full flex-col justify-between gap-4 pt-6">
                             <div>
-                                <p className="font-medium">Detail Profile Pegawai</p>
+                                <p className="font-medium">
+                                    Detail Profile Pegawai
+                                </p>
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    Lihat rincian biodata, keluarga, riwayat pangkat, pendidikan, 
-                                    serta dokumen-dokumen terkait Anda.
+                                    Lihat rincian biodata, keluarga, riwayat
+                                    pangkat, pendidikan, serta dokumen-dokumen
+                                    terkait Anda.
                                 </p>
                             </div>
                             <div>
@@ -402,7 +405,9 @@ export default function SelfServiceIndex({ pegawai, kgbInfo, kpInfo }: Props) {
 
                 <div className="flex justify-end">
                     <Button variant="ghost" asChild>
-                        <Link href={toUrl(dashboard())}>Kembali ke Dashboard</Link>
+                        <Link href={toUrl(dashboard())}>
+                            Kembali ke Dashboard
+                        </Link>
                     </Button>
                 </div>
             </div>

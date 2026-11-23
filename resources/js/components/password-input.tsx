@@ -44,7 +44,6 @@ export default function PasswordInput({
                         ? 'Sembunyikan kata sandi'
                         : 'Tampilkan kata sandi'
                 }
-                tabIndex={-1}
             >
                 <span className="flex items-center justify-center">
                     {showPassword ? (

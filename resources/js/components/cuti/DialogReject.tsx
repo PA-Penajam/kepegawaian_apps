@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { reject } from '@/actions/App/Http/Controllers/Cuti/ApprovalController';
+import AlertError from '@/components/alert-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -13,21 +14,73 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { formatTanggal } from '@/lib/cuti-utils';
-import type { CutiPengajuan } from '@/types/cuti';
+import { errorsToArray } from '@/lib/form-errors';
+import type { ApproverRole, CutiPengajuan } from '@/types/cuti';
 
 type Props = {
     pengajuan: CutiPengajuan;
+    role?: ApproverRole;
     open: boolean;
     onClose: () => void;
 };
 
 const MIN_ALASAN_LENGTH = 10;
 
-export function DialogReject({ pengajuan, open, onClose }: Props) {
+const ROLE_LABELS: Record<ApproverRole, string> = {
+    petugas_kepegawaian: 'Petugas Kepegawaian',
+    atasan_langsung: 'Atasan Langsung',
+    pejabat_berwenang: 'Pejabat Berwenang',
+};
+
+export function DialogReject({ pengajuan, role, open, onClose }: Props) {
     const [localError, setLocalError] = useState('');
-    const { data, setData, post, processing, errors, reset } = useForm({
-        alasan: '',
-    });
+    const [prevOpen, setPrevOpen] = useState(open);
+    const [prevPengajuanId, setPrevPengajuanId] = useState(pengajuan.id);
+    const { data, setData, post, processing, errors, reset, clearErrors } =
+        useForm({
+            alasan: '',
+        });
+
+    if (prevOpen !== open || prevPengajuanId !== pengajuan.id) {
+        const pengajuanChanged = prevPengajuanId !== pengajuan.id;
+        setPrevOpen(open);
+        setPrevPengajuanId(pengajuan.id);
+
+        if (!open || pengajuanChanged) {
+            setLocalError('');
+        }
+    }
+
+    useEffect(() => {
+        if (!open) {
+            reset();
+            clearErrors();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
+    useEffect(() => {
+        reset();
+        clearErrors();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pengajuan.id]);
+
+    const nonAlasanErrors = errorsToArray(
+        Object.fromEntries(
+            Object.entries(errors).filter(([key]) => key !== 'alasan'),
+        ),
+    );
+
+    function handleClose() {
+        if (processing) {
+            return;
+        }
+
+        reset();
+        clearErrors();
+        setLocalError('');
+        onClose();
+    }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -45,6 +98,7 @@ export function DialogReject({ pengajuan, open, onClose }: Props) {
         post(reject.url(pengajuan.id), {
             onSuccess: () => {
                 reset();
+                clearErrors();
                 setLocalError('');
                 onClose();
             },
@@ -55,12 +109,14 @@ export function DialogReject({ pengajuan, open, onClose }: Props) {
     const displayError = localError || errors.alasan;
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Tolak Pengajuan Cuti</DialogTitle>
                     <DialogDescription>
-                        Berikan alasan penolakan untuk pengajuan cuti ini.
+                        {role
+                            ? `Berikan alasan penolakan sebagai ${ROLE_LABELS[role]} untuk pengajuan cuti ini.`
+                            : 'Berikan alasan penolakan untuk pengajuan cuti ini.'}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -102,6 +158,12 @@ export function DialogReject({ pengajuan, open, onClose }: Props) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {nonAlasanErrors.length > 0 && (
+                        <AlertError
+                            errors={nonAlasanErrors}
+                            title="Gagal menolak pengajuan"
+                        />
+                    )}
                     <div className="space-y-2">
                         <Label htmlFor="alasan">
                             Alasan Penolakan{' '}
@@ -139,7 +201,7 @@ export function DialogReject({ pengajuan, open, onClose }: Props) {
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={onClose}
+                            onClick={handleClose}
                             disabled={processing}
                         >
                             Batal

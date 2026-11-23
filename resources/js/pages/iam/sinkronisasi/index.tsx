@@ -1,4 +1,4 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import {
     Activity,
     ArrowLeftRight,
@@ -28,6 +28,7 @@ import { SyncTokenModal } from '@/components/iam/SyncTokenModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -68,9 +69,10 @@ type Props = {
         pegawai_total: number;
     };
     flash?: {
-        sync_token_once?: SyncTokenOnce;
-        success?: string;
-        error?: string;
+        sync_token_once?: SyncTokenOnce | null;
+        test_connection?: SyncConnectionTest | null;
+        success?: string | null;
+        error?: string | null;
     };
 };
 
@@ -81,17 +83,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const CANONICAL_EXAMPLE = [
-    'GET:/api/v1/pegawai/sync?page=1=1&per_page=100:',
+    'GET:/api/v1/pegawai/sync:page=1&per_page=100:',
     '<sha256(body)>:<timestamp>',
 ].join('');
 
-const CURL_EXAMPLE = `curl -G "https://kepegawaian-apps.test/api/v1/pegawai/sync" \\
+const CURL_EXAMPLE = `curl "https://kepegawaian-apps.test/api/v1/pegawai/sync?page=1&per_page=100" \\
   -H "Authorization: Bearer <TOKEN_SYNC>" \\
   -H "Accept: application/json" \\
   -H "X-Timestamp: $(date +%s)" \\
-  -H "X-Signature: <HMAC-SHA256 canonical-string>" \\
-  --data-urlencode "page=1" \\
-  --data-urlencode "per_page=100"`;
+  -H "X-Nonce: $(uuidgen)" \\
+  -H "X-Signature: <HMAC-SHA256 canonical-string>"`;
 
 function timeAgo(value: string | null): string {
     if (!value) {
@@ -143,7 +144,12 @@ export default function SyncConsumerIndex() {
             return false;
         }
 
-        return window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === '1';
+        try {
+            return window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === '1';
+        } catch {
+            // Abaikan kegagalan akses penyimpanan lokal (mis. opaque origin).
+            return false;
+        }
     });
     const [testResult, setTestResult] = useState<
         Record<string, SyncConnectionTest>
@@ -209,6 +215,37 @@ export default function SyncConsumerIndex() {
     });
 
     const tokenRegenForm = useForm({});
+    const deleteForm = useForm({});
+
+    const openCreateDialog = () => {
+        createForm.reset();
+        createForm.clearErrors();
+        setShowCreateDialog(true);
+    };
+
+    const closeCreateDialog = () => {
+        setShowCreateDialog(false);
+        createForm.reset();
+        createForm.clearErrors();
+    };
+
+    const openEditDialog = (consumer: SyncConsumer) => {
+        editForm.clearErrors();
+        setEditTarget(consumer);
+        editForm.setData({
+            nama: consumer.nama,
+            slug: consumer.slug,
+            base_url: consumer.base_url ?? '',
+            deskripsi: consumer.deskripsi ?? '',
+            is_active: consumer.is_active,
+        });
+    };
+
+    const closeEditDialog = () => {
+        setEditTarget(null);
+        editForm.reset();
+        editForm.clearErrors();
+    };
 
     const handleStore = () => {
         createForm.post('/iam/sinkronisasi', {
@@ -222,8 +259,7 @@ export default function SyncConsumerIndex() {
                     setTokenModal(nextFlash.sync_token_once);
                 }
 
-                setShowCreateDialog(false);
-                createForm.reset();
+                closeCreateDialog();
             },
         });
     };
@@ -232,8 +268,7 @@ export default function SyncConsumerIndex() {
         editForm.put(`/iam/sinkronisasi/${editTarget?.id}`, {
             preserveScroll: true,
             onSuccess: () => {
-                setEditTarget(null);
-                editForm.reset();
+                closeEditDialog();
             },
         });
     };
@@ -243,52 +278,70 @@ export default function SyncConsumerIndex() {
             return;
         }
 
-        router.delete(`/iam/sinkronisasi/${deleteTarget.id}`, {
+        deleteForm.delete(`/iam/sinkronisasi/${deleteTarget.id}`, {
             preserveScroll: true,
             onSuccess: () => setDeleteTarget(null),
         });
     };
 
-    const handleTestConnection = (consumer: SyncConsumer) => {
+    const handleTestConnection = async (consumer: SyncConsumer) => {
         setTestingSlug(consumer.slug);
-        setTestResult((prev) => ({
-            ...prev,
-            [consumer.slug]: undefined as unknown as SyncConnectionTest,
-        }));
+        setTestResult((prev) => {
+            const next = { ...prev };
+            delete next[consumer.slug];
 
-        router.post(
-            `/iam/sinkronisasi/${consumer.id}/test-connection`,
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: (page) => {
-                    const flash = (page.props.flash ?? {}) as {
-                        test_connection?: { success: boolean; message: string };
-                    };
+            return next;
+        });
 
-                    if (flash.test_connection) {
-                        setTestResult((prev) => ({
-                            ...prev,
-                            [consumer.slug]:
-                                flash.test_connection as SyncConnectionTest,
-                        }));
-                    }
+        try {
+            const csrfToken =
+                document
+                    .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+                    ?.getAttribute('content') ?? '';
 
-                    setTestingSlug(null);
+            const response = await fetch(
+                `/iam/sinkronisasi/${consumer.id}/test-connection`,
+                {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({}),
                 },
-                onError: () => {
-                    setTestResult((prev) => ({
-                        ...prev,
-                        [consumer.slug]: {
-                            success: false,
-                            message:
-                                'Gagal menguji koneksi. Periksa log server.',
-                        },
-                    }));
-                    setTestingSlug(null);
+            );
+
+            const payload = (await response
+                .json()
+                .catch(() => null)) as Partial<SyncConnectionTest> | null;
+
+            const result: SyncConnectionTest = {
+                success: Boolean(payload?.success) && response.ok,
+                message:
+                    typeof payload?.message === 'string' &&
+                    payload.message.trim() !== ''
+                        ? payload.message
+                        : 'Gagal menguji koneksi. Periksa log server.',
+            };
+
+            setTestResult((prev) => ({
+                ...prev,
+                [consumer.slug]: result,
+            }));
+        } catch {
+            setTestResult((prev) => ({
+                ...prev,
+                [consumer.slug]: {
+                    success: false,
+                    message: 'Gagal menguji koneksi. Periksa log server.',
                 },
-            },
-        );
+            }));
+        } finally {
+            setTestingSlug(null);
+        }
     };
 
     const handleRegenerateToken = (consumer: SyncConsumer) => {
@@ -343,19 +396,19 @@ export default function SyncConsumerIndex() {
                 label: 'Konsumen Aktif',
                 value: formatNumber(stats.aktif),
                 icon: ShieldCheck,
-                tone: 'text-emerald-600',
+                tone: 'text-emerald-600 dark:text-emerald-400',
             },
             {
                 label: 'Pull 24 Jam Terakhir',
                 value: formatNumber(stats.pull_24h),
                 icon: Activity,
-                tone: 'text-amber-600',
+                tone: 'text-amber-600 dark:text-amber-400',
             },
             {
                 label: 'Data Pegawai',
                 value: formatNumber(stats.pegawai_total),
                 icon: Database,
-                tone: 'text-sky-600',
+                tone: 'text-sky-600 dark:text-sky-400',
             },
         ],
         [stats],
@@ -368,7 +421,7 @@ export default function SyncConsumerIndex() {
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">
+                        <h1 className="text-2xl font-semibold tracking-tight">
                             Klien Sinkronisasi
                         </h1>
                         <p className="mt-1 text-sm text-muted-foreground">
@@ -377,7 +430,7 @@ export default function SyncConsumerIndex() {
                             kesehatannya.
                         </p>
                     </div>
-                    <Button onClick={() => setShowCreateDialog(true)}>
+                    <Button onClick={openCreateDialog}>
                         <Plus className="mr-2 h-4 w-4" />
                         Tambah Konsumen
                     </Button>
@@ -460,9 +513,7 @@ export default function SyncConsumerIndex() {
                                 {!hasConsumer ? (
                                     <Button
                                         size="sm"
-                                        onClick={() =>
-                                            setShowCreateDialog(true)
-                                        }
+                                        onClick={openCreateDialog}
                                     >
                                         Daftarkan pertama
                                         <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
@@ -507,7 +558,7 @@ export default function SyncConsumerIndex() {
                                     className={`h-7 w-7 shrink-0 ${card.tone}`}
                                 />
                                 <div className="min-w-0">
-                                    <p className="tnum text-xl font-black tracking-tight">
+                                    <p className="tnum text-xl font-bold tracking-tight">
                                         {card.value}
                                     </p>
                                     <p className="truncate text-xs font-medium text-muted-foreground">
@@ -538,12 +589,20 @@ export default function SyncConsumerIndex() {
                             <CardContent className="p-0">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Konsumen</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Pull Terakhir</TableHead>
-                                            <TableHead>Uji Koneksi</TableHead>
-                                            <TableHead className="text-right">
+                                        <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
+                                            <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                                Konsumen
+                                            </TableHead>
+                                            <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                                Status
+                                            </TableHead>
+                                            <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                                Pull Terakhir
+                                            </TableHead>
+                                            <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                                Uji Koneksi
+                                            </TableHead>
+                                            <TableHead className="text-right text-xs font-semibold tracking-wider text-foreground uppercase">
                                                 Aksi
                                             </TableHead>
                                         </TableRow>
@@ -670,10 +729,8 @@ export default function SyncConsumerIndex() {
                                                         <div className="flex flex-wrap items-center justify-center gap-2">
                                                             <Button
                                                                 size="sm"
-                                                                onClick={() =>
-                                                                    setShowCreateDialog(
-                                                                        true,
-                                                                    )
+                                                                onClick={
+                                                                    openCreateDialog
                                                                 }
                                                             >
                                                                 <Plus className="mr-2 h-3.5 w-3.5" />
@@ -703,7 +760,10 @@ export default function SyncConsumerIndex() {
                                                     testResult[consumer.slug];
 
                                                 return (
-                                                    <TableRow key={consumer.id}>
+                                                    <TableRow
+                                                        key={consumer.id}
+                                                        className="border-b border-border transition-colors hover:bg-muted/40"
+                                                    >
                                                         <TableCell>
                                                             <div className="flex flex-col gap-0.5">
                                                                 <span className="flex items-center gap-2 font-semibold">
@@ -779,7 +839,7 @@ export default function SyncConsumerIndex() {
                                                                 ) : result ? (
                                                                     <>
                                                                         <span
-                                                                            className={`flex items-center gap-1.5 text-xs font-medium ${result.success ? 'text-emerald-600' : 'text-destructive'}`}
+                                                                            className={`flex items-center gap-1.5 text-xs font-medium ${result.success ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive dark:text-red-400'}`}
                                                                         >
                                                                             {result.success ? (
                                                                                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
@@ -804,7 +864,7 @@ export default function SyncConsumerIndex() {
                                                                 ) : consumer.last_connection_test_status ? (
                                                                     <>
                                                                         <span
-                                                                            className={`flex items-center gap-1.5 text-xs font-medium ${consumer.last_connection_test_status === 'success' ? 'text-emerald-600' : 'text-destructive'}`}
+                                                                            className={`flex items-center gap-1.5 text-xs font-medium ${consumer.last_connection_test_status === 'success' ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive dark:text-red-400'}`}
                                                                         >
                                                                             {consumer.last_connection_test_status ===
                                                                             'success' ? (
@@ -902,25 +962,11 @@ export default function SyncConsumerIndex() {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    onClick={() => {
-                                                                        setEditTarget(
+                                                                    onClick={() =>
+                                                                        openEditDialog(
                                                                             consumer,
-                                                                        );
-                                                                        editForm.setData(
-                                                                            {
-                                                                                nama: consumer.nama,
-                                                                                slug: consumer.slug,
-                                                                                base_url:
-                                                                                    consumer.base_url ??
-                                                                                    '',
-                                                                                deskripsi:
-                                                                                    consumer.deskripsi ??
-                                                                                    '',
-                                                                                is_active:
-                                                                                    consumer.is_active,
-                                                                            },
-                                                                        );
-                                                                    }}
+                                                                        )
+                                                                    }
                                                                     title="Edit"
                                                                 >
                                                                     <Pencil className="h-4 w-4" />
@@ -961,13 +1007,25 @@ export default function SyncConsumerIndex() {
                             <CardContent className="p-0">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Waktu</TableHead>
-                                            <TableHead>Konsumen</TableHead>
-                                            <TableHead>Baris</TableHead>
-                                            <TableHead>Halaman</TableHead>
-                                            <TableHead>Durasi</TableHead>
-                                            <TableHead>Token</TableHead>
+                                        <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
+                                            <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                                Waktu
+                                            </TableHead>
+                                            <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                                Konsumen
+                                            </TableHead>
+                                            <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                                Baris
+                                            </TableHead>
+                                            <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                                Halaman
+                                            </TableHead>
+                                            <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                                Durasi
+                                            </TableHead>
+                                            <TableHead className="text-xs font-semibold tracking-wider text-foreground uppercase">
+                                                Token
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -1030,10 +1088,8 @@ export default function SyncConsumerIndex() {
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
-                                                                onClick={() =>
-                                                                    setShowCreateDialog(
-                                                                        true,
-                                                                    )
+                                                                onClick={
+                                                                    openCreateDialog
                                                                 }
                                                             >
                                                                 <Plus className="mr-2 h-3.5 w-3.5" />
@@ -1046,9 +1102,12 @@ export default function SyncConsumerIndex() {
                                             </TableRow>
                                         ) : (
                                             recentPulls.map((pull) => (
-                                                <TableRow key={pull.id}>
+                                                <TableRow
+                                                    key={pull.id}
+                                                    className="border-b border-border transition-colors hover:bg-muted/40"
+                                                >
                                                     <TableCell>
-                                                        <span className="text-sm">
+                                                        <span className="tnum text-sm">
                                                             {new Date(
                                                                 pull.pulled_at,
                                                             ).toLocaleString(
@@ -1073,20 +1132,20 @@ export default function SyncConsumerIndex() {
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <span className="font-mono">
+                                                        <span className="tnum font-mono">
                                                             {formatNumber(
                                                                 pull.rows_returned,
                                                             )}
                                                         </span>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <span className="font-mono">
+                                                        <span className="tnum font-mono">
                                                             {pull.page}/
                                                             {pull.per_page}
                                                         </span>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <span className="font-mono">
+                                                        <span className="tnum font-mono">
                                                             {pull.duration_ms}{' '}
                                                             ms
                                                         </span>
@@ -1184,6 +1243,16 @@ export default function SyncConsumerIndex() {
                                                 variant="outline"
                                                 className="mr-2"
                                             >
+                                                X-Nonce
+                                            </Badge>
+                                            string acak unik per request, maks.
+                                            128 karakter (wajib anti-replay)
+                                        </li>
+                                        <li>
+                                            <Badge
+                                                variant="outline"
+                                                className="mr-2"
+                                            >
                                                 X-Signature
                                             </Badge>
                                             HMAC-SHA256 dari string kanonik di
@@ -1231,7 +1300,7 @@ export default function SyncConsumerIndex() {
             {/* Modal tambah konsumen */}
             <Dialog
                 open={showCreateDialog}
-                onOpenChange={(open) => !open && setShowCreateDialog(false)}
+                onOpenChange={(open) => !open && closeCreateDialog()}
             >
                 <DialogContent>
                     <DialogHeader>
@@ -1250,7 +1319,7 @@ export default function SyncConsumerIndex() {
                         }}
                         className="flex flex-col gap-4"
                     >
-                        {createForm.errors && (
+                        {Object.keys(createForm.errors).length > 0 && (
                             <AlertError
                                 errors={errorsToArray(createForm.errors)}
                             />
@@ -1316,7 +1385,7 @@ export default function SyncConsumerIndex() {
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setShowCreateDialog(false)}
+                                onClick={closeCreateDialog}
                             >
                                 Batal
                             </Button>
@@ -1336,7 +1405,7 @@ export default function SyncConsumerIndex() {
             {/* Modal edit konsumen */}
             <Dialog
                 open={!!editTarget}
-                onOpenChange={(open) => !open && setEditTarget(null)}
+                onOpenChange={(open) => !open && closeEditDialog()}
             >
                 <DialogContent>
                     <DialogHeader>
@@ -1354,7 +1423,7 @@ export default function SyncConsumerIndex() {
                         }}
                         className="flex flex-col gap-4"
                     >
-                        {editForm.errors && (
+                        {Object.keys(editForm.errors).length > 0 && (
                             <AlertError
                                 errors={errorsToArray(editForm.errors)}
                             />
@@ -1404,12 +1473,37 @@ export default function SyncConsumerIndex() {
                                 rows={3}
                             />
                         </div>
+                        <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                            <Checkbox
+                                id="edit_is_active"
+                                checked={editForm.data.is_active}
+                                onCheckedChange={(checked) =>
+                                    editForm.setData(
+                                        'is_active',
+                                        checked === true,
+                                    )
+                                }
+                                className="mt-0.5"
+                            />
+                            <div className="grid gap-0.5">
+                                <Label
+                                    htmlFor="edit_is_active"
+                                    className="cursor-pointer font-medium"
+                                >
+                                    Konsumen Aktif
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Konsumen nonaktif akan ditolak saat menarik
+                                    data sinkronisasi.
+                                </p>
+                            </div>
+                        </div>
 
                         <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setEditTarget(null)}
+                                onClick={closeEditDialog}
                             >
                                 Batal
                             </Button>
@@ -1440,12 +1534,14 @@ export default function SyncConsumerIndex() {
             {/* Konfirmasi hapus */}
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
-                onOpenChange={(open) => !open && setDeleteTarget(null)}
+                onOpenChange={(open) =>
+                    !open && !deleteForm.processing && setDeleteTarget(null)
+                }
                 title="Hapus Konsumen"
-                description="Apakah Anda yakin ingin menghapus konsumen ini? Token API yang dimilikinya akan kehilangan akses ke endpoint sinkronisasi."
+                description="Apakah Anda yakin ingin menghapus konsumen"
                 itemName={deleteTarget?.nama}
                 onConfirm={handleDelete}
-                processing={false}
+                processing={deleteForm.processing}
             />
         </AppLayout>
     );
@@ -1468,7 +1564,7 @@ function CopyableCodeBlock({ text }: { text: string }) {
             className="h-7 gap-1.5 text-xs"
         >
             {copied ? (
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
             ) : (
                 <Copy className="h-3.5 w-3.5" />
             )}

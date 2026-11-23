@@ -64,12 +64,12 @@ export function MultiStepForm({
                                 >
                                     <div
                                         className={cn(
-                                            'z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 bg-background text-sm font-semibold transition-colors',
+                                            'z-10 flex h-10 w-10 items-center justify-center rounded-full border bg-background text-sm font-semibold transition-colors',
                                             isCompleted
                                                 ? 'border-primary bg-primary text-primary-foreground'
                                                 : isCurrent
-                                                  ? 'border-primary text-primary'
-                                                  : 'border-muted text-muted-foreground',
+                                                  ? 'border-primary text-primary ring-2 ring-primary/20'
+                                                  : 'border-border text-muted-foreground',
                                         )}
                                     >
                                         {isCompleted ? (
@@ -96,7 +96,7 @@ export function MultiStepForm({
 
                 <div className="mt-12">{children}</div>
             </CardContent>
-            <CardFooter className="flex justify-between border-t p-6">
+            <CardFooter className="flex justify-between border-t border-border p-6">
                 <Button
                     type="button"
                     variant="outline"

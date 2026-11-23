@@ -1,5 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -13,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem } from '@/types';
 
 type PegawaiSummary = {
@@ -121,6 +125,12 @@ export default function RiwayatPangkatPage({
         null,
     );
     const [form, setForm] = useState<RiwayatPangkatForm>(emptyForm);
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [submitting, setSubmitting] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<RiwayatPangkatItem | null>(
+        null,
+    );
+    const [deleting, setDeleting] = useState(false);
 
     const breadcrumbs = useMemo<BreadcrumbItem[]>(
         () => [
@@ -143,12 +153,14 @@ export default function RiwayatPangkatPage({
     const openCreateDialog = () => {
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
     const openEditDialog = (item: RiwayatPangkatItem) => {
         setEditingItem(item);
         setForm(toFormState(item));
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
@@ -156,12 +168,21 @@ export default function RiwayatPangkatPage({
         setIsDialogOpen(false);
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
     };
 
     const submitForm = () => {
         const requestOptions = {
             preserveScroll: true,
-            onSuccess: () => closeDialog(),
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
+            onSuccess: () => {
+                setFormErrors({});
+                closeDialog();
+            },
+            onError: (errors: Record<string, string>) => {
+                setFormErrors(errors);
+            },
         };
 
         if (editingItem !== null) {
@@ -173,13 +194,16 @@ export default function RiwayatPangkatPage({
         router.post(storeUrl, toPayload(form), requestOptions);
     };
 
-    const handleDelete = (item: RiwayatPangkatItem) => {
-        if (!window.confirm('Hapus riwayat pangkat ini?')) {
+    const confirmDelete = () => {
+        if (deleteTarget === null) {
             return;
         }
 
-        router.delete(item.delete_url, {
+        router.delete(deleteTarget.delete_url, {
             preserveScroll: true,
+            onStart: () => setDeleting(true),
+            onFinish: () => setDeleting(false),
+            onSuccess: () => setDeleteTarget(null),
         });
     };
 
@@ -306,7 +330,9 @@ export default function RiwayatPangkatPage({
                                                         type="button"
                                                         variant="destructive"
                                                         onClick={() =>
-                                                            handleDelete(item)
+                                                            setDeleteTarget(
+                                                                item,
+                                                            )
                                                         }
                                                     >
                                                         Hapus
@@ -322,7 +348,14 @@ export default function RiwayatPangkatPage({
                 </div>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open && !submitting) {
+                        closeDialog();
+                    }
+                }}
+            >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>
@@ -335,6 +368,13 @@ export default function RiwayatPangkatPage({
                             sebagai pangkat aktif bila diperlukan.
                         </DialogDescription>
                     </DialogHeader>
+
+                    {Object.keys(formErrors).length > 0 && (
+                        <AlertError
+                            errors={errorsToArray(formErrors)}
+                            title="Gagal menyimpan riwayat pangkat"
+                        />
+                    )}
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2 sm:col-span-2">
@@ -357,6 +397,7 @@ export default function RiwayatPangkatPage({
                                     </option>
                                 ))}
                             </select>
+                            <InputError message={formErrors.ref_pangkat_id} />
                         </div>
 
                         <div className="grid gap-2">
@@ -371,6 +412,7 @@ export default function RiwayatPangkatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.no_sk} />
                         </div>
 
                         <div className="grid gap-2">
@@ -386,6 +428,7 @@ export default function RiwayatPangkatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tanggal_sk} />
                         </div>
 
                         <div className="grid gap-2">
@@ -401,6 +444,7 @@ export default function RiwayatPangkatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tmt} />
                         </div>
 
                         <div className="grid gap-2">
@@ -417,6 +461,7 @@ export default function RiwayatPangkatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.pejabat_penetap} />
                         </div>
 
                         <div className="grid gap-2">
@@ -435,6 +480,7 @@ export default function RiwayatPangkatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.masa_kerja_tahun} />
                         </div>
 
                         <div className="grid gap-2">
@@ -454,6 +500,7 @@ export default function RiwayatPangkatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.masa_kerja_bulan} />
                         </div>
 
                         <div className="grid gap-2">
@@ -471,6 +518,7 @@ export default function RiwayatPangkatPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.gaji_pokok} />
                         </div>
 
                         <div className="grid gap-2 sm:col-span-2">
@@ -487,22 +535,26 @@ export default function RiwayatPangkatPage({
                                 }
                                 className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
+                            <InputError message={formErrors.keterangan} />
                         </div>
 
-                        <div className="flex items-center gap-3 sm:col-span-2">
-                            <Checkbox
-                                id="is_aktif"
-                                checked={form.is_aktif}
-                                onCheckedChange={(checked) =>
-                                    setForm((current) => ({
-                                        ...current,
-                                        is_aktif: checked === true,
-                                    }))
-                                }
-                            />
-                            <Label htmlFor="is_aktif">
-                                Jadikan pangkat aktif pegawai
-                            </Label>
+                        <div className="flex flex-col gap-1 sm:col-span-2">
+                            <div className="flex items-center gap-3">
+                                <Checkbox
+                                    id="is_aktif"
+                                    checked={form.is_aktif}
+                                    onCheckedChange={(checked) =>
+                                        setForm((current) => ({
+                                            ...current,
+                                            is_aktif: checked === true,
+                                        }))
+                                    }
+                                />
+                                <Label htmlFor="is_aktif">
+                                    Jadikan pangkat aktif pegawai
+                                </Label>
+                            </div>
+                            <InputError message={formErrors.is_aktif} />
                         </div>
                     </div>
 
@@ -511,15 +563,34 @@ export default function RiwayatPangkatPage({
                             type="button"
                             variant="outline"
                             onClick={closeDialog}
+                            disabled={submitting}
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={submitForm}>
-                            Simpan
+                        <Button
+                            type="button"
+                            onClick={submitForm}
+                            processing={submitting}
+                        >
+                            {submitting ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDeleteDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open && !deleting) {
+                        setDeleteTarget(null);
+                    }
+                }}
+                title="Hapus Riwayat Pangkat"
+                description="Apakah Anda yakin ingin menghapus riwayat pangkat dengan nomor SK"
+                itemName={deleteTarget?.no_sk}
+                onConfirm={confirmDelete}
+                processing={deleting}
+            />
         </AppLayout>
     );
 }

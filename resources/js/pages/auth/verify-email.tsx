@@ -4,20 +4,21 @@ import AlertError from '@/components/alert-error';
 import { Button } from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
 import { errorsToArray } from '@/lib/form-errors';
+import { logout } from '@/routes/auth/sso';
 import { send } from '@/routes/verification';
 
 export default function VerifyEmail({ status }: { status?: string }) {
     return (
         <AuthLayout
-            title="Verify email"
-            description="Please verify your email address by clicking on the link we just emailed to you."
+            title="Verifikasi email"
+            description="Silakan verifikasi alamat email Anda dengan mengklik tautan yang baru saja kami kirimkan ke email Anda."
         >
-            <Head title="Email verification" />
+            <Head title="Verifikasi email" />
 
             {status === 'verification-link-sent' && (
                 <div className="mb-4 text-center text-sm font-medium text-primary">
-                    A new verification link has been sent to the email address
-                    you provided during registration.
+                    Tautan verifikasi baru telah dikirim ke alamat email yang
+                    Anda daftarkan.
                 </div>
             )}
 
@@ -31,23 +32,19 @@ export default function VerifyEmail({ status }: { status?: string }) {
                             />
                         )}
                         <Button processing={processing} variant="secondary">
-                            Resend verification email
+                            Kirim ulang email verifikasi
                         </Button>
-
-                        <Form
-                            method="post"
-                            action="/auth/sso/logout"
-                            className="mx-auto block"
-                        >
-                            <button
-                                type="submit"
-                                className="cursor-pointer text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                            >
-                                Log out
-                            </button>
-                        </Form>
                     </>
                 )}
+            </Form>
+
+            <Form {...logout.form()} className="mt-4 text-center">
+                <button
+                    type="submit"
+                    className="cursor-pointer text-sm text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                >
+                    Keluar
+                </button>
             </Form>
         </AuthLayout>
     );

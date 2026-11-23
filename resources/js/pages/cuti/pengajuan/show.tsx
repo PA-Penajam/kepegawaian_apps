@@ -27,19 +27,21 @@ const breadcrumbs: BreadcrumbItem[] = [
  */
 function formatFileSize(bytes: number): string {
     if (bytes < 1024) {
-return `${bytes} B`;
-}
+        return `${bytes} B`;
+    }
 
     if (bytes < 1024 * 1024) {
-return `${(bytes / 1024).toFixed(1)} KB`;
-}
+        return `${(bytes / 1024).toFixed(1)} KB`;
+    }
 
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export default function PengajuanShow({ pengajuan }: Props) {
     // Mode dialog: null = tertutup, 'cancel' = batalkan, 'revoke' = cabut cuti
-    const [cancelMode, setCancelMode] = useState<'cancel' | 'revoke' | null>(null);
+    const [cancelMode, setCancelMode] = useState<'cancel' | 'revoke' | null>(
+        null,
+    );
 
     const state = pengajuan.state as CutiState;
     const stateLabel = CutiStateLabels[state] ?? state;
@@ -58,7 +60,9 @@ export default function PengajuanShow({ pengajuan }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Pengajuan ${pengajuan.nomor_pengajuan ?? pengajuan.id}`} />
+            <Head
+                title={`Pengajuan ${pengajuan.nomor_pengajuan ?? pengajuan.id}`}
+            />
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4 md:p-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -119,8 +123,12 @@ export default function PengajuanShow({ pengajuan }: Props) {
                         <Card>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
-                                    <CardTitle className="text-base">Informasi Pengajuan</CardTitle>
-                                    <Badge variant={CutiStateBadgeVariant[state]}>
+                                    <CardTitle className="text-base">
+                                        Informasi Pengajuan
+                                    </CardTitle>
+                                    <Badge
+                                        variant={CutiStateBadgeVariant[state]}
+                                    >
                                         {stateLabel}
                                     </Badge>
                                 </div>
@@ -128,27 +136,41 @@ export default function PengajuanShow({ pengajuan }: Props) {
                             <CardContent className="space-y-4">
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div>
-                                        <p className="text-xs text-muted-foreground">Jenis Cuti</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Jenis Cuti
+                                        </p>
                                         <p className="text-sm font-medium">
-                                            {pengajuan.jenis_cuti?.nama ?? pengajuan.jenis_cuti_kode}
+                                            {pengajuan.jenis_cuti?.nama ??
+                                                pengajuan.jenis_cuti_kode}
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-muted-foreground">Durasi</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Durasi
+                                        </p>
                                         <p className="text-sm font-medium">
-                                            {pengajuan.jumlah_hari_kerja} hari kerja
+                                            {pengajuan.jumlah_hari_kerja} hari
+                                            kerja
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-muted-foreground">Tanggal Mulai</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Tanggal Mulai
+                                        </p>
                                         <p className="text-sm font-medium">
-                                            {formatTanggal(pengajuan.tanggal_mulai)}
+                                            {formatTanggal(
+                                                pengajuan.tanggal_mulai,
+                                            )}
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-muted-foreground">Tanggal Selesai</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Tanggal Selesai
+                                        </p>
                                         <p className="text-sm font-medium">
-                                            {formatTanggal(pengajuan.tanggal_selesai)}
+                                            {formatTanggal(
+                                                pengajuan.tanggal_selesai,
+                                            )}
                                         </p>
                                     </div>
                                 </div>
@@ -156,8 +178,12 @@ export default function PengajuanShow({ pengajuan }: Props) {
                                 <Separator />
 
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Alasan</p>
-                                    <p className="mt-1 text-sm">{pengajuan.alasan}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Alasan
+                                    </p>
+                                    <p className="mt-1 text-sm">
+                                        {pengajuan.alasan}
+                                    </p>
                                 </div>
 
                                 {pengajuan.alamat_selama_cuti && (
@@ -200,59 +226,89 @@ export default function PengajuanShow({ pengajuan }: Props) {
                                 <Separator />
                                 <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                                     {pengajuan.submitted_at && (
-                                        <p>Diajukan: {formatTanggalDateTime(pengajuan.submitted_at)}</p>
+                                        <p>
+                                            Diajukan:{' '}
+                                            {formatTanggalDateTime(
+                                                pengajuan.submitted_at,
+                                            )}
+                                        </p>
                                     )}
                                     {pengajuan.approved_at && (
-                                        <p>Disetujui: {formatTanggalDateTime(pengajuan.approved_at)}</p>
+                                        <p>
+                                            Disetujui:{' '}
+                                            {formatTanggalDateTime(
+                                                pengajuan.approved_at,
+                                            )}
+                                        </p>
                                     )}
                                     {pengajuan.rejected_at && (
-                                        <p>Ditolak: {formatTanggalDateTime(pengajuan.rejected_at)}</p>
+                                        <p>
+                                            Ditolak:{' '}
+                                            {formatTanggalDateTime(
+                                                pengajuan.rejected_at,
+                                            )}
+                                        </p>
                                     )}
                                     {pengajuan.cancelled_at && (
-                                        <p>Dibatalkan: {formatTanggalDateTime(pengajuan.cancelled_at)}</p>
+                                        <p>
+                                            Dibatalkan:{' '}
+                                            {formatTanggalDateTime(
+                                                pengajuan.cancelled_at,
+                                            )}
+                                        </p>
                                     )}
                                 </div>
                             </CardContent>
                         </Card>
 
                         {/* Lampiran */}
-                        {pengajuan.lampiran && pengajuan.lampiran.length > 0 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-base">Lampiran</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-2">
-                                        {pengajuan.lampiran.map((file) => (
-                                            <div
-                                                key={file.id}
-                                                className="flex items-center justify-between rounded-lg border p-3"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <FileText className="h-5 w-5 text-muted-foreground" />
-                                                    <div>
-                                                        <p className="text-sm font-medium">
-                                                            {file.nama_file_asli}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {formatFileSize(file.size_bytes)} &middot;{' '}
-                                                            {file.mime_type}
-                                                        </p>
+                        {pengajuan.lampiran &&
+                            pengajuan.lampiran.length > 0 && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">
+                                            Lampiran
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-2">
+                                            {pengajuan.lampiran.map((file) => (
+                                                <div
+                                                    key={file.id}
+                                                    className="flex items-center justify-between rounded-lg border p-3"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <FileText className="h-5 w-5 text-muted-foreground" />
+                                                        <div>
+                                                            <p className="text-sm font-medium">
+                                                                {
+                                                                    file.nama_file_asli
+                                                                }
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {formatFileSize(
+                                                                    file.size_bytes,
+                                                                )}{' '}
+                                                                &middot;{' '}
+                                                                {file.mime_type}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
                     </div>
 
                     {/* Kolom samping: timeline approval */}
                     <div>
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-base">Riwayat Status</CardTitle>
+                                <CardTitle className="text-base">
+                                    Riwayat Status
+                                </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <TimelineApproval

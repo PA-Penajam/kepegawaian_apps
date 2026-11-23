@@ -66,22 +66,28 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const statusBadgeClass: Record<KgbStatus, string> = {
-    'Sudah Jatuh Tempo': 'bg-red-100 text-red-700 border-red-200 hover:bg-red-100',
+    'Sudah Jatuh Tempo':
+        'bg-red-100 text-red-700 border-red-200 hover:bg-red-100',
     Segera: 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100',
-    Mendekati: 'bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100',
+    Mendekati:
+        'bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100',
     Aman: 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100',
 };
 
 function formatDate(date: string | null): string {
     if (date === null) {
-return '-';
-}
+        return '-';
+    }
 
     const parsed = new Date(date);
 
     return Number.isNaN(parsed.getTime())
         ? '-'
-        : new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(parsed);
+        : new Intl.DateTimeFormat('id-ID', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+          }).format(parsed);
 }
 
 function applyFilter(newFilters: Partial<Filters>) {
@@ -89,25 +95,36 @@ function applyFilter(newFilters: Partial<Filters>) {
     const merged = { ...newFilters };
 
     if (merged.unit_kerja) {
-params.unit_kerja = merged.unit_kerja;
-}
+        params.unit_kerja = merged.unit_kerja;
+    }
 
     if (merged.golongan) {
-params.golongan = merged.golongan;
-}
+        params.golongan = merged.golongan;
+    }
 
     if (merged.status) {
-params.status = merged.status;
+        params.status = merged.status;
+    }
+
+    router.get('/kepegawaian/monitoring/kgb', params, {
+        preserveState: true,
+        replace: true,
+    });
 }
 
-    router.get('/kepegawaian/monitoring/kgb', params, { preserveState: true, replace: true });
-}
-
-export default function MonitoringKgbIndex({ pegawaiList, kgbStats, filters, filterOptions }: Props) {
+export default function MonitoringKgbIndex({
+    pegawaiList,
+    kgbStats,
+    filters,
+    filterOptions,
+}: Props) {
     const [localFilters, setLocalFilters] = useState<Filters>(filters);
 
     function handleFilterChange(key: keyof Filters, value: string) {
-        const updated = { ...localFilters, [key]: value === 'semua' || value === '' ? null : value };
+        const updated = {
+            ...localFilters,
+            [key]: value === 'semua' || value === '' ? null : value,
+        };
         setLocalFilters(updated);
         applyFilter(updated);
     }
@@ -116,16 +133,16 @@ export default function MonitoringKgbIndex({ pegawaiList, kgbStats, filters, fil
         const params = new URLSearchParams();
 
         if (localFilters.unit_kerja) {
-params.set('unit_kerja', localFilters.unit_kerja);
-}
+            params.set('unit_kerja', localFilters.unit_kerja);
+        }
 
         if (localFilters.golongan) {
-params.set('golongan', localFilters.golongan);
-}
+            params.set('golongan', localFilters.golongan);
+        }
 
         if (localFilters.status) {
-params.set('status', localFilters.status);
-}
+            params.set('status', localFilters.status);
+        }
 
         window.location.href = `/kepegawaian/monitoring/kgb/export?${params.toString()}`;
     }
@@ -140,7 +157,8 @@ params.set('status', localFilters.status);
                         Monitoring Kenaikan Gaji Berkala
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Pantau pegawai yang mendekati atau sudah jatuh tempo KGB.
+                        Pantau pegawai yang mendekati atau sudah jatuh tempo
+                        KGB.
                     </p>
                 </div>
 
@@ -174,56 +192,88 @@ params.set('status', localFilters.status);
                 <Card>
                     <CardHeader>
                         <CardTitle>Daftar Monitoring KGB</CardTitle>
-                        <CardDescription>Data pegawai disusun berdasarkan sisa hari terdekat.</CardDescription>
+                        <CardDescription>
+                            Data pegawai disusun berdasarkan sisa hari terdekat.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:flex-wrap">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                             <div className="grid gap-1.5">
-                                <label htmlFor="filter-unit-kerja" className="text-sm font-medium">
+                                <label
+                                    htmlFor="filter-unit-kerja"
+                                    className="text-sm font-medium"
+                                >
                                     Unit Kerja
                                 </label>
                                 <select
                                     id="filter-unit-kerja"
                                     value={localFilters.unit_kerja ?? ''}
-                                    onChange={(e) => handleFilterChange('unit_kerja', e.target.value)}
+                                    onChange={(e) =>
+                                        handleFilterChange(
+                                            'unit_kerja',
+                                            e.target.value,
+                                        )
+                                    }
                                     className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:w-48"
                                 >
                                     <option value="">Semua Unit</option>
                                     {filterOptions.unitKerja.map((uk) => (
-                                        <option key={uk.id} value={uk.id}>{uk.nama}</option>
+                                        <option key={uk.id} value={uk.id}>
+                                            {uk.nama}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
 
                             <div className="grid gap-1.5">
-                                <label htmlFor="filter-golongan" className="text-sm font-medium">
+                                <label
+                                    htmlFor="filter-golongan"
+                                    className="text-sm font-medium"
+                                >
                                     Golongan
                                 </label>
                                 <select
                                     id="filter-golongan"
                                     value={localFilters.golongan ?? ''}
-                                    onChange={(e) => handleFilterChange('golongan', e.target.value)}
+                                    onChange={(e) =>
+                                        handleFilterChange(
+                                            'golongan',
+                                            e.target.value,
+                                        )
+                                    }
                                     className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:w-36"
                                 >
                                     <option value="">Semua Gol</option>
                                     {filterOptions.golongan.map((gol) => (
-                                        <option key={gol} value={gol}>Golongan {gol}</option>
+                                        <option key={gol} value={gol}>
+                                            Golongan {gol}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
 
                             <div className="grid gap-1.5">
-                                <label htmlFor="filter-status" className="text-sm font-medium">
+                                <label
+                                    htmlFor="filter-status"
+                                    className="text-sm font-medium"
+                                >
                                     Status
                                 </label>
                                 <select
                                     id="filter-status"
                                     value={localFilters.status ?? 'semua'}
-                                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                                    onChange={(e) =>
+                                        handleFilterChange(
+                                            'status',
+                                            e.target.value,
+                                        )
+                                    }
                                     className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:w-40"
                                 >
                                     <option value="semua">Semua Status</option>
-                                    <option value="jatuh-tempo">Jatuh Tempo</option>
+                                    <option value="jatuh-tempo">
+                                        Jatuh Tempo
+                                    </option>
                                     <option value="segera">Segera</option>
                                     <option value="mendekati">Mendekati</option>
                                     <option value="aman">Aman</option>
@@ -231,7 +281,9 @@ params.set('status', localFilters.status);
                             </div>
 
                             <div className="grid gap-1.5">
-                                <label className="text-sm font-medium">Aksi</label>
+                                <label className="text-sm font-medium">
+                                    Aksi
+                                </label>
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -268,32 +320,57 @@ params.set('status', localFilters.status);
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        pegawaiList.data.map((pegawai: PegawaiMonitoringKgb) => (
-                                            <TableRow key={pegawai.id}>
-                                                <TableCell className="font-medium">
-                                                    {pegawai.nip ?? '-'}
-                                                </TableCell>
-                                                <TableCell>{pegawai.nama_lengkap}</TableCell>
-                                                <TableCell>{pegawai.pangkat_gol || '-'}</TableCell>
-                                                <TableCell>{formatDate(pegawai.tmt_pangkat)}</TableCell>
-                                                <TableCell>{formatDate(pegawai.tanggal_kgb_berikutnya)}</TableCell>
-                                                <TableCell>{pegawai.sisa_hari}</TableCell>
-                                                <TableCell>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={statusBadgeClass[pegawai.status]}
-                                                    >
-                                                        {pegawai.status}
-                                                    </Badge>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
+                                        pegawaiList.data.map(
+                                            (pegawai: PegawaiMonitoringKgb) => (
+                                                <TableRow key={pegawai.id}>
+                                                    <TableCell className="font-medium">
+                                                        {pegawai.nip ?? '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {pegawai.nama_lengkap}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {pegawai.pangkat_gol ||
+                                                            '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {formatDate(
+                                                            pegawai.tmt_pangkat,
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {formatDate(
+                                                            pegawai.tanggal_kgb_berikutnya,
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {pegawai.sisa_hari}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={
+                                                                statusBadgeClass[
+                                                                    pegawai
+                                                                        .status
+                                                                ]
+                                                            }
+                                                        >
+                                                            {pegawai.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ),
+                                        )
                                     )}
                                 </TableBody>
                             </Table>
                         </div>
 
-                        <PaginationWrapper links={pegawaiList.links} lastPage={pegawaiList.last_page} />
+                        <PaginationWrapper
+                            links={pegawaiList.links}
+                            lastPage={pegawaiList.last_page}
+                        />
                     </CardContent>
                 </Card>
             </div>

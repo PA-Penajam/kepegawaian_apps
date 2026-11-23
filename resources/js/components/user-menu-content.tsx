@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
+import { logout } from '@/routes/auth/sso';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
 
@@ -54,8 +55,8 @@ export function UserMenuContent({ user }: Props) {
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Form method="post" action="/auth/sso/logout" className="block w-full">
+            <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                <Form {...logout.form()} className="block w-full">
                     <button
                         type="submit"
                         className="flex w-full cursor-pointer items-center px-2 py-1.5 text-left text-sm outline-none data-[highlighted]:bg-accent"

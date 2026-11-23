@@ -41,7 +41,9 @@ export default function MyDashboard({ saldo, pengajuanList }: Props) {
                 {/* Header dengan tombol ajukan cuti */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-xl font-semibold tracking-tight">Cuti Saya</h1>
+                        <h1 className="text-xl font-semibold tracking-tight">
+                            Cuti Saya
+                        </h1>
                         <p className="text-sm text-muted-foreground">
                             Kelola pengajuan cuti dan lihat saldo Anda.
                         </p>
@@ -62,7 +64,9 @@ export default function MyDashboard({ saldo, pengajuanList }: Props) {
                 {/* Riwayat Pengajuan */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Riwayat Pengajuan</CardTitle>
+                        <CardTitle className="text-base">
+                            Riwayat Pengajuan
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         {pengajuanList.data.length === 0 ? (
@@ -78,52 +82,78 @@ export default function MyDashboard({ saldo, pengajuanList }: Props) {
                                         <TableHead>Tanggal</TableHead>
                                         <TableHead>Durasi</TableHead>
                                         <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">Aksi</TableHead>
+                                        <TableHead className="text-right">
+                                            Aksi
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {pengajuanList.data.map((p: CutiPengajuan) => {
-                                        const state = p.state as CutiState;
-                                        const label = CutiStateLabels[state] ?? state;
+                                    {pengajuanList.data.map(
+                                        (p: CutiPengajuan) => {
+                                            const state = p.state as CutiState;
+                                            const label =
+                                                CutiStateLabels[state] ?? state;
 
-                                        return (
-                                            <TableRow key={p.id}>
-                                                <TableCell className="font-mono text-xs">
-                                                    {p.nomor_pengajuan ?? '-'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {p.jenis_cuti?.nama ?? p.jenis_cuti_kode}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {formatTanggal(p.tanggal_mulai)} &ndash;{' '}
-                                                    {formatTanggal(p.tanggal_selesai)}
-                                                </TableCell>
-                                                <TableCell>{p.jumlah_hari_kerja} hari</TableCell>
-                                                <TableCell>
-                                                    <Badge variant={CutiStateBadgeVariant[state]}>
-                                                        {label}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon-xs"
-                                                        asChild
-                                                        aria-label="Lihat detail pengajuan"
-                                                    >
-                                                        <Link href={`/cuti/pengajuan/${p.id}`}>
-                                                            <Eye className="h-4 w-4" />
-                                                        </Link>
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
+                                            return (
+                                                <TableRow key={p.id}>
+                                                    <TableCell className="font-mono text-xs">
+                                                        {p.nomor_pengajuan ??
+                                                            '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {p.jenis_cuti?.nama ??
+                                                            p.jenis_cuti_kode}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {formatTanggal(
+                                                            p.tanggal_mulai,
+                                                        )}{' '}
+                                                        &ndash;{' '}
+                                                        {formatTanggal(
+                                                            p.tanggal_selesai,
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {p.jumlah_hari_kerja}{' '}
+                                                        hari
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            variant={
+                                                                CutiStateBadgeVariant[
+                                                                    state
+                                                                ]
+                                                            }
+                                                        >
+                                                            {label}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon-xs"
+                                                            asChild
+                                                            aria-label="Lihat detail pengajuan"
+                                                        >
+                                                            <Link
+                                                                href={`/cuti/pengajuan/${p.id}`}
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </Link>
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        },
+                                    )}
                                 </TableBody>
                             </Table>
                         )}
 
-                        <PaginationWrapper links={pengajuanList.links} lastPage={pengajuanList.last_page} />
+                        <PaginationWrapper
+                            links={pengajuanList.links}
+                            lastPage={pengajuanList.last_page}
+                        />
                     </CardContent>
                 </Card>
             </div>

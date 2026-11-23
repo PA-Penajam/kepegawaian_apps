@@ -61,12 +61,12 @@ function barPct(value: number, max: number): number {
 
 function jkLabel(code: string): string {
     if (code === 'L') {
-return 'Laki-laki';
-}
+        return 'Laki-laki';
+    }
 
     if (code === 'P') {
-return 'Perempuan';
-}
+        return 'Perempuan';
+    }
 
     return code;
 }

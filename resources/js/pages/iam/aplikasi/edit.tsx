@@ -57,7 +57,7 @@ export default function Edit() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit ${aplikasi.nama}`} />
 
-            <div className="flex flex-col gap-6 p-4 max-w-2xl">
+            <div className="flex max-w-2xl flex-col gap-6 p-4">
                 {/* Header */}
                 <div className="flex items-center gap-4">
                     <Button variant="outline" size="icon" asChild>
@@ -84,7 +84,7 @@ export default function Edit() {
                             title="Gagal memperbarui aplikasi"
                         />
                     )}
-                    <div className="rounded-lg border p-6 flex flex-col gap-4">
+                    <div className="flex flex-col gap-4 rounded-lg border p-6">
                         {/* Nama */}
                         <div className="grid gap-2">
                             <Label htmlFor="nama">Nama Aplikasi</Label>
@@ -98,7 +98,7 @@ export default function Edit() {
                                 required
                             />
                             {form.errors.nama && (
-                                <p className="text-sm text-destructive">
+                                <p className="text-sm text-destructive dark:text-red-400">
                                     {form.errors.nama}
                                 </p>
                             )}
@@ -117,7 +117,7 @@ export default function Edit() {
                                 value={aplikasi.slug}
                                 readOnly
                                 disabled
-                                className="font-mono bg-muted"
+                                className="bg-muted font-mono"
                             />
                         </div>
 
@@ -135,7 +135,7 @@ export default function Edit() {
                                 required
                             />
                             {form.errors.url && (
-                                <p className="text-sm text-destructive">
+                                <p className="text-sm text-destructive dark:text-red-400">
                                     {form.errors.url}
                                 </p>
                             )}
@@ -156,7 +156,7 @@ export default function Edit() {
                                 rows={3}
                             />
                             {form.errors.deskripsi && (
-                                <p className="text-sm text-destructive">
+                                <p className="text-sm text-destructive dark:text-red-400">
                                     {form.errors.deskripsi}
                                 </p>
                             )}
@@ -172,11 +172,15 @@ export default function Edit() {
                                 }
                             />
                             <div>
-                                <Label htmlFor="is_active" className="font-medium cursor-pointer">
+                                <Label
+                                    htmlFor="is_active"
+                                    className="cursor-pointer font-medium"
+                                >
                                     Aplikasi Aktif
                                 </Label>
                                 <p className="text-sm text-muted-foreground">
-                                    Aplikasi yang nonaktif tidak bisa melakukan SSO
+                                    Aplikasi yang nonaktif tidak bisa melakukan
+                                    SSO
                                 </p>
                             </div>
                         </div>
@@ -184,10 +188,7 @@ export default function Edit() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-3">
-                        <Button
-                            type="submit"
-                            processing={form.processing}
-                        >
+                        <Button type="submit" processing={form.processing}>
                             <Save className="mr-2 h-4 w-4" />
                             Simpan Perubahan
                         </Button>

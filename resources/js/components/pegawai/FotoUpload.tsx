@@ -11,7 +11,12 @@ type Props = {
     canUpdate: boolean;
 };
 
-export function FotoUpload({ pegawaiId, currentFotoUrl, initials, canUpdate }: Props) {
+export function FotoUpload({
+    pegawaiId,
+    currentFotoUrl,
+    initials,
+    canUpdate,
+}: Props) {
     const fileRef = useRef<HTMLInputElement>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -21,8 +26,8 @@ export function FotoUpload({ pegawaiId, currentFotoUrl, initials, canUpdate }: P
         const file = e.target.files?.[0];
 
         if (!file) {
-return;
-}
+            return;
+        }
 
         setSelectedFile(file);
         setPreviewUrl(URL.createObjectURL(file));
@@ -32,8 +37,8 @@ return;
         e.preventDefault();
 
         if (!selectedFile) {
-return;
-}
+            return;
+        }
 
         const formData = new FormData();
         formData.append('foto', selectedFile);
@@ -52,17 +57,22 @@ return;
     const displayUrl = previewUrl ?? currentFotoUrl;
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col items-center gap-3">
+        <form
+            onSubmit={handleSubmit}
+            className="flex flex-col items-center gap-3"
+        >
             <div className="relative">
-                <Avatar className="h-20 w-20 border-2 border-border">
+                <Avatar className="h-20 w-20 border border-border shadow-xs">
                     <AvatarImage src={displayUrl ?? undefined} alt={initials} />
-                    <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
+                    <AvatarFallback className="text-2xl">
+                        {initials}
+                    </AvatarFallback>
                 </Avatar>
                 {canUpdate && (
                     <button
                         type="button"
                         onClick={() => fileRef.current?.click()}
-                        className="absolute bottom-0 right-0 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
+                        className="absolute right-0 bottom-0 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
                         title="Ganti foto"
                     >
                         <Camera className="h-3.5 w-3.5" />

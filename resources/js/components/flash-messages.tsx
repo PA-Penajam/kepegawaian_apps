@@ -53,19 +53,19 @@ export function FlashMessages() {
     };
 
     useEffect(() => {
-        if (flash?.success) {
+        if (typeof flash?.success === 'string' && flash.success !== '') {
             addMessage('success', flash.success);
         }
 
-        if (flash?.error) {
+        if (typeof flash?.error === 'string' && flash.error !== '') {
             addMessage('error', flash.error);
         }
 
-        if (flash?.warning) {
+        if (typeof flash?.warning === 'string' && flash.warning !== '') {
             addMessage('warning', flash.warning);
         }
 
-        if (flash?.info) {
+        if (typeof flash?.info === 'string' && flash.info !== '') {
             addMessage('info', flash.info);
         }
     }, [flash]);

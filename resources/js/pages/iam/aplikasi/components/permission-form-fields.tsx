@@ -1,10 +1,17 @@
 import { usePage } from '@inertiajs/react';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { compileIamSlugPattern } from '@/lib/iam-slug';
 import { ConventionHelpPanel } from './convention-help-panel';
 
 interface FormData {
@@ -23,7 +30,13 @@ interface Props {
     lockSlug?: boolean;
 }
 
-export function PermissionFormFields({ data, setData, errors, disabled, lockSlug }: Props) {
+export function PermissionFormFields({
+    data,
+    setData,
+    errors,
+    disabled,
+    lockSlug,
+}: Props) {
     const iam = (
         usePage().props as unknown as {
             iam: {
@@ -32,7 +45,16 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
             };
         }
     ).iam;
-    const regex = useMemo(() => new RegExp(iam.slug_pattern), [iam.slug_pattern]);
+    const regex = useMemo(
+        () => compileIamSlugPattern(iam.slug_pattern),
+        [iam.slug_pattern],
+    );
+
+    const setDataRef = useRef(setData);
+
+    useEffect(() => {
+        setDataRef.current = setData;
+    }, [setData]);
 
     const [mode, setMode] = useState<'builder' | 'free'>('builder');
     const [resource, setResource] = useState('');
@@ -48,10 +70,17 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
 
     useEffect(() => {
         if (mode === 'builder' && !lockSlug) {
-            setData('slug', builderSlug);
-            setData('group', builderSlug.split('.')[0] ?? '');
+            const nextGroup = builderSlug.split('.')[0] ?? '';
+
+            if (data.slug !== builderSlug) {
+                setDataRef.current('slug', builderSlug);
+            }
+
+            if (data.group !== nextGroup) {
+                setDataRef.current('group', nextGroup);
+            }
         }
-    }, [builderSlug, mode, lockSlug, setData]);
+    }, [builderSlug, mode, lockSlug, data.slug, data.group]);
 
     const isValid = regex.test(data.slug);
     const group = data.slug.split('.')[0] ?? '';
@@ -61,16 +90,21 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
     return (
         <div className="grid gap-4 py-4">
             {!lockSlug && (
-                <Tabs value={mode} onValueChange={(v) => {
-                    if (v === 'free') {
-                        // Pindah ke free: copy builder slug ke field free supaya tidak hilang
-                        setData('slug', builderSlug);
-                    }
+                <Tabs
+                    value={mode}
+                    onValueChange={(v) => {
+                        if (v === 'free') {
+                            // Pindah ke free: copy builder slug ke field free supaya tidak hilang
+                            setData('slug', builderSlug);
+                        }
 
-                    setMode(v as 'builder' | 'free');
-                }}>
+                        setMode(v as 'builder' | 'free');
+                    }}
+                >
                     <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="builder">Builder (disarankan)</TabsTrigger>
+                        <TabsTrigger value="builder">
+                            Builder (disarankan)
+                        </TabsTrigger>
                         <TabsTrigger value="free">Mode ahli</TabsTrigger>
                     </TabsList>
 
@@ -81,55 +115,93 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
                                 <Input
                                     id="resource"
                                     value={resource}
-                                    onChange={(e) => setResource(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                                    onChange={(e) =>
+                                        setResource(
+                                            e.target.value
+                                                .toLowerCase()
+                                                .replace(/\s+/g, '-'),
+                                        )
+                                    }
                                     placeholder="contoh: pegawai, cuti, barang"
                                     className="font-mono"
                                     disabled={slugInputsDisabled}
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Resource utama. Lowercase, kebab-case. Auto-sanitize saat ketik.
+                                    Resource utama. Lowercase, kebab-case.
+                                    Auto-sanitize saat ketik.
                                 </p>
                             </div>
 
                             <div className="grid gap-2">
                                 <Label htmlFor="sub-resource">
-                                    Sub-resource <span className="text-muted-foreground">(opsional)</span>
+                                    Sub-resource{' '}
+                                    <span className="text-muted-foreground">
+                                        (opsional)
+                                    </span>
                                 </Label>
                                 <Input
                                     id="sub-resource"
                                     value={subResource}
-                                    onChange={(e) => setSubResource(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                                    onChange={(e) =>
+                                        setSubResource(
+                                            e.target.value
+                                                .toLowerCase()
+                                                .replace(/\s+/g, '-'),
+                                        )
+                                    }
                                     placeholder="contoh: pengajuan, usulan"
                                     className="font-mono"
                                     disabled={slugInputsDisabled}
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Untuk modul kompleks (mis. <code className="font-mono">cuti.pengajuan</code>). Boleh kosong.
+                                    Untuk modul kompleks (mis.{' '}
+                                    <code className="font-mono">
+                                        cuti.pengajuan
+                                    </code>
+                                    ). Boleh kosong.
                                 </p>
                             </div>
 
                             <div className="grid gap-2">
                                 <Label htmlFor="action">Action</Label>
-                                <Select value={action} onValueChange={setAction} disabled={slugInputsDisabled}>
+                                <Select
+                                    value={action}
+                                    onValueChange={setAction}
+                                    disabled={slugInputsDisabled}
+                                >
                                     <SelectTrigger id="action">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {Object.entries(iam.standard_actions).map(([key, desc]) => (
+                                        {Object.entries(
+                                            iam.standard_actions,
+                                        ).map(([key, desc]) => (
                                             <SelectItem key={key} value={key}>
-                                                <span className="font-mono">{key}</span>
-                                                <span className="ml-2 text-xs text-muted-foreground">{desc}</span>
+                                                <span className="font-mono">
+                                                    {key}
+                                                </span>
+                                                <span className="ml-2 text-xs text-muted-foreground">
+                                                    {desc}
+                                                </span>
                                             </SelectItem>
                                         ))}
                                         <SelectItem value="__custom__">
-                                            <span className="italic">Custom...</span>
+                                            <span className="italic">
+                                                Custom...
+                                            </span>
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {action === '__custom__' && (
                                     <Input
                                         value={customAction}
-                                        onChange={(e) => setCustomAction(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                                        onChange={(e) =>
+                                            setCustomAction(
+                                                e.target.value
+                                                    .toLowerCase()
+                                                    .replace(/\s+/g, '-'),
+                                            )
+                                        }
                                         placeholder="contoh: tanda-tangan-ketua"
                                         className="font-mono"
                                         disabled={slugInputsDisabled}
@@ -138,17 +210,24 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
                             </div>
 
                             <div className="rounded-md bg-background p-2 text-sm">
-                                <span className="text-muted-foreground">Preview slug:</span>{' '}
-                                <code className="font-mono">{builderSlug || '—'}</code>{' '}
-                                {builderSlug && (
-                                    isValid ? (
+                                <span className="text-muted-foreground">
+                                    Preview slug:
+                                </span>{' '}
+                                <code className="font-mono">
+                                    {builderSlug || '—'}
+                                </code>{' '}
+                                {builderSlug &&
+                                    (isValid ? (
                                         <CheckCircle2 className="ml-1 inline h-4 w-4 text-green-600" />
                                     ) : (
                                         <AlertCircle className="ml-1 inline h-4 w-4 text-amber-600" />
-                                    )
-                                )}
+                                    ))}
                                 <div className="mt-1 text-xs text-muted-foreground">
-                                    Group: <code className="font-mono">{group || '—'}</code> (auto)
+                                    Group:{' '}
+                                    <code className="font-mono">
+                                        {group || '—'}
+                                    </code>{' '}
+                                    (auto)
                                 </div>
                             </div>
                         </div>
@@ -162,27 +241,36 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
                                 value={data.slug}
                                 onChange={(e) => {
                                     setData('slug', e.target.value);
-                                    setData('group', e.target.value.split('.')[0] ?? '');
+                                    setData(
+                                        'group',
+                                        e.target.value.split('.')[0] ?? '',
+                                    );
                                 }}
                                 placeholder="contoh: cuti.pengajuan.approve-langsung"
                                 className="font-mono"
                                 disabled={slugInputsDisabled}
                             />
                             {data.slug && (
-                                <p className={`text-xs ${isValid ? 'text-green-600' : 'text-amber-700'}`}>
+                                <p
+                                    className={`text-xs ${isValid ? 'text-green-600' : 'text-amber-700'}`}
+                                >
                                     {isValid ? (
                                         <>
-                                            <CheckCircle2 className="inline h-3 w-3" /> Sesuai konvensi
+                                            <CheckCircle2 className="inline h-3 w-3" />{' '}
+                                            Sesuai konvensi
                                         </>
                                     ) : (
                                         <>
-                                            <AlertCircle className="inline h-3 w-3" /> Format tidak match regex konvensi
+                                            <AlertCircle className="inline h-3 w-3" />{' '}
+                                            Format tidak match regex konvensi
                                         </>
                                     )}
                                 </p>
                             )}
                             <p className="text-xs text-muted-foreground">
-                                Format: <code className="font-mono">{`{resource}.{action}`}</code> atau{' '}
+                                Format:{' '}
+                                <code className="font-mono">{`{resource}.{action}`}</code>{' '}
+                                atau{' '}
                                 <code className="font-mono">{`{module}.{resource}.{action}`}</code>
                             </p>
                         </div>
@@ -194,14 +282,24 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
                 // Edit mode: tampilkan slug read-only untuk konteks tapi tidak bisa diubah
                 <div className="grid gap-2">
                     <Label>Slug (immutable)</Label>
-                    <Input value={data.slug} className="font-mono" disabled readOnly />
+                    <Input
+                        value={data.slug}
+                        className="font-mono"
+                        disabled
+                        readOnly
+                    />
                     <p className="text-xs text-muted-foreground">
-                        Slug tidak dapat diubah via Edit. Gunakan tombol Migrate jika perlu rename.
+                        Slug tidak dapat diubah via Edit. Gunakan tombol Migrate
+                        jika perlu rename.
                     </p>
                 </div>
             )}
 
-            {errors.slug && <p className="text-sm text-destructive">{errors.slug}</p>}
+            {errors.slug && (
+                <p className="text-sm text-destructive dark:text-red-400">
+                    {errors.slug}
+                </p>
+            )}
 
             <div className="grid gap-2">
                 <Label htmlFor="perm-nama">Nama Permission</Label>
@@ -216,12 +314,17 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
                 <p className="text-xs text-muted-foreground">
                     Nama deskriptif dalam Bahasa Indonesia.
                 </p>
-                {errors.nama && <p className="text-sm text-destructive">{errors.nama}</p>}
+                {errors.nama && (
+                    <p className="text-sm text-destructive dark:text-red-400">
+                        {errors.nama}
+                    </p>
+                )}
             </div>
 
             <div className="grid gap-2">
                 <Label htmlFor="perm-keterangan">
-                    Keterangan <span className="text-muted-foreground">(opsional)</span>
+                    Keterangan{' '}
+                    <span className="text-muted-foreground">(opsional)</span>
                 </Label>
                 <Input
                     id="perm-keterangan"
@@ -230,7 +333,11 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
                     placeholder="Deskripsi singkat untuk audit/dokumentasi"
                     disabled={disabled}
                 />
-                {errors.keterangan && <p className="text-sm text-destructive">{errors.keterangan}</p>}
+                {errors.keterangan && (
+                    <p className="text-sm text-destructive dark:text-red-400">
+                        {errors.keterangan}
+                    </p>
+                )}
             </div>
 
             <ConventionHelpPanel />
@@ -239,5 +346,5 @@ export function PermissionFormFields({ data, setData, errors, disabled, lockSlug
 }
 
 PermissionFormFields.isSlugValid = (slug: string, pattern: string): boolean => {
-    return new RegExp(pattern).test(slug);
+    return compileIamSlugPattern(pattern).test(slug);
 };

@@ -3,6 +3,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { SystemErrorNotifier } from '@/components/system-error-notifier';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import '../css/app.css';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -28,6 +29,7 @@ createInertiaApp({
                 <ErrorBoundary>
                     <TooltipProvider delayDuration={0}>
                         <App {...props} />
+                        <SystemErrorNotifier />
                     </TooltipProvider>
                 </ErrorBoundary>
             </StrictMode>,

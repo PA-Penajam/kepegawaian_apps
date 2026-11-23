@@ -1,5 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem } from '@/types';
 
 type PegawaiSummary = {
@@ -91,6 +95,12 @@ export default function PenghargaanPage({
         null,
     );
     const [form, setForm] = useState<PenghargaanForm>(emptyForm);
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [submitting, setSubmitting] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<PenghargaanItem | null>(
+        null,
+    );
+    const [deleting, setDeleting] = useState(false);
 
     const breadcrumbs = useMemo<BreadcrumbItem[]>(
         () => [
@@ -113,12 +123,14 @@ export default function PenghargaanPage({
     const openCreateDialog = () => {
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
     const openEditDialog = (item: PenghargaanItem) => {
         setEditingItem(item);
         setForm(toFormState(item));
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
@@ -126,12 +138,21 @@ export default function PenghargaanPage({
         setIsDialogOpen(false);
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
     };
 
     const submitForm = () => {
         const requestOptions = {
             preserveScroll: true,
-            onSuccess: () => closeDialog(),
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
+            onSuccess: () => {
+                setFormErrors({});
+                closeDialog();
+            },
+            onError: (errors: Record<string, string>) => {
+                setFormErrors(errors);
+            },
         };
 
         if (editingItem !== null) {
@@ -143,13 +164,16 @@ export default function PenghargaanPage({
         router.post(storeUrl, toPayload(form), requestOptions);
     };
 
-    const handleDelete = (item: PenghargaanItem) => {
-        if (!window.confirm('Hapus data penghargaan ini?')) {
+    const confirmDelete = () => {
+        if (deleteTarget === null) {
             return;
         }
 
-        router.delete(item.delete_url, {
+        router.delete(deleteTarget.delete_url, {
             preserveScroll: true,
+            onStart: () => setDeleting(true),
+            onFinish: () => setDeleting(false),
+            onSuccess: () => setDeleteTarget(null),
         });
     };
 
@@ -255,7 +279,9 @@ export default function PenghargaanPage({
                                                         type="button"
                                                         variant="destructive"
                                                         onClick={() =>
-                                                            handleDelete(item)
+                                                            setDeleteTarget(
+                                                                item,
+                                                            )
                                                         }
                                                     >
                                                         Hapus
@@ -271,7 +297,14 @@ export default function PenghargaanPage({
                 </div>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open && !submitting) {
+                        closeDialog();
+                    }
+                }}
+            >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>
@@ -280,9 +313,16 @@ export default function PenghargaanPage({
                                 : 'Ubah penghargaan'}
                         </DialogTitle>
                         <DialogDescription>
-                            Isi data penghargaan/penghargaan pegawai.
+                            Isi data penghargaan pegawai.
                         </DialogDescription>
                     </DialogHeader>
+
+                    {Object.keys(formErrors).length > 0 && (
+                        <AlertError
+                            errors={errorsToArray(formErrors)}
+                            title="Gagal menyimpan data penghargaan"
+                        />
+                    )}
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
@@ -310,6 +350,9 @@ export default function PenghargaanPage({
                                     </option>
                                 ))}
                             </select>
+                            <InputError
+                                message={formErrors.ref_jenis_penghargaan_id}
+                            />
                         </div>
 
                         <div className="grid gap-2">
@@ -326,6 +369,7 @@ export default function PenghargaanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.nama_penghargaan} />
                         </div>
 
                         <div className="grid gap-2">
@@ -340,6 +384,7 @@ export default function PenghargaanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.no_sk} />
                         </div>
 
                         <div className="grid gap-2">
@@ -355,6 +400,7 @@ export default function PenghargaanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tanggal_sk} />
                         </div>
 
                         <div className="grid gap-2">
@@ -371,6 +417,7 @@ export default function PenghargaanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.pejabat_penetap} />
                         </div>
 
                         <div className="grid gap-2 sm:col-span-2">
@@ -387,6 +434,7 @@ export default function PenghargaanPage({
                                 }
                                 className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
+                            <InputError message={formErrors.keterangan} />
                         </div>
                     </div>
 
@@ -395,15 +443,34 @@ export default function PenghargaanPage({
                             type="button"
                             variant="outline"
                             onClick={closeDialog}
+                            disabled={submitting}
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={submitForm}>
-                            Simpan
+                        <Button
+                            type="button"
+                            onClick={submitForm}
+                            processing={submitting}
+                        >
+                            {submitting ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDeleteDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open && !deleting) {
+                        setDeleteTarget(null);
+                    }
+                }}
+                title="Hapus Data Penghargaan"
+                description="Apakah Anda yakin ingin menghapus penghargaan"
+                itemName={deleteTarget?.nama_penghargaan}
+                onConfirm={confirmDelete}
+                processing={deleting}
+            />
         </AppLayout>
     );
 }

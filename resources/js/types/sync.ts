@@ -53,3 +53,11 @@ export type SyncConnectionTest = {
     success: boolean;
     message: string;
 };
+
+export type SharedFlash = {
+    success?: string | null;
+    error?: string | null;
+    api_secret_once?: string | null;
+    sync_token_once?: SyncTokenOnce | null;
+    test_connection?: SyncConnectionTest | null;
+};

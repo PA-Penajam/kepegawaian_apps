@@ -2,7 +2,9 @@
  * Mengkonversi object errors dari Inertia menjadi array string.
  * Berguna untuk komponen AlertError yang membutuhkan array string.
  */
-export function errorsToArray(errors: Record<string, string | string[]>): string[] {
+export function errorsToArray(
+    errors: Record<string, string | string[]>,
+): string[] {
     const result: string[] = [];
 
     Object.values(errors).forEach((value) => {
@@ -26,9 +28,11 @@ export function hasErrors(errors: Record<string, unknown>): boolean {
 /**
  * Pesan error default untuk network error.
  */
-export const NETWORK_ERROR_MESSAGE = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
+export const NETWORK_ERROR_MESSAGE =
+    'Terjadi kesalahan jaringan. Silakan coba lagi.';
 
 /**
  * Pesan error default untuk server error.
  */
-export const SERVER_ERROR_MESSAGE = 'Terjadi kesalahan pada server. Silakan coba lagi nanti.';
+export const SERVER_ERROR_MESSAGE =
+    'Terjadi kesalahan pada server. Silakan coba lagi nanti.';

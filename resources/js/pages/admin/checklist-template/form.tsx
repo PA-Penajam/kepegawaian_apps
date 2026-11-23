@@ -158,12 +158,12 @@ export default function Form({ template }: Props) {
             <form onSubmit={submit} className="flex flex-col gap-6 p-4 md:p-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight uppercase">
+                        <h1 className="text-2xl font-semibold tracking-tight">
                             {isEdit
                                 ? 'Edit Checklist Template'
                                 : 'Tambah Checklist Template'}
                         </h1>
-                        <p className="mt-1 text-sm font-medium text-muted-foreground">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Atur informasi template dan daftar item checklist.
                         </p>
                     </div>
@@ -177,7 +177,7 @@ export default function Form({ template }: Props) {
                     </div>
                 </div>
 
-                <div className="grid gap-4 rounded-xl border-2 border-black bg-background p-4 shadow-[4px_4px_0_rgba(0,0,0,1)] md:grid-cols-2">
+                <div className="grid gap-4 rounded-xl border border-border bg-card p-6 shadow-sm md:grid-cols-2">
                     <div className="grid gap-2">
                         <Label htmlFor="kode">Kode</Label>
                         <Input
@@ -189,7 +189,7 @@ export default function Form({ template }: Props) {
                             }
                         />
                         {form.errors.kode && (
-                            <p className="text-sm font-medium text-destructive">
+                            <p className="text-sm font-medium text-destructive dark:text-red-400">
                                 {form.errors.kode}
                             </p>
                         )}
@@ -204,7 +204,7 @@ export default function Form({ template }: Props) {
                             }
                         />
                         {form.errors.nama && (
-                            <p className="text-sm font-medium text-destructive">
+                            <p className="text-sm font-medium text-destructive dark:text-red-400">
                                 {form.errors.nama}
                             </p>
                         )}
@@ -219,7 +219,7 @@ export default function Form({ template }: Props) {
                             }
                         />
                         {form.errors.jenis && (
-                            <p className="text-sm font-medium text-destructive">
+                            <p className="text-sm font-medium text-destructive dark:text-red-400">
                                 {form.errors.jenis}
                             </p>
                         )}
@@ -244,18 +244,18 @@ export default function Form({ template }: Props) {
                             }
                         />
                         {form.errors.deskripsi && (
-                            <p className="text-sm font-medium text-destructive">
+                            <p className="text-sm font-medium text-destructive dark:text-red-400">
                                 {form.errors.deskripsi}
                             </p>
                         )}
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-4 rounded-xl border-2 border-black bg-background p-4 shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 shadow-sm">
                     <div className="flex items-center justify-between gap-4">
                         <div>
-                            <h2 className="font-black tracking-tight uppercase">
-                                Items Checklist
+                            <h2 className="text-lg font-semibold tracking-tight">
+                                Item Checklist
                             </h2>
                             <p className="text-sm text-muted-foreground">
                                 Tambah, hapus, atau urutkan item template.
@@ -274,11 +274,14 @@ export default function Form({ template }: Props) {
                     {form.data.items.map((item, index) => (
                         <div
                             key={item.id ?? index}
-                            className="grid gap-3 rounded-lg border border-black/20 p-3 md:grid-cols-[1fr_2fr_auto_auto]"
+                            className="grid gap-3 rounded-lg border border-border bg-muted/20 p-4 md:grid-cols-[1fr_2fr_auto_auto]"
                         >
                             <div className="grid gap-2">
-                                <Label>Kode</Label>
+                                <Label htmlFor={`item-kode-${index}`}>
+                                    Kode
+                                </Label>
                                 <Input
+                                    id={`item-kode-${index}`}
                                     value={item.kode}
                                     onChange={(event) =>
                                         updateItem(
@@ -291,7 +294,7 @@ export default function Form({ template }: Props) {
                                 {form.errors[
                                     `items.${index}.kode` as keyof typeof form.errors
                                 ] && (
-                                    <p className="text-sm font-medium text-destructive">
+                                    <p className="text-sm font-medium text-destructive dark:text-red-400">
                                         {
                                             form.errors[
                                                 `items.${index}.kode` as keyof typeof form.errors
@@ -301,8 +304,11 @@ export default function Form({ template }: Props) {
                                 )}
                             </div>
                             <div className="grid gap-2">
-                                <Label>Nama</Label>
+                                <Label htmlFor={`item-nama-${index}`}>
+                                    Nama
+                                </Label>
                                 <Input
+                                    id={`item-nama-${index}`}
                                     value={item.nama}
                                     onChange={(event) =>
                                         updateItem(
@@ -315,7 +321,7 @@ export default function Form({ template }: Props) {
                                 {form.errors[
                                     `items.${index}.nama` as keyof typeof form.errors
                                 ] && (
-                                    <p className="text-sm font-medium text-destructive">
+                                    <p className="text-sm font-medium text-destructive dark:text-red-400">
                                         {
                                             form.errors[
                                                 `items.${index}.nama` as keyof typeof form.errors
@@ -326,6 +332,7 @@ export default function Form({ template }: Props) {
                             </div>
                             <div className="flex items-center gap-2 pt-7">
                                 <Checkbox
+                                    id={`item-wajib-${index}`}
                                     checked={item.wajib}
                                     onCheckedChange={(checked) =>
                                         updateItem(
@@ -335,38 +342,52 @@ export default function Form({ template }: Props) {
                                         )
                                     }
                                 />
-                                <Label>Wajib</Label>
+                                <Label htmlFor={`item-wajib-${index}`}>
+                                    Wajib
+                                </Label>
                             </div>
                             <div className="flex items-center gap-1 pt-6">
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="icon"
+                                    aria-label={`Naikkan urutan item ${index + 1}`}
                                     onClick={() => moveItem(index, -1)}
                                 >
-                                    <ArrowUp className="h-4 w-4" />
+                                    <ArrowUp
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
                                 </Button>
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="icon"
+                                    aria-label={`Turunkan urutan item ${index + 1}`}
                                     onClick={() => moveItem(index, 1)}
                                 >
-                                    <ArrowDown className="h-4 w-4" />
+                                    <ArrowDown
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
                                 </Button>
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="icon"
+                                    aria-label={`Hapus item ${index + 1}`}
                                     onClick={() => removeItem(index)}
                                 >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                    <Trash2
+                                        className="h-4 w-4 text-destructive"
+                                        aria-hidden="true"
+                                    />
                                 </Button>
                             </div>
                         </div>
                     ))}
                     {form.errors.items && (
-                        <p className="text-sm font-medium text-destructive">
+                        <p className="text-sm font-medium text-destructive dark:text-red-400">
                             {form.errors.items}
                         </p>
                     )}

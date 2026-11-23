@@ -41,31 +41,41 @@ export type IamPermission = {
 
 export type IamUserRole = {
     id: number;
-    user_id: number;
+    user_id: string;
     iam_role_id: number;
     assigned_at: string;
-    assigned_by: number;
+    assigned_by: string | null;
     role?: IamRole;
     assignedByUser?: {
-        id: number;
-        name: string;
-    };
+        id: string;
+        nama_lengkap: string;
+    } | null;
+    assigned_by_user?: {
+        id: string;
+        nama_lengkap: string;
+    } | null;
 };
 
 export type IamUserAkses = {
     id: number;
-    user_id: number;
+    user_id: string;
     iam_role_id: number;
     assigned_at: string;
-    assigned_by: number;
-    role: IamRole & {
-        application: IamApplication;
-        permissions: IamPermission[];
-    };
-    assignedByUser: {
-        id: number;
-        name: string;
-    };
+    assigned_by: string | null;
+    role?:
+        | (IamRole & {
+              application?: IamApplication | null;
+              permissions?: IamPermission[];
+          })
+        | null;
+    assignedByUser?: {
+        id: string;
+        nama_lengkap: string;
+    } | null;
+    assigned_by_user?: {
+        id: string;
+        nama_lengkap: string;
+    } | null;
 };
 
 export type IamAvailableApp = {

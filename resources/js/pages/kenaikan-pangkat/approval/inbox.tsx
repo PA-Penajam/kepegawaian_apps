@@ -1,6 +1,9 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { Inbox as InboxIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
+import InputError from '@/components/input-error';
+import { PaginationWrapper } from '@/components/pagination-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -69,6 +72,7 @@ type Props = {
 
 type PageProps = {
     auth: Auth;
+    errors?: Record<string, string>;
     flash?: {
         success?: string;
     };
@@ -175,7 +179,10 @@ function submitUrl(selected: SelectedAction): string {
     return kirimBiro.url(selected.usulan.id);
 }
 
-function submitPayload(selected: SelectedAction, catatan: string): Record<string, string | boolean> {
+function submitPayload(
+    selected: SelectedAction,
+    catatan: string,
+): Record<string, string | boolean> {
     if (selected.action === 'reject') {
         return { alasan: catatan };
     }
@@ -184,7 +191,10 @@ function submitPayload(selected: SelectedAction, catatan: string): Record<string
         return { catatan };
     }
 
-    if (selected.tab.role === 'kasubbag' || selected.tab.role === 'sekretaris') {
+    if (
+        selected.tab.role === 'kasubbag' ||
+        selected.tab.role === 'sekretaris'
+    ) {
         return { setuju: true, catatan };
     }
 
@@ -196,32 +206,56 @@ function submitPayload(selected: SelectedAction, catatan: string): Record<string
 }
 
 export default function ApprovalInboxPage({ usulan, current_role }: Props) {
-    const { auth, flash } = usePage<PageProps>().props;
+    const { auth, flash, errors: pageErrors } = usePage<PageProps>().props;
     const permissions = auth.user.permissions ?? [];
-    const visibleTabs = tabs.filter((tab) => permissions.includes(tab.permission));
+    const visibleTabs = tabs.filter((tab) =>
+        permissions.includes(tab.permission),
+    );
     const defaultTab = current_role ?? visibleTabs[0]?.role ?? 'kasubbag';
     const [activeTab, setActiveTab] = useState<ApprovalRole>(defaultTab);
     const [selected, setSelected] = useState<SelectedAction | null>(null);
     const [catatan, setCatatan] = useState('');
     const [processing, setProcessing] = useState(false);
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [trackPageErrors, setTrackPageErrors] = useState(false);
     const [successMessage, setSuccessMessage] = useState(flash?.success ?? '');
 
-    const itemsByState = useMemo(() => {
-        return visibleTabs.reduce<Record<string, UsulanKenaikanPangkat[]>>((result, tab) => {
-            result[tab.state] = usulan.data.filter((item) => item.state === tab.state);
+    const activeErrors = useMemo(() => {
+        return {
+            ...(trackPageErrors ? (pageErrors ?? {}) : {}),
+            ...formErrors,
+        };
+    }, [trackPageErrors, pageErrors, formErrors]);
 
-            return result;
-        }, {});
+    const itemsByState = useMemo(() => {
+        return visibleTabs.reduce<Record<string, UsulanKenaikanPangkat[]>>(
+            (result, tab) => {
+                result[tab.state] = usulan.data.filter(
+                    (item) => item.state === tab.state,
+                );
+
+                return result;
+            },
+            {},
+        );
     }, [usulan.data, visibleTabs]);
 
-    function openAction(usulanItem: UsulanKenaikanPangkat, tab: TabConfig, action: ApprovalAction): void {
+    function openAction(
+        usulanItem: UsulanKenaikanPangkat,
+        tab: TabConfig,
+        action: ApprovalAction,
+    ): void {
         setSelected({ usulan: usulanItem, tab, action });
         setCatatan('');
+        setFormErrors({});
+        setTrackPageErrors(false);
     }
 
     function closeAction(): void {
         setSelected(null);
         setCatatan('');
+        setFormErrors({});
+        setTrackPageErrors(false);
         setProcessing(false);
     }
 
@@ -232,17 +266,32 @@ export default function ApprovalInboxPage({ usulan, current_role }: Props) {
             return;
         }
 
-        if ((selected.action === 'revise' || selected.action === 'reject') && catatan.trim() === '') {
+        if (
+            (selected.action === 'revise' || selected.action === 'reject') &&
+            catatan.trim() === ''
+        ) {
+            setFormErrors({
+                [selected.action === 'reject' ? 'alasan' : 'catatan']:
+                    selected.action === 'reject'
+                        ? 'Alasan penolakan wajib diisi.'
+                        : 'Catatan perbaikan wajib diisi.',
+            });
+
             return;
         }
 
         setProcessing(true);
+        setFormErrors({});
+        setTrackPageErrors(true);
         router.post(submitUrl(selected), submitPayload(selected, catatan), {
-            only: ['usulan', 'current_role', 'flash'],
+            only: ['usulan', 'current_role', 'flash', 'errors'],
             preserveScroll: true,
             onSuccess: () => {
                 setSuccessMessage('Aksi approval berhasil diproses.');
                 closeAction();
+            },
+            onError: (errors) => {
+                setFormErrors(errors);
             },
             onFinish: () => setProcessing(false),
         });
@@ -258,7 +307,8 @@ export default function ApprovalInboxPage({ usulan, current_role }: Props) {
                         Inbox Approval Kenaikan Pangkat
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Daftar usulan kenaikan pangkat yang menunggu tindakan sesuai kewenangan Anda.
+                        Daftar usulan kenaikan pangkat yang menunggu tindakan
+                        sesuai kewenangan Anda.
                     </p>
                     {successMessage && (
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300">
@@ -268,141 +318,254 @@ export default function ApprovalInboxPage({ usulan, current_role }: Props) {
                 </div>
 
                 {visibleTabs.length > 0 ? (
-                    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ApprovalRole)}>
-                        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-2 p-1">
-                            {visibleTabs.map((tab) => (
-                                <TabsTrigger key={tab.role} value={tab.role} className="grow-0">
-                                    {tab.label}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
+                    <>
+                        <Tabs
+                            value={activeTab}
+                            onValueChange={(value) =>
+                                setActiveTab(value as ApprovalRole)
+                            }
+                        >
+                            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-2 p-1">
+                                {visibleTabs.map((tab) => (
+                                    <TabsTrigger
+                                        key={tab.role}
+                                        value={tab.role}
+                                        className="grow-0"
+                                    >
+                                        {tab.label}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
 
-                        {visibleTabs.map((tab) => {
-                            const items = itemsByState[tab.state] ?? [];
+                            {visibleTabs.map((tab) => {
+                                const items = itemsByState[tab.state] ?? [];
 
-                            return (
-                                <TabsContent key={tab.role} value={tab.role} className="mt-4">
-                                    {items.length > 0 ? (
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Pegawai</TableHead>
-                                                    <TableHead>Pangkat</TableHead>
-                                                    <TableHead>Tanggal Diajukan</TableHead>
-                                                    <TableHead>Status</TableHead>
-                                                    <TableHead className="text-right">Aksi</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {items.map((item) => (
-                                                    <TableRow key={item.id}>
-                                                        <TableCell>
-                                                            <div className="flex flex-col gap-1">
-                                                                <span className="font-medium">
-                                                                    {item.pegawai?.nama_lengkap ?? '-'}
-                                                                </span>
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {item.pegawai?.nip ?? '-'}
-                                                                </span>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>{resolvePangkat(item)}</TableCell>
-                                                        <TableCell>{formatTanggal(item.submitted_at)}</TableCell>
-                                                        <TableCell>
-                                                            <Badge variant="outline">{tab.label}</Badge>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex flex-wrap justify-end gap-2">
-                                                                <Button
-                                                                    size="sm"
-                                                                    className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600"
-                                                                    onClick={() => openAction(item, tab, 'approve')}
-                                                                >
-                                                                    {tab.approveLabel}
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
-                                                                    className="bg-amber-400 text-amber-950 hover:bg-amber-500 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
-                                                                    onClick={() => openAction(item, tab, 'revise')}
-                                                                >
-                                                                    Perlu Perbaikan
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="destructive"
-                                                                    onClick={() => openAction(item, tab, 'reject')}
-                                                                >
-                                                                    Tolak
-                                                                </Button>
-                                                            </div>
-                                                        </TableCell>
+                                return (
+                                    <TabsContent
+                                        key={tab.role}
+                                        value={tab.role}
+                                        className="mt-4"
+                                    >
+                                        {items.length > 0 ? (
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>
+                                                            Pegawai
+                                                        </TableHead>
+                                                        <TableHead>
+                                                            Pangkat
+                                                        </TableHead>
+                                                        <TableHead>
+                                                            Tanggal Diajukan
+                                                        </TableHead>
+                                                        <TableHead>
+                                                            Status
+                                                        </TableHead>
+                                                        <TableHead className="text-right">
+                                                            Aksi
+                                                        </TableHead>
                                                     </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-12 text-center dark:border-border">
-                                            <InboxIcon className="h-12 w-12 text-muted-foreground/50" />
-                                            <div>
-                                                <p className="font-medium text-muted-foreground">
-                                                    Tidak ada usulan pada tahap {tab.label}.
-                                                </p>
-                                                <p className="mt-1 text-sm text-muted-foreground/70">
-                                                    Semua usulan pada tahap ini sudah ditindaklanjuti.
-                                                </p>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {items.map((item) => (
+                                                        <TableRow key={item.id}>
+                                                            <TableCell>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <span className="font-medium">
+                                                                        {item
+                                                                            .pegawai
+                                                                            ?.nama_lengkap ??
+                                                                            '-'}
+                                                                    </span>
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        {item
+                                                                            .pegawai
+                                                                            ?.nip ??
+                                                                            '-'}
+                                                                    </span>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {resolvePangkat(
+                                                                    item,
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {formatTanggal(
+                                                                    item.submitted_at,
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Badge variant="outline">
+                                                                    {tab.label}
+                                                                </Badge>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="flex flex-wrap justify-end gap-2">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600"
+                                                                        onClick={() =>
+                                                                            openAction(
+                                                                                item,
+                                                                                tab,
+                                                                                'approve',
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            tab.approveLabel
+                                                                        }
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        className="bg-amber-400 text-amber-950 hover:bg-amber-500 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
+                                                                        onClick={() =>
+                                                                            openAction(
+                                                                                item,
+                                                                                tab,
+                                                                                'revise',
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Perlu
+                                                                        Perbaikan
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="destructive"
+                                                                        onClick={() =>
+                                                                            openAction(
+                                                                                item,
+                                                                                tab,
+                                                                                'reject',
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Tolak
+                                                                    </Button>
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-12 text-center dark:border-border">
+                                                <InboxIcon className="h-12 w-12 text-muted-foreground/50" />
+                                                <div>
+                                                    <p className="font-medium text-muted-foreground">
+                                                        Tidak ada usulan pada
+                                                        tahap {tab.label}.
+                                                    </p>
+                                                    <p className="mt-1 text-sm text-muted-foreground/70">
+                                                        Semua usulan pada tahap
+                                                        ini sudah
+                                                        ditindaklanjuti.
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </TabsContent>
-                            );
-                        })}
-                    </Tabs>
+                                        )}
+                                    </TabsContent>
+                                );
+                            })}
+                        </Tabs>
+                        <PaginationWrapper
+                            links={usulan.links}
+                            lastPage={usulan.last_page}
+                        />
+                    </>
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-12 text-center dark:border-border">
                         <InboxIcon className="h-12 w-12 text-muted-foreground/50" />
                         <div>
                             <p className="font-medium text-muted-foreground">
-                                Anda tidak memiliki permission approval kenaikan pangkat.
+                                Anda tidak memiliki permission approval kenaikan
+                                pangkat.
                             </p>
                             <p className="mt-1 text-sm text-muted-foreground/70">
-                                Tab approval hanya ditampilkan sesuai permission user.
+                                Tab approval hanya ditampilkan sesuai permission
+                                user.
                             </p>
                         </div>
                     </div>
                 )}
             </div>
 
-            <Dialog open={selected !== null} onOpenChange={(open) => !open && closeAction()}>
+            <Dialog
+                open={selected !== null}
+                onOpenChange={(open) => !open && closeAction()}
+            >
                 <DialogContent>
                     {selected && (
-                        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+                        <form
+                            className="flex flex-col gap-4"
+                            onSubmit={handleSubmit}
+                        >
                             <DialogHeader>
-                                <DialogTitle>{actionTitle(selected.action)}</DialogTitle>
+                                <DialogTitle>
+                                    {actionTitle(selected.action)}
+                                </DialogTitle>
                                 <DialogDescription>
-                                    Konfirmasi aksi untuk usulan {selected.usulan.pegawai?.nama_lengkap ?? '-'}.
+                                    Konfirmasi aksi untuk usulan{' '}
+                                    {selected.usulan.pegawai?.nama_lengkap ??
+                                        '-'}
+                                    .
                                 </DialogDescription>
                             </DialogHeader>
 
+                            <AlertError errors={Object.values(activeErrors)} />
+
                             <div className="space-y-2">
-                                <label className="text-sm font-medium" htmlFor="catatan">
-                                    Catatan{selected.action === 'revise' || selected.action === 'reject' ? ' *' : ''}
+                                <label
+                                    className="text-sm font-medium"
+                                    htmlFor="catatan"
+                                >
+                                    Catatan
+                                    {selected.action === 'revise' ||
+                                    selected.action === 'reject'
+                                        ? ' *'
+                                        : ''}
                                 </label>
                                 <Textarea
                                     id="catatan"
-                                    name={selected.action === 'reject' ? 'alasan' : 'catatan'}
+                                    name={
+                                        selected.action === 'reject'
+                                            ? 'alasan'
+                                            : 'catatan'
+                                    }
                                     value={catatan}
-                                    onChange={(event) => setCatatan(event.target.value)}
-                                    required={selected.action === 'revise' || selected.action === 'reject'}
+                                    onChange={(event) =>
+                                        setCatatan(event.target.value)
+                                    }
+                                    required={
+                                        selected.action === 'revise' ||
+                                        selected.action === 'reject'
+                                    }
                                     placeholder={
                                         selected.action === 'approve'
                                             ? 'Catatan opsional'
                                             : 'Tuliskan catatan yang perlu ditindaklanjuti'
                                     }
                                 />
+                                <InputError
+                                    message={
+                                        selected.action === 'reject'
+                                            ? activeErrors.alasan
+                                            : (activeErrors.catatan ??
+                                              activeErrors.usulan)
+                                    }
+                                />
                             </div>
 
                             <DialogFooter>
-                                <Button type="button" variant="outline" onClick={closeAction} disabled={processing}>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={closeAction}
+                                    disabled={processing}
+                                >
                                     Batal
                                 </Button>
                                 <Button
@@ -415,7 +578,11 @@ export default function ApprovalInboxPage({ usulan, current_role }: Props) {
                                               ? 'bg-amber-400 text-amber-950 hover:bg-amber-500 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400'
                                               : undefined
                                     }
-                                    variant={selected.action === 'reject' ? 'destructive' : 'default'}
+                                    variant={
+                                        selected.action === 'reject'
+                                            ? 'destructive'
+                                            : 'default'
+                                    }
                                 >
                                     {selected.action === 'approve'
                                         ? 'Setuju'

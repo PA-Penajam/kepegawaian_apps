@@ -3,9 +3,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function DashboardDistribusiSkeleton() {
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 5 }).map((_, i) => (
-                <Card key={i} className={i === 1 || i === 2 ? 'col-span-1 lg:col-span-2' : 'col-span-1'}>
+                <Card
+                    key={i}
+                    className={
+                        i < 2
+                            ? 'col-span-1 lg:col-span-2'
+                            : i === 2
+                              ? 'col-span-1 md:col-span-2 lg:col-span-2'
+                              : 'col-span-1'
+                    }
+                >
                     <CardHeader>
                         <Skeleton className="h-5 w-44" />
                         <Skeleton className="mt-1 h-4 w-32" />

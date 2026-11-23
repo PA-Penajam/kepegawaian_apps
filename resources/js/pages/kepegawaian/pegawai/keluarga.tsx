@@ -1,6 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import AlertError from '@/components/alert-error';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -109,6 +111,9 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
     const [editingItem, setEditingItem] = useState<KeluargaItem | null>(null);
     const [form, setForm] = useState<KeluargaForm>(emptyForm);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [submitting, setSubmitting] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<KeluargaItem | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     const breadcrumbs = useMemo<BreadcrumbItem[]>(
         () => [
@@ -131,12 +136,14 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
     const openCreateDialog = () => {
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
     const openEditDialog = (item: KeluargaItem) => {
         setEditingItem(item);
         setForm(toFormState(item));
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
@@ -144,11 +151,14 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
         setIsDialogOpen(false);
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
     };
 
     const submitForm = () => {
         const requestOptions = {
             preserveScroll: true,
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
             onSuccess: () => {
                 setFormErrors({});
                 closeDialog();
@@ -167,13 +177,16 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
         router.post(storeUrl, toPayload(form), requestOptions);
     };
 
-    const handleDelete = (item: KeluargaItem) => {
-        if (!window.confirm('Hapus data keluarga ini?')) {
+    const confirmDelete = () => {
+        if (deleteTarget === null) {
             return;
         }
 
-        router.delete(item.delete_url, {
+        router.delete(deleteTarget.delete_url, {
             preserveScroll: true,
+            onStart: () => setDeleting(true),
+            onFinish: () => setDeleting(false),
+            onSuccess: () => setDeleteTarget(null),
         });
     };
 
@@ -297,7 +310,9 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                                                         type="button"
                                                         variant="destructive"
                                                         onClick={() =>
-                                                            handleDelete(item)
+                                                            setDeleteTarget(
+                                                                item,
+                                                            )
                                                         }
                                                     >
                                                         Hapus
@@ -313,7 +328,14 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                 </div>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open && !submitting) {
+                        closeDialog();
+                    }
+                }}
+            >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>
@@ -358,6 +380,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                                     </option>
                                 ))}
                             </select>
+                            <InputError message={formErrors.hubungan} />
                         </div>
 
                         <div className="grid gap-2">
@@ -372,6 +395,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.nama} />
                         </div>
 
                         <div className="grid gap-2">
@@ -386,6 +410,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tempat_lahir} />
                         </div>
 
                         <div className="grid gap-2">
@@ -401,6 +426,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tanggal_lahir} />
                         </div>
 
                         <div className="grid gap-2">
@@ -427,6 +453,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                                     </option>
                                 ))}
                             </select>
+                            <InputError message={formErrors.jenis_kelamin} />
                         </div>
 
                         <div className="grid gap-2">
@@ -441,6 +468,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.pekerjaan} />
                         </div>
 
                         <div className="grid gap-2">
@@ -455,6 +483,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.pendidikan} />
                         </div>
 
                         <div className="grid gap-2 sm:col-span-2">
@@ -471,6 +500,7 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                                 }
                                 className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
+                            <InputError message={formErrors.keterangan} />
                         </div>
                     </div>
 
@@ -479,15 +509,34 @@ export default function KeluargaPage({ pegawai, storeUrl, keluarga }: Props) {
                             type="button"
                             variant="outline"
                             onClick={closeDialog}
+                            disabled={submitting}
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={submitForm}>
-                            Simpan
+                        <Button
+                            type="button"
+                            onClick={submitForm}
+                            processing={submitting}
+                        >
+                            {submitting ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDeleteDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open && !deleting) {
+                        setDeleteTarget(null);
+                    }
+                }}
+                title="Hapus Data Keluarga"
+                description="Apakah Anda yakin ingin menghapus data keluarga"
+                itemName={deleteTarget?.nama}
+                onConfirm={confirmDelete}
+                processing={deleting}
+            />
         </AppLayout>
     );
 }

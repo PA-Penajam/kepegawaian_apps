@@ -1,5 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import AlertError from '@/components/alert-error';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { errorsToArray } from '@/lib/form-errors';
 import type { BreadcrumbItem } from '@/types';
 
 type ReferenceOption = {
@@ -110,6 +114,12 @@ export default function RiwayatJabatanPage({
         null,
     );
     const [form, setForm] = useState<RiwayatJabatanForm>(emptyForm);
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [submitting, setSubmitting] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<RiwayatJabatanItem | null>(
+        null,
+    );
+    const [deleting, setDeleting] = useState(false);
 
     const breadcrumbs = useMemo<BreadcrumbItem[]>(
         () => [
@@ -132,12 +142,14 @@ export default function RiwayatJabatanPage({
     const openCreateDialog = () => {
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
     const openEditDialog = (item: RiwayatJabatanItem) => {
         setEditingItem(item);
         setForm(toFormState(item));
+        setFormErrors({});
         setIsDialogOpen(true);
     };
 
@@ -145,12 +157,21 @@ export default function RiwayatJabatanPage({
         setIsDialogOpen(false);
         setEditingItem(null);
         setForm(emptyForm());
+        setFormErrors({});
     };
 
     const submitForm = () => {
         const requestOptions = {
             preserveScroll: true,
-            onSuccess: () => closeDialog(),
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
+            onSuccess: () => {
+                setFormErrors({});
+                closeDialog();
+            },
+            onError: (errors: Record<string, string>) => {
+                setFormErrors(errors);
+            },
         };
 
         if (editingItem !== null) {
@@ -162,13 +183,16 @@ export default function RiwayatJabatanPage({
         router.post(storeUrl, toPayload(form), requestOptions);
     };
 
-    const handleDelete = (item: RiwayatJabatanItem) => {
-        if (!window.confirm('Hapus riwayat jabatan ini?')) {
+    const confirmDelete = () => {
+        if (deleteTarget === null) {
             return;
         }
 
-        router.delete(item.delete_url, {
+        router.delete(deleteTarget.delete_url, {
             preserveScroll: true,
+            onStart: () => setDeleting(true),
+            onFinish: () => setDeleting(false),
+            onSuccess: () => setDeleteTarget(null),
         });
     };
 
@@ -314,7 +338,9 @@ export default function RiwayatJabatanPage({
                                                         type="button"
                                                         variant="destructive"
                                                         onClick={() =>
-                                                            handleDelete(item)
+                                                            setDeleteTarget(
+                                                                item,
+                                                            )
                                                         }
                                                     >
                                                         Hapus
@@ -330,7 +356,14 @@ export default function RiwayatJabatanPage({
                 </div>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open && !submitting) {
+                        closeDialog();
+                    }
+                }}
+            >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>
@@ -343,6 +376,13 @@ export default function RiwayatJabatanPage({
                             jabatan aktif bila diperlukan.
                         </DialogDescription>
                     </DialogHeader>
+
+                    {Object.keys(formErrors).length > 0 && (
+                        <AlertError
+                            errors={errorsToArray(formErrors)}
+                            title="Gagal menyimpan riwayat jabatan"
+                        />
+                    )}
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
@@ -365,6 +405,7 @@ export default function RiwayatJabatanPage({
                                     </option>
                                 ))}
                             </select>
+                            <InputError message={formErrors.ref_jabatan_id} />
                         </div>
 
                         <div className="grid gap-2">
@@ -389,6 +430,9 @@ export default function RiwayatJabatanPage({
                                     </option>
                                 ))}
                             </select>
+                            <InputError
+                                message={formErrors.ref_unit_kerja_id}
+                            />
                         </div>
 
                         <div className="grid gap-2">
@@ -403,6 +447,7 @@ export default function RiwayatJabatanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.no_sk} />
                         </div>
 
                         <div className="grid gap-2">
@@ -418,6 +463,7 @@ export default function RiwayatJabatanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tanggal_sk} />
                         </div>
 
                         <div className="grid gap-2">
@@ -433,6 +479,7 @@ export default function RiwayatJabatanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.tmt} />
                         </div>
 
                         <div className="grid gap-2">
@@ -449,6 +496,7 @@ export default function RiwayatJabatanPage({
                                     }))
                                 }
                             />
+                            <InputError message={formErrors.pejabat_penetap} />
                         </div>
 
                         <div className="grid gap-2 sm:col-span-2">
@@ -465,24 +513,28 @@ export default function RiwayatJabatanPage({
                                 }
                                 className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             />
+                            <InputError message={formErrors.keterangan} />
                         </div>
 
-                        <div className="flex items-center gap-3 sm:col-span-2">
-                            <input
-                                id="is_aktif"
-                                type="checkbox"
-                                checked={form.is_aktif}
-                                onChange={(event) =>
-                                    setForm((current) => ({
-                                        ...current,
-                                        is_aktif: event.target.checked,
-                                    }))
-                                }
-                                className="size-4"
-                            />
-                            <Label htmlFor="is_aktif">
-                                Jadikan sebagai jabatan aktif pegawai
-                            </Label>
+                        <div className="flex flex-col gap-1 sm:col-span-2">
+                            <div className="flex items-center gap-3">
+                                <input
+                                    id="is_aktif"
+                                    type="checkbox"
+                                    checked={form.is_aktif}
+                                    onChange={(event) =>
+                                        setForm((current) => ({
+                                            ...current,
+                                            is_aktif: event.target.checked,
+                                        }))
+                                    }
+                                    className="size-4"
+                                />
+                                <Label htmlFor="is_aktif">
+                                    Jadikan sebagai jabatan aktif pegawai
+                                </Label>
+                            </div>
+                            <InputError message={formErrors.is_aktif} />
                         </div>
                     </div>
 
@@ -491,15 +543,34 @@ export default function RiwayatJabatanPage({
                             type="button"
                             variant="outline"
                             onClick={closeDialog}
+                            disabled={submitting}
                         >
                             Batal
                         </Button>
-                        <Button type="button" onClick={submitForm}>
-                            Simpan
+                        <Button
+                            type="button"
+                            onClick={submitForm}
+                            processing={submitting}
+                        >
+                            {submitting ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDeleteDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open && !deleting) {
+                        setDeleteTarget(null);
+                    }
+                }}
+                title="Hapus Riwayat Jabatan"
+                description="Apakah Anda yakin ingin menghapus riwayat jabatan dengan nomor SK"
+                itemName={deleteTarget?.no_sk}
+                onConfirm={confirmDelete}
+                processing={deleting}
+            />
         </AppLayout>
     );
 }

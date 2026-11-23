@@ -5,11 +5,7 @@
 
 // Status Pegawai
 export type StatusPegawai =
-    | 'aktif'
-    | 'mutasi_keluar'
-    | 'pensiun'
-    | 'meninggal'
-    | 'diberhentikan';
+    'aktif' | 'mutasi_keluar' | 'pensiun' | 'meninggal' | 'diberhentikan';
 
 export const StatusPegawaiLabels: Record<StatusPegawai, string> = {
     aktif: 'Aktif',
@@ -29,10 +25,7 @@ export const JenisKelaminLabels: Record<JenisKelamin, string> = {
 
 // Status Perkawinan
 export type StatusPerkawinan =
-    | 'belum_kawin'
-    | 'kawin'
-    | 'cerai_hidup'
-    | 'cerai_mati';
+    'belum_kawin' | 'kawin' | 'cerai_hidup' | 'cerai_mati';
 
 export const StatusPerkawinanLabels: Record<StatusPerkawinan, string> = {
     belum_kawin: 'Belum Kawin',
@@ -43,12 +36,7 @@ export const StatusPerkawinanLabels: Record<StatusPerkawinan, string> = {
 
 // Agama
 export type Agama =
-    | 'islam'
-    | 'kristen'
-    | 'katolik'
-    | 'hindu'
-    | 'buddha'
-    | 'konghucu';
+    'islam' | 'kristen' | 'katolik' | 'hindu' | 'buddha' | 'konghucu';
 
 export const AgamaLabels: Record<Agama, string> = {
     islam: 'Islam',
@@ -89,11 +77,7 @@ export const StatusKepegawaianLabels: Record<StatusKepegawaian, string> = {
 
 // Hubungan Keluarga
 export type HubunganKeluarga =
-    | 'Suami'
-    | 'Istri'
-    | 'Anak'
-    | 'AyahKandung'
-    | 'IbuKandung';
+    'Suami' | 'Istri' | 'Anak' | 'AyahKandung' | 'IbuKandung';
 
 export const HubunganKeluargaLabels: Record<HubunganKeluarga, string> = {
     Suami: 'Suami',
@@ -105,16 +89,7 @@ export const HubunganKeluargaLabels: Record<HubunganKeluarga, string> = {
 
 // Jenjang Pendidikan
 export type JenjangPendidikan =
-    | 'sd'
-    | 'smp'
-    | 'sma'
-    | 'd1'
-    | 'd2'
-    | 'd3'
-    | 'd4'
-    | 's1'
-    | 's2'
-    | 's3';
+    'sd' | 'smp' | 'sma' | 'd1' | 'd2' | 'd3' | 'd4' | 's1' | 's2' | 's3';
 
 export const JenjangPendidikanLabels: Record<JenjangPendidikan, string> = {
     sd: 'SD',
