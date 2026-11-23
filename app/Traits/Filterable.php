@@ -2,23 +2,14 @@
 
 namespace App\Traits;
 
+use App\Support\SqlLike;
 use Illuminate\Database\Eloquent\Builder;
 
 trait Filterable
 {
     public function scopeSearch(Builder $query, ?string $search, array $columns): Builder
     {
-        $term = trim((string) $search);
-
-        if ($term === '' || $columns === []) {
-            return $query;
-        }
-
-        return $query->where(function (Builder $builder) use ($columns, $term): void {
-            foreach ($columns as $column) {
-                $builder->orWhere($column, 'like', "%{$term}%");
-            }
-        });
+        return SqlLike::whereContains($query, $columns, $search);
     }
 
     public function scopeFilter(Builder $query, array $filters): Builder
