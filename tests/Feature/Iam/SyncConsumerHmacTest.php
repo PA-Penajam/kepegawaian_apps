@@ -6,6 +6,7 @@ use App\Services\Iam\SyncConsumerCredentialService;
 use App\Services\Sync\SyncConnectionTester;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
@@ -32,7 +33,7 @@ function hmacSignedHeaders(string $secret, array $params): array
     ];
 }
 
-function hmacGetJson($testCase, string $tokenPlain, string $secret, array $params = ['page' => 1, 'per_page' => 5])
+function hmacGetJson($testCase, string $tokenPlain, string $secret, array $params = ['page' => 1, 'per_page' => 5], ?string $nonce = null)
 {
     $signed = hmacSignedHeaders($secret, $params);
 
@@ -41,6 +42,7 @@ function hmacGetJson($testCase, string $tokenPlain, string $secret, array $param
 
     return $testCase->withToken($tokenPlain)->withHeaders([
         'X-Timestamp' => $signed['timestamp'],
+        'X-Nonce' => $nonce ?? (string) Str::uuid(),
         'X-Signature' => $signed['signature'],
         'Accept' => 'application/json',
     ])->getJson('/api/v1/pegawai/sync?'.$signed['query']);
@@ -99,13 +101,38 @@ test('middleware menolak signature silang antar konsumen', function () {
     hmacGetJson($this, $issuedA['plaintext'], $secretA)->assertOk();
 });
 
-test('konsumen lawas tanpa secret masih bisa pakai secret global', function () {
+test('konsumen tanpa hmac secret ditolak 401 dan tidak fallback ke secret global', function () {
     $consumer = SyncConsumer::factory()->create(['slug' => 'legacy-app']);
     $consumer->forceFill(['hmac_secret' => null])->save();
 
     $issued = app(SyncConsumerCredentialService::class)->issueToken($consumer);
 
-    hmacGetJson($this, $issued['plaintext'], config('kepegawaian.secret_key'))->assertOk();
+    hmacGetJson($this, $issued['plaintext'], config('kepegawaian.secret_key'))->assertUnauthorized();
+});
+
+test('middleware menolak SyncConsumer nonaktif, X-Nonce kosong, dan replay X-Nonce', function () {
+    $consumer = SyncConsumer::factory()->create(['slug' => 'nonce-test-app', 'is_active' => true]);
+    $service = app(SyncConsumerCredentialService::class);
+    $secret = $service->ensureHmacSecret($consumer);
+    $issued = $service->issueToken($consumer);
+
+    // Nonce unik pertama berhasil, replay dengan nonce sama ditolak 401
+    $nonce = (string) Str::uuid();
+    hmacGetJson($this, $issued['plaintext'], $secret, nonce: $nonce)->assertOk();
+    hmacGetJson($this, $issued['plaintext'], $secret, nonce: $nonce)->assertUnauthorized();
+
+    // Tanpa X-Nonce ditolak 401
+    $signed = hmacSignedHeaders($secret, ['page' => 1, 'per_page' => 5]);
+    auth()->forgetGuards();
+    $this->withToken($issued['plaintext'])->withHeaders([
+        'X-Timestamp' => $signed['timestamp'],
+        'X-Signature' => $signed['signature'],
+        'Accept' => 'application/json',
+    ])->getJson('/api/v1/pegawai/sync?'.$signed['query'])->assertUnauthorized();
+
+    // Konsumen nonaktif ditolak 403
+    $consumer->update(['is_active' => false]);
+    hmacGetJson($this, $issued['plaintext'], $secret)->assertForbidden();
 });
 
 test('regenerasi secret memutar secret tanpa mengubah token', function () {

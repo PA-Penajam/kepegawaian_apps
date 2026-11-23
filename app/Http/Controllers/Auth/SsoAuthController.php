@@ -55,12 +55,17 @@ class SsoAuthController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
-        // 1. Cek parameter error dari SSO
-        if ($request->filled('error')) {
-            $errorDescription = $request->query('error_description', 'Autentikasi ditolak atau dibatalkan oleh SSO.');
+        // 1. Cek parameter error dari SSO (validasi tipe string untuk mencegah array injection)
+        $rawError = $request->query('error');
+        $hasError = (is_string($rawError) && trim($rawError) !== '') || (is_array($rawError) && $rawError !== []);
+        if ($hasError) {
+            $rawErrorDesc = $request->query('error_description');
+            $errorDescription = is_string($rawErrorDesc) && trim($rawErrorDesc) !== ''
+                ? $rawErrorDesc
+                : 'Autentikasi ditolak atau dibatalkan oleh SSO.';
 
             Log::warning('SSO callback received error', [
-                'error' => $request->query('error'),
+                'error' => is_string($rawError) ? $rawError : 'invalid_error_type',
                 'description' => $errorDescription,
                 'ip' => $request->ip(),
             ]);
@@ -70,8 +75,10 @@ class SsoAuthController extends Controller
 
         // 2. Validasi CSRF state parameter (constant-time check)
         $oauthState = session()->pull('sso.oauth_state');
+        $rawState = $request->query('state');
+        $state = is_string($rawState) ? $rawState : '';
 
-        if (! $oauthState || ! hash_equals($oauthState['state'], (string) $request->query('state', ''))) {
+        if (! $oauthState || $state === '' || ! hash_equals($oauthState['state'], $state)) {
             Log::warning('SSO callback: Invalid or missing CSRF state parameter', [
                 'ip' => $request->ip(),
                 'has_stored_state' => $oauthState !== null,
@@ -91,7 +98,19 @@ class SsoAuthController extends Controller
             abort(403, 'Sesi permintaan otorisasi telah kedaluwarsa.');
         }
 
-        $code = (string) $request->query('code', '');
+        $rawCode = $request->query('code');
+        if (! is_string($rawCode) || $rawCode === '') {
+            Log::warning('SSO callback: Authorization code missing or invalid type', [
+                'ip' => $request->ip(),
+            ]);
+
+            return redirect()->route('login')->with(
+                'error',
+                'Autentikasi gagal: kode otorisasi SSO tidak valid atau tidak ditemukan.'
+            );
+        }
+
+        $code = $rawCode;
         $redirectUri = config('sso.redirect_uri') ?: route('auth.sso.callback');
 
         // 4. Tukar authorization code dengan access token & refresh token
@@ -193,9 +212,9 @@ class SsoAuthController extends Controller
     }
 
     /**
-     * Melakukan proses logout pengguna dari sesi SSO dan aplikasi lokal.
+     * Melakukan proses logout pengguna dari sesi SSO dan aplikasi lokal (front-channel logout).
      */
-    public function logout(Request $request): RedirectResponse
+    public function logout(Request $request): SymfonyResponse
     {
         try {
             $refreshToken = $this->tokenStorage->getRefreshToken();
@@ -214,6 +233,15 @@ class SsoAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        $baseUrl = rtrim((string) config('sso.base_url'), '/');
+        $destination = $baseUrl !== ''
+            ? $baseUrl.'/logout?'.http_build_query(['post_logout_redirect_uri' => url('/')])
+            : url('/');
+
+        if ($request->header('X-Inertia')) {
+            return Inertia::location($destination);
+        }
+
+        return redirect()->away($destination);
     }
 }

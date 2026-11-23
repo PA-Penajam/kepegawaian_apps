@@ -11,7 +11,15 @@ class ProfileDeleteRequest extends FormRequest
     use PasswordValidationRules;
 
     /**
-     * Get the validation rules that apply to the request.
+     * Tentukan apakah pengguna diizinkan menghapus akun pada mode SSO-only.
+     */
+    public function authorize(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Aturan validasi yang berlaku untuk permintaan.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */

@@ -147,4 +147,12 @@ describe('SsoClient', function () {
         expect(fn () => $this->client->getUserInfo('invalid-token'))
             ->toThrow(SsoException::class, 'Gagal mengambil data profil dari SSO');
     });
+
+    test('config sso.scopes default ke profile email dan buildAuthorizationUrl menyertakan scope tersebut', function () {
+        expect(config('sso.scopes'))->toBe(['profile', 'email']);
+
+        $request = $this->client->buildAuthorizationUrl('https://kepegawaian.pa-penajam.go.id/auth/sso/callback');
+
+        expect(urldecode($request->url))->toContain('scope=profile email');
+    });
 });

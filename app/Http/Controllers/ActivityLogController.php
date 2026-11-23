@@ -13,16 +13,26 @@ class ActivityLogController extends Controller
 
     public function index(Request $request): Response
     {
+        $rawSubjectType = $request->input('subject_type');
+        $subjectType = is_string($rawSubjectType) && trim($rawSubjectType) !== '' ? trim($rawSubjectType) : null;
+        $rawCauserId = $request->input('causer_id');
+        $causerId = is_string($rawCauserId) && trim($rawCauserId) !== '' ? trim($rawCauserId) : null;
+        $rawDateFrom = $request->input('date_from');
+        $dateFrom = is_string($rawDateFrom) && trim($rawDateFrom) !== '' ? trim($rawDateFrom) : null;
+        $rawDateTo = $request->input('date_to');
+        $dateTo = is_string($rawDateTo) && trim($rawDateTo) !== '' ? trim($rawDateTo) : null;
+
         $activities = Activity::with('causer', 'subject')
             ->when(
-                $request->input('subject_type'),
-                fn ($q, $type) => $q->where('subject_type', self::resolveModelFqcn($type)),
+                $subjectType !== null && $subjectType !== 'all',
+                fn ($q) => $q->where('subject_type', self::resolveModelFqcn($subjectType)),
             )
-            ->when($request->input('causer_id'), fn ($q, $id) => $q->where('causer_id', $id))
-            ->when($request->input('date_from'), fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
-            ->when($request->input('date_to'), fn ($q, $date) => $q->whereDate('created_at', '<=', $date))
+            ->when($causerId !== null, fn ($q) => $q->where('causer_id', $causerId))
+            ->when($dateFrom !== null, fn ($q) => $q->whereDate('created_at', '>=', $dateFrom))
+            ->when($dateTo !== null, fn ($q) => $q->whereDate('created_at', '<=', $dateTo))
             ->latest()
             ->paginate(20)
+            ->withQueryString()
             ->through(fn (Activity $activity): array => [
                 'id' => $activity->id,
                 'waktu' => $activity->created_at->format('d M Y H:i'),

@@ -5,6 +5,8 @@ use App\Models\PegawaiSyncPull;
 use App\Models\SyncConsumer;
 use App\Services\Iam\SyncConsumerCredentialService;
 use App\Services\Sync\SyncConnectionTester;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 
 function makeAuthUser(): Pegawai
@@ -56,11 +58,11 @@ test('konsumen dapat dibuat dan token API diterbitkan', function () {
         && $token['hmac_secret'] !== config('kepegawaian.secret_key')
     ));
 
-    // Token Sanctum aktif dengan ability app:kepegawaian
+    // Token Sanctum aktif dengan ability sync:pegawai
     $token = $consumer->tokens()->first();
     expect($token)->not->toBeNull();
     expect($token->name)->toBe('sync:wfa-task');
-    expect($token->abilities)->toContain('app:kepegawaian');
+    expect($token->abilities)->toContain('sync:pegawai');
 });
 
 test('slug konsumen duplikat ditolak', function () {
@@ -149,6 +151,7 @@ test('pull di-record dengan identitas konsumen dari token sync', function () {
     ]);
 
     $service = app(SyncConsumerCredentialService::class);
+    $secret = $service->ensureHmacSecret($consumer);
     $issued = $service->issueToken($consumer);
 
     // Simulasikan request ke endpoint sync dengan token konsumen
@@ -157,7 +160,7 @@ test('pull di-record dengan identitas konsumen dari token sync', function () {
     $queryString = http_build_query(collect($params)->sortKeys()->all());
     $timestamp = now()->timestamp;
     $payload = 'GET:'.$path.':'.$queryString.':'.hash('sha256', '[]').':'.$timestamp;
-    $signature = hash_hmac('sha256', $payload, config('kepegawaian.secret_key'));
+    $signature = hash_hmac('sha256', $payload, $secret);
 
     $plain = substr($issued['plaintext'], 0);
 
@@ -168,6 +171,7 @@ test('pull di-record dengan identitas konsumen dari token sync', function () {
     $response = $this->withToken($plain)
         ->withHeaders([
             'X-Timestamp' => (string) $timestamp,
+            'X-Nonce' => (string) Str::uuid(),
             'X-Signature' => $signature,
             'Accept' => 'application/json',
         ])
@@ -187,4 +191,37 @@ test('pull di-record dengan identitas konsumen dari token sync', function () {
     $consumer->refresh();
     expect($consumer->last_pull_at)->not->toBeNull();
     expect($consumer->last_pull_status)->toBe('success');
+});
+
+test('testConnection menyaring exception internal agar tidak membocorkan SQLSTATE', function () {
+    $consumer = SyncConsumer::factory()->create(['slug' => 'err-client']);
+    $service = app(SyncConsumerCredentialService::class);
+    $service->ensureHmacSecret($consumer);
+    $service->issueToken($consumer);
+
+    Http::fake([
+        '*' => fn () => throw new RuntimeException('SQLSTATE[HY000]: Connection refused internal'),
+    ]);
+
+    $response = $this->postJson(route('iam.sinkronisasi.test-connection', $consumer));
+
+    $response->assertStatus(500)
+        ->assertJsonPath('success', false);
+    expect((string) $response->json('message'))->not->toContain('SQLSTATE');
+    expect((string) $consumer->fresh()->last_connection_test_message)->not->toContain('SQLSTATE');
+});
+
+test('store dan update menolak base_url berskema non-HTTP seperti ftp dan javascript', function () {
+    $this->post(route('iam.sinkronisasi.store'), [
+        'nama' => 'FTP Client',
+        'slug' => 'ftp-client',
+        'base_url' => 'ftp://files.example.test',
+    ])->assertSessionHasErrors('base_url');
+
+    $consumer = SyncConsumer::factory()->create();
+    $this->put(route('iam.sinkronisasi.update', $consumer), [
+        'nama' => $consumer->nama,
+        'slug' => $consumer->slug,
+        'base_url' => 'javascript:alert(1)',
+    ])->assertSessionHasErrors('base_url');
 });

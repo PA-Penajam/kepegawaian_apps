@@ -25,7 +25,19 @@ Schedule::command('cuti:carry-over')
     ->onOneServer();
 
 // Dispatch pending event cuti ke consumer webhook setiap menit
-Schedule::command('cuti:dispatch-events')->everyMinute()->withoutOverlapping();
+Schedule::command('cuti:dispatch-events')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onOneServer();
 
 // Expire draft cuti yang sudah lebih dari 7 hari setiap hari jam 00:30
-Schedule::command('cuti:expire-drafts')->dailyAt('00:30')->withoutOverlapping();
+Schedule::command('cuti:expire-drafts')
+    ->dailyAt('00:30')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Notifikasi KGB setiap hari jam 08:00
+Schedule::command('kgb:notify')
+    ->dailyAt('08:00')
+    ->withoutOverlapping()
+    ->onOneServer();

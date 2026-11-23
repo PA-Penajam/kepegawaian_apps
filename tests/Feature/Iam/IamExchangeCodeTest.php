@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\StatusPegawai;
 use App\Http\Controllers\Api\IamController;
 use App\Models\IamApplication;
 use App\Models\IamSsoCode;
@@ -133,4 +134,66 @@ test('menolak request ke-11 pada exchange-code dengan HTTP 429', function () {
     ]);
 
     $response->assertStatus(429);
+});
+
+test('exchange code menolak pegawai soft-deleted dengan 403 tanpa crash 500 dan tidak membakar code', function () {
+    $user = Pegawai::factory()->create();
+    $code = str_repeat('d', 64);
+
+    $ssoCode = IamSsoCode::create([
+        'code' => $code,
+        'user_id' => $user->id,
+        'app_slug' => $this->iamApp->slug,
+        'expires_at' => now()->addMinutes(5),
+    ]);
+
+    $user->delete();
+
+    $ts = now()->timestamp;
+    $body = ['code' => $code];
+    $bodyHash = hash('sha256', json_encode($body));
+    $payload = 'POST:/test-iam-exchange::'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
+
+    $response = $this->postJson('/test-iam-exchange', $body, [
+        'X-App-Key' => $this->iamApp->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+        'Accept' => 'application/json',
+    ]);
+
+    $response->assertForbidden();
+    expect($ssoCode->refresh()->used_at)->toBeNull()
+        ->and($user->tokens()->count())->toBe(0);
+});
+
+test('exchange code menolak pegawai nonaktif dengan 403 tanpa menerbitkan token Sanctum', function () {
+    $user = Pegawai::factory()->create([
+        'status_pegawai' => StatusPegawai::Pensiun->value,
+    ]);
+    $code = str_repeat('e', 64);
+
+    $ssoCode = IamSsoCode::create([
+        'code' => $code,
+        'user_id' => $user->id,
+        'app_slug' => $this->iamApp->slug,
+        'expires_at' => now()->addMinutes(5),
+    ]);
+
+    $ts = now()->timestamp;
+    $body = ['code' => $code];
+    $bodyHash = hash('sha256', json_encode($body));
+    $payload = 'POST:/test-iam-exchange::'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
+
+    $response = $this->postJson('/test-iam-exchange', $body, [
+        'X-App-Key' => $this->iamApp->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+        'Accept' => 'application/json',
+    ]);
+
+    $response->assertForbidden();
+    expect($ssoCode->refresh()->used_at)->toBeNull()
+        ->and($user->tokens()->count())->toBe(0);
 });

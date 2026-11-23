@@ -63,8 +63,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->group(function () {
             Route::get('/', [SelfServiceController::class, 'index'])->name('index');
             Route::get('/detail', [SelfServiceController::class, 'detail'])->name('detail');
-
+            Route::get('/foto', [SelfServiceController::class, 'showFoto'])->name('foto');
         });
+
+    // Foto pegawai: pemilik diizinkan melihat fotonya sendiri; selain pemilik tetap diperiksa PegawaiPolicy::view
+    Route::get('kepegawaian/pegawai/{pegawai}/foto', [PegawaiController::class, 'showFoto'])
+        ->name('kepegawaian.pegawai.foto.show');
 
     // Cuti PDF
     Route::get('cuti/pengajuan/{id}/pdf', [CutiPdfController::class, 'show'])->name('cuti.pengajuan.pdf');
@@ -124,15 +128,19 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
         ->name('kepegawaian.pegawai.foto.update');
 
     Route::get('kepegawaian/monitoring/kgb', [MonitoringKgbController::class, 'index'])
+        ->middleware('iam.permission:monitoring.view')
         ->name('monitoring.kgb.index');
 
     Route::get('kepegawaian/monitoring/kgb/export', [MonitoringKgbController::class, 'export'])
+        ->middleware('iam.permission:monitoring.view')
         ->name('monitoring.kgb.export');
 
     Route::get('kepegawaian/monitoring/kenaikan-pangkat', [MonitoringKenaikanPangkatController::class, 'index'])
+        ->middleware('iam.permission:any:monitoring.view,kenaikan-pangkat.monitoring.view')
         ->name('monitoring.kenaikan-pangkat.index');
 
     Route::get('kepegawaian/monitoring/kenaikan-pangkat/export', [MonitoringKenaikanPangkatController::class, 'export'])
+        ->middleware('iam.permission:any:monitoring.view,kenaikan-pangkat.monitoring.view')
         ->name('monitoring.kenaikan-pangkat.export');
 
     Route::resource('referensi/jenis-dokumen', RefJenisDokumenController::class)
@@ -186,6 +194,9 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
             Route::resource('pegawai.riwayat-pendidikan', RiwayatPendidikanController::class)
                 ->only(['index', 'store', 'update', 'destroy']);
 
+            Route::get('pegawai/{pegawai}/dokumen/{dokumen}/download', [DokumenPegawaiController::class, 'download'])
+                ->name('pegawai.dokumen.download');
+
             Route::resource('pegawai.dokumen', DokumenPegawaiController::class)
                 ->parameters([
                     'dokumen' => 'dokumen',
@@ -213,9 +224,15 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
 
 // === Cuti (Leave) routes ===
 Route::middleware(['auth', 'verified'])->prefix('cuti')->name('cuti.')->group(function () {
-    Route::get('/saya', [SaldoController::class, 'myDashboard'])->name('saya');
-    Route::get('/pengajuan/baru', [PengajuanController::class, 'create'])->name('pengajuan.create');
-    Route::post('/pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
+    Route::get('/saya', [SaldoController::class, 'myDashboard'])
+        ->middleware('iam.permission:any:cuti.saldo.view-own,cuti.pengajuan.view-own')
+        ->name('saya');
+    Route::get('/pengajuan/baru', [PengajuanController::class, 'create'])
+        ->middleware('iam.permission:cuti.pengajuan.create')
+        ->name('pengajuan.create');
+    Route::post('/pengajuan', [PengajuanController::class, 'store'])
+        ->middleware('iam.permission:cuti.pengajuan.create')
+        ->name('pengajuan.store');
     Route::get('/pengajuan/{id}', [PengajuanController::class, 'show'])->name('pengajuan.show');
     Route::get('/inbox', [ApprovalController::class, 'inbox'])->name('inbox');
     Route::post('/pengajuan/{id}/verify', [ApprovalController::class, 'verify'])->name('pengajuan.verify');
@@ -227,10 +244,15 @@ Route::middleware(['auth', 'verified'])->prefix('cuti')->name('cuti.')->group(fu
 });
 
 Route::middleware(['auth', 'verified'])->prefix('kenaikan-pangkat')->name('kenaikan-pangkat.')->group(function () {
+    Route::get('eligible', [UsulanKenaikanPangkatController::class, 'eligible'])->name('eligible');
     Route::get('usulan/{usulan}/activity', [UsulanKenaikanPangkatController::class, 'activity'])->name('usulan.activity');
     Route::resource('usulan', UsulanKenaikanPangkatController::class);
     Route::post('usulan/{usulan}/submit', [UsulanKenaikanPangkatController::class, 'submit'])->name('usulan.submit');
     Route::post('usulan/{usulan}/batalkan', [UsulanKenaikanPangkatController::class, 'batalkan'])->name('usulan.batalkan');
+    Route::post('usulan/{usulan}/checklist/{item}/upload', [UsulanKenaikanPangkatController::class, 'uploadChecklist'])->name('usulan.checklist.upload');
+    Route::post('usulan/{usulan}/checklist/{item}/validate', [UsulanKenaikanPangkatController::class, 'validateChecklist'])->name('usulan.checklist.validate');
+    Route::post('usulan/{usulan}/lampiran', [UsulanKenaikanPangkatController::class, 'storeLampiran'])->name('usulan.lampiran.store');
+    Route::delete('usulan/{usulan}/lampiran/{lampiran}', [UsulanKenaikanPangkatController::class, 'destroyLampiran'])->name('usulan.lampiran.destroy');
     Route::get('approval/inbox', [KenaikanPangkatApprovalController::class, 'inbox'])->name('approval.inbox');
     Route::post('approval/{usulan}/verifikasi-kasubbag', [KenaikanPangkatApprovalController::class, 'verifikasiKasubbag'])->name('approval.verifikasi-kasubbag');
     Route::post('approval/{usulan}/verifikasi-sekretaris', [KenaikanPangkatApprovalController::class, 'verifikasiSekretaris'])->name('approval.verifikasi-sekretaris');
@@ -246,10 +268,21 @@ Route::middleware(['auth', 'verified'])->prefix('kenaikan-pangkat')->name('kenai
 
 Route::middleware(['auth', 'verified', 'iam.permission:cuti.saldo.view-all'])->prefix('admin/cuti')->name('admin.cuti.')->group(function () {
     Route::get('/saldo', [SaldoController::class, 'adminIndex'])->name('saldo.index');
-    Route::get('/saldo/init', [SaldoController::class, 'adminInit'])->name('saldo.init');
-    Route::post('/saldo/init', [SaldoController::class, 'adminInitStore'])->name('saldo.init.store');
-    Route::post('/saldo/adjust', [SaldoController::class, 'adminAdjust'])->middleware('iam.permission:cuti.saldo.adjust')->name('saldo.adjust');
-    Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
+});
+
+Route::prefix('admin/cuti')->name('admin.cuti.')->middleware(['auth', 'verified'])->group(function () {
+    Route::get('/saldo/init', [SaldoController::class, 'adminInit'])
+        ->middleware('iam.permission:cuti.saldo.adjust')
+        ->name('saldo.init');
+    Route::post('/saldo/init', [SaldoController::class, 'adminInitStore'])
+        ->middleware('iam.permission:cuti.saldo.adjust')
+        ->name('saldo.init.store');
+    Route::post('/saldo/adjust', [SaldoController::class, 'adminAdjust'])
+        ->middleware('iam.permission:cuti.saldo.adjust')
+        ->name('saldo.adjust');
+    Route::get('/audit', [AuditController::class, 'index'])
+        ->middleware('iam.permission:cuti.audit.view')
+        ->name('audit.index');
 });
 
 require __DIR__.'/settings.php';

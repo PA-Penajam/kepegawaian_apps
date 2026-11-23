@@ -45,3 +45,20 @@ it('callback membersihkan session setelah digunakan', function () {
     $this->assertNull(session('sso_app'));
     $this->assertNull(session('sso_redirect'));
 });
+
+it('callback menolak open redirect pada selfSlug kepegawaian', function (string $badRedirect) {
+    $user = Pegawai::factory()->create();
+
+    session([
+        'sso_app' => config('iam.app_slug', 'kepegawaian'),
+        'sso_redirect' => $badRedirect,
+    ]);
+
+    $response = $this->actingAs($user)->get('/sso/callback');
+
+    expect($response->getStatusCode())->toBe(422);
+})->with([
+    'host asing' => 'https://evil.test/dashboard',
+    'skema javascript' => 'javascript:alert(1)',
+    'port berbeda' => 'http://localhost:9999/dashboard',
+]);

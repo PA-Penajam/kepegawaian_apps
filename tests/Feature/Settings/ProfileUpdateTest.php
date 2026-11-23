@@ -50,7 +50,7 @@ test('email verification status is unchanged when the email address is unchanged
     expect($user->refresh()->email_verified_at)->not->toBeNull();
 });
 
-test('user can delete their account', function () {
+test('penghapusan akun mandiri diblokir pada mode sso-only', function () {
     $user = Pegawai::factory()->create();
 
     $response = $this
@@ -59,29 +59,9 @@ test('user can delete their account', function () {
             'password' => 'password',
         ]);
 
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect(route('home'));
+    $response->assertForbidden();
 
-    $this->assertGuest();
-    // Pegawai menggunakan SoftDeletes, jadi fresh() mengembalikan model dengan deleted_at terisi
-    expect($user->fresh())->not->toBeNull();
-    expect($user->fresh()->deleted_at)->not->toBeNull();
-});
-
-test('correct password must be provided to delete account', function () {
-    $user = Pegawai::factory()->create();
-
-    $response = $this
-        ->actingAs($user)
-        ->from(route('profile.edit'))
-        ->delete(route('profile.destroy'), [
-            'password' => 'wrong-password',
-        ]);
-
-    $response
-        ->assertSessionHasErrors('password')
-        ->assertRedirect(route('profile.edit'));
-
-    expect($user->fresh())->not->toBeNull();
+    $this->assertAuthenticated();
+    expect($user->fresh())->not->toBeNull()
+        ->and($user->fresh()->deleted_at)->toBeNull();
 });

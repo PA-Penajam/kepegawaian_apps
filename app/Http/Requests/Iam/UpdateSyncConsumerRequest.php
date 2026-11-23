@@ -19,11 +19,12 @@ class UpdateSyncConsumerRequest extends FormRequest
             'slug' => [
                 'required',
                 'string',
+                'max:255',
                 'alpha_dash',
                 Rule::unique('sync_consumers', 'slug')
                     ->ignore($this->route('konsumen')),
             ],
-            'base_url' => ['nullable', 'url', 'max:255'],
+            'base_url' => ['nullable', 'url:http,https', 'max:255'],
             'deskripsi' => ['nullable', 'string', 'max:500'],
             'is_active' => ['sometimes', 'boolean'],
         ];
@@ -36,7 +37,7 @@ class UpdateSyncConsumerRequest extends FormRequest
             'slug.required' => 'Slug konsumen wajib diisi.',
             'slug.alpha_dash' => 'Slug hanya boleh mengandung huruf, angka, strip, dan garis bawah.',
             'slug.unique' => 'Slug ini sudah digunakan oleh konsumen lain.',
-            'base_url.url' => 'Base URL harus berupa URL yang valid.',
+            'base_url.url' => 'Base URL harus berupa URL HTTP atau HTTPS yang valid.',
         ];
     }
 }

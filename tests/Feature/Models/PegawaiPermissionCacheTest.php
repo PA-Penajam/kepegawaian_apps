@@ -3,7 +3,10 @@
 use App\Models\IamApplication;
 use App\Models\IamPermission;
 use App\Models\IamRole;
+use App\Models\IamUserRole;
 use App\Models\Pegawai;
+use App\Services\Cuti\ApproverResolverService;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->kepegawaianApp = IamApplication::where('slug', 'kepegawaian')->first();
@@ -65,4 +68,39 @@ test('hasAnyPermission menggunakan cache yang sama', function () {
 
     expect($user->hasAnyPermission('test:cache-perm', 'nonexistent:perm'))->toBeTrue();
     expect($user->hasAnyPermission('nonexistent:perm', 'another:fake'))->toBeFalse();
+});
+
+test('loadPermissions, HandleInertiaRequests, dan ApproverResolverService mengabaikan role dari aplikasi IAM lain', function () {
+    $this->withoutVite();
+
+    $otherApp = IamApplication::factory()->create(['slug' => 'app-lain', 'is_active' => true]);
+    $otherRole = IamRole::factory()->create([
+        'iam_application_id' => $otherApp->id,
+        'nama' => 'Admin App Lain',
+        'slug' => 'admin-app-lain',
+    ]);
+    $otherPerm = IamPermission::factory()->create([
+        'iam_application_id' => $otherApp->id,
+        'slug' => 'cuti.pengajuan.verify',
+    ]);
+    $otherRole->permissions()->attach($otherPerm->id);
+
+    $pegawai = Pegawai::factory()->create();
+    IamUserRole::where('user_id', $pegawai->id)->delete();
+    $pegawai->iamRoles()->attach($otherRole->id, ['assigned_at' => now()]);
+    $fresh = $pegawai->fresh();
+
+    expect($fresh->hasPermission('cuti.pengajuan.verify'))->toBeFalse();
+
+    $this->actingAs($fresh)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.user.roles', [])
+            ->where('auth.user.permissions', [])
+        );
+
+    $pemohon = Pegawai::factory()->create();
+    $snapshot = app(ApproverResolverService::class)->resolveSnapshot($pemohon->nip);
+    expect($snapshot['petugas_kepegawaian'])->not->toBe($fresh->nip);
 });

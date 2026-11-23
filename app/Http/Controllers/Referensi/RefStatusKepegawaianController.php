@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Referensi\StoreRefStatusKepegawaianRequest;
 use App\Http\Requests\Referensi\UpdateRefStatusKepegawaianRequest;
 use App\Models\RefStatusKepegawaian;
+use App\Support\SqlLike;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,12 +17,12 @@ class RefStatusKepegawaianController extends Controller
     {
         $this->authorize('viewAny', RefStatusKepegawaian::class);
 
+        $rawSearch = request('search');
+        $search = is_string($rawSearch) && trim($rawSearch) !== '' ? $rawSearch : null;
+
         $statusKepegawaian = RefStatusKepegawaian::query()
-            ->when(request('search'), function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('kode', 'like', "%{$search}%")
-                        ->orWhere('nama', 'like', "%{$search}%");
-                });
+            ->when($search !== null, function ($query) use ($search): void {
+                SqlLike::whereContains($query, ['kode', 'nama'], $search);
             })
             ->orderBy('nama')
             ->paginate(10)
@@ -29,7 +30,7 @@ class RefStatusKepegawaianController extends Controller
 
         return Inertia::render('referensi/status-kepegawaian/index', [
             'statusKepegawaian' => $statusKepegawaian,
-            'filters' => request()->only(['search']),
+            'filters' => ['search' => $search],
         ]);
     }
 

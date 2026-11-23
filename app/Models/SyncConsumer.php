@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\HasActivityLogOptions;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -70,7 +71,7 @@ class SyncConsumer extends Model implements AuthenticatableContract
         return $this->hasMany(PegawaiSyncPull::class);
     }
 
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }

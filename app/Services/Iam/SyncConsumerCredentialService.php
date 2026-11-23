@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
  * Pengelola kredensial API konsumen sinkronisasi pegawai.
  *
  * Setiap konsumen memiliki DUA kredensial unik (1 client 1 secret):
- * - Sanctum token bernama "sync:{slug}" dengan ability "app:kepegawaian".
+ * - Sanctum token bernama "sync:{slug}" dengan ability "sync:pegawai".
  *   Plaintext token hanya dikembalikan sekali saat penerbitan/regenerasi.
  * - HMAC secret per konsumen untuk tanda tangan X-Signature. Disimpan
  *   terenkripsi pada model dan plaintext hanya dikembalikan sekali saat
@@ -31,7 +31,7 @@ class SyncConsumerCredentialService
 
         $token = $consumer->createToken(
             $this->tokenName($consumer),
-            ['app:kepegawaian'],
+            ['sync:pegawai'],
             now()->addYear(),
         );
 

@@ -2,6 +2,7 @@
 
 use App\Exceptions\Handler;
 use App\Http\Middleware\EnforceSsoOnly;
+use App\Http\Middleware\EnsurePegawaiIsActive;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeadersMiddleware;
@@ -44,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             EnforceSsoOnly::class,
+            EnsurePegawaiIsActive::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

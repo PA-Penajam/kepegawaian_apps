@@ -15,12 +15,13 @@ class IamPermissionAuditor
     public function findNonCanonical(): Collection
     {
         return IamPermission::with('application')
+            ->whereHas('application')
             ->get()
             ->filter(fn (IamPermission $p) => ! $this->isValidSlug($p->slug))
             ->map(fn (IamPermission $p) => [
                 'id' => $p->id,
                 'slug' => $p->slug,
-                'app' => $p->application->slug,
+                'app' => $p->application?->slug ?? '',
                 'reason' => $this->violationReason($p->slug),
                 'suggested' => $this->suggestCanonical($p->slug),
             ])

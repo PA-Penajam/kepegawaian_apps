@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\StatusPegawai;
 use App\Http\Controllers\Api\IamController;
 use App\Models\IamApplication;
 use App\Models\IamPermission;
@@ -183,4 +184,27 @@ test('validate endpoint mengembalikan null unit_kerja jika pegawai tidak punya u
 
     $response->assertOk()
         ->assertJsonPath('user.unit_kerja', null);
+});
+
+test('validate endpoint menolak pegawai nonaktif atau soft-deleted dengan 403', function () {
+    $user = Pegawai::factory()->create([
+        'status_pegawai' => StatusPegawai::Diberhentikan->value,
+    ]);
+
+    Sanctum::actingAs($user);
+
+    Route::middleware(['auth:sanctum', 'iam.signature'])
+        ->get('/test-iam-validate', [IamController::class, 'validate']);
+
+    $ts = now()->timestamp;
+    $bodyHash = hash('sha256', '[]');
+    $payload = 'GET:/test-iam-validate::'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($this->iamApp->api_secret_hash));
+
+    $this->getJson('/test-iam-validate', [
+        'X-App-Key' => $this->iamApp->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+        'Accept' => 'application/json',
+    ])->assertForbidden();
 });

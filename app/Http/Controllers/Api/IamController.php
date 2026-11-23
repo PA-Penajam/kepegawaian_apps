@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\StatusPegawai;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ExchangeCodeRequest;
 use App\Http\Resources\IamValidateResource;
 use App\Models\IamSsoCode;
+use App\Models\Pegawai;
 use App\Services\IamAuthorizationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +20,10 @@ class IamController extends Controller
     public function validate(Request $request): JsonResponse
     {
         $user = $request->user();
+        if (! $this->isPegawaiAktif($user)) {
+            return response()->json(['message' => 'Akun pegawai tidak aktif atau telah dihapus.'], 403);
+        }
+
         $app = $request->attributes->get('iam_app'); // diinjek oleh VerifyIamSignature via attributes
         $token = $user->currentAccessToken();
 
@@ -32,8 +38,13 @@ class IamController extends Controller
     public function check(Request $request): JsonResponse
     {
         $user = $request->user();
+        if (! $this->isPegawaiAktif($user)) {
+            return response()->json(['message' => 'Akun pegawai tidak aktif atau telah dihapus.'], 403);
+        }
+
         $app = $request->attributes->get('iam_app');
-        $permission = $request->query('permission', '');
+        $rawPermission = $request->query('permission');
+        $permission = is_string($rawPermission) ? $rawPermission : '';
 
         $allowed = in_array(
             $permission,
@@ -46,7 +57,19 @@ class IamController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        if (! $this->isPegawaiAktif($user)) {
+            return response()->json(['message' => 'Akun pegawai tidak aktif atau telah dihapus.'], 403);
+        }
+
+        $app = $request->attributes->get('iam_app');
+        $token = $user->currentAccessToken();
+
+        if (! $app || ! $token || ! $token->can("app:{$app->slug}")) {
+            return response()->json(['message' => 'Token tidak memiliki akses untuk aplikasi ini.'], 403);
+        }
+
+        $token->delete();
 
         return response()->json(['message' => 'Token invalidated']);
     }
@@ -56,18 +79,28 @@ class IamController extends Controller
         $app = $request->attributes->get('iam_app');
 
         return DB::transaction(function () use ($request, $app): JsonResponse {
-            $affected = IamSsoCode::where('code', $request->code)
+            $ssoCode = IamSsoCode::query()
+                ->where('code', $request->code)
                 ->where('app_slug', $app->slug)
-                ->whereNull('used_at')
-                ->where('expires_at', '>', now())
-                ->update(['used_at' => now()]);
+                ->lockForUpdate()
+                ->first();
 
-            if ($affected === 0) {
+            if (
+                $ssoCode === null
+                || $ssoCode->used_at !== null
+                || $ssoCode->expires_at === null
+                || $ssoCode->expires_at->lte(now())
+            ) {
                 return response()->json(['message' => 'Invalid or expired code'], 400);
             }
 
-            $ssoCode = IamSsoCode::where('code', $request->code)->first();
-            $user = $ssoCode->user;
+            $user = $ssoCode->user()->withTrashed()->first();
+
+            if (! $this->isPegawaiAktif($user)) {
+                return response()->json(['message' => 'Akun pegawai tidak aktif atau tidak terdaftar.'], 403);
+            }
+
+            $ssoCode->forceFill(['used_at' => now()])->save();
             $ttlHours = (int) config('iam.token_ttl_hours', 8);
 
             $token = $user->createToken(
@@ -82,5 +115,15 @@ class IamController extends Controller
                 'expires_at' => $token->accessToken->expires_at->timestamp,
             ]);
         });
+    }
+
+    /**
+     * Memastikan subjek autentikasi IAM merupakan pegawai yang masih aktif dan belum dihapus.
+     */
+    private function isPegawaiAktif(mixed $user): bool
+    {
+        return $user instanceof Pegawai
+            && ! $user->trashed()
+            && $user->status_pegawai === StatusPegawai::Aktif;
     }
 }

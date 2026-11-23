@@ -4,7 +4,9 @@ namespace App\Http\Requests\Referensi;
 
 use App\Models\IamApplication;
 use App\Models\IamRole;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class StoreRefRoleRequest extends FormRequest
@@ -16,7 +18,7 @@ class StoreRefRoleRequest extends FormRequest
 
     public function rules(): array
     {
-        $appId = IamApplication::where('slug', 'kepegawaian')->value('id');
+        $appId = IamApplication::where('slug', config('iam.app_slug', 'kepegawaian'))->value('id');
 
         return [
             'nama' => [
@@ -24,10 +26,39 @@ class StoreRefRoleRequest extends FormRequest
                 'string',
                 'max:255',
                 Rule::unique('iam_roles', 'nama')->where('iam_application_id', $appId)->whereNull('deleted_at'),
+                function (string $attribute, mixed $value, Closure $fail) use ($appId): void {
+                    if (! is_string($value)) {
+                        return;
+                    }
+
+                    $slug = Str::slug($value);
+
+                    if ($slug === '') {
+                        $fail('Nama role harus mengandung huruf atau angka agar menghasilkan slug yang valid.');
+
+                        return;
+                    }
+
+                    // Unique index (iam_application_id, slug) mencakup baris soft-deleted, sehingga validasi harus memakai withTrashed().
+                    $slugExists = IamRole::withTrashed()
+                        ->where('iam_application_id', $appId ?? '')
+                        ->where('slug', $slug)
+                        ->exists();
+
+                    if ($slugExists) {
+                        $fail('Slug dari nama role sudah digunakan di aplikasi ini.');
+                    }
+                },
             ],
             'keterangan' => ['nullable', 'string', 'max:1000'],
             'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['exists:iam_permissions,id'],
+            'permissions.*' => [
+                'string',
+                'ulid',
+                Rule::exists('iam_permissions', 'id')
+                    ->where('iam_application_id', $appId ?? '')
+                    ->whereNull('deleted_at'),
+            ],
         ];
     }
 

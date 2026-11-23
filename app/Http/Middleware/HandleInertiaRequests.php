@@ -20,15 +20,21 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $appSlug = (string) config('iam.app_slug', 'kepegawaian');
 
-        // Eager load permissions sekaligus untuk mencegah N+1 per role
-        $user?->loadMissing('iamRoles.permissions');
+        // Muat role & permission ter-scope hanya untuk aplikasi kepegawaian agar bebas lazy loading dan bocor lintas aplikasi
+        $kepegawaianRoles = $user
+            ? $user->iamRoles()
+                ->whereHas('application', fn ($query) => $query->where('slug', $appSlug))
+                ->with('permissions')
+                ->get()
+            : collect();
 
-        $permissions = $user
-            ? $user->iamRoles->flatMap(
-                fn ($role) => $role->permissions->pluck('slug')
-            )->unique()->values()->toArray()
-            : [];
+        $permissions = $kepegawaianRoles
+            ->flatMap(fn ($role) => $role->permissions->pluck('slug'))
+            ->unique()
+            ->values()
+            ->toArray();
 
         return [
             ...parent::share($request),
@@ -42,7 +48,7 @@ class HandleInertiaRequests extends Middleware
                     'foto' => $user->foto ?? null,
                     'email_verified_at' => $user->email_verified_at,
                     'two_factor_enabled' => ! is_null($user->two_factor_confirmed_at),
-                    'roles' => $user->iamRoles->pluck('nama')->toArray(),
+                    'roles' => $kepegawaianRoles->pluck('nama')->values()->toArray(),
                     'permissions' => $permissions,
                     'pending_pengajuan_count' => in_array('pengajuan-perubahan.validate', $permissions, true)
                         ? Cache::remember('pending_pengajuan_count', 60, fn () => PengajuanPerubahanData::query()->where('status', StatusPengajuanPerubahanData::Pending)->count())
@@ -57,6 +63,8 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
                 'api_secret_once' => $request->session()->get('api_secret_once'),
+                'sync_token_once' => $request->session()->get('sync_token_once'),
+                'test_connection' => $request->session()->get('test_connection'),
             ],
             'iam' => fn () => [
                 'slug_pattern' => config('iam.slug.pattern'),

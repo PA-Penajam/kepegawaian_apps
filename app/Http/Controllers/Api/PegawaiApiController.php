@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\IndexPegawaiRequest;
 use App\Http\Resources\PegawaiApiResource;
 use App\Models\Pegawai;
+use App\Support\SqlLike;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -86,11 +87,14 @@ class PegawaiApiController extends Controller
      */
     private function search(Request $request): JsonResponse
     {
+        $rawSearch = $request->input('search');
+        $search = is_string($rawSearch) ? trim($rawSearch) : '';
+
         $result = Pegawai::with(['jabatan', 'unitKerja', 'pangkat'])
             ->when($request->input('status') === 'aktif', fn ($q) => $q->aktif())
             ->when(
-                $request->input('search'),
-                fn ($q, $search) => $q->where('nama_lengkap', 'like', "%{$search}%")
+                $search !== '',
+                fn ($q) => SqlLike::whereContains($q, 'nama_lengkap', $search)
             )
             ->paginate(20);
 

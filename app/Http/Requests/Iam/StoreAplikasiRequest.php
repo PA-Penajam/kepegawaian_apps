@@ -15,8 +15,8 @@ class StoreAplikasiRequest extends FormRequest
     {
         return [
             'nama' => ['required', 'string', 'max:100'],
-            'slug' => ['required', 'string', 'alpha_dash', 'unique:iam_applications,slug'],
-            'url' => ['required', 'url'],
+            'slug' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:iam_applications,slug'],
+            'url' => ['required', 'url:http,https', 'max:255'],
             'deskripsi' => ['nullable', 'string'],
         ];
     }
@@ -29,7 +29,7 @@ class StoreAplikasiRequest extends FormRequest
             'slug.alpha_dash' => 'Slug hanya boleh mengandung huruf, angka, strip, dan garis bawah.',
             'slug.unique' => 'Slug ini sudah digunakan oleh aplikasi lain.',
             'url.required' => 'URL aplikasi wajib diisi.',
-            'url.url' => 'URL aplikasi harus berupa URL yang valid.',
+            'url.url' => 'URL aplikasi harus berupa URL HTTP atau HTTPS yang valid.',
         ];
     }
 }

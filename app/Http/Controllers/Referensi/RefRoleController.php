@@ -9,16 +9,28 @@ use App\Models\IamApplication;
 use App\Models\IamPermission;
 use App\Models\IamRole;
 use App\Models\Pegawai;
+use App\Support\SqlLike;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RefRoleController extends Controller
 {
+    private function appSlug(): string
+    {
+        return (string) config('iam.app_slug', 'kepegawaian');
+    }
+
     private function getAppId(): string
     {
-        return IamApplication::where('slug', 'kepegawaian')->value('id') ?? '';
+        return IamApplication::where('slug', $this->appSlug())->value('id') ?? '';
+    }
+
+    private function forgetAppCache(): void
+    {
+        Cache::forget('iam_app:'.$this->appSlug());
     }
 
     public function index(): Response
@@ -26,16 +38,15 @@ class RefRoleController extends Controller
         $this->authorize('viewAny', IamRole::class);
 
         $appId = $this->getAppId();
+        $rawSearch = request('search');
+        $search = is_string($rawSearch) && trim($rawSearch) !== '' ? $rawSearch : null;
 
         $roles = IamRole::query()
             ->where('iam_application_id', $appId)
             ->with(['permissions:id'])
             ->withCount(['permissions', 'users as pegawai_count'])
-            ->when(request('search'), function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama', 'like', "%{$search}%")
-                        ->orWhere('keterangan', 'like', "%{$search}%");
-                });
+            ->when($search !== null, function ($query) use ($search): void {
+                SqlLike::whereContains($query, ['nama', 'keterangan'], $search);
             })
             ->orderBy('nama')
             ->paginate(10)
@@ -49,7 +60,7 @@ class RefRoleController extends Controller
 
         return Inertia::render('referensi/roles/index', [
             'roles' => $roles,
-            'filters' => request()->only(['search']),
+            'filters' => ['search' => $search],
             'permissions' => $permissions,
         ]);
     }
@@ -63,8 +74,11 @@ class RefRoleController extends Controller
         $role = IamRole::query()->create($data);
 
         if ($request->has('permissions')) {
-            $role->permissions()->sync($request->input('permissions', []));
+            $permissions = $request->validated('permissions');
+            $role->permissions()->sync(is_array($permissions) ? $permissions : []);
         }
+
+        $this->forgetAppCache();
 
         return redirect()
             ->route('referensi.roles.index')
@@ -73,6 +87,8 @@ class RefRoleController extends Controller
 
     public function edit(IamRole $role): Response
     {
+        abort_unless($role->iam_application_id === $this->getAppId(), 404);
+
         $this->authorize('update', $role);
 
         $role->load('permissions');
@@ -85,14 +101,18 @@ class RefRoleController extends Controller
             ->orderBy('nama')
             ->get(['id', 'nama', 'group', 'keterangan']);
 
+        $rawSearchPegawai = request('search_pegawai');
+        $searchPegawai = is_string($rawSearchPegawai) && trim($rawSearchPegawai) !== '' ? $rawSearchPegawai : null;
+
         return Inertia::render('referensi/roles/edit', [
             'role' => $role,
             'permissions' => $permissions,
             'pegawaiList' => Pegawai::query()
                 ->select('id', 'nama_lengkap', 'nip')
-                ->when(request('search_pegawai'), fn ($q, $s) => $q
-                    ->where('nama_lengkap', 'like', "%{$s}%")
-                    ->orWhere('nip', 'like', "%{$s}%"))
+                ->when(
+                    $searchPegawai !== null,
+                    fn ($q) => SqlLike::whereContains($q, ['nama_lengkap', 'nip'], $searchPegawai)
+                )
                 ->orderBy('nama_lengkap')
                 ->paginate(15, ['*'], 'pegawai_page')
                 ->withQueryString(),
@@ -102,18 +122,38 @@ class RefRoleController extends Controller
 
     public function update(UpdateRefRoleRequest $request, IamRole $role): RedirectResponse
     {
-        $data = $request->safe()->only(['nama', 'keterangan']);
-        $data['slug'] = Str::slug($data['nama']);
+        abort_unless($role->iam_application_id === $this->getAppId(), 404);
 
-        $role->update($data);
+        $validated = $request->safe()->only(['nama', 'keterangan']);
+
+        if ($role->is_system) {
+            if ($validated['nama'] !== $role->nama) {
+                return redirect()
+                    ->route('referensi.roles.index')
+                    ->withErrors(['nama' => 'Nama role sistem tidak dapat diubah.'])
+                    ->with('error', 'Nama role sistem tidak dapat diubah.');
+            }
+
+            // Role sistem hanya mengizinkan perubahan keterangan, izin, dan penugasan pegawai
+            $role->update([
+                'keterangan' => $validated['keterangan'] ?? $role->keterangan,
+            ]);
+        } else {
+            // Jangan pernah menimpa slug saat update agar integritas referensi terjaga
+            $role->update($validated);
+        }
 
         if ($request->has('permissions')) {
-            $role->permissions()->sync($request->input('permissions', []));
+            $permissions = $request->validated('permissions');
+            $role->permissions()->sync(is_array($permissions) ? $permissions : []);
         }
 
         if ($request->has('pegawai_ids')) {
-            $role->users()->sync($request->input('pegawai_ids', []));
+            $pegawaiIds = $request->validated('pegawai_ids');
+            $role->users()->sync(is_array($pegawaiIds) ? $pegawaiIds : []);
         }
+
+        $this->forgetAppCache();
 
         return redirect()
             ->route('referensi.roles.index')
@@ -122,13 +162,15 @@ class RefRoleController extends Controller
 
     public function destroy(IamRole $role): RedirectResponse
     {
+        abort_unless($role->iam_application_id === $this->getAppId(), 404);
+
+        $this->authorize('delete', $role);
+
         if ($role->is_system) {
             return redirect()
                 ->route('referensi.roles.index')
                 ->with('error', 'Role sistem tidak dapat dihapus.');
         }
-
-        $this->authorize('delete', $role);
 
         if ($role->users()->exists()) {
             return redirect()
@@ -137,6 +179,7 @@ class RefRoleController extends Controller
         }
 
         $role->delete();
+        $this->forgetAppCache();
 
         return redirect()
             ->route('referensi.roles.index')

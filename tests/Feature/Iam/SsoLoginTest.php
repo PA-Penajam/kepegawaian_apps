@@ -3,6 +3,7 @@
 use App\Models\IamApplication;
 use App\Models\IamSsoCode;
 use App\Models\Pegawai;
+use App\Services\Iam\IamSsoStateStore;
 use Illuminate\Support\Facades\Crypt;
 
 test('GET /sso/login tanpa app param mengembalikan 422', function () {
@@ -86,3 +87,27 @@ it('mengizinkan redirect ke subdirectory host yang sama', function () {
     $location = $response->headers->get('Location');
     expect($location)->toStartWith('http://att.local/callback?code=');
 });
+
+it('menolak tamu dengan redirect tidak sah sebelum menyimpan state ke IamSsoStateStore', function (string $badRedirect) {
+    IamApplication::factory()->create([
+        'slug' => 'att-strict',
+        'url' => 'https://att.local:8443',
+        'is_active' => true,
+    ]);
+
+    $response = $this->get('/sso/login?'.http_build_query([
+        'app' => 'att-strict',
+        'redirect' => $badRedirect,
+        'state' => 'state-tamu',
+    ]));
+
+    $response->assertStatus(422);
+    expect(session('sso_app'))->toBeNull();
+    expect(session('sso_redirect'))->toBeNull();
+    expect(app(IamSsoStateStore::class)->hasPending())->toBeFalse();
+})->with([
+    'skema ftp' => 'ftp://att.local:8443/callback',
+    'host eksternal' => 'https://evil.test:8443/steal',
+    'port berbeda' => 'https://att.local:9999/callback',
+    'skema downgrade' => 'http://att.local:8443/callback',
+]);

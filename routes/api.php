@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Pegawai API — throttle 60 req/menit
-Route::middleware(['auth:sanctum', 'verify.hmac', 'throttle:60,1'])
+Route::middleware(['auth:sanctum', 'abilities:sync:pegawai', 'verify.hmac', 'throttle:60,1'])
     ->prefix('v1')
     ->group(function () {
         // Ekspor sinkronisasi penuh/delta (meta paginator lengkap)
@@ -47,14 +47,18 @@ Route::middleware(['auth:sanctum', 'iam.signature', 'throttle:120,1'])
     });
 
 // Cuti API — throttle 60 req/menit
-Route::middleware(['auth:sanctum', 'verify.hmac', 'throttle:60,1'])
+Route::middleware(['auth:sanctum', 'abilities:cuti:read', 'verify.hmac', 'throttle:60,1'])
     ->prefix('cuti')
     ->name('api.cuti.')
     ->group(function () {
         Route::get('/pengajuan', [CutiPengajuanController::class, 'index'])->name('pengajuan.index');
         Route::get('/pengajuan/{id}', [CutiPengajuanController::class, 'show'])->name('pengajuan.show');
-        Route::get('/saldo/{nip}', [CutiSaldoController::class, 'show'])->name('saldo.show');
-        Route::get('/saldo/{nip}/ledger', [CutiSaldoController::class, 'ledger'])->name('saldo.ledger');
+        Route::get('/saldo/{nip}', [CutiSaldoController::class, 'show'])
+            ->where('nip', '^\d{18}$')
+            ->name('saldo.show');
+        Route::get('/saldo/{nip}/ledger', [CutiSaldoController::class, 'ledger'])
+            ->where('nip', '^\d{18}$')
+            ->name('saldo.ledger');
     });
 
 Route::prefix('kenaikan-pangkat')

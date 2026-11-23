@@ -72,3 +72,19 @@ test('violationReason memberikan alasan spesifik', function () {
     expect($reasons['pegawai_view'])->toBe('Tidak ada titik pemisah'); // tidak ada titik pemisah dulu
     expect($reasons['Pegawai.View'])->toBe('Mengandung uppercase');
 });
+
+test('findNonCanonical mengabaikan permission milik IamApplication yang di-soft-delete tanpa exception', function () {
+    $activeApp = IamApplication::factory()->create(['slug' => 'app-aktif']);
+    $deletedApp = IamApplication::factory()->create(['slug' => 'app-dihapus', 'is_system' => false]);
+
+    IamPermission::factory()->for($activeApp, 'application')->legacy('aktif-noncanonical')->create();
+    IamPermission::factory()->for($deletedApp, 'application')->legacy('deleted-noncanonical')->create();
+
+    $deletedApp->delete();
+
+    $result = $this->auditor->findNonCanonical();
+
+    expect($result)->toHaveCount(1)
+        ->and($result->first()['slug'])->toBe('aktif-noncanonical')
+        ->and($result->first()['app'])->toBe('app-aktif');
+});

@@ -15,7 +15,7 @@ class UpdateAplikasiRequest extends FormRequest
     {
         return [
             'nama' => ['required', 'string', 'max:100'],
-            'url' => ['required', 'url'],
+            'url' => ['required', 'url:http,https', 'max:255'],
             'deskripsi' => ['nullable', 'string'],
             'is_active' => ['boolean'],
         ];
@@ -26,7 +26,7 @@ class UpdateAplikasiRequest extends FormRequest
         return [
             'nama.required' => 'Nama aplikasi wajib diisi.',
             'url.required' => 'URL aplikasi wajib diisi.',
-            'url.url' => 'URL aplikasi harus berupa URL yang valid.',
+            'url.url' => 'URL aplikasi harus berupa URL HTTP atau HTTPS yang valid.',
         ];
     }
 }

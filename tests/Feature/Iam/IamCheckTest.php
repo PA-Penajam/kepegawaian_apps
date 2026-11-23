@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\StatusPegawai;
 use App\Models\IamApplication;
 use App\Models\IamUserRole;
 use App\Models\Pegawai;
@@ -73,4 +74,26 @@ it('menolak request tanpa token auth (401)', function () {
     ]);
 
     $response->assertStatus(401);
+});
+
+it('menolak check untuk pegawai nonaktif dengan 403', function () {
+    $user = Pegawai::factory()->create([
+        'status_pegawai' => StatusPegawai::Pensiun->value,
+    ]);
+    $app = IamApplication::factory()->create(['is_active' => true]);
+
+    Sanctum::actingAs($user, ['*']);
+
+    $ts = now()->timestamp;
+    $bodyHash = hash('sha256', '[]');
+    $qs = 'permission=any';
+    $payload = 'GET:/api/v1/iam/check:'.$qs.':'.$bodyHash.':'.$ts;
+    $signature = hash_hmac('sha256', $payload, Crypt::decryptString($app->api_secret_hash));
+
+    $this->getJson('/api/v1/iam/check?permission=any', [
+        'X-App-Key' => $app->api_key,
+        'X-Signature' => $signature,
+        'X-Timestamp' => $ts,
+        'Accept' => 'application/json',
+    ])->assertForbidden();
 });

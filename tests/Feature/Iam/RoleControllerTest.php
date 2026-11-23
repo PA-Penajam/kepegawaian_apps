@@ -80,3 +80,63 @@ it('membuat role dengan permission se-aplikasi dan menghapus cache aplikasi', fu
     $response->assertRedirect();
     $this->assertDatabaseHas('iam_roles', ['slug' => 'pengelola-x']);
 });
+
+it('menolak permission_ids nested array dengan HTTP 422 saat store dan update role', function () {
+    $perm = $this->kepegawaian->permissions()->create(['nama' => 'Kelola Y', 'slug' => 'kelola.y']);
+
+    $this->actingAs($this->admin)
+        ->postJson("/iam/aplikasi/{$this->kepegawaian->id}/roles", [
+            'nama' => 'Role Nested Array',
+            'slug' => 'role-nested-array',
+            'permission_ids' => [[$perm->id]],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('permission_ids.0');
+
+    $role = $this->kepegawaian->roles()->create([
+        'nama' => 'Role Valid Uji',
+        'slug' => 'role-valid-uji',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->putJson("/iam/aplikasi/{$this->kepegawaian->id}/roles/{$role->id}", [
+            'nama' => 'Role Valid Uji',
+            'permission_ids' => [[$perm->id]],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('permission_ids.0');
+});
+
+it('menolak permission_ids yang sudah di-soft-delete dengan HTTP 422 saat store dan update role', function (): void {
+    $permTerhapus = $this->kepegawaian->permissions()->create([
+        'nama' => 'Perm Terhapus',
+        'slug' => 'perm.terhapus',
+    ]);
+    $permTerhapus->delete();
+
+    $this->actingAs($this->admin)
+        ->postJson("/iam/aplikasi/{$this->kepegawaian->id}/roles", [
+            'nama' => 'Role Perm Terhapus',
+            'slug' => 'role-perm-terhapus',
+            'permission_ids' => [$permTerhapus->id],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('permission_ids.0');
+
+    $this->assertDatabaseMissing('iam_roles', ['slug' => 'role-perm-terhapus']);
+
+    $role = $this->kepegawaian->roles()->create([
+        'nama' => 'Role Aktif Uji',
+        'slug' => 'role-aktif-uji',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->putJson("/iam/aplikasi/{$this->kepegawaian->id}/roles/{$role->id}", [
+            'nama' => 'Role Aktif Uji',
+            'permission_ids' => [$permTerhapus->id],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('permission_ids.0');
+
+    expect($role->fresh()->permissions)->toHaveCount(0);
+});

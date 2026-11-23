@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\SyncConsumer;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -12,15 +13,11 @@ use Symfony\Component\HttpFoundation\Response;
  * Middleware untuk verifikasi HMAC-SHA256 signature pada API requests.
  *
  * Mengamankan integritas request dengan:
- * 1. Verifikasi signature HMAC-SHA256
- * 2. Timestamp validation (anti-replay attack, window 5 menit)
- * 3. Query string tampering detection
- *
- * Resolusi secret (1 client 1 secret): bila pemanggil terautentikasi
- * sebagai SyncConsumer yang sudah memiliki hmac_secret per konsumen,
- * secret itu yang dipakai. Selain itu (konsumen lawas maupun integrasi
- * non-sync) fallback ke secret global config kepegawaian.secret_key
- * agar masa transisi tidak memutus client lama.
+ * 1. Verifikasi status aktif konsumen (khusus SyncConsumer)
+ * 2. Validasi header wajib X-Timestamp, X-Signature, dan X-Nonce (wajib untuk SyncConsumer)
+ * 3. Timestamp validation (anti-replay attack, window 5 menit)
+ * 4. Verifikasi signature HMAC-SHA256 + query string tampering detection
+ * 5. Atomic replay protection pada X-Nonce (TTL 300 detik)
  */
 class VerifyHmacSignature
 {
@@ -30,13 +27,29 @@ class VerifyHmacSignature
      */
     private const TIMESTAMP_WINDOW = 300;
 
+    private const MAX_NONCE_LENGTH = 128;
+
     public function handle(Request $request, Closure $next): Response
     {
+        $user = $request->user();
+        $isSyncConsumer = $user instanceof SyncConsumer;
+
+        if ($isSyncConsumer && ! $user->is_active) {
+            return response()->json(['message' => 'Konsumen sinkronisasi tidak aktif.'], 403);
+        }
+
         $timestamp = $request->header('X-Timestamp');
         $received = $request->header('X-Signature');
+        $rawNonce = $request->header('X-Nonce');
+        $nonce = is_string($rawNonce) ? trim($rawNonce) : null;
 
         // Validasi header wajib ada
         if (! $timestamp || ! $received) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        // SyncConsumer wajib mengirim X-Nonce unik
+        if ($isSyncConsumer && ($nonce === null || $nonce === '' || mb_strlen($nonce) > self::MAX_NONCE_LENGTH)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
@@ -48,7 +61,11 @@ class VerifyHmacSignature
         $secret = $this->resolveSecret($request);
 
         if (empty($secret)) {
-            Log::critical('HMAC secret tidak dikonfigurasi (per konsumen maupun global)');
+            if ($isSyncConsumer) {
+                return response()->json(['message' => 'Invalid credentials'], 401);
+            }
+
+            Log::critical('HMAC secret global tidak dikonfigurasi');
 
             return response()->json(['message' => 'Service configuration error'], 500);
         }
@@ -69,13 +86,20 @@ class VerifyHmacSignature
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
+        if ($isSyncConsumer) {
+            $nonceKey = "hmac_nonce:consumer:{$user->id}:".hash('sha256', (string) $nonce);
+
+            if (! Cache::add($nonceKey, true, self::TIMESTAMP_WINDOW)) {
+                return response()->json(['message' => 'Invalid credentials'], 401);
+            }
+        }
+
         return $next($request);
     }
 
     /**
-     * Ambil secret yang berlaku untuk request ini: secret per konsumen
-     * bila pemanggil adalah SyncConsumer yang sudah memilikinya,
-     * selain itu secret global sebagai fallback masa transisi.
+     * Ambil secret yang berlaku untuk request ini.
+     * SyncConsumer wajib memakai hmac_secret terenkripsi miliknya sendiri tanpa fallback global.
      */
     private function resolveSecret(Request $request): ?string
     {
@@ -85,14 +109,14 @@ class VerifyHmacSignature
             try {
                 $consumerSecret = $user->hmac_secret;
 
-                if (is_string($consumerSecret) && $consumerSecret !== '') {
-                    return $consumerSecret;
-                }
+                return is_string($consumerSecret) && $consumerSecret !== '' ? $consumerSecret : null;
             } catch (\Throwable $e) {
                 Log::warning('Gagal mendekripsi HMAC secret saat verifikasi', [
                     'consumer_slug' => $user->slug ?? null,
                     'exception' => $e->getMessage(),
                 ]);
+
+                return null;
             }
         }
 

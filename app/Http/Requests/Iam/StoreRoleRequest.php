@@ -23,11 +23,17 @@ class StoreRoleRequest extends FormRequest
 
         return [
             'nama' => ['required', 'string', 'max:100'],
-            'slug' => ['required', 'alpha_dash', Rule::unique('iam_roles', 'slug')->where('iam_application_id', $aplikasi->id)],
+            'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('iam_roles', 'slug')->where('iam_application_id', $aplikasi->id)],
             'keterangan' => ['nullable', 'string'],
             'permission_ids' => ['array'],
-            // Scope permission_ids hanya ke permissions milik aplikasi ini
-            'permission_ids.*' => ['exists:iam_permissions,id', Rule::exists('iam_permissions', 'id')->where('iam_application_id', $aplikasi->id)],
+            // Scope permission_ids hanya ke permissions aktif milik aplikasi ini
+            'permission_ids.*' => [
+                'string',
+                'ulid',
+                Rule::exists('iam_permissions', 'id')
+                    ->where('iam_application_id', $aplikasi->id)
+                    ->whereNull('deleted_at'),
+            ],
         ];
     }
 

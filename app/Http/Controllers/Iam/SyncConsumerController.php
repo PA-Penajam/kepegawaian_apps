@@ -108,26 +108,21 @@ class SyncConsumerController extends Controller
                 'last_connection_test_message' => $result['message'],
             ]);
 
-            $request->session()->flash('test_connection', $result);
-
             return response()->json($result);
         } catch (\Throwable $e) {
             report($e);
 
+            $safeMessage = 'Gagal menguji koneksi ke endpoint sinkronisasi. Periksa log server.';
+
             $konsumen->update([
                 'last_connection_test_at' => now(),
                 'last_connection_test_status' => 'failed',
-                'last_connection_test_message' => $e->getMessage(),
-            ]);
-
-            $request->session()->flash('test_connection', [
-                'success' => false,
-                'message' => $e->getMessage(),
+                'last_connection_test_message' => $safeMessage,
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => $safeMessage,
             ], 500);
         }
     }

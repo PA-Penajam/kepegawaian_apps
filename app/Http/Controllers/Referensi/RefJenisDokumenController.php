@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Referensi\StoreRefJenisDokumenRequest;
 use App\Http\Requests\Referensi\UpdateRefJenisDokumenRequest;
 use App\Models\RefJenisDokumen;
+use App\Support\SqlLike;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,9 +17,12 @@ class RefJenisDokumenController extends Controller
     {
         $this->authorize('viewAny', RefJenisDokumen::class);
 
+        $rawSearch = request('search');
+        $search = is_string($rawSearch) && trim($rawSearch) !== '' ? $rawSearch : null;
+
         $jenisDokumen = RefJenisDokumen::query()
-            ->when(request('search'), function ($query, $search) {
-                $query->where('nama', 'like', "%{$search}%");
+            ->when($search !== null, function ($query) use ($search): void {
+                SqlLike::whereContains($query, 'nama', $search);
             })
             ->orderBy('nama')
             ->paginate(10)
@@ -26,7 +30,7 @@ class RefJenisDokumenController extends Controller
 
         return Inertia::render('referensi/jenis-dokumen/index', [
             'jenisDokumen' => $jenisDokumen,
-            'filters' => request()->only(['search']),
+            'filters' => ['search' => $search],
         ]);
     }
 

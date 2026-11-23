@@ -8,6 +8,7 @@ use App\Services\Sso\Exceptions\SsoException;
 use Closure;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
@@ -117,6 +118,7 @@ class SsoTokenRefresh
     private function forceLogout(Request $request): Response
     {
         $this->tokenStorage->clearTokens();
+        Auth::guard('web')->logout();
         session()->invalidate();
         session()->regenerateToken();
 

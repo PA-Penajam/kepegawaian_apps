@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Referensi\StoreRefStatusPegawaiRequest;
 use App\Http\Requests\Referensi\UpdateRefStatusPegawaiRequest;
 use App\Models\RefStatusPegawai;
+use App\Support\SqlLike;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,18 +16,18 @@ class RefStatusPegawaiController extends Controller
     public function index(): Response
     {
         $this->authorize('viewAny', RefStatusPegawai::class);
+        $rawSearch = request('search');
+        $search = is_string($rawSearch) && trim($rawSearch) !== '' ? $rawSearch : null;
+
         $statusPegawai = RefStatusPegawai::query()
-            ->when(request('search'), function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('kode', 'like', "%{$search}%")
-                        ->orWhere('nama', 'like', "%{$search}%");
-                });
+            ->when($search !== null, function ($query) use ($search): void {
+                SqlLike::whereContains($query, ['kode', 'nama'], $search);
             })
             ->orderBy('nama')->paginate(10)->withQueryString();
 
         return Inertia::render('referensi/status-pegawai/index', [
             'statusPegawai' => $statusPegawai,
-            'filters' => request()->only(['search']),
+            'filters' => ['search' => $search],
         ]);
     }
 

@@ -148,3 +148,51 @@ it('viewer tidak bisa memberikan akses role ke user', function () {
 
     $response->assertForbidden();
 });
+
+it('menolak url berskema non-http(s) seperti ftp dan javascript pada store dan update aplikasi dengan 422', function (string $badUrl): void {
+    $admin = Pegawai::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->postJson('/iam/aplikasi', [
+            'nama' => 'App Skema Jahat',
+            'slug' => 'app-skema-jahat',
+            'url' => $badUrl,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('url');
+
+    $app = IamApplication::factory()->create(['is_system' => false]);
+
+    $this->actingAs($admin)
+        ->putJson("/iam/aplikasi/{$app->id}", [
+            'nama' => 'App Update Skema Jahat',
+            'url' => $badUrl,
+            'is_active' => true,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('url');
+})->with([
+    'skema ftp' => 'ftp://evil.example.com',
+    'skema javascript' => 'javascript:alert(1)',
+]);
+
+it('tetap merender show aplikasi lain dengan 200 dan iam:audit-slugs exit 0 saat ada aplikasi soft-deleted dengan permission non-canonical', function (): void {
+    $admin = Pegawai::factory()->admin()->create();
+    $appLain = IamApplication::factory()->create(['slug' => 'app-aktif-show', 'is_system' => false]);
+    $appTerhapus = IamApplication::factory()->create(['slug' => 'app-terhapus-audit', 'is_system' => false]);
+
+    $appTerhapus->permissions()->create([
+        'nama' => 'Legacy Bad Slug',
+        'slug' => 'bad-slug-no-dot',
+        'group' => 'legacy',
+    ]);
+    $appTerhapus->delete();
+
+    $this->actingAs($admin)
+        ->get("/iam/aplikasi/{$appLain->id}")
+        ->assertOk();
+
+    $this->artisan('iam:audit-slugs', ['--json' => true])
+        ->assertExitCode(0)
+        ->doesntExpectOutputToContain('bad-slug-no-dot');
+});

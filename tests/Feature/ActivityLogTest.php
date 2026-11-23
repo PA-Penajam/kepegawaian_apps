@@ -102,3 +102,31 @@ test('halaman activity log menampilkan daftar aktivitas', function () {
             ->has('activities.data')
         );
 });
+
+test('halaman activity log mengabaikan sentinel subject_type=all dan membawa query string pada pagination', function () {
+    $this->withoutVite();
+
+    $admin = Pegawai::factory()->admin()->create();
+    $pegawai = Pegawai::factory()->create(['nama_lengkap' => 'Awal']);
+
+    $this->actingAs($admin);
+    for ($i = 1; $i <= 22; $i++) {
+        $pegawai->update(['nama_lengkap' => "Ubah {$i}"]);
+    }
+
+    $this->actingAs($admin)
+        ->get('/activity-log?subject_type=all')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('activity-log/index')
+            ->where('activities.total', fn ($total) => $total >= 22)
+        );
+
+    $filtered = $this->actingAs($admin)
+        ->get('/activity-log?subject_type=Pegawai');
+
+    $filtered->assertOk();
+    $links = $filtered->viewData('page')['props']['activities']['links'] ?? [];
+    $pageTwoLink = collect($links)->firstWhere('label', '2');
+    expect($pageTwoLink['url'] ?? '')->toContain('subject_type=Pegawai');
+});

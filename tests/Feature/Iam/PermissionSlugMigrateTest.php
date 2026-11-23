@@ -86,3 +86,23 @@ it('mencatat audit log saat slug dimigrasi', function () {
         'description' => 'slug-migrated',
     ]);
 });
+
+it('menolak migrate slug dengan validation error 422 jika target slug sudah ada dalam kondisi soft-deleted', function () {
+    $trashedCanonical = $this->kepegawaian->permissions()->create([
+        'nama' => 'Existing Trashed', 'slug' => 'cuti.view', 'group' => 'cuti',
+    ]);
+    $trashedCanonical->delete();
+
+    $legacy = $this->kepegawaian->permissions()->create([
+        'nama' => 'Legacy Cuti', 'slug' => 'cuti-view', 'group' => 'cuti-view',
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->from("/iam/aplikasi/{$this->kepegawaian->id}")
+        ->post("/iam/aplikasi/{$this->kepegawaian->id}/permissions/{$legacy->id}/migrate-slug");
+
+    $response->assertStatus(302);
+    $response->assertSessionHasErrors('slug');
+
+    expect($legacy->fresh()->slug)->toBe('cuti-view');
+});

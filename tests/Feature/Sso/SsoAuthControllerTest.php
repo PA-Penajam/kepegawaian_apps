@@ -217,7 +217,7 @@ describe('SsoAuthController', function () {
         expect(session('sso.user.nip'))->toBe($nip);
     });
 
-    test('logout membersihkan session SSO dan mengeluarkan akun user', function () {
+    test('logout membersihkan session SSO, mengeluarkan akun user, dan mengarahkan ke IdP logout', function () {
         $pegawai = Pegawai::factory()->create();
         $this->actingAs($pegawai);
 
@@ -233,10 +233,60 @@ describe('SsoAuthController', function () {
             config('sso.base_url').'/api/logout' => Http::response(['message' => 'Logged out'], 200),
         ]);
 
+        $baseUrl = rtrim((string) config('sso.base_url'), '/');
+        $expectedDestination = $baseUrl.'/logout?'.http_build_query(['post_logout_redirect_uri' => url('/')]);
+
         $response = $this->post(route('auth.sso.logout'));
 
-        $response->assertRedirect('/');
+        $response->assertRedirect($expectedDestination);
         expect(Auth::check())->toBeFalse();
         expect($storage->getAccessToken())->toBeNull();
+    });
+
+    test('logout via Inertia mengembalikan 409 Inertia::location ke IdP GET /logout', function () {
+        $pegawai = Pegawai::factory()->create();
+        $baseUrl = rtrim((string) config('sso.base_url'), '/');
+
+        $response = $this->actingAs($pegawai)
+            ->withHeaders(['X-Inertia' => 'true'])
+            ->post(route('auth.sso.logout'));
+
+        expect($response->getStatusCode())->toBe(409);
+        expect((string) $response->headers->get('X-Inertia-Location'))
+            ->toStartWith($baseUrl.'/logout');
+        expect(Auth::check())->toBeFalse();
+    });
+
+    test('callback menolak query parameter array state[], code[], dan error_description[] tanpa 500 atau flash non-string', function () {
+        Http::fake();
+
+        session(['sso.oauth_state' => [
+            'state' => 'valid-state-12345',
+            'code_verifier' => 'test-verifier',
+            'expires_at' => now()->addMinutes(10)->toIso8601String(),
+        ]]);
+
+        $stateArrayResponse = $this->get(route('auth.sso.callback').'?state[]=foo');
+        $stateArrayResponse->assertForbidden();
+
+        session(['sso.oauth_state' => [
+            'state' => 'valid-state-12345',
+            'code_verifier' => 'test-verifier',
+            'expires_at' => now()->addMinutes(10)->toIso8601String(),
+        ]]);
+
+        $codeArrayResponse = $this->get(route('auth.sso.callback').'?state=valid-state-12345&code[]=foo');
+        $codeArrayResponse->assertRedirect(route('login'));
+        expect(session('error'))->toBeString()->not->toBeEmpty();
+
+        $errDescArrayResponse = $this->get(route('auth.sso.callback').'?error=access_denied&error_description[foo]=bar');
+        $errDescArrayResponse->assertRedirect(route('login'));
+        expect(session('error'))->toBeString()->toBe('Autentikasi ditolak atau dibatalkan oleh SSO.');
+
+        $errorArrayResponse = $this->get(route('auth.sso.callback').'?error[]=foo');
+        $errorArrayResponse->assertRedirect(route('login'));
+        expect(session('error'))->toBeString()->toBe('Autentikasi ditolak atau dibatalkan oleh SSO.');
+
+        Http::assertNothingSent();
     });
 });

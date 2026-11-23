@@ -85,8 +85,9 @@ class PermissionController extends Controller
             ]);
         }
 
-        // Cek uniqueness dalam aplikasi
-        $exists = IamPermission::where('iam_application_id', $aplikasi->id)
+        // Cek uniqueness dalam aplikasi (termasuk soft-deleted karena unique index DB tidak memfilter deleted_at)
+        $exists = IamPermission::withTrashed()
+            ->where('iam_application_id', $aplikasi->id)
             ->where('slug', $suggested)
             ->where('id', '!=', $permission->id)
             ->exists();

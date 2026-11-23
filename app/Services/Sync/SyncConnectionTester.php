@@ -4,13 +4,14 @@ namespace App\Services\Sync;
 
 use App\Models\SyncConsumer;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 /**
  * Penguji koneksi konsumen sinkronisasi.
  *
  * Menyimulasikan persis apa yang dilakukan aplikasi client: membangun
  * HMAC-SHA256 signature dari string kanonik memakai HMAC secret
- * per konsumen (fallback global untuk konsumen lawas), lalu melakukan
+ * per konsumen, lalu melakukan
  * GET ke endpoint /api/v1/pegawai/sync.
  *
  * Keamanan:
@@ -50,13 +51,13 @@ class SyncConnectionTester
         if ($secret === null) {
             return [
                 'success' => false,
-                'message' => 'Konsumen belum memiliki HMAC secret dan secret global kosong. Regenerasi secret konsumen terlebih dahulu.',
+                'message' => 'Konsumen belum memiliki HMAC secret. Regenerasi secret konsumen terlebih dahulu.',
             ];
         }
 
         // Token sementara agar request benar-benar terautentikasi tanpa
         // menyentuh token asli konsumen.
-        $ephemeral = $consumer->createToken('sync-test', ['app:kepegawaian'], now()->addMinutes(5));
+        $ephemeral = $consumer->createToken('sync-test', ['sync:pegawai'], now()->addMinutes(5));
         $plaintext = $ephemeral->plainTextToken;
 
         try {
@@ -74,6 +75,7 @@ class SyncConnectionTester
                 ->withToken($plaintext)
                 ->withHeaders([
                     'X-Timestamp' => (string) $timestamp,
+                    'X-Nonce' => (string) Str::uuid(),
                     'X-Signature' => $signature,
                     'Accept' => 'application/json',
                 ])
@@ -96,7 +98,7 @@ class SyncConnectionTester
     }
 
     /**
-     * Secret per konsumen bila sudah ada, selain itu secret global.
+     * Ambil HMAC secret unik per konsumen tanpa fallback ke secret global.
      */
     private function resolveSecret(SyncConsumer $consumer): ?string
     {
@@ -107,12 +109,10 @@ class SyncConnectionTester
                 return $consumerSecret;
             }
         } catch (\Throwable) {
-            // Lanjut ke fallback global
+            return null;
         }
 
-        $global = config('kepegawaian.secret_key');
-
-        return is_string($global) && $global !== '' ? $global : null;
+        return null;
     }
 
     private function appUrl(): string
