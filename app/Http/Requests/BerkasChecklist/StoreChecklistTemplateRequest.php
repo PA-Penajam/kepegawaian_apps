@@ -24,8 +24,8 @@ class StoreChecklistTemplateRequest extends FormRequest
             'deskripsi' => ['nullable', 'string'],
             'aktif' => ['boolean'],
             'urutan' => ['nullable', 'integer', 'min:0'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.kode' => ['required', 'string', 'max:50'],
+            'items' => ['required', 'list', 'min:1'],
+            'items.*.kode' => ['required', 'string', 'max:50', 'distinct:ignore_case'],
             'items.*.nama' => ['required', 'string', 'max:255'],
             'items.*.wajib' => ['boolean'],
             'items.*.urutan' => ['nullable', 'integer', 'min:0'],
@@ -40,6 +40,7 @@ class StoreChecklistTemplateRequest extends FormRequest
         return [
             'items.required' => 'Minimal satu item checklist harus diisi.',
             'items.min' => 'Minimal satu item checklist harus diisi.',
+            'items.*.kode.distinct' => 'Kode item checklist tidak boleh duplikat.',
         ];
     }
 }

@@ -14,8 +14,10 @@ use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
 use App\Services\UsulanKenaikanPangkat\UsulanKenaikanPangkatService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\ModelStates\Exceptions\TransitionNotFound;
 
 class ApprovalController extends Controller
 {
@@ -30,21 +32,30 @@ class ApprovalController extends Controller
     {
         /** @var Pegawai $user */
         $user = $request->user();
-        $approvalContext = $this->approvalContext($user);
+        $approvalContexts = $this->approvalContexts($user);
 
         $query = UsulanKenaikanPangkat::query()
             ->with(['pegawai:id,nip,nama_lengkap', 'pangkatAsal:id,kode,nama', 'pangkatTujuan:id,kode,nama'])
             ->latest('submitted_at');
 
-        if ($approvalContext === null) {
+        if ($approvalContexts === []) {
             $query->whereRaw('1 = 0');
         } else {
-            $query->where('state', $approvalContext['state']);
+            $states = array_column($approvalContexts, 'state');
+            $query->where(function ($subQuery) use ($states): void {
+                foreach ($states as $index => $state) {
+                    if ($index === 0) {
+                        $subQuery->where('state', $state);
+                    } else {
+                        $subQuery->orWhere('state', $state);
+                    }
+                }
+            });
         }
 
         return Inertia::render('kenaikan-pangkat/approval/inbox', [
             'usulan' => $query->paginate(10)->withQueryString(),
-            'current_role' => $approvalContext['role'] ?? null,
+            'current_role' => $approvalContexts[0]['role'] ?? null,
         ]);
     }
 
@@ -52,12 +63,18 @@ class ApprovalController extends Controller
     {
         $this->authorize('verifikasiKasubbag', $usulan);
 
-        $this->service->verifikasiKasubbag(
-            $usulan,
-            $request->user(),
-            $request->boolean('setuju'),
-            $request->validated('catatan')
-        );
+        try {
+            $this->service->verifikasiKasubbag(
+                $usulan,
+                $request->user(),
+                $request->boolean('setuju'),
+                $request->validated('catatan')
+            );
+        } catch (TransitionNotFound) {
+            throw ValidationException::withMessages([
+                'usulan' => 'Status usulan sudah berubah dan tidak dapat diverifikasi kasubbag.',
+            ]);
+        }
 
         return back()->with('success', 'Usulan berhasil diverifikasi kasubbag.');
     }
@@ -66,12 +83,18 @@ class ApprovalController extends Controller
     {
         $this->authorize('verifikasiSekretaris', $usulan);
 
-        $this->service->verifikasiSekretaris(
-            $usulan,
-            $request->user(),
-            $request->boolean('setuju'),
-            $request->validated('catatan')
-        );
+        try {
+            $this->service->verifikasiSekretaris(
+                $usulan,
+                $request->user(),
+                $request->boolean('setuju'),
+                $request->validated('catatan')
+            );
+        } catch (TransitionNotFound) {
+            throw ValidationException::withMessages([
+                'usulan' => 'Status usulan sudah berubah dan tidak dapat diverifikasi sekretaris.',
+            ]);
+        }
 
         return back()->with('success', 'Usulan berhasil diverifikasi sekretaris.');
     }
@@ -80,7 +103,13 @@ class ApprovalController extends Controller
     {
         $this->authorize('tandaTanganKetua', $usulan);
 
-        $this->service->tandaTanganKetua($usulan, $request->user());
+        try {
+            $this->service->tandaTanganKetua($usulan, $request->user());
+        } catch (TransitionNotFound) {
+            throw ValidationException::withMessages([
+                'usulan' => 'Status usulan sudah berubah dan tidak dapat ditandatangani ulang.',
+            ]);
+        }
 
         return back()->with('success', 'Surat pengantar berhasil ditandatangani ketua.');
     }
@@ -89,40 +118,69 @@ class ApprovalController extends Controller
     {
         $this->authorize('kirimBiro', $usulan);
 
-        $this->service->kirimBiro($usulan, $request->user(), $request->validated('catatan'));
+        try {
+            $this->service->kirimBiro($usulan, $request->user(), $request->validated('catatan'));
+        } catch (TransitionNotFound) {
+            throw ValidationException::withMessages([
+                'usulan' => 'Status usulan sudah berubah dan tidak dapat dikirim ke Biro Kepegawaian.',
+            ]);
+        }
 
         return back()->with('success', 'Usulan berhasil dikirim ke Biro Kepegawaian.');
     }
 
     public function mintaPerbaikan(MintaPerbaikanRequest $request, UsulanKenaikanPangkat $usulan): RedirectResponse
     {
-        $this->authorize('view', $usulan);
+        $this->authorize('mintaPerbaikan', $usulan);
 
-        $this->service->mintaPerbaikan($usulan, $request->user(), $request->validated('catatan'));
+        try {
+            $this->service->mintaPerbaikan($usulan, $request->user(), $request->validated('catatan'));
+        } catch (TransitionNotFound) {
+            throw ValidationException::withMessages([
+                'usulan' => 'Status usulan sudah berubah dan tidak dapat diminta perbaikan.',
+            ]);
+        }
 
         return back()->with('success', 'Permintaan perbaikan berhasil dikirim.');
     }
 
     public function tolak(TolakUsulanRequest $request, UsulanKenaikanPangkat $usulan): RedirectResponse
     {
-        $this->authorize('view', $usulan);
+        $this->authorize('tolak', $usulan);
 
-        $this->service->tolak($usulan, $request->user(), $request->validated('alasan'));
+        try {
+            $this->service->tolak($usulan, $request->user(), $request->validated('alasan'));
+        } catch (TransitionNotFound) {
+            throw ValidationException::withMessages([
+                'usulan' => 'Status usulan sudah berubah dan tidak dapat ditolak.',
+            ]);
+        }
 
         return back()->with('success', 'Usulan berhasil ditolak.');
     }
 
     /**
-     * @return array{role: string, state: string}|null
+     * Mengumpulkan seluruh konteks role/state approval yang dimiliki user.
+     *
+     * @return array<int, array{role: string, state: string}>
      */
-    private function approvalContext(Pegawai $user): ?array
+    private function approvalContexts(Pegawai $user): array
     {
-        return match (true) {
-            $user->hasPermission('kenaikan-pangkat.usulan.verifikasi-kasubbag') => ['role' => 'kasubbag', 'state' => 'DIAJUKAN'],
-            $user->hasPermission('kenaikan-pangkat.usulan.verifikasi-sekretaris') => ['role' => 'sekretaris', 'state' => 'DIVERIFIKASI_KASUBBAG'],
-            $user->hasPermission('kenaikan-pangkat.usulan.tanda-tangan-ketua') => ['role' => 'ketua', 'state' => 'DIVERIFIKASI_SEKRETARIS'],
-            $user->hasPermission('kenaikan-pangkat.usulan.kirim-biro') => ['role' => 'biro', 'state' => 'DITANDATANGANI_KETUA'],
-            default => null,
-        };
+        $mappings = [
+            'kenaikan-pangkat.usulan.verifikasi-kasubbag' => ['role' => 'kasubbag', 'state' => 'DIAJUKAN'],
+            'kenaikan-pangkat.usulan.verifikasi-sekretaris' => ['role' => 'sekretaris', 'state' => 'DIVERIFIKASI_KASUBBAG'],
+            'kenaikan-pangkat.usulan.tanda-tangan-ketua' => ['role' => 'ketua', 'state' => 'DIVERIFIKASI_SEKRETARIS'],
+            'kenaikan-pangkat.usulan.kirim-biro' => ['role' => 'biro', 'state' => 'DITANDATANGANI_KETUA'],
+        ];
+
+        $contexts = [];
+
+        foreach ($mappings as $permission => $context) {
+            if ($user->hasPermission($permission)) {
+                $contexts[] = $context;
+            }
+        }
+
+        return $contexts;
     }
 }

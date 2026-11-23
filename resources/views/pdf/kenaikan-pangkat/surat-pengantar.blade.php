@@ -46,7 +46,9 @@
 </table>
 
 @php
-    $lampiranValid = $usulan->checklistSubmission?->items?->filter(fn ($item) => (bool) ($item->is_valid ?? false)) ?? collect();
+    $lampiranValid = $usulan->checklistSubmission?->items
+        ?->where('status', \App\Models\BerkasChecklist\BerkasChecklistSubmissionItem::STATUS_VALID)
+        ->values() ?? collect();
 @endphp
 
 <div class="section-title">Daftar Berkas Terlampir</div>
@@ -54,7 +56,7 @@
     <thead><tr><th style="width: 8%;">No</th><th>Nama Berkas</th></tr></thead>
     <tbody>
     @forelse($lampiranValid as $index => $item)
-        <tr><td style="text-align: center;">{{ $index + 1 }}</td><td>{{ $item->templateItem?->nama ?? $item->nama_berkas ?? '-' }}</td></tr>
+        <tr><td style="text-align: center;">{{ $index + 1 }}</td><td>{{ $item->item?->nama ?? '-' }}</td></tr>
     @empty
         <tr><td style="text-align: center;">-</td><td>Belum ada berkas valid yang tercatat.</td></tr>
     @endforelse

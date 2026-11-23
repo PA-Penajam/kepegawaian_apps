@@ -168,6 +168,22 @@ it('keeps incomplete when optional items are valid but required items are missin
         ->and($service->isComplete($submission->fresh()))->toBeFalse();
 });
 
+it('returns false in isComplete when a new required item lacks a submission item row', function () {
+    [$service, $template, $pegawai, $subject] = checklistContext();
+    $submission = $service->createSubmission($template, $subject, $pegawai);
+    markRequiredItemsValid($submission, 5);
+
+    expect($service->isComplete($submission->fresh()))->toBeTrue();
+
+    BerkasChecklistItem::factory()->create([
+        'berkas_checklist_template_id' => $template->id,
+        'kode' => 'item_wajib_tambahan',
+        'wajib' => true,
+    ]);
+
+    expect($service->isComplete($submission->fresh()))->toBeFalse();
+});
+
 function checklistContext(): array
 {
     Artisan::call('db:seed', [

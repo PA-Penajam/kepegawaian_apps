@@ -75,14 +75,18 @@ class ChecklistBerkasService
 
     public function recalculatePersentase(BerkasChecklistSubmission $submission): void
     {
+        $submission->loadMissing('template');
         $previousStatus = $submission->status_kelengkapan;
         $requiredItemIds = $submission->template->items()->wajib()->pluck('id');
         $requiredCount = $requiredItemIds->count();
 
-        $validCount = $submission->items()
-            ->whereIn('berkas_checklist_item_id', $requiredItemIds)
-            ->where('status', BerkasChecklistSubmissionItem::STATUS_VALID)
-            ->count();
+        $validCount = $requiredCount === 0
+            ? 0
+            : $submission->items()
+                ->whereIn('berkas_checklist_item_id', $requiredItemIds)
+                ->where('status', BerkasChecklistSubmissionItem::STATUS_VALID)
+                ->distinct('berkas_checklist_item_id')
+                ->count('berkas_checklist_item_id');
 
         $percentage = $requiredCount === 0 ? 100 : (int) round(($validCount / $requiredCount) * 100);
 
@@ -100,16 +104,20 @@ class ChecklistBerkasService
 
     public function isComplete(BerkasChecklistSubmission $submission): bool
     {
+        $submission->loadMissing('template');
         $requiredItemIds = $submission->template->items()->wajib()->pluck('id');
 
         if ($requiredItemIds->isEmpty()) {
             return true;
         }
 
-        return ! $submission->items()
+        $validRequiredCount = $submission->items()
             ->whereIn('berkas_checklist_item_id', $requiredItemIds)
-            ->where('status', '!=', BerkasChecklistSubmissionItem::STATUS_VALID)
-            ->exists();
+            ->where('status', BerkasChecklistSubmissionItem::STATUS_VALID)
+            ->distinct('berkas_checklist_item_id')
+            ->count('berkas_checklist_item_id');
+
+        return $validRequiredCount === $requiredItemIds->count();
     }
 
     private function ensureValidStatus(string $status): void

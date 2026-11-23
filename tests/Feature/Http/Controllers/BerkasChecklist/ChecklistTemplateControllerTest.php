@@ -17,8 +17,8 @@ uses(RefreshDatabase::class);
 function grantChecklistTemplatePermission(Pegawai $pegawai, string $slug): void
 {
     $app = IamApplication::query()->firstOrCreate(
-        ['slug' => 'test-checklist'],
-        ['nama' => 'Checklist Test', 'url' => 'https://local']
+        ['slug' => (string) config('iam.app_slug', 'kepegawaian')],
+        ['nama' => 'Kepegawaian', 'url' => (string) config('app.url')]
     );
 
     $role = IamRole::query()->firstOrCreate(
@@ -118,4 +118,188 @@ it('menolak akses index checklist template tanpa permission', function (): void 
         ->withoutVite()
         ->get('/admin/checklist-template')
         ->assertForbidden();
+});
+
+it('menolak duplikat items kode pada store dan update checklist template dengan 422', function (): void {
+    $user = checklistTemplateUserWith('checklist.template.create', 'checklist.template.update');
+
+    actingAs($user)
+        ->postJson('/admin/checklist-template', [
+            'kode' => 'KP-DUP',
+            'nama' => 'Template Duplikat',
+            'jenis' => 'kp',
+            'aktif' => true,
+            'items' => [
+                ['kode' => 'SK_PANGKAT', 'nama' => 'SK 1', 'wajib' => true, 'urutan' => 1],
+                ['kode' => 'SK_PANGKAT', 'nama' => 'SK 2', 'wajib' => true, 'urutan' => 2],
+            ],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('items.1.kode');
+
+    $template = BerkasChecklistTemplate::factory()->create(['kode' => 'KP-EDIT-DUP', 'jenis' => 'kp']);
+    $item = BerkasChecklistItem::factory()->create([
+        'berkas_checklist_template_id' => $template->id,
+        'kode' => 'ITEM_SATU',
+    ]);
+
+    actingAs($user)
+        ->putJson("/admin/checklist-template/{$template->id}", [
+            'kode' => 'KP-EDIT-DUP',
+            'nama' => 'Template Edit Duplikat',
+            'jenis' => 'kp',
+            'aktif' => true,
+            'items' => [
+                ['id' => $item->id, 'kode' => 'SAMA', 'nama' => 'Item 1', 'wajib' => true, 'urutan' => 1],
+                ['kode' => 'SAMA', 'nama' => 'Item 2', 'wajib' => false, 'urutan' => 2],
+            ],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('items.1.kode');
+});
+
+it('update checklist template mendukung hapus dan tambah ulang kode sama serta swap kode antar item tanpa error 500', function (): void {
+    $user = checklistTemplateUserWith('checklist.template.update');
+    $template = BerkasChecklistTemplate::factory()->create(['kode' => 'KP-SWAP', 'jenis' => 'kp']);
+    $itemA = BerkasChecklistItem::factory()->create([
+        'berkas_checklist_template_id' => $template->id,
+        'kode' => 'ITEM_A',
+        'nama' => 'Item A Lama',
+        'urutan' => 1,
+    ]);
+    $itemB = BerkasChecklistItem::factory()->create([
+        'berkas_checklist_template_id' => $template->id,
+        'kode' => 'ITEM_B',
+        'nama' => 'Item B Lama',
+        'urutan' => 2,
+    ]);
+
+    // (a) Swap kode antar item aktif (ITEM_A <-> ITEM_B)
+    actingAs($user)
+        ->put("/admin/checklist-template/{$template->id}", [
+            'kode' => 'KP-SWAP',
+            'nama' => 'Template Swap',
+            'jenis' => 'kp',
+            'aktif' => true,
+            'items' => [
+                ['id' => $itemA->id, 'kode' => 'ITEM_B', 'nama' => 'Item A Jadi B', 'wajib' => true, 'urutan' => 1],
+                ['id' => $itemB->id, 'kode' => 'ITEM_A', 'nama' => 'Item B Jadi A', 'wajib' => false, 'urutan' => 2],
+            ],
+        ])
+        ->assertRedirect(route('admin.checklist-template.index'))
+        ->assertSessionHas('success');
+
+    expect($itemA->fresh()->kode)->toBe('ITEM_B')
+        ->and($itemB->fresh()->kode)->toBe('ITEM_A');
+
+    // (b) Hapus item & tambah ulang kode yang sama tanpa id (restore soft-deleted)
+    actingAs($user)
+        ->put("/admin/checklist-template/{$template->id}", [
+            'kode' => 'KP-SWAP',
+            'nama' => 'Template Replace',
+            'jenis' => 'kp',
+            'aktif' => true,
+            'items' => [
+                ['kode' => 'ITEM_A', 'nama' => 'Item A Pengganti', 'wajib' => true, 'urutan' => 1],
+            ],
+        ])
+        ->assertRedirect(route('admin.checklist-template.index'))
+        ->assertSessionHas('success');
+
+    expect($template->items()->count())->toBe(1)
+        ->and($template->items()->first()->kode)->toBe('ITEM_A')
+        ->and($template->items()->first()->nama)->toBe('Item A Pengganti');
+});
+
+it('menolak payload items asosiatif non-list pada store dan update dengan 422 bukan 500 TypeError', function (): void {
+    $user = checklistTemplateUserWith('checklist.template.create', 'checklist.template.update');
+
+    actingAs($user)
+        ->postJson('/admin/checklist-template', [
+            'kode' => 'KP-ASSOC-STORE',
+            'nama' => 'Template Asosiatif Store',
+            'jenis' => 'kp',
+            'aktif' => true,
+            'items' => [
+                'abc' => ['kode' => 'ITEM_X', 'nama' => 'Item X', 'wajib' => true],
+            ],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('items');
+
+    $template = BerkasChecklistTemplate::factory()->create(['kode' => 'KP-ASSOC-UPD', 'jenis' => 'kp']);
+
+    actingAs($user)
+        ->putJson("/admin/checklist-template/{$template->id}", [
+            'kode' => 'KP-ASSOC-UPD',
+            'nama' => 'Template Asosiatif Update',
+            'jenis' => 'kp',
+            'aktif' => true,
+            'items' => [
+                'abc' => ['kode' => 'ITEM_X', 'nama' => 'Item X', 'wajib' => true],
+            ],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('items');
+});
+
+it('menolak items.*.id milik template lain atau yang sudah soft-deleted pada update dengan 422 bukan 404', function (): void {
+    $user = checklistTemplateUserWith('checklist.template.update');
+    $template1 = BerkasChecklistTemplate::factory()->create(['kode' => 'KP-TPL-1', 'jenis' => 'kp']);
+    $template2 = BerkasChecklistTemplate::factory()->create(['kode' => 'KP-TPL-2', 'jenis' => 'kp']);
+
+    $foreignItem = BerkasChecklistItem::factory()->create([
+        'berkas_checklist_template_id' => $template2->id,
+        'kode' => 'FOREIGN_ITEM',
+    ]);
+
+    actingAs($user)
+        ->putJson("/admin/checklist-template/{$template1->id}", [
+            'kode' => 'KP-TPL-1',
+            'nama' => 'Template 1 Update',
+            'jenis' => 'kp',
+            'aktif' => true,
+            'items' => [
+                ['id' => $foreignItem->id, 'kode' => 'ITEM_VALID', 'nama' => 'Item Valid', 'wajib' => true],
+            ],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('items.0.id');
+
+    $trashedOwnItem = BerkasChecklistItem::factory()->create([
+        'berkas_checklist_template_id' => $template1->id,
+        'kode' => 'TRASHED_OWN',
+    ]);
+    $trashedOwnItem->delete();
+
+    actingAs($user)
+        ->putJson("/admin/checklist-template/{$template1->id}", [
+            'kode' => 'KP-TPL-1',
+            'nama' => 'Template 1 Update Trashed',
+            'jenis' => 'kp',
+            'aktif' => true,
+            'items' => [
+                ['id' => $trashedOwnItem->id, 'kode' => 'ITEM_VALID', 'nama' => 'Item Valid', 'wajib' => true],
+            ],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('items.0.id');
+});
+
+it('menolak duplikat items.*.kode berbeda huruf besar-kecil pada store dan update dengan 422', function (): void {
+    $user = checklistTemplateUserWith('checklist.template.create', 'checklist.template.update');
+
+    actingAs($user)
+        ->postJson('/admin/checklist-template', [
+            'kode' => 'KP-CASE-DUP',
+            'nama' => 'Template Case Insensitive',
+            'jenis' => 'kp',
+            'aktif' => true,
+            'items' => [
+                ['kode' => 'ITEM_A', 'nama' => 'Item 1', 'wajib' => true],
+                ['kode' => 'item_a', 'nama' => 'Item 2', 'wajib' => false],
+            ],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('items.1.kode');
 });

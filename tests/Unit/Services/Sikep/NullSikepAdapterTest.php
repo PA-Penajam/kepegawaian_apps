@@ -65,7 +65,10 @@ it('pushes binding to app container', function (): void {
 it('logs info when pushUsulan called', function (): void {
     $adapter = new NullSikepAdapter;
 
-    $adapter->pushUsulan(null);
+    $result = $adapter->pushUsulan(null);
 
-    Log::assertLogged('info', fn ($message, $context) => str_contains($message, 'NullSikepAdapter::pushUsulan called'));
+    expect($result)->toBeNull();
+    Log::shouldHaveReceived('info')
+        ->once()
+        ->withArgs(fn (string $message, array $context): bool => str_contains($message, 'NullSikepAdapter::pushUsulan called') && array_key_exists('usulan', $context));
 });

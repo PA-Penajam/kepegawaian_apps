@@ -15,7 +15,7 @@ class VerifikasiSekretarisRequest extends FormRequest
     {
         return [
             'setuju' => ['required', 'boolean'],
-            'catatan' => ['required_if:setuju,false', 'string', 'max:500'],
+            'catatan' => ['required_if:setuju,false', 'nullable', 'string', 'max:500'],
         ];
     }
 }

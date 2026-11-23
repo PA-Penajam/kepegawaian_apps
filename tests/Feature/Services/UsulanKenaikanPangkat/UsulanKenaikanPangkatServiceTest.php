@@ -1,26 +1,4 @@
-use App\Actions\UsulanKenaikanPangkat\GenerateSuratPengantarPdf;
-use App\Enums\StatusKepegawaian;
-use App\Enums\StatusPegawai;
-use App\Exceptions\UsulanKenaikanPangkat\BerkasBelumLengkapException;
-use App\Exceptions\UsulanKenaikanPangkat\DuplicateUsulanException;
-use App\Exceptions\UsulanKenaikanPangkat\PegawaiTidakEligibleException;
-use App\Models\BerkasChecklist\BerkasChecklistItem;
-use App\Models\BerkasChecklist\BerkasChecklistSubmission;
-use App\Models\BerkasChecklist\BerkasChecklistSubmissionItem;
-use App\Models\BerkasChecklist\BerkasChecklistTemplate;
-use App\Models\Pegawai;
-use App\Models\RefPangkat;
-use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
-use App\Models\UsulanKenaikanPangkat\UsulanKpApproverHistory;
-use App\Models\UsulanKenaikanPangkat\UsulanKpPdf;
-use App\Models\UsulanKenaikanPangkat\UsulanKpStateHistory;
-use App\Services\BerkasChecklist\ChecklistBerkasService;
-use App\Services\Sikep\SikepAdapter;
-use App\Services\UsulanKenaikanPangkat\UsulanKenaikanPangkatService;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Mockery\MockInterface;
+<?php
 
 use App\Actions\UsulanKenaikanPangkat\GenerateSuratPengantarPdf;
 use App\Enums\StatusKepegawaian;
@@ -41,12 +19,17 @@ use App\Models\UsulanKenaikanPangkat\UsulanKpStateHistory;
 use App\Services\BerkasChecklist\ChecklistBerkasService;
 use App\Services\Sikep\SikepAdapter;
 use App\Services\UsulanKenaikanPangkat\UsulanKenaikanPangkatService;
+use Database\Seeders\ChecklistKenaikanPangkatSeeder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
-use Database\Seeders\ChecklistKenaikanPangkatSeeder;
-use Illuminate\Support\Facades\Artisan;
+use Spatie\LaravelPdf\Facades\Pdf;
+use Spatie\LaravelPdf\FakePdfBuilder;
+use Spatie\ModelStates\Exceptions\TransitionNotFound;
 
 uses(RefreshDatabase::class);
 beforeEach(fn () => Artisan::call('db:seed', ['--class' => ChecklistKenaikanPangkatSeeder::class, '--force' => true]));
@@ -76,6 +59,8 @@ function makeUsulanKpData(Pegawai $pegawai, array $attributes = []): array
 
 function makeCompleteChecklist(UsulanKenaikanPangkat $usulan, Pegawai $pegawai): BerkasChecklistSubmission
 {
+    $usulan->checklistSubmission()->delete();
+
     $template = BerkasChecklistTemplate::factory()->create(['jenis' => 'kenaikan_pangkat']);
     $item = BerkasChecklistItem::factory()->create([
         'berkas_checklist_template_id' => $template->id,
@@ -160,7 +145,7 @@ it('menjalankan happy path end to end sampai SK terbit', function () {
     $service->kirimBiro($usulan->refresh(), $ketua, 'Dikirim');
     $service->uploadSkFinal($usulan->refresh(), $actor, UploadedFile::fake()->create('sk.pdf', 10, 'application/pdf'), 'SK-001', '2026-05-12');
 
-    $usulan->refresh();
+    $usulan->refresh()->load(['stateHistory', 'approverHistory']);
     expect($pdf)->toBeInstanceOf(UsulanKpPdf::class)
         ->and((string) $usulan->state)->toBe('SELESAI_SK_TERBIT')
         ->and($usulan->nomor_sk)->toBe('SK-001')
@@ -238,7 +223,7 @@ it('submit merekam submitted_at tanggal_usulan history dan approver', function (
 
     $service->submit($usulan, $actor, $checklist);
 
-    $usulan->refresh();
+    $usulan->refresh()->load(['stateHistory', 'approverHistory']);
     expect($usulan->submitted_at)->not->toBeNull()
         ->and($usulan->tanggal_usulan)->not->toBeNull()
         ->and(UsulanKpStateHistory::query()->where('to_state', 'DIAJUKAN')->count())->toBe(1)
@@ -307,7 +292,7 @@ it('upload SK final menyimpan file dan data SK', function () {
 
     $service->uploadSkFinal($usulan, makePegawaiKp(), UploadedFile::fake()->create('sk-final.pdf', 12, 'application/pdf'), 'SK-777', '2026-05-12');
 
-    $usulan->refresh();
+    $usulan->refresh()->load(['stateHistory', 'approverHistory']);
     expect((string) $usulan->state)->toBe('SELESAI_SK_TERBIT')
         ->and($usulan->sk_file_path)->toBe("usulan-kp/sk/{$usulan->id}.pdf")
         ->and($usulan->sk_file_original_name)->toBe('sk-final.pdf');
@@ -417,3 +402,274 @@ function prepareWaitingSkUsulan(): array
 
     return [$service, $usulan->refresh(), $actor];
 }
+
+it('mencegah race condition tandaTanganKetua menghapus PDF sah pertama atau membocorkan nomor surat', function () {
+    Storage::fake('local');
+
+    Pdf::swap(new class extends FakePdfBuilder
+    {
+        public function save(string $path): static
+        {
+            parent::save($path);
+            $dir = dirname($path);
+            if (! is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            file_put_contents($path, '%PDF-1.4 fake');
+
+            return $this;
+        }
+    });
+
+    [$baseService, $usulan] = prepareVerifiedKasubbagUsulan();
+    $baseService->verifikasiSekretaris($usulan, makePegawaiKp(), true, 'OK');
+
+    $realService = new UsulanKenaikanPangkatService(
+        app(ChecklistBerkasService::class),
+        app(GenerateSuratPengantarPdf::class),
+        Mockery::mock(SikepAdapter::class),
+    );
+
+    // Dua snapshot stale yang sama-sama berada di state DIVERIFIKASI_SEKRETARIS
+    $snapshotPertama = UsulanKenaikanPangkat::query()->findOrFail($usulan->id);
+    $snapshotKedua = UsulanKenaikanPangkat::query()->findOrFail($usulan->id);
+    $ketua = makePegawaiKp();
+
+    $pdfPertama = $realService->tandaTanganKetua($snapshotPertama, $ketua);
+
+    expect(Storage::disk('local')->exists($pdfPertama->file_path))->toBeTrue();
+
+    expect(fn () => $realService->tandaTanganKetua($snapshotKedua, $ketua))
+        ->toThrow(TransitionNotFound::class);
+
+    // File PDF sah pertama harus tetap utuh dan hanya 1 reservasi nomor surat terkonfirmasi
+    expect(Storage::disk('local')->exists($pdfPertama->file_path))->toBeTrue()
+        ->and(UsulanKpPdf::query()->where('usulan_kenaikan_pangkat_id', $usulan->id)->count())->toBe(1)
+        ->and(DB::table('nomor_surat_reservations')->where('status', 'confirmed')->count())->toBe(1);
+});
+
+it('mencegah uploadSkFinal stale menimpa file SK sah di disk', function () {
+    Storage::fake('local');
+
+    [$service, $usulan] = prepareWaitingSkUsulan();
+    $snapshotPertama = UsulanKenaikanPangkat::query()->findOrFail($usulan->id);
+    $snapshotKedua = UsulanKenaikanPangkat::query()->findOrFail($usulan->id);
+    $adminSk = makePegawaiKp();
+
+    $fileSah = UploadedFile::fake()->createWithContent('sk-sah.pdf', '%PDF-1.4 VALID-SK-1');
+    $fileStale = UploadedFile::fake()->createWithContent('sk-stale.pdf', '%PDF-1.4 CORRUPTED-STALE-SK-2');
+
+    $service->uploadSkFinal($snapshotPertama, $adminSk, $fileSah, 'SK-VALID-01', '2026-05-12');
+
+    expect(fn () => $service->uploadSkFinal($snapshotKedua, $adminSk, $fileStale, 'SK-STALE-02', '2026-05-13'))
+        ->toThrow(TransitionNotFound::class);
+
+    $path = "usulan-kp/sk/{$usulan->id}.pdf";
+    expect(Storage::disk('local')->get($path))->toBe('%PDF-1.4 VALID-SK-1')
+        ->and($usulan->fresh()->nomor_sk)->toBe('SK-VALID-01')
+        ->and((string) $usulan->fresh()->state)->toBe('SELESAI_SK_TERBIT');
+});
+
+it('melepas reservasi nomor surat tanpa bocor confirmed jika usulan ditolak saat render PDF tandaTanganKetua', function () {
+    Storage::fake('local');
+
+    [$baseService, $usulan] = prepareVerifiedKasubbagUsulan();
+    $baseService->verifikasiSekretaris($usulan, makePegawaiKp(), true, 'OK');
+    $ketua = makePegawaiKp();
+
+    Pdf::swap(new class($usulan) extends FakePdfBuilder
+    {
+        public function __construct(private readonly UsulanKenaikanPangkat $targetUsulan) {}
+
+        public function save(string $path): static
+        {
+            parent::save($path);
+            $dir = dirname($path);
+            if (! is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            file_put_contents($path, '%PDF-1.4 fake');
+
+            // Simulasikan state usulan berubah menjadi DITOLAK saat Browsershot sedang merender PDF di luar transaksi
+            UsulanKenaikanPangkat::query()
+                ->whereKey($this->targetUsulan->id)
+                ->update([
+                    'state' => 'DITOLAK',
+                    'catatan_penolakan' => 'Ditolak bersamaan saat render',
+                ]);
+
+            return $this;
+        }
+    });
+
+    $realService = new UsulanKenaikanPangkatService(
+        app(ChecklistBerkasService::class),
+        app(GenerateSuratPengantarPdf::class),
+        Mockery::mock(SikepAdapter::class),
+    );
+
+    expect(fn () => $realService->tandaTanganKetua($usulan->fresh(), $ketua))
+        ->toThrow(TransitionNotFound::class);
+
+    expect((string) $usulan->fresh()->state)->toBe('DITOLAK')
+        ->and(UsulanKpPdf::query()->where('usulan_kenaikan_pangkat_id', $usulan->id)->count())->toBe(0)
+        ->and(Storage::disk('local')->exists("usulan-kp/surat-pengantar/{$usulan->id}.pdf"))->toBeFalse()
+        ->and(DB::table('nomor_surat_reservations')->where('status', 'confirmed')->count())->toBe(0)
+        ->and(DB::table('nomor_surat_reservations')->where('status', 'released')->count())->toBe(1);
+});
+
+it('menolak submit pada snapshot stale setelah usulan dibatalkan dan menjaga state tetap DIBATALKAN', function () {
+    $actor = makePegawaiKp();
+    $service = makeKpService();
+    $usulan = $service->createDraft(makeUsulanKpData($actor), $actor);
+    $checklist = makeCompleteChecklist($usulan, $actor);
+
+    $staleDraft = UsulanKenaikanPangkat::query()->findOrFail($usulan->id);
+
+    $service->batalkan($usulan, $actor, 'Dibatalkan lebih dulu');
+
+    expect(fn () => $service->submit($staleDraft, $actor, $checklist))
+        ->toThrow(TransitionNotFound::class);
+
+    expect((string) $usulan->fresh()->state)->toBe('DIBATALKAN');
+});
+
+it('membaca ulang checklist dari DB di dalam lock submit untuk mencegah TOCTOU', function () {
+    $actor = makePegawaiKp();
+    $service = makeKpService();
+    $usulan = $service->createDraft(makeUsulanKpData($actor), $actor);
+    $staleCompleteChecklist = makeCompleteChecklist($usulan, $actor);
+
+    // Simulasikan item checklist berubah menjadi belum lengkap sebelum submit mengambil lock transaksi
+    $staleCompleteChecklist->items()->update(['status' => BerkasChecklistSubmissionItem::STATUS_BELUM_ADA]);
+
+    expect(fn () => $service->submit($usulan, $actor, $staleCompleteChecklist))
+        ->toThrow(BerkasBelumLengkapException::class);
+
+    expect((string) $usulan->fresh()->state)->toBe('DRAFT');
+});
+
+it('menolak verifikasiKasubbag pada snapshot stale setelah dibatalkan atau ditolak', function () {
+    [$service, $usulan] = prepareSubmittedUsulan();
+    $kasubbag = makePegawaiKp();
+
+    $staleSubmitted = UsulanKenaikanPangkat::query()->findOrFail($usulan->id);
+    $service->batalkan($usulan, $kasubbag, 'Batal sebelum verifikasi kasubbag');
+
+    expect(fn () => $service->verifikasiKasubbag($staleSubmitted, $kasubbag, true, 'Setuju terlambat'))
+        ->toThrow(TransitionNotFound::class);
+
+    expect((string) $usulan->fresh()->state)->toBe('DIBATALKAN');
+});
+
+it('menolak verifikasiSekretaris pada snapshot stale setelah ditolak', function () {
+    [$service, $usulan] = prepareVerifiedKasubbagUsulan();
+    $sekretaris = makePegawaiKp();
+
+    $staleVerified = UsulanKenaikanPangkat::query()->findOrFail($usulan->id);
+    $service->tolak($usulan, $sekretaris, 'Ditolak lebih dulu');
+
+    expect(fn () => $service->verifikasiSekretaris($staleVerified, $sekretaris, true, 'Setuju terlambat'))
+        ->toThrow(TransitionNotFound::class);
+
+    expect((string) $usulan->fresh()->state)->toBe('DITOLAK');
+});
+
+it('menolak kirimBiro pada snapshot stale dan tidak mengirim dua kali ke SIKEP', function () {
+    [, $usulan] = prepareVerifiedSekretarisUsulanWithPdf();
+    $ketua = makePegawaiKp();
+    $biroActor = makePegawaiKp();
+
+    $pdfAction = Mockery::mock(GenerateSuratPengantarPdf::class);
+    $pdfAction->shouldReceive('handle')->andReturnUsing(
+        fn (UsulanKenaikanPangkat $signedUsulan, Pegawai $pejabat): UsulanKpPdf => UsulanKpPdf::query()->create([
+            'usulan_kenaikan_pangkat_id' => $signedUsulan->id,
+            'jenis_pdf' => 'surat_pengantar',
+            'nomor_surat' => 'KP/002',
+            'file_path' => 'usulan-kp/surat-pengantar/'.$signedUsulan->id.'.pdf',
+            'generated_by' => $pejabat->id,
+            'generated_at' => now(),
+        ])
+    );
+
+    $adapter = Mockery::mock(SikepAdapter::class);
+    $adapter->shouldReceive('pushUsulan')->once()->andReturn(['external_id' => 'SIKEP-ONCE']);
+    $adapter->shouldReceive('isConfigured')->byDefault()->andReturn(true);
+
+    $service = makeKpService($pdfAction, $adapter);
+    $service->tandaTanganKetua($usulan->fresh(), $ketua);
+
+    $snapshotPertama = UsulanKenaikanPangkat::query()->findOrFail($usulan->id);
+    $snapshotKedua = UsulanKenaikanPangkat::query()->findOrFail($usulan->id);
+
+    $service->kirimBiro($snapshotPertama, $biroActor, 'Kirim pertama');
+
+    expect(fn () => $service->kirimBiro($snapshotKedua, $biroActor, 'Kirim duplikat'))
+        ->toThrow(TransitionNotFound::class);
+
+    expect((string) $usulan->fresh()->state)->toBe('MENUNGGU_SK')
+        ->and($usulan->approverHistory()->where('action', 'kirim_biro')->count())->toBe(1);
+});
+
+it('createDraft membungkus pengecekan eligible dan duplikasi di dalam transaksi serta rollback penuh jika attachChecklist gagal', function () {
+    $actor = makePegawaiKp();
+    $data = makeUsulanKpData($actor);
+    $observedTransactionLevel = 0;
+
+    DB::listen(function ($query) use (&$observedTransactionLevel): void {
+        if (str_contains(strtolower($query->sql), 'from "pegawai"') || str_contains(strtolower($query->sql), 'from `pegawai`')) {
+            $observedTransactionLevel = max($observedTransactionLevel, DB::transactionLevel());
+        }
+    });
+
+    // Hapus template aktif agar attachChecklist gagal setelah pengecekan duplikat & insert awal
+    BerkasChecklistTemplate::query()->delete();
+
+    expect(fn () => makeKpService()->createDraft($data, $actor))
+        ->toThrow(ModelNotFoundException::class);
+
+    expect($observedTransactionLevel)->toBeGreaterThanOrEqual(1)
+        ->and(UsulanKenaikanPangkat::query()->where('pegawai_id', $actor->id)->count())->toBe(0);
+});
+
+it('update mengunci baris usulan dalam transaksi dan menolak periode yang bertabrakan dengan usulan aktif lain', function () {
+    $actor = makePegawaiKp();
+    $service = makeKpService();
+
+    $usulanApril = $service->createDraft(makeUsulanKpData($actor, [
+        'periode_usul_bulan' => 4,
+        'periode_usul_tahun' => 2026,
+    ]), $actor);
+
+    $usulanOktober = $service->createDraft(makeUsulanKpData($actor, [
+        'periode_usul_bulan' => 10,
+        'periode_usul_tahun' => 2026,
+    ]), $actor);
+
+    expect(fn () => $service->update($usulanOktober, [
+        'periode_usul_bulan' => 4,
+        'periode_usul_tahun' => 2026,
+        'catatan_pengusul' => 'Tabrakan periode',
+    ]))->toThrow(DuplicateUsulanException::class);
+
+    expect((int) $usulanOktober->fresh()->periode_usul_bulan)->toBe(10)
+        ->and($usulanOktober->fresh()->catatan_pengusul)->toBe('Usulan reguler')
+        ->and($usulanApril->fresh()->periode_usul_bulan)->toBe(4);
+});
+
+it('update menolak usulan yang sudah berstatus DIAJUKAN di dalam lock transaksi tanpa memutasi data', function () {
+    [$service, $usulan] = prepareSubmittedUsulan();
+
+    $catatanAwal = $usulan->catatan_pengusul;
+    $pangkatTujuanAwal = $usulan->ref_pangkat_tujuan_id;
+    $pangkatTujuanBaru = RefPangkat::factory()->create();
+
+    expect(fn () => $service->update($usulan, [
+        'ref_pangkat_tujuan_id' => $pangkatTujuanBaru->id,
+        'catatan_pengusul' => 'Mutasi ilegal setelah submit',
+    ]))->toThrow(TransitionNotFound::class);
+
+    expect((string) $usulan->fresh()->state)->toBe('DIAJUKAN')
+        ->and($usulan->fresh()->catatan_pengusul)->toBe($catatanAwal)
+        ->and($usulan->fresh()->ref_pangkat_tujuan_id)->toBe($pangkatTujuanAwal);
+});

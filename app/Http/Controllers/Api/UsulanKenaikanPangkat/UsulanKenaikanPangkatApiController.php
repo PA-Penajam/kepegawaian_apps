@@ -19,12 +19,17 @@ class UsulanKenaikanPangkatApiController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        $state = $this->scalarString($request, 'state');
+        $pegawaiId = $this->scalarString($request, 'pegawai_id');
+        $bulan = $this->scalarInt($request, 'periode_usul_bulan');
+        $tahun = $this->scalarInt($request, 'periode_usul_tahun');
+
         $query = UsulanKenaikanPangkat::query()
             ->with(['pegawai', 'pangkatAsal', 'pangkatTujuan'])
-            ->when($request->input('state'), fn ($query, string $state) => $query->where('state', $state))
-            ->when($request->input('pegawai_id'), fn ($query, string $pegawaiId) => $query->where('pegawai_id', $pegawaiId))
-            ->when($request->input('periode_usul_bulan'), fn ($query, string $bulan) => $query->where('periode_usul_bulan', (int) $bulan))
-            ->when($request->input('periode_usul_tahun'), fn ($query, string $tahun) => $query->where('periode_usul_tahun', (int) $tahun))
+            ->when($state !== null, fn ($query) => $query->where('state', $state))
+            ->when($pegawaiId !== null, fn ($query) => $query->where('pegawai_id', $pegawaiId))
+            ->when($bulan !== null, fn ($query) => $query->where('periode_usul_bulan', $bulan))
+            ->when($tahun !== null, fn ($query) => $query->where('periode_usul_tahun', $tahun))
             ->latest('created_at');
 
         return UsulanKenaikanPangkatResource::collection($query->paginate(15));
@@ -53,10 +58,14 @@ class UsulanKenaikanPangkatApiController extends Controller
      */
     public function stats(Request $request): JsonResponse
     {
+        $state = $this->scalarString($request, 'state');
+        $bulan = $this->scalarInt($request, 'periode_usul_bulan');
+        $tahun = $this->scalarInt($request, 'periode_usul_tahun');
+
         $query = UsulanKenaikanPangkat::query()
-            ->when($request->input('state'), fn ($query, string $state) => $query->where('state', $state))
-            ->when($request->input('periode_usul_bulan'), fn ($query, string $bulan) => $query->where('periode_usul_bulan', (int) $bulan))
-            ->when($request->input('periode_usul_tahun'), fn ($query, string $tahun) => $query->where('periode_usul_tahun', (int) $tahun));
+            ->when($state !== null, fn ($query) => $query->where('state', $state))
+            ->when($bulan !== null, fn ($query) => $query->where('periode_usul_bulan', $bulan))
+            ->when($tahun !== null, fn ($query) => $query->where('periode_usul_tahun', $tahun));
 
         $perState = (clone $query)
             ->selectRaw('state, count(*) as aggregate')
@@ -77,8 +86,40 @@ class UsulanKenaikanPangkatApiController extends Controller
     private function periodeFromRequest(Request $request): array
     {
         return [
-            'bulan' => $request->filled('periode_usul_bulan') ? (int) $request->input('periode_usul_bulan') : null,
-            'tahun' => $request->filled('periode_usul_tahun') ? (int) $request->input('periode_usul_tahun') : null,
+            'bulan' => $this->scalarInt($request, 'periode_usul_bulan'),
+            'tahun' => $this->scalarInt($request, 'periode_usul_tahun'),
         ];
+    }
+
+    /**
+     * Mengambil parameter string skalar dengan aman untuk mencegah error input array.
+     */
+    private function scalarString(Request $request, string $key): ?string
+    {
+        $value = $request->input($key);
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed !== '' ? $trimmed : null;
+    }
+
+    /**
+     * Mengambil parameter integer skalar dengan aman untuk mencegah error input array.
+     */
+    private function scalarInt(Request $request, string $key): ?int
+    {
+        $value = $request->input($key);
+
+        if (! is_scalar($value) || is_bool($value)) {
+            return null;
+        }
+
+        $raw = trim((string) $value);
+
+        return $raw !== '' && is_numeric($raw) ? (int) $raw : null;
     }
 }

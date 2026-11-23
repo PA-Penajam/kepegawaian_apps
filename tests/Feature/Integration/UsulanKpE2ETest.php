@@ -10,9 +10,9 @@ use App\Models\RiwayatPangkat;
 use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
 use App\Models\UsulanKenaikanPangkat\UsulanKpPdf;
 use App\Services\BerkasChecklist\ChecklistBerkasService;
+use App\Services\RiwayatPangkatService;
 use App\Services\UsulanKenaikanPangkat\UsulanKenaikanPangkatService;
 use Database\Seeders\ChecklistKenaikanPangkatSeeder;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
@@ -97,17 +97,31 @@ it('UsulanKpE2E does not dispatch SK event when transition fails', function (): 
 
 it('UsulanKpE2E enforces one active riwayat pangkat per pegawai', function (): void {
     $pegawai = Pegawai::factory()->create();
+    $pangkatAwal = RefPangkat::factory()->create();
+    $pangkatBaru = RefPangkat::factory()->create();
 
-    RiwayatPangkat::factory()->create([
+    $riwayatLama = RiwayatPangkat::factory()->create([
         'pegawai_id' => $pegawai->id,
+        'ref_pangkat_id' => $pangkatAwal->id,
         'is_aktif' => true,
     ]);
 
-    expect(fn () => RiwayatPangkat::factory()->create([
-        'pegawai_id' => $pegawai->id,
+    $riwayatBaru = app(RiwayatPangkatService::class)->store($pegawai, [
+        'ref_pangkat_id' => $pangkatBaru->id,
+        'no_sk' => 'SK-KP-INVARIANT-001',
+        'tanggal_sk' => '2026-05-12',
+        'tmt' => '2026-05-12',
+        'pejabat_penetap' => 'Biro Kepegawaian Mahkamah Agung RI',
+        'masa_kerja_tahun' => 8,
+        'masa_kerja_bulan' => 2,
         'is_aktif' => true,
-    ]))->toThrow(QueryException::class);
-})->skip('Invariant enforced at service layer (SinkronkanRiwayatPangkat listener), not DB partial unique index');
+    ]);
+
+    expect($riwayatLama->refresh()->is_aktif)->toBeFalse()
+        ->and($riwayatBaru->is_aktif)->toBeTrue()
+        ->and(RiwayatPangkat::query()->aktif()->where('pegawai_id', $pegawai->id)->count())->toBe(1)
+        ->and($pegawai->refresh()->ref_pangkat_id)->toBe($pangkatBaru->id);
+});
 
 function completeRequiredChecklist(UsulanKenaikanPangkat $usulan, Pegawai $validator): void
 {
