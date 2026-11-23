@@ -3,7 +3,7 @@
 namespace App\Services\Cuti\Rules;
 
 use App\Models\Cuti\CutiPengajuan;
-use Carbon\Carbon;
+use Carbon\CarbonInterface;
 
 trait HasMasaKerjaValidation
 {
@@ -15,15 +15,25 @@ trait HasMasaKerjaValidation
      */
     private function validateMasaKerjaMinimum(CutiPengajuan $pengajuan, int $minTahun): void
     {
-        $tmtCpns = $pengajuan->pegawai->tmt_cpns;
+        $pengajuan->loadMissing('pegawai');
+        $tmtCpns = $pengajuan->pegawai?->tmt_cpns;
 
-        if (! $tmtCpns instanceof Carbon) {
+        if (! $tmtCpns instanceof CarbonInterface) {
             throw new \DomainException(
                 'Data TMT CPNS pegawai tidak ditemukan. Silakan hubungi petugas kepegawaian.'
             );
         }
 
-        $masaKerja = now()->diffInYears($tmtCpns);
+        $referensiTanggal = ($pengajuan->tanggal_mulai ?? now())->startOfDay();
+        $tmtStart = $tmtCpns->startOfDay();
+
+        if ($tmtStart->isFuture() || $tmtStart->gt($referensiTanggal)) {
+            throw new \DomainException(
+                'Data TMT CPNS pegawai tidak valid (berada di masa depan).'
+            );
+        }
+
+        $masaKerja = (int) floor($tmtStart->diffInYears($referensiTanggal, true));
 
         if ($masaKerja < $minTahun) {
             throw new \DomainException(

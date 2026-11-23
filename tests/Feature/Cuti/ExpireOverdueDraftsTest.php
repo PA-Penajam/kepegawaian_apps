@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Cuti\CutiEvent;
 use App\Models\Cuti\CutiPengajuan;
+use App\Models\Cuti\CutiPengajuanStateHistory;
 use App\Models\Pegawai;
 use App\States\Cuti\DibatalkanState;
 use Database\Seeders\CutiJenisMasterSeeder;
@@ -10,7 +12,7 @@ beforeEach(function () {
     $this->seed(CutiJenisMasterSeeder::class);
 });
 
-test('expire transitions old drafts to dibatalkan', function () {
+test('expire transitions old drafts to dibatalkan dan mencatat state history serta outbox event', function () {
     $pegawai = Pegawai::factory()->create();
 
     // Draft lama (8 hari lalu)
@@ -24,8 +26,24 @@ test('expire transitions old drafts to dibatalkan', function () {
         ->assertSuccessful();
 
     $oldDraft->refresh();
-    expect($oldDraft->state->name())->toBe('DIBATALKAN');
-    expect($oldDraft->cancelled_at)->not->toBeNull();
+    expect($oldDraft->state->name())->toBe('DIBATALKAN')
+        ->and($oldDraft->cancelled_at)->not->toBeNull();
+
+    $history = CutiPengajuanStateHistory::where('pengajuan_id', $oldDraft->id)->first();
+    expect($history)->not->toBeNull()
+        ->and($history->state_from)->toBe('DRAFT')
+        ->and($history->state_to)->toBe('DIBATALKAN')
+        ->and($history->aktor_pegawai_nip)->toBe($pegawai->nip);
+
+    $event = CutiEvent::where('aggregate_id', $oldDraft->id)
+        ->where('event_type', 'cuti.dibatalkan')
+        ->first();
+    expect($event)->not->toBeNull();
+
+    // Jalankan ulang bersifat idempoten dan tidak menggandakan history/event
+    $this->artisan('cuti:expire-drafts')->assertSuccessful();
+    expect(CutiPengajuanStateHistory::where('pengajuan_id', $oldDraft->id)->count())->toBe(1)
+        ->and(CutiEvent::where('aggregate_id', $oldDraft->id)->count())->toBe(1);
 });
 
 test('expire does not touch recent drafts', function () {

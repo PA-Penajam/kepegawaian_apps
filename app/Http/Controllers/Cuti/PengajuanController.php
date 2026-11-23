@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Cuti;
 use App\Exceptions\Cuti\AlokasiTidakAdaException;
 use App\Exceptions\Cuti\CrossYearLeaveException;
 use App\Exceptions\Cuti\OverlapPengajuanException;
+use App\Exceptions\Cuti\SaldoTidakCukupException;
+use App\Exceptions\Cuti\SubmitTerlambatException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cuti\SubmitPengajuanRequest;
 use App\Models\Cuti\CutiJenisMaster;
 use App\Models\Cuti\CutiPengajuan;
-use App\Models\Cuti\CutiPengajuanLampiran;
 use App\Services\Cuti\PengajuanCutiService;
 use App\Services\Cuti\SaldoLedgerService;
 use Illuminate\Http\RedirectResponse;
@@ -37,14 +38,18 @@ class PengajuanController extends Controller
             ->orderBy('kode')
             ->get(['kode', 'nama', 'saldo_driven', 'butuh_lampiran']);
 
-        // Ambil saldo per jenis cuti yang saldo_driven
+        // Ambil saldo seluruh jenis cuti saldo_driven dalam satu query agregat (anti N+1)
+        $saldoDrivenJenis = $jenisCutiList->where('saldo_driven', true);
+        $buckets = $saldoDrivenJenis->map(fn (CutiJenisMaster $jenis): array => [
+            'nip' => $user->nip,
+            'jenis' => $jenis->kode,
+            'tahun' => $tahun,
+        ])->values()->all();
+        $saldos = $this->saldoService->saldoBuckets($buckets);
+
         $saldoData = [];
-        foreach ($jenisCutiList->where('saldo_driven', true) as $jenis) {
-            $saldoData[$jenis->kode] = $this->saldoService->saldoBucket(
-                $user->nip,
-                $jenis->kode,
-                $tahun
-            );
+        foreach ($saldoDrivenJenis as $jenis) {
+            $saldoData[$jenis->kode] = $saldos["{$user->nip}|{$jenis->kode}|{$tahun}"] ?? 0;
         }
 
         return Inertia::render('cuti/pengajuan/create', [
@@ -61,6 +66,11 @@ class PengajuanController extends Controller
         try {
             $user = $request->user();
 
+            $lampiranFiles = $request->file('lampiran', []);
+            if (! is_array($lampiranFiles)) {
+                $lampiranFiles = [$lampiranFiles];
+            }
+
             $pengajuan = $this->pengajuanService->submit([
                 'pegawai_nip' => $user->nip,
                 'jenis_cuti_kode' => $request->validated('jenis_cuti_kode'),
@@ -69,38 +79,23 @@ class PengajuanController extends Controller
                 'alasan' => $request->validated('alasan'),
                 'alamat_selama_cuti' => $request->validated('alamat_selama_cuti'),
                 'nomor_telp_selama_cuti' => $request->validated('nomor_telp_selama_cuti'),
-            ]);
-
-            // Simpan lampiran jika ada
-            if ($request->hasFile('lampiran')) {
-                foreach ($request->file('lampiran') as $file) {
-                    $path = $file->store("cuti/lampiran/{$pengajuan->id}", 'local');
-
-                    CutiPengajuanLampiran::create([
-                        'pengajuan_id' => $pengajuan->id,
-                        'jenis_lampiran' => 'pendukung',
-                        'nama_file_asli' => $file->getClientOriginalName(),
-                        'path_file' => $path,
-                        'mime_type' => $file->getMimeType(),
-                        'size_bytes' => $file->getSize(),
-                        'checksum_sha256' => hash_file('sha256', $file->getRealPath()),
-                        'uploaded_by_nip' => $user->nip,
-                    ]);
-                }
-            }
+            ], $lampiranFiles);
 
             return to_route('cuti.pengajuan.show', $pengajuan->id)
                 ->with('success', 'Pengajuan cuti berhasil diajukan.');
-        } catch (CrossYearLeaveException $e) {
-            return back()->with('error', $e->getMessage());
-        } catch (AlokasiTidakAdaException $e) {
-            return back()->with('error', $e->getMessage());
-        } catch (OverlapPengajuanException $e) {
-            return back()->with('error', $e->getMessage());
+        } catch (
+            CrossYearLeaveException
+            |AlokasiTidakAdaException
+            |OverlapPengajuanException
+            |SubmitTerlambatException
+            |SaldoTidakCukupException
+            |\DomainException $e
+        ) {
+            return back()->withInput()->with('error', $e->getMessage());
         } catch (\Exception $e) {
             report($e);
 
-            return back()->with('error', 'Terjadi kesalahan saat menyimpan pengajuan cuti. Silakan coba lagi.');
+            return back()->withInput()->with('error', 'Terjadi kesalahan saat menyimpan pengajuan cuti. Silakan coba lagi.');
         }
     }
 
@@ -114,7 +109,7 @@ class PengajuanController extends Controller
             'jenisCuti',
             'lampiran',
             'approvalSteps',
-            'stateHistory',
+            'stateHistory.aktor:id,nip,nama_lengkap',
             'approverHistory',
             'atasanLangsungCurrent:id,nip,nama_lengkap',
             'pejabatBerwenangCurrent:id,nip,nama_lengkap',

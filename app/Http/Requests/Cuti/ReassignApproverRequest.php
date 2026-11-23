@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Cuti;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ReassignApproverRequest extends FormRequest
 {
@@ -18,7 +19,7 @@ class ReassignApproverRequest extends FormRequest
     {
         return [
             'role' => ['required', 'in:petugas_kepegawaian,atasan_langsung,pejabat_berwenang'],
-            'new_nip' => ['required', 'string', 'exists:pegawai,nip'],
+            'new_nip' => ['required', 'string', Rule::exists('pegawai', 'nip')->whereNull('deleted_at')],
             'alasan' => ['required', 'string', 'min:10', 'max:1000'],
         ];
     }

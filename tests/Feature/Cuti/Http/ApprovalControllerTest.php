@@ -103,3 +103,63 @@ test('guests cannot access approval routes', function () {
     post(route('cuti.pengajuan.reject', 'fake-id'))
         ->assertRedirectContains('login');
 });
+
+test('approval endpoints mengembalikan 403 untuk self-approval atau NIP approver salah', function () {
+    $pemohon = Pegawai::factory()->admin()->create();
+    $aktorSalah = Pegawai::factory()->admin()->create();
+    $aktorSah = Pegawai::factory()->admin()->create();
+
+    // Self-approval verify
+    $pVerifySelf = buatPengajuanUntukApproval('DIAJUKAN', $pemohon, $pemohon);
+    actingAs($pemohon);
+    post(route('cuti.pengajuan.verify', $pVerifySelf->id))->assertForbidden();
+
+    // Salah NIP verify
+    $pVerifyWrong = buatPengajuanUntukApproval('DIAJUKAN', $aktorSah, $pemohon);
+    actingAs($aktorSalah);
+    post(route('cuti.pengajuan.verify', $pVerifyWrong->id))->assertForbidden();
+
+    // Salah NIP approve-atasan
+    $pAtasanWrong = buatPengajuanUntukApproval('DIVERIFIKASI', $aktorSah, $pemohon);
+    post(route('cuti.pengajuan.approve-atasan', $pAtasanWrong->id))->assertForbidden();
+
+    // Salah NIP approve-pejabat
+    $pPejabatWrong = buatPengajuanUntukApproval('DISETUJUI_ATASAN', $aktorSah, $pemohon);
+    post(route('cuti.pengajuan.approve-pejabat', $pPejabatWrong->id))->assertForbidden();
+
+    // Salah NIP reject
+    post(route('cuti.pengajuan.reject', $pPejabatWrong->id), [
+        'alasan' => 'Alasan penolakan oleh bukan approver yang sah',
+    ])->assertForbidden();
+});
+
+test('reject menentukan role dari state pengajuan bukan prioritas permission', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    $pemohon = Pegawai::factory()->create();
+
+    // Pengajuan dalam state DIVERIFIKASI namun admin memiliki semua permission (termasuk approve-pejabat)
+    $pengajuan = buatPengajuanUntukApproval('DIVERIFIKASI', $admin, $pemohon);
+
+    actingAs($admin);
+    post(route('cuti.pengajuan.reject', $pengajuan->id), [
+        'alasan' => 'Penolakan oleh atasan langsung pada state DIVERIFIKASI',
+    ])->assertRedirect(route('cuti.pengajuan.show', $pengajuan->id));
+
+    expect($pengajuan->fresh()->state->name())->toBe('DITOLAK_ATASAN');
+});
+
+test('cancel meneruskan alasan ke state history catatan', function () {
+    $user = Pegawai::factory()->admin()->create();
+    $pengajuan = buatPengajuanUntukApproval('DRAFT', $user, $user);
+
+    actingAs($user);
+    post(route('cuti.pengajuan.cancel', $pengajuan->id), [
+        'alasan' => 'Jadwal berubah sehingga cuti dibatalkan',
+    ])->assertRedirect(route('cuti.pengajuan.show', $pengajuan->id));
+
+    $this->assertDatabaseHas('cuti_pengajuan_state_history', [
+        'pengajuan_id' => $pengajuan->id,
+        'state_to' => 'DIBATALKAN',
+        'catatan' => 'Jadwal berubah sehingga cuti dibatalkan',
+    ]);
+});

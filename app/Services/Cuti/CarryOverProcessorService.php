@@ -2,6 +2,7 @@
 
 namespace App\Services\Cuti;
 
+use App\Models\Cuti\CutiAlokasiTahunan;
 use App\Models\Cuti\CutiSaldoLedger;
 use App\Models\Pegawai;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,9 @@ class CarryOverProcessorService
         $tahunN = (int) now()->year;
         $nip = $pegawai->nip;
 
-        DB::transaction(function () use ($nip, $tahunN) {
+        DB::transaction(function () use ($nip, $tahunN): void {
+            Pegawai::where('nip', $nip)->lockForUpdate()->first();
+
             // Hanguskan sisa bucket N-2
             $this->expireBucket($nip, $tahunN - 2);
 
@@ -38,18 +41,25 @@ class CarryOverProcessorService
      */
     private function expireBucket(string $nip, int $tahun): void
     {
+        CutiAlokasiTahunan::where('pegawai_nip', $nip)
+            ->where('jenis_cuti_kode', 'CT')
+            ->where('tahun_hak', $tahun)
+            ->lockForUpdate()
+            ->first();
+
         $saldo = $this->saldoService->saldoBucket($nip, 'CT', $tahun);
 
         if ($saldo <= 0) {
             return;
         }
 
-        // Cek idempotency: sudah ada expire row?
+        // Cek idempotensi: hanya periksa baris hangus N-2 agar tidak bentrok dengan baris Cap carry-over
         $sudahExpire = CutiSaldoLedger::where('pegawai_nip', $nip)
             ->where('jenis_cuti_kode', 'CT')
             ->where('tahun_hak', $tahun)
             ->where('jenis_transaksi', 'expire')
             ->whereNull('pengajuan_id')
+            ->where('keterangan', 'like', 'Hangus carry-over%')
             ->exists();
 
         if ($sudahExpire) {
@@ -72,6 +82,12 @@ class CarryOverProcessorService
      */
     private function capBucket(string $nip, int $tahun, int $maxHari): void
     {
+        CutiAlokasiTahunan::where('pegawai_nip', $nip)
+            ->where('jenis_cuti_kode', 'CT')
+            ->where('tahun_hak', $tahun)
+            ->lockForUpdate()
+            ->first();
+
         $saldo = $this->saldoService->saldoBucket($nip, 'CT', $tahun);
 
         if ($saldo <= $maxHari) {

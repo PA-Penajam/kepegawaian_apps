@@ -2,7 +2,7 @@
 
 namespace App\Models\Cuti;
 
-use App\Models\Concerns\HasActivityLogOptions;
+use App\Models\Concerns\HasCutiActivityLogOptions;
 use App\Models\Model;
 use App\Models\Pegawai;
 use App\States\Cuti\PengajuanState;
@@ -16,8 +16,8 @@ use Spatie\ModelStates\HasStates;
 
 class CutiPengajuan extends Model
 {
-    use HasActivityLogOptions, HasFactory, HasStates, HasUlids, LogsActivity {
-        HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
+    use HasCutiActivityLogOptions, HasFactory, HasStates, HasUlids, LogsActivity {
+        HasCutiActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
     }
 
     protected $table = 'cuti_pengajuan';

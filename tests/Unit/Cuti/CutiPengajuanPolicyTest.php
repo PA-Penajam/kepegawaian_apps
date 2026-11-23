@@ -18,8 +18,8 @@ uses(TestCase::class, RefreshDatabase::class);
 function grantCutiPolicyPermission(Pegawai $pegawai, string $slug): void
 {
     $app = IamApplication::firstOrCreate(
-        ['slug' => 'test-cuti-policy'],
-        ['nama' => 'Test Cuti Policy App', 'url' => 'https://test.local']
+        ['slug' => (string) config('iam.app_slug', 'kepegawaian')],
+        ['nama' => 'Kepegawaian', 'url' => (string) config('app.url')]
     );
 
     $role = IamRole::firstOrCreate(
@@ -92,17 +92,38 @@ test('viewAll mengizinkan admin melihat semua pengajuan', function () {
     expect($this->policy->viewAll($admin))->toBeTrue();
 });
 
-test('verify mengizinkan petugas kepegawaian memverifikasi', function () {
+test('verify mengizinkan petugas kepegawaian yang ditunjuk memverifikasi', function () {
     $petugas = Pegawai::factory()->create();
     $pegawai = Pegawai::factory()->create();
     grantCutiPolicyPermission($petugas, 'cuti.pengajuan.verify');
 
     $pengajuan = CutiPengajuan::factory()->create([
         'pegawai_nip' => $pegawai->nip,
+        'petugas_kepegawaian_current_nip' => $petugas->nip,
         'jenis_cuti_kode' => 'CT',
     ]);
 
     expect($this->policy->verify($petugas, $pengajuan))->toBeTrue();
+});
+
+test('verify menolak jika bukan petugas ditunjuk atau pengajuan milik sendiri', function () {
+    $petugas = Pegawai::factory()->create();
+    $other = Pegawai::factory()->create();
+    grantCutiPolicyPermission($petugas, 'cuti.pengajuan.verify');
+
+    $pengajuanSalahNip = CutiPengajuan::factory()->create([
+        'pegawai_nip' => $other->nip,
+        'petugas_kepegawaian_current_nip' => $other->nip,
+        'jenis_cuti_kode' => 'CT',
+    ]);
+    $pengajuanSendiri = CutiPengajuan::factory()->create([
+        'pegawai_nip' => $petugas->nip,
+        'petugas_kepegawaian_current_nip' => $petugas->nip,
+        'jenis_cuti_kode' => 'CT',
+    ]);
+
+    expect($this->policy->verify($petugas, $pengajuanSalahNip))->toBeFalse()
+        ->and($this->policy->verify($petugas, $pengajuanSendiri))->toBeFalse();
 });
 
 test('approveLangsung mengizinkan jika NIP cocok dan punya permission', function () {
@@ -134,16 +155,40 @@ test('approveLangsung menolak jika NIP tidak cocok', function () {
     expect($this->policy->approveLangsung($atasan, $pengajuan))->toBeFalse();
 });
 
-test('approvePejabat mengizinkan pejabat berwenang', function () {
+test('approvePejabat mengizinkan pejabat berwenang yang ditunjuk', function () {
     $pejabat = Pegawai::factory()->create();
     grantCutiPolicyPermission($pejabat, 'cuti.pengajuan.approve-pejabat');
 
     $pengajuan = CutiPengajuan::factory()->create([
         'pegawai_nip' => Pegawai::factory()->create()->nip,
+        'pejabat_berwenang_current_nip' => $pejabat->nip,
         'jenis_cuti_kode' => 'CT',
     ]);
 
     expect($this->policy->approvePejabat($pejabat, $pengajuan))->toBeTrue();
+});
+
+test('approvePejabat dan approveLangsung menolak jika bukan NIP ditunjuk atau pengajuan milik sendiri', function () {
+    $aktor = Pegawai::factory()->create();
+    $other = Pegawai::factory()->create();
+    grantCutiPolicyPermission($aktor, 'cuti.pengajuan.approve-pejabat');
+    grantCutiPolicyPermission($aktor, 'cuti.pengajuan.approve-langsung');
+
+    $pengajuanSalahPejabat = CutiPengajuan::factory()->create([
+        'pegawai_nip' => $other->nip,
+        'pejabat_berwenang_current_nip' => $other->nip,
+        'jenis_cuti_kode' => 'CT',
+    ]);
+    $pengajuanSendiri = CutiPengajuan::factory()->create([
+        'pegawai_nip' => $aktor->nip,
+        'atasan_langsung_current_nip' => $aktor->nip,
+        'pejabat_berwenang_current_nip' => $aktor->nip,
+        'jenis_cuti_kode' => 'CT',
+    ]);
+
+    expect($this->policy->approvePejabat($aktor, $pengajuanSalahPejabat))->toBeFalse()
+        ->and($this->policy->approvePejabat($aktor, $pengajuanSendiri))->toBeFalse()
+        ->and($this->policy->approveLangsung($aktor, $pengajuanSendiri))->toBeFalse();
 });
 
 test('cancelOwn mengizinkan pegawai membatalkan pengajuan sendiri', function () {

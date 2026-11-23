@@ -3,6 +3,7 @@
 use App\Models\Cuti\CutiPengajuan;
 use App\Models\Pegawai;
 use App\Services\Cuti\SaldoLedgerService;
+use Carbon\Carbon;
 use Database\Seeders\CutiJenisMasterSeeder;
 use Database\Seeders\CutiPermissionSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -10,13 +11,19 @@ use Inertia\Testing\AssertableInertia as Assert;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
+use function Pest\Laravel\postJson;
 
 beforeEach(function () {
     $this->seed(CutiJenisMasterSeeder::class);
     $this->seed(CutiPermissionSeeder::class);
 });
 
+afterEach(function () {
+    Carbon::setTestNow();
+});
+
 test('store creates pengajuan and redirects to show', function () {
+    $this->travelTo('2026-06-01');
     $user = Pegawai::factory()->admin()->create();
 
     // Setup alokasi saldo
@@ -113,4 +120,36 @@ test('guests cannot access pengajuan routes', function () {
 
     post(route('cuti.pengajuan.store'))
         ->assertRedirectContains('login');
+});
+
+test('store mengembalikan 422 bukan 500 ketika tanggal_mulai bukan format tanggal valid', function () {
+    $this->travelTo('2026-06-01');
+    $user = Pegawai::factory()->admin()->create();
+
+    actingAs($user);
+
+    postJson(route('cuti.pengajuan.store'), [
+        'jenis_cuti_kode' => 'CT',
+        'tanggal_mulai' => 'bukan-tanggal',
+        'tanggal_selesai' => '2026-07-10',
+        'alasan' => 'Pengujian input tanggal tidak valid',
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('tanggal_mulai');
+});
+
+test('store mengembalikan 422 bukan 500 ketika jenis_cuti_kode berbentuk array', function () {
+    $this->travelTo('2026-06-01');
+    $user = Pegawai::factory()->admin()->create();
+
+    actingAs($user);
+
+    postJson(route('cuti.pengajuan.store'), [
+        'jenis_cuti_kode' => ['CT'],
+        'tanggal_mulai' => '2026-07-06',
+        'tanggal_selesai' => '2026-07-10',
+        'alasan' => 'Pengujian input array pada jenis cuti',
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('jenis_cuti_kode');
 });

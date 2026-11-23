@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pegawai;
+use App\Support\SqlLike;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,22 +19,29 @@ class AuditController extends Controller
     {
         $query = Activity::query()
             ->where('log_name', 'cuti')
-            ->with('causer:id,nip,nama_lengkap')
+            ->with('causer')
             ->latest();
 
-        if ($request->filled('from')) {
-            $query->whereDate('created_at', '>=', $request->input('from'));
+        $rawFrom = $request->input('from');
+        $from = is_string($rawFrom) && trim($rawFrom) !== '' ? trim($rawFrom) : null;
+
+        $rawTo = $request->input('to');
+        $to = is_string($rawTo) && trim($rawTo) !== '' ? trim($rawTo) : null;
+
+        $rawAktor = $request->input('aktor');
+        $aktor = is_string($rawAktor) && trim($rawAktor) !== '' ? trim($rawAktor) : null;
+
+        if ($from !== null) {
+            $query->whereDate('created_at', '>=', $from);
         }
 
-        if ($request->filled('to')) {
-            $query->whereDate('created_at', '<=', $request->input('to'));
+        if ($to !== null) {
+            $query->whereDate('created_at', '<=', $to);
         }
 
-        if ($request->filled('aktor')) {
-            $search = $request->input('aktor');
-            $query->whereHasMorph('causer', ['App\Models\Pegawai'], function ($q) use ($search) {
-                $q->where('nip', 'like', "%{$search}%")
-                    ->orWhere('nama_lengkap', 'like', "%{$search}%");
+        if ($aktor !== null) {
+            $query->whereHasMorph('causer', [Pegawai::class], function ($q) use ($aktor) {
+                SqlLike::whereContains($q, ['nip', 'nama_lengkap'], $aktor);
             });
         }
 
@@ -46,17 +55,22 @@ class AuditController extends Controller
                 'causer_type' => $activity->causer_type ? class_basename($activity->causer_type) : null,
                 'causer_id' => $activity->causer_id,
                 'causer' => $activity->causer ? [
-                    'nip' => $activity->causer->nip,
-                    'nama' => $activity->causer->nama_lengkap,
+                    'nip' => $activity->causer->nip ?? '',
+                    'nama' => $activity->causer->nama_lengkap ?? $activity->causer->nama ?? '-',
                 ] : null,
-                'properties' => $activity->properties->toArray(),
+                'attribute_changes' => $activity->attribute_changes?->toArray() ?? [],
+                'properties' => $activity->properties?->toArray() ?? [],
                 'created_at' => $activity->created_at->toIso8601String(),
             ];
         });
 
         return Inertia::render('cuti/admin/audit', [
             'activities' => $activities,
-            'filters' => $request->only(['from', 'to', 'aktor']),
+            'filters' => [
+                'from' => $from,
+                'to' => $to,
+                'aktor' => $aktor,
+            ],
         ]);
     }
 }

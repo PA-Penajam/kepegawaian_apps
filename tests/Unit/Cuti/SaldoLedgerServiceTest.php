@@ -7,6 +7,8 @@ use App\Models\Cuti\CutiPengajuan;
 use App\Models\Cuti\CutiSaldoLedger;
 use App\Models\Pegawai;
 use App\Services\Cuti\SaldoLedgerService;
+use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,6 +20,11 @@ beforeEach(function () {
         ['kode' => 'CT'],
         ['nama' => 'Cuti Tahunan', 'saldo_driven' => true, 'aktif' => true]
     );
+});
+
+afterEach(function () {
+    Carbon::setTestNow();
+    CarbonImmutable::setTestNow();
 });
 
 test('saldoBucket mengembalikan sum jumlah_hari dari ledger', function () {
@@ -50,6 +57,7 @@ test('bucketsAktif mengembalikan bucket dengan saldo positif terurut ASC', funct
 });
 
 test('debitPendingFifo single bucket saldo cukup', function () {
+    $this->travelTo('2026-06-01');
     $p = Pegawai::factory()->create();
 
     CutiAlokasiTahunan::create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2026, 'hak_awal' => 12]);
@@ -57,6 +65,8 @@ test('debitPendingFifo single bucket saldo cukup', function () {
     $pengajuan = CutiPengajuan::factory()->create([
         'pegawai_nip' => $p->nip,
         'jenis_cuti_kode' => 'CT',
+        'tanggal_mulai' => '2026-07-06',
+        'tanggal_selesai' => '2026-07-10',
         'jumlah_hari_kerja' => 5,
     ]);
 
@@ -70,13 +80,20 @@ test('debitPendingFifo single bucket saldo cukup', function () {
 });
 
 test('debitPendingFifo split lintas bucket FIFO', function () {
+    $this->travelTo('2026-06-01');
     $p = Pegawai::factory()->create();
 
     CutiAlokasiTahunan::create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2025, 'hak_awal' => 12]);
     CutiAlokasiTahunan::create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2026, 'hak_awal' => 12]);
     CutiSaldoLedger::create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2025, 'jenis_transaksi' => 'kredit', 'jumlah_hari' => 4, 'aktor_pegawai_nip' => $p->nip]);
     CutiSaldoLedger::create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2026, 'jenis_transaksi' => 'kredit', 'jumlah_hari' => 12, 'aktor_pegawai_nip' => $p->nip]);
-    $pengajuan = CutiPengajuan::factory()->create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'jumlah_hari_kerja' => 7]);
+    $pengajuan = CutiPengajuan::factory()->create([
+        'pegawai_nip' => $p->nip,
+        'jenis_cuti_kode' => 'CT',
+        'tanggal_mulai' => '2026-07-06',
+        'tanggal_selesai' => '2026-07-14',
+        'jumlah_hari_kerja' => 7,
+    ]);
 
     $rows = app(SaldoLedgerService::class)->debitPendingFifo($pengajuan);
 
@@ -88,18 +105,32 @@ test('debitPendingFifo split lintas bucket FIFO', function () {
 });
 
 test('debitPendingFifo saldo tidak cukup throws SaldoTidakCukupException', function () {
+    $this->travelTo('2026-06-01');
     $p = Pegawai::factory()->create();
 
     CutiAlokasiTahunan::create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2026, 'hak_awal' => 12]);
     CutiSaldoLedger::create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2026, 'jenis_transaksi' => 'kredit', 'jumlah_hari' => 5, 'aktor_pegawai_nip' => $p->nip]);
-    $pengajuan = CutiPengajuan::factory()->create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'jumlah_hari_kerja' => 10]);
+    $pengajuan = CutiPengajuan::factory()->create([
+        'pegawai_nip' => $p->nip,
+        'jenis_cuti_kode' => 'CT',
+        'tanggal_mulai' => '2026-07-06',
+        'tanggal_selesai' => '2026-07-17',
+        'jumlah_hari_kerja' => 10,
+    ]);
 
     app(SaldoLedgerService::class)->debitPendingFifo($pengajuan);
 })->throws(SaldoTidakCukupException::class);
 
 test('commitConfirmed menulis void dan confirmed per bucket', function () {
+    $this->travelTo('2026-06-01');
     $p = Pegawai::factory()->create();
-    $pengajuan = CutiPengajuan::factory()->create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'jumlah_hari_kerja' => 7]);
+    $pengajuan = CutiPengajuan::factory()->create([
+        'pegawai_nip' => $p->nip,
+        'jenis_cuti_kode' => 'CT',
+        'tanggal_mulai' => '2026-07-06',
+        'tanggal_selesai' => '2026-07-14',
+        'jumlah_hari_kerja' => 7,
+    ]);
 
     // Simulasi 2 row debit_pending dari 2 bucket
     CutiSaldoLedger::create(['pengajuan_id' => $pengajuan->id, 'pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2025, 'jenis_transaksi' => 'debit_pending', 'jumlah_hari' => -4, 'aktor_pegawai_nip' => $p->nip]);
@@ -116,8 +147,15 @@ test('commitConfirmed menulis void dan confirmed per bucket', function () {
 });
 
 test('voidPending menulis void per bucket tanpa confirmed', function () {
+    $this->travelTo('2026-06-01');
     $p = Pegawai::factory()->create();
-    $pengajuan = CutiPengajuan::factory()->create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT']);
+    $pengajuan = CutiPengajuan::factory()->create([
+        'pegawai_nip' => $p->nip,
+        'jenis_cuti_kode' => 'CT',
+        'tanggal_mulai' => '2026-07-06',
+        'tanggal_selesai' => '2026-07-14',
+        'jumlah_hari_kerja' => 7,
+    ]);
 
     CutiSaldoLedger::create(['pengajuan_id' => $pengajuan->id, 'pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2025, 'jenis_transaksi' => 'debit_pending', 'jumlah_hari' => -4, 'aktor_pegawai_nip' => $p->nip]);
     CutiSaldoLedger::create(['pengajuan_id' => $pengajuan->id, 'pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2026, 'jenis_transaksi' => 'debit_pending', 'jumlah_hari' => -3, 'aktor_pegawai_nip' => $p->nip]);
@@ -132,6 +170,7 @@ test('voidPending menulis void per bucket tanpa confirmed', function () {
 });
 
 test('processRefund partial FIFO setelah cuti berjalan', function () {
+    $this->travelTo('2026-06-01');
     $p = Pegawai::factory()->create();
 
     $pengajuan = CutiPengajuan::factory()->create([
@@ -156,6 +195,7 @@ test('processRefund partial FIFO setelah cuti berjalan', function () {
 });
 
 test('processRefund full ketika belum mulai cuti', function () {
+    $this->travelTo('2026-06-01');
     $p = Pegawai::factory()->create();
 
     $pengajuan = CutiPengajuan::factory()->create([
@@ -189,4 +229,36 @@ test('kreditAlokasi idempotent - 2 panggilan hanya 1 row kredit', function () {
 
     $count = CutiSaldoLedger::where('pegawai_nip', $p->nip)->where('jenis_transaksi', 'kredit')->count();
     expect($count)->toBe(1);
+});
+
+test('bucketsAktif dengan maxTahun mengecualikan alokasi tahun depan', function () {
+    $p = Pegawai::factory()->create();
+    $svc = app(SaldoLedgerService::class);
+
+    $svc->kreditAlokasi($p->nip, 'CT', 2025, 4, 'init 2025');
+    $svc->kreditAlokasi($p->nip, 'CT', 2026, 12, 'init 2026');
+    $svc->kreditAlokasi($p->nip, 'CT', 2027, 12, 'init 2027');
+
+    $buckets = $svc->bucketsAktif($p->nip, 'CT', 2026);
+    expect($buckets->pluck('tahun_hak')->all())->toBe([2025, 2026]);
+});
+
+test('penyesuaian menolak nilai nol, jenis non saldo_driven, dan saldo negatif', function () {
+    $p = Pegawai::factory()->create();
+    $svc = app(SaldoLedgerService::class);
+    $svc->kreditAlokasi($p->nip, 'CT', 2026, 5, 'init');
+
+    CutiJenisMaster::firstOrCreate(
+        ['kode' => 'CS_TIER1'],
+        ['nama' => 'Cuti Sakit Tier 1', 'saldo_driven' => false, 'aktif' => true]
+    );
+
+    expect(fn () => $svc->penyesuaian($p->nip, 'CT', 2026, 0, 'koreksi nol 10 char', $p->nip))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect(fn () => $svc->penyesuaian($p->nip, 'CS_TIER1', 2026, 2, 'koreksi non saldo 10 char', $p->nip))
+        ->toThrow(DomainException::class);
+
+    expect(fn () => $svc->penyesuaian($p->nip, 'CT', 2026, -6, 'koreksi negatif melebihi saldo', $p->nip))
+        ->toThrow(SaldoTidakCukupException::class);
 });

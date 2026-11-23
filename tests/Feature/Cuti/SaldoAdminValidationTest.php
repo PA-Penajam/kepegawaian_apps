@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Pegawai;
+use App\Services\Cuti\SaldoLedgerService;
 use Database\Seeders\CutiJenisMasterSeeder;
 use Database\Seeders\CutiPermissionSeeder;
 
@@ -113,4 +114,54 @@ test('init saldo happy path menyimpan alokasi dan kredit ledger', function () {
         'jenis_transaksi' => 'kredit',
         'jumlah_hari' => 12,
     ]);
+});
+
+test('init dan adjust saldo menolak jenis cuti non-saldo_driven', function () {
+    $admin = buatAdminSaldo();
+    $pegawai = Pegawai::factory()->create();
+
+    $this->actingAs($admin)
+        ->post(route('admin.cuti.saldo.init.store'), [
+            'pegawai_nip' => $pegawai->nip,
+            'jenis_cuti_kode' => 'CS_TIER1',
+            'tahun' => 2026,
+            'jumlah_hari' => 5,
+        ])
+        ->assertSessionHasErrors('jenis_cuti_kode');
+
+    $this->actingAs($admin)
+        ->post(route('admin.cuti.saldo.adjust'), [
+            'pegawai_nip' => $pegawai->nip,
+            'jenis_cuti_kode' => 'CS_TIER1',
+            'tahun' => 2026,
+            'jumlah_hari' => 2,
+            'keterangan' => 'Penyesuaian jenis non saldo tidak valid',
+        ])
+        ->assertSessionHasErrors('jenis_cuti_kode');
+});
+
+test('adjust saldo menolak jumlah_hari nol dan penyesuaian yang membuat saldo negatif', function () {
+    $admin = buatAdminSaldo();
+    $pegawai = Pegawai::factory()->create();
+    app(SaldoLedgerService::class)->kreditAlokasi($pegawai->nip, 'CT', 2026, 4, 'init');
+
+    $this->actingAs($admin)
+        ->post(route('admin.cuti.saldo.adjust'), [
+            'pegawai_nip' => $pegawai->nip,
+            'jenis_cuti_kode' => 'CT',
+            'tahun' => 2026,
+            'jumlah_hari' => 0,
+            'keterangan' => 'Koreksi nol tidak boleh lolos',
+        ])
+        ->assertSessionHasErrors('jumlah_hari');
+
+    $this->actingAs($admin)
+        ->post(route('admin.cuti.saldo.adjust'), [
+            'pegawai_nip' => $pegawai->nip,
+            'jenis_cuti_kode' => 'CT',
+            'tahun' => 2026,
+            'jumlah_hari' => -10,
+            'keterangan' => 'Koreksi negatif melebihi saldo',
+        ])
+        ->assertSessionHasErrors('jumlah_hari');
 });

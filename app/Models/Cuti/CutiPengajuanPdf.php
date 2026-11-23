@@ -2,7 +2,7 @@
 
 namespace App\Models\Cuti;
 
-use App\Models\Concerns\HasActivityLogOptions;
+use App\Models\Concerns\HasCutiActivityLogOptions;
 use App\Models\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,8 +11,8 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class CutiPengajuanPdf extends Model
 {
-    use HasActivityLogOptions, HasFactory, HasUlids, LogsActivity {
-        HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
+    use HasCutiActivityLogOptions, HasFactory, HasUlids, LogsActivity {
+        HasCutiActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
     }
 
     protected $table = 'cuti_pengajuan_pdf';

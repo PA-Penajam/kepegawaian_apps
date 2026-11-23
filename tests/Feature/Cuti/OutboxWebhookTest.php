@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\Cuti\DispatchPendingEventsCommand;
 use App\Models\Cuti\CutiEvent;
 use App\Models\Cuti\CutiEventDelivery;
 use App\Models\Cuti\CutiPengajuan;
@@ -213,4 +214,185 @@ test('signature uses canonical string', function () {
 
     expect($receivedSignature)->toBe($expectedSignature)
         ->and($eventId)->toBe($event->id);
+});
+
+test('worker memulihkan delivery in_flight yang stale lebih dari 5 menit', function () {
+    config(['cuti.consumers' => [
+        'test-consumer' => [
+            'webhook_url' => 'https://example.test/hook',
+            'shared_secret_encrypted' => Crypt::encryptString('secret-stale'),
+        ],
+    ]]);
+
+    $pengajuan = buatPengajuanUntukOutbox();
+    $event = app(EventDispatcherService::class)->dispatch('cuti.disetujui', $pengajuan);
+
+    CutiEventDelivery::where('event_id', $event->id)->update([
+        'consumer_id' => 'test-consumer',
+        'status' => 'in_flight',
+        'last_attempt_at' => now()->subMinutes(10),
+    ]);
+
+    Http::fake([
+        'https://example.test/hook' => Http::response('OK', 200),
+    ]);
+
+    $this->artisan('cuti:dispatch-events')->assertSuccessful();
+
+    $delivery = CutiEventDelivery::where('event_id', $event->id)->first();
+    expect($delivery->status)->toBe('delivered')
+        ->and($delivery->attempts)->toBe(1);
+});
+
+test('worker tetap memproses item lain saat satu consumer memiliki secret korup', function () {
+    config(['cuti.consumers' => [
+        'bad-consumer' => [
+            'webhook_url' => 'https://bad.example.test/hook',
+            'shared_secret_encrypted' => 'ciphertext-korup-tidak-valid',
+        ],
+        'good-consumer' => [
+            'webhook_url' => 'https://good.example.test/hook',
+            'shared_secret_encrypted' => Crypt::encryptString('good-secret'),
+        ],
+    ]]);
+
+    $pengajuan = buatPengajuanUntukOutbox();
+    $event = app(EventDispatcherService::class)->dispatch('cuti.disetujui', $pengajuan);
+
+    Http::fake([
+        'https://good.example.test/hook' => Http::response('OK', 200),
+    ]);
+
+    $this->artisan('cuti:dispatch-events')->assertSuccessful();
+
+    $bad = CutiEventDelivery::where('event_id', $event->id)->where('consumer_id', 'bad-consumer')->first();
+    $good = CutiEventDelivery::where('event_id', $event->id)->where('consumer_id', 'good-consumer')->first();
+
+    expect($bad->status)->toBe('failed')
+        ->and($bad->last_error)->toContain('mendekripsi')
+        ->and($good->status)->toBe('delivered');
+});
+
+test('worker memblokir SSRF (http, loopback, metadata IP, CGNAT, localhost) dan tidak mengikuti redirect 302', function (string $badUrl) {
+    config(['cuti.consumers' => [
+        'ssrf-consumer' => [
+            'webhook_url' => $badUrl,
+            'shared_secret_encrypted' => Crypt::encryptString('secret-ssrf'),
+        ],
+    ]]);
+
+    $pengajuan = buatPengajuanUntukOutbox();
+    $event = app(EventDispatcherService::class)->dispatch('cuti.disetujui', $pengajuan);
+
+    Http::fake();
+
+    $this->artisan('cuti:dispatch-events')->assertSuccessful();
+
+    Http::assertNothingSent();
+
+    $delivery = CutiEventDelivery::where('event_id', $event->id)->first();
+    expect($delivery->status)->toBe('dead_letter');
+})->with([
+    'plain http' => 'http://example.test/hook',
+    'loopback v4' => 'https://127.0.0.1/hook',
+    'metadata IP' => 'https://169.254.169.254/latest/meta-data',
+    'loopback v6' => 'https://[::1]/hook',
+    'cgnat' => 'https://100.64.0.1/hook',
+    'localhost' => 'https://localhost/hook',
+]);
+
+test('worker tidak mengikuti redirect HTTP 302 dan menandai delivery failed', function () {
+    config(['cuti.consumers' => [
+        'redirect-consumer' => [
+            'webhook_url' => 'https://redirect.example.test/hook',
+            'shared_secret_encrypted' => Crypt::encryptString('secret-redirect'),
+        ],
+    ]]);
+
+    $pengajuan = buatPengajuanUntukOutbox();
+    $event = app(EventDispatcherService::class)->dispatch('cuti.disetujui', $pengajuan);
+
+    Http::fake([
+        'https://redirect.example.test/hook' => Http::response('', 302, ['Location' => 'http://127.0.0.1/internal']),
+    ]);
+
+    $this->artisan('cuti:dispatch-events')->assertSuccessful();
+
+    Http::assertSentCount(1);
+    $delivery = CutiEventDelivery::where('event_id', $event->id)->first();
+    expect($delivery->status)->toBe('failed')
+        ->and($delivery->last_error)->toContain('302');
+});
+
+test('worker menaikkan attempts saat klaim stale in_flight hingga berstatus dead_letter', function () {
+    config(['cuti.consumers' => [
+        'test-consumer' => [
+            'webhook_url' => 'https://example.test/hook',
+            'shared_secret_encrypted' => Crypt::encryptString('secret-lease'),
+        ],
+    ]]);
+
+    $pengajuan = buatPengajuanUntukOutbox();
+    $event = app(EventDispatcherService::class)->dispatch('cuti.disetujui', $pengajuan);
+    $delivery = CutiEventDelivery::where('event_id', $event->id)->firstOrFail();
+
+    $attemptsObservedDuringHttp = [];
+
+    Http::fake(function () use ($delivery, &$attemptsObservedDuringHttp) {
+        $attemptsObservedDuringHttp[] = (int) CutiEventDelivery::query()->whereKey($delivery->id)->value('attempts');
+
+        return Http::response('Error', 500);
+    });
+
+    for ($cycle = 1; $cycle <= 6; $cycle++) {
+        // Simulasikan lease timeout pekerja sebelumnya yang tidak sempat memanggil markFailed()
+        CutiEventDelivery::query()->whereKey($delivery->id)->update([
+            'status' => 'in_flight',
+            'last_attempt_at' => now()->subMinutes(10),
+            'next_retry_at' => null,
+        ]);
+
+        $this->artisan('cuti:dispatch-events')->assertSuccessful();
+    }
+
+    expect($attemptsObservedDuringHttp)->toBe([1, 2, 3, 4, 5, 6]);
+
+    // Simulasikan stale in_flight yang sudah mencapai MAX_ATTEMPTS = 6 -> sweep ke dead_letter
+    CutiEventDelivery::query()->whereKey($delivery->id)->update([
+        'status' => 'in_flight',
+        'last_attempt_at' => now()->subMinutes(10),
+    ]);
+
+    $this->artisan('cuti:dispatch-events')->assertSuccessful();
+
+    $fresh = $delivery->fresh();
+    expect($fresh->status)->toBe('dead_letter')
+        ->and($fresh->attempts)->toBe(6);
+});
+
+test('worker mem-pin IP publik hasil resolusi DNS ke CURLOPT_RESOLVE untuk mencegah DNS rebinding', function () {
+    $command = new class extends DispatchPendingEventsCommand
+    {
+        protected function resolveHostIps(string $host): array
+        {
+            return ['93.184.216.34'];
+        }
+
+        public function inspectResolveAndClient(string $url): array
+        {
+            $validation = $this->resolveAndValidateWebhookUrl($url);
+            $entries = $this->buildCurlResolveEntries((string) $validation['host'], $validation['port'], $validation['ips']);
+
+            return [
+                'validation' => $validation,
+                'entries' => $entries,
+            ];
+        }
+    };
+
+    $result = $command->inspectResolveAndClient('https://webhook.example.test:8443/hook');
+
+    expect($result['validation']['error'])->toBeNull()
+        ->and($result['validation']['ips'])->toBe(['93.184.216.34'])
+        ->and($result['entries'])->toBe(['webhook.example.test:8443:93.184.216.34']);
 });

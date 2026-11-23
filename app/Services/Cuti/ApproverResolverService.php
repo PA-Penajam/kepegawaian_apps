@@ -14,34 +14,27 @@ class ApproverResolverService
      */
     public function resolveSnapshot(string $pegawaiNip): array
     {
-        // Petugas kepegawaian = pegawai yang punya permission 'cuti.pengajuan.verify'
-        $petugas = Pegawai::aktif()
-            ->whereHas('iamRoles.permissions', function ($q) {
-                $q->where('slug', 'cuti.pengajuan.verify');
-            })
-            ->where('nip', '!=', $pegawaiNip)
-            ->first();
-
-        // Atasan langsung = pegawai yang punya permission 'cuti.pengajuan.approve-langsung'
-        $atasan = Pegawai::aktif()
-            ->whereHas('iamRoles.permissions', function ($q) {
-                $q->where('slug', 'cuti.pengajuan.approve-langsung');
-            })
-            ->where('nip', '!=', $pegawaiNip)
-            ->first();
-
-        // Pejabat berwenang = pegawai yang punya permission 'cuti.pengajuan.approve-pejabat'
-        $pejabat = Pegawai::aktif()
-            ->whereHas('iamRoles.permissions', function ($q) {
-                $q->where('slug', 'cuti.pengajuan.approve-pejabat');
-            })
-            ->where('nip', '!=', $pegawaiNip)
-            ->first();
+        $appSlug = (string) config('iam.app_slug', 'kepegawaian');
 
         return [
-            'petugas_kepegawaian' => $petugas?->nip,
-            'atasan_langsung' => $atasan?->nip,
-            'pejabat_berwenang' => $pejabat?->nip,
+            'petugas_kepegawaian' => $this->findApproverNip($pegawaiNip, 'cuti.pengajuan.verify', $appSlug),
+            'atasan_langsung' => $this->findApproverNip($pegawaiNip, 'cuti.pengajuan.approve-langsung', $appSlug),
+            'pejabat_berwenang' => $this->findApproverNip($pegawaiNip, 'cuti.pengajuan.approve-pejabat', $appSlug),
         ];
+    }
+
+    /**
+     * Mencari NIP pegawai aktif dengan permission tertentu khusus pada aplikasi kepegawaian.
+     */
+    private function findApproverNip(string $pegawaiNip, string $permissionSlug, string $appSlug): ?string
+    {
+        return Pegawai::aktif()
+            ->whereHas('iamRoles', function ($roleQuery) use ($appSlug, $permissionSlug): void {
+                $roleQuery
+                    ->whereHas('application', fn ($appQuery) => $appQuery->where('slug', $appSlug))
+                    ->whereHas('permissions', fn ($permQuery) => $permQuery->where('slug', $permissionSlug));
+            })
+            ->where('nip', '!=', $pegawaiNip)
+            ->value('nip');
     }
 }

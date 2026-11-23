@@ -35,28 +35,51 @@ class CutiPengajuanPolicy
     }
 
     /**
-     * Verifikasi pengajuan cuti (petugas kepegawaian).
+     * Verifikasi pengajuan cuti (petugas kepegawaian yang ditunjuk, bukan diri sendiri).
      */
     public function verify(Pegawai $user, CutiPengajuan $pengajuan): bool
     {
-        return $user->hasPermission('cuti.pengajuan.verify');
+        return $user->hasPermission('cuti.pengajuan.verify')
+            && $user->nip === $pengajuan->petugas_kepegawaian_current_nip
+            && $user->nip !== $pengajuan->pegawai_nip;
     }
 
     /**
-     * Approve oleh atasan langsung (guard: NIP harus cocok).
+     * Approve oleh atasan langsung (guard: NIP harus cocok dan bukan diri sendiri).
      */
     public function approveLangsung(Pegawai $user, CutiPengajuan $pengajuan): bool
     {
         return $user->hasPermission('cuti.pengajuan.approve-langsung')
-            && $user->nip === $pengajuan->atasan_langsung_current_nip;
+            && $user->nip === $pengajuan->atasan_langsung_current_nip
+            && $user->nip !== $pengajuan->pegawai_nip;
     }
 
     /**
-     * Approve oleh pejabat berwenang.
+     * Approve oleh pejabat berwenang (guard: NIP harus cocok dan bukan diri sendiri).
      */
     public function approvePejabat(Pegawai $user, CutiPengajuan $pengajuan): bool
     {
-        return $user->hasPermission('cuti.pengajuan.approve-pejabat');
+        return $user->hasPermission('cuti.pengajuan.approve-pejabat')
+            && $user->nip === $pengajuan->pejabat_berwenang_current_nip
+            && $user->nip !== $pengajuan->pegawai_nip;
+    }
+
+    /**
+     * Tolak pengajuan cuti berdasarkan state aktif saat ini.
+     */
+    public function reject(Pegawai $user, CutiPengajuan $pengajuan): bool
+    {
+        return match ($pengajuan->state?->name()) {
+            'DIAJUKAN' => $this->verify($user, $pengajuan),
+            'DIVERIFIKASI' => $this->approveLangsung($user, $pengajuan),
+            'DISETUJUI_ATASAN' => $this->approvePejabat($user, $pengajuan),
+            default => $user->nip !== $pengajuan->pegawai_nip
+                && $user->hasAnyPermission(
+                    'cuti.pengajuan.verify',
+                    'cuti.pengajuan.approve-langsung',
+                    'cuti.pengajuan.approve-pejabat',
+                ),
+        };
     }
 
     /**

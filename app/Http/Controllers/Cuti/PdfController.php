@@ -24,10 +24,12 @@ class PdfController extends Controller
             'pejabatBerwenangCurrent',
         ])->findOrFail($id);
 
-        Gate::authorize('viewOwn', $pengajuan);
+        abort_unless(Gate::any(['viewOwn', 'viewTeam', 'viewAll'], $pengajuan), 403);
+
+        $safeNomor = str_replace(['/', '\\'], '-', (string) ($pengajuan->nomor_pengajuan ?? $pengajuan->id));
 
         return Pdf::view('pdf.cuti.pengajuan', ['p' => $pengajuan])
-            ->name("cuti-{$pengajuan->nomor_pengajuan}.pdf")
+            ->name("cuti-{$safeNomor}.pdf")
             ->download();
     }
 }

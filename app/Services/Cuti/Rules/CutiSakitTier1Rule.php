@@ -33,7 +33,7 @@ class CutiSakitTier1Rule implements CutiRule
 
         if ($durasiKalender > self::MAX_DURASI_KALENDER) {
             throw new \DomainException(
-                "Cuti sakit tier 1 maksimal {self::MAX_DURASI_KALENDER} hari kalender, diajukan: {$durasiKalender} hari."
+                'Cuti sakit tier 1 maksimal '.self::MAX_DURASI_KALENDER." hari kalender, diajukan: {$durasiKalender} hari."
             );
         }
     }

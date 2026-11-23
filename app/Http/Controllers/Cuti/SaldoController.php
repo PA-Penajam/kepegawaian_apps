@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Cuti;
 
+use App\Exceptions\Cuti\SaldoTidakCukupException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cuti\AdjustSaldoRequest;
 use App\Http\Requests\Cuti\InitSaldoRequest;
 use App\Models\Cuti\CutiAlokasiTahunan;
 use App\Models\Cuti\CutiPengajuan;
-use App\Models\Pegawai;
 use App\Services\Cuti\SaldoLedgerService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -56,7 +57,10 @@ class SaldoController extends Controller
      */
     public function adminIndex(Request $request): Response
     {
-        $tahun = $request->input('tahun', now()->year);
+        $rawTahun = $request->input('tahun');
+        $tahun = is_scalar($rawTahun) && is_numeric((string) $rawTahun)
+            ? (int) $rawTahun
+            : now()->year;
 
         $alokasiPaginator = CutiAlokasiTahunan::with('pegawai:id,nip,nama_lengkap')
             ->where('tahun_hak', $tahun)
@@ -124,14 +128,24 @@ class SaldoController extends Controller
     {
         $validated = $request->validated();
 
-        $this->saldoService->penyesuaian(
-            $validated['pegawai_nip'],
-            $validated['jenis_cuti_kode'],
-            (int) $validated['tahun'],
-            (int) $validated['jumlah_hari'],
-            $validated['keterangan'],
-            $request->user()->nip
-        );
+        try {
+            $this->saldoService->penyesuaian(
+                $validated['pegawai_nip'],
+                $validated['jenis_cuti_kode'],
+                (int) $validated['tahun'],
+                (int) $validated['jumlah_hari'],
+                $validated['keterangan'],
+                $request->user()->nip
+            );
+        } catch (ModelNotFoundException) {
+            return back()->withInput()->withErrors([
+                'jumlah_hari' => 'Alokasi saldo cuti untuk pegawai, jenis cuti, dan tahun tersebut belum ditemukan.',
+            ]);
+        } catch (SaldoTidakCukupException|\DomainException|\InvalidArgumentException $e) {
+            return back()->withInput()->withErrors([
+                'jumlah_hari' => $e->getMessage(),
+            ]);
+        }
 
         return to_route('admin.cuti.saldo.index')
             ->with('success', 'Penyesuaian saldo berhasil disimpan.');

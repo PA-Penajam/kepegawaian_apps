@@ -2,7 +2,7 @@
 
 namespace App\Models\Cuti;
 
-use App\Models\Concerns\HasActivityLogOptions;
+use App\Models\Concerns\HasCutiActivityLogOptions;
 use App\Models\Model;
 use App\Models\Pegawai;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -12,8 +12,8 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class CutiPengajuanStateHistory extends Model
 {
-    use HasActivityLogOptions, HasFactory, HasUlids, LogsActivity {
-        HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
+    use HasCutiActivityLogOptions, HasFactory, HasUlids, LogsActivity {
+        HasCutiActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
     }
 
     protected $table = 'cuti_pengajuan_state_history';

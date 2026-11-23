@@ -2,15 +2,15 @@
 
 namespace App\Models\Cuti;
 
-use App\Models\Concerns\HasActivityLogOptions;
+use App\Models\Concerns\HasCutiActivityLogOptions;
 use App\Models\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 class CutiJenisMaster extends Model
 {
-    use HasActivityLogOptions, HasFactory, LogsActivity {
-        HasActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
+    use HasCutiActivityLogOptions, HasFactory, LogsActivity {
+        HasCutiActivityLogOptions::getActivitylogOptions insteadof LogsActivity;
     }
 
     protected $table = 'cuti_jenis_master';

@@ -1,12 +1,15 @@
 <?php
 
 use App\Exceptions\Cuti\CancelTidakDiizinkanException;
+use App\Exceptions\Cuti\SaldoTidakCukupException;
 use App\Exceptions\Cuti\TransitionTidakValidException;
 use App\Models\Cuti\CutiPengajuan;
 use App\Models\Cuti\CutiSaldoLedger;
 use App\Models\Pegawai;
+use App\Services\Cuti\PengajuanCutiService;
 use App\Services\Cuti\SaldoLedgerService;
 use App\Services\Cuti\WorkflowService;
+use Carbon\Carbon;
 use Database\Seeders\CutiJenisMasterSeeder;
 use Database\Seeders\CutiPermissionSeeder;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -14,6 +17,10 @@ use Illuminate\Auth\Access\AuthorizationException;
 beforeEach(function () {
     $this->seed(CutiJenisMasterSeeder::class);
     $this->seed(CutiPermissionSeeder::class);
+});
+
+afterEach(function () {
+    Carbon::setTestNow();
 });
 
 /**
@@ -39,7 +46,9 @@ function buatPengajuanCT(string $state, ?Pegawai $pegawai = null, array $extra =
 test('verify transitions ke DIVERIFIKASI', function () {
     $petugas = Pegawai::factory()->admin()->create();
     $pemohon = Pegawai::factory()->create();
-    $pengajuan = buatPengajuanCT('DIAJUKAN', $pemohon);
+    $pengajuan = buatPengajuanCT('DIAJUKAN', $pemohon, [
+        'petugas_kepegawaian_current_nip' => $petugas->nip,
+    ]);
 
     app(WorkflowService::class)->verify($pengajuan->id, $petugas, 'OK');
 
@@ -69,7 +78,10 @@ test('verify tanpa permission throws AuthorizationException', function () {
 
 test('verify dua kali throws TransitionTidakValidException', function () {
     $petugas = Pegawai::factory()->admin()->create();
-    $pengajuan = buatPengajuanCT('DIAJUKAN');
+    $pemohon = Pegawai::factory()->create();
+    $pengajuan = buatPengajuanCT('DIAJUKAN', $pemohon, [
+        'petugas_kepegawaian_current_nip' => $petugas->nip,
+    ]);
 
     app(WorkflowService::class)->verify($pengajuan->id, $petugas);
 
@@ -117,6 +129,7 @@ test('approvePejabat transitions ke DISETUJUI dan commit ledger CT', function ()
     app(SaldoLedgerService::class)->kreditAlokasi($pemohon->nip, 'CT', 2026, 12, 'init');
 
     $pengajuan = buatPengajuanCT('DISETUJUI_ATASAN', $pemohon, [
+        'pejabat_berwenang_current_nip' => $pejabat->nip,
         'tanggal_mulai' => '2026-07-06',
         'tanggal_selesai' => '2026-07-10',
         'jumlah_hari_kerja' => 5,
@@ -154,7 +167,10 @@ test('approvePejabat transitions ke DISETUJUI dan commit ledger CT', function ()
 
 test('rejectByRole kepegawaian transitions ke DITOLAK_KEPEGAWAIAN', function () {
     $petugas = Pegawai::factory()->admin()->create();
-    $pengajuan = buatPengajuanCT('DIAJUKAN');
+    $pemohon = Pegawai::factory()->create();
+    $pengajuan = buatPengajuanCT('DIAJUKAN', $pemohon, [
+        'petugas_kepegawaian_current_nip' => $petugas->nip,
+    ]);
 
     app(WorkflowService::class)->rejectByRole($pengajuan->id, $petugas, 'petugas_kepegawaian', 'data tidak lengkap');
 
@@ -166,7 +182,10 @@ test('rejectByRole kepegawaian transitions ke DITOLAK_KEPEGAWAIAN', function () 
 
 test('rejectByRole atasan transitions ke DITOLAK_ATASAN', function () {
     $atasan = Pegawai::factory()->admin()->create();
-    $pengajuan = buatPengajuanCT('DIVERIFIKASI');
+    $pemohon = Pegawai::factory()->create();
+    $pengajuan = buatPengajuanCT('DIVERIFIKASI', $pemohon, [
+        'atasan_langsung_current_nip' => $atasan->nip,
+    ]);
 
     app(WorkflowService::class)->rejectByRole($pengajuan->id, $atasan, 'atasan_langsung', 'tidak bisa ditinggal');
 
@@ -175,7 +194,10 @@ test('rejectByRole atasan transitions ke DITOLAK_ATASAN', function () {
 
 test('rejectByRole pejabat transitions ke DITOLAK_PEJABAT', function () {
     $pejabat = Pegawai::factory()->admin()->create();
-    $pengajuan = buatPengajuanCT('DISETUJUI_ATASAN');
+    $pemohon = Pegawai::factory()->create();
+    $pengajuan = buatPengajuanCT('DISETUJUI_ATASAN', $pemohon, [
+        'pejabat_berwenang_current_nip' => $pejabat->nip,
+    ]);
 
     app(WorkflowService::class)->rejectByRole($pengajuan->id, $pejabat, 'pejabat_berwenang', 'ditolak pejabat');
 
@@ -183,12 +205,18 @@ test('rejectByRole pejabat transitions ke DITOLAK_PEJABAT', function () {
 });
 
 test('rejectByRole CT void pending ledger', function () {
+    $this->travelTo('2026-06-01');
     $petugas = Pegawai::factory()->admin()->create();
     $pemohon = Pegawai::factory()->create();
 
     app(SaldoLedgerService::class)->kreditAlokasi($pemohon->nip, 'CT', 2026, 12, 'init');
 
-    $pengajuan = buatPengajuanCT('DIAJUKAN', $pemohon);
+    $pengajuan = buatPengajuanCT('DIAJUKAN', $pemohon, [
+        'petugas_kepegawaian_current_nip' => $petugas->nip,
+        'tanggal_mulai' => '2026-07-06',
+        'tanggal_selesai' => '2026-07-08',
+        'jumlah_hari_kerja' => 3,
+    ]);
 
     // Simulasi debit_pending
     CutiSaldoLedger::create([
@@ -233,6 +261,7 @@ test('cancelDraft dari state DIAJUKAN throws TransitionTidakValidException', fun
 // === Task 7.6: cancelAfterApproved() ===
 
 test('cancelAfterApproved CT transitions ke DICABUT_SETELAH_DISETUJUI dengan refund', function () {
+    $this->travelTo('2026-06-01');
     $admin = Pegawai::factory()->admin()->create();
     $pemohon = Pegawai::factory()->create();
 
@@ -330,6 +359,7 @@ test('full approval flow: DIAJUKAN → DIVERIFIKASI → DISETUJUI_ATASAN → DIS
     app(SaldoLedgerService::class)->kreditAlokasi($pemohon->nip, 'CT', 2026, 12, 'init');
 
     $pengajuan = buatPengajuanCT('DIAJUKAN', $pemohon, [
+        'petugas_kepegawaian_current_nip' => $petugas->nip,
         'atasan_langsung_current_nip' => $atasan->nip,
         'pejabat_berwenang_current_nip' => $pejabat->nip,
         'tanggal_mulai' => '2026-07-06',
@@ -369,4 +399,157 @@ test('full approval flow: DIAJUKAN → DIVERIFIKASI → DISETUJUI_ATASAN → DIS
 
     // Verifikasi 3 state history tercatat
     expect($fresh->stateHistory()->count())->toBe(3);
+});
+
+test('anti-self-approval dan salah current_nip ditolak AuthorizationException di WorkflowService', function () {
+    $pemohon = Pegawai::factory()->admin()->create();
+    $orangLain = Pegawai::factory()->admin()->create();
+    $aktorSah = Pegawai::factory()->admin()->create();
+    $svc = app(WorkflowService::class);
+
+    // Self-approval verify meskipun current_nip sama dengan pemohon
+    $p1 = buatPengajuanCT('DIAJUKAN', $pemohon, ['petugas_kepegawaian_current_nip' => $pemohon->nip]);
+    expect(fn () => $svc->verify($p1->id, $pemohon))->toThrow(AuthorizationException::class);
+
+    // Salah current_nip verify
+    $p1b = buatPengajuanCT('DIAJUKAN', $pemohon, ['petugas_kepegawaian_current_nip' => $aktorSah->nip]);
+    expect(fn () => $svc->verify($p1b->id, $orangLain))->toThrow(AuthorizationException::class);
+
+    // Self-approval & salah current_nip approvePejabat
+    $p3 = buatPengajuanCT('DISETUJUI_ATASAN', $pemohon, ['pejabat_berwenang_current_nip' => $pemohon->nip]);
+    expect(fn () => $svc->approvePejabat($p3->id, $pemohon))->toThrow(AuthorizationException::class);
+
+    $p3b = buatPengajuanCT('DISETUJUI_ATASAN', $pemohon, ['pejabat_berwenang_current_nip' => $aktorSah->nip]);
+    expect(fn () => $svc->approvePejabat($p3b->id, $orangLain))->toThrow(AuthorizationException::class);
+});
+
+test('cancelAfterApproved menolak cuti yang sudah berlalu dengan CancelTidakDiizinkanException', function () {
+    $admin = Pegawai::factory()->admin()->create();
+    $pemohon = Pegawai::factory()->create();
+
+    $pengajuan = buatPengajuanCT('DISETUJUI', $pemohon, [
+        'approved_at' => now()->subMonths(2),
+        'tanggal_mulai' => now()->subDays(10)->toDateString(),
+        'tanggal_selesai' => now()->subDays(5)->toDateString(),
+        'jumlah_hari_kerja' => 4,
+    ]);
+
+    app(WorkflowService::class)->cancelAfterApproved($pengajuan->id, $admin, 'coba cabut cuti lampau');
+})->throws(CancelTidakDiizinkanException::class);
+
+test('penolakan pengajuan CT pending lintas tahun tidak membangkitkan saldo hangus N-2 dan tetap menjaga cap N-1 maksimal 6 hari', function () {
+    $pemohon = Pegawai::factory()->create(['tmt_cpns' => '2020-01-01']);
+    $petugas = Pegawai::factory()->admin()->create();
+    $saldoSvc = app(SaldoLedgerService::class);
+
+    $this->travelTo('2025-12-01 09:00:00');
+    $saldoSvc->kreditAlokasi($pemohon->nip, 'CT', 2024, 5, 'Sisa 2024');
+    $saldoSvc->kreditAlokasi($pemohon->nip, 'CT', 2025, 10, 'Hak 2025');
+
+    // Submit CT 10 hari kerja pada Desember 2025 -> debit_pending 5 dari 2024 + 5 dari 2025
+    $pengajuan = app(PengajuanCutiService::class)->submit([
+        'pegawai_nip' => $pemohon->nip,
+        'jenis_cuti_kode' => 'CT',
+        'tanggal_mulai' => '2025-12-08',
+        'tanggal_selesai' => '2025-12-19',
+        'alasan' => 'Cuti akhir tahun 2025',
+    ]);
+    $pengajuan->forceFill(['petugas_kepegawaian_current_nip' => $petugas->nip])->save();
+
+    expect($saldoSvc->saldoBucket($pemohon->nip, 'CT', 2024))->toBe(0)
+        ->and($saldoSvc->saldoBucket($pemohon->nip, 'CT', 2025))->toBe(5);
+
+    // Awal 2026: carry-over berjalan
+    $this->travelTo('2026-01-01 01:00:00');
+    $this->artisan('cuti:carry-over', ['--nip' => $pemohon->nip])->assertSuccessful();
+
+    // 2026-01-02: pengajuan 2025 ditolak oleh petugas kepegawaian
+    $this->travelTo('2026-01-02 09:00:00');
+    app(WorkflowService::class)->rejectByRole($pengajuan->id, $petugas, 'petugas_kepegawaian', 'Ditolak lintas tahun');
+
+    // Saldo 2024 (N-2) wajib tetap 0 dan saldo 2025 (N-1) wajib <= 6 (tepat 6)
+    expect($saldoSvc->saldoBucket($pemohon->nip, 'CT', 2024))->toBe(0)
+        ->and($saldoSvc->saldoBucket($pemohon->nip, 'CT', 2025))->toBeLessThanOrEqual(6)
+        ->and($saldoSvc->saldoBucket($pemohon->nip, 'CT', 2025))->toBe(6)
+        ->and($saldoSvc->saldoBucket($pemohon->nip, 'CT', 2026))->toBe(12);
+
+    // Pastikan pengajuan 2026 untuk 19 hari kerja ditolak karena total saldo aktif maksimal 18 (6 + 12)
+    expect(fn () => app(PengajuanCutiService::class)->submit([
+        'pegawai_nip' => $pemohon->nip,
+        'jenis_cuti_kode' => 'CT',
+        'tanggal_mulai' => '2026-02-02',
+        'tanggal_selesai' => '2026-02-26',
+        'alasan' => 'Uji batas saldo pasca void lintas tahun',
+    ]))->toThrow(SaldoTidakCukupException::class);
+
+    Carbon::setTestNow();
+});
+
+test('penolakan pengajuan CT pending N-1 setelah pengajuan tahun N memakai bucket N-1 tetap menegakkan cap carry-over maksimal 6 hari', function () {
+    $pemohon = Pegawai::factory()->create(['tmt_cpns' => '2020-01-01']);
+    $petugas = Pegawai::factory()->admin()->create();
+    $atasan = Pegawai::factory()->admin()->create();
+    $pejabat = Pegawai::factory()->admin()->create();
+    $saldoSvc = app(SaldoLedgerService::class);
+    $pengajuanSvc = app(PengajuanCutiService::class);
+    $workflowSvc = app(WorkflowService::class);
+
+    // 2025-12-20: alokasi 2025 = 10 hari, submit CT B (6 hari kerja) -> sisa 2025 = 4
+    $this->travelTo('2025-12-20 09:00:00');
+    $saldoSvc->kreditAlokasi($pemohon->nip, 'CT', 2025, 10, 'Hak 2025');
+
+    $pengajuanB = $pengajuanSvc->submit([
+        'pegawai_nip' => $pemohon->nip,
+        'jenis_cuti_kode' => 'CT',
+        'tanggal_mulai' => '2025-12-24',
+        'tanggal_selesai' => '2025-12-31',
+        'alasan' => 'Cuti akhir tahun 2025 B',
+    ]);
+    $pengajuanB->forceFill(['petugas_kepegawaian_current_nip' => $petugas->nip])->save();
+
+    expect($saldoSvc->saldoBucket($pemohon->nip, 'CT', 2025))->toBe(4);
+
+    // 2026-01-01: carry-over berjalan (bucket 2025 = 4 <= 6, kredit 2026 = 12)
+    $this->travelTo('2026-01-01 01:00:00');
+    $this->artisan('cuti:carry-over', ['--nip' => $pemohon->nip])->assertSuccessful();
+
+    // 2026-01-02: submit & setujui CT C (4 hari kerja di 2026-02) -> memakan 4 hari dari bucket 2025
+    $this->travelTo('2026-01-02 09:00:00');
+    $pengajuanC = $pengajuanSvc->submit([
+        'pegawai_nip' => $pemohon->nip,
+        'jenis_cuti_kode' => 'CT',
+        'tanggal_mulai' => '2026-02-02',
+        'tanggal_selesai' => '2026-02-05',
+        'alasan' => 'Cuti Februari 2026 C',
+    ]);
+    $pengajuanC->forceFill([
+        'petugas_kepegawaian_current_nip' => $petugas->nip,
+        'atasan_langsung_current_nip' => $atasan->nip,
+        'pejabat_berwenang_current_nip' => $pejabat->nip,
+    ])->save();
+
+    $workflowSvc->verify($pengajuanC->id, $petugas);
+    $workflowSvc->approveAtasan($pengajuanC->id, $atasan);
+    $workflowSvc->approvePejabat($pengajuanC->id, $pejabat);
+
+    expect($saldoSvc->saldoBucket($pemohon->nip, 'CT', 2025))->toBe(0);
+
+    // 2026-01-04: CT B dari 2025 ditolak -> bucket 2025 maksimal tersisa 2 (4 dipakai C + 2 sisa = 6)
+    $this->travelTo('2026-01-04 09:00:00');
+    $workflowSvc->rejectByRole($pengajuanB->id, $petugas, 'petugas_kepegawaian', 'Ditolak di tahun baru');
+
+    $sisaBucket2025 = $saldoSvc->saldoBucket($pemohon->nip, 'CT', 2025);
+    $confirmed2025Di2026 = (int) CutiSaldoLedger::query()
+        ->where('pegawai_nip', $pemohon->nip)
+        ->where('jenis_cuti_kode', 'CT')
+        ->where('tahun_hak', 2025)
+        ->where('jenis_transaksi', 'debit_confirmed')
+        ->where('pengajuan_id', $pengajuanC->id)
+        ->sum('jumlah_hari');
+
+    expect($sisaBucket2025)->toBe(2)
+        ->and(abs($confirmed2025Di2026) + $sisaBucket2025)->toBeLessThanOrEqual(6)
+        ->and($saldoSvc->saldoBucket($pemohon->nip, 'CT', 2026))->toBe(12);
+
+    Carbon::setTestNow();
 });

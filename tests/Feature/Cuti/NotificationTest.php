@@ -44,13 +44,14 @@ function buatPengajuanUntukNotifikasi(
     Pegawai $pemohon,
     Pegawai $atasan,
     Pegawai $pejabat,
+    ?Pegawai $petugas = null,
 ): CutiPengajuan {
     return CutiPengajuan::factory()->create([
         'pegawai_nip' => $pemohon->nip,
         'jenis_cuti_kode' => 'CT',
         'state' => $state,
         'submitted_at' => now(),
-        'petugas_kepegawaian_current_nip' => $pemohon->nip,
+        'petugas_kepegawaian_current_nip' => $petugas?->nip ?? $pemohon->nip,
         'atasan_langsung_current_nip' => $atasan->nip,
         'pejabat_berwenang_current_nip' => $pejabat->nip,
     ]);
@@ -64,7 +65,7 @@ test('verify mengirim notifikasi ke atasan langsung', function () {
     $atasan = Pegawai::factory()->create();
     $pejabat = Pegawai::factory()->create();
 
-    $pengajuan = buatPengajuanUntukNotifikasi('DIAJUKAN', $pemohon, $atasan, $pejabat);
+    $pengajuan = buatPengajuanUntukNotifikasi('DIAJUKAN', $pemohon, $atasan, $pejabat, $petugas);
 
     app(WorkflowService::class)->verify($pengajuan->id, $petugas, 'OK');
 

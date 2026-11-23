@@ -4,6 +4,7 @@ namespace App\Services\Cuti;
 
 use App\Exceptions\Cuti\SaldoTidakCukupException;
 use App\Models\Cuti\CutiAlokasiTahunan;
+use App\Models\Cuti\CutiJenisMaster;
 use App\Models\Cuti\CutiPengajuan;
 use App\Models\Cuti\CutiSaldoLedger;
 use Carbon\Carbon;
@@ -35,9 +36,11 @@ class SaldoLedgerService
         }
 
         $nips = array_unique(array_column($buckets, 'nip'));
+        $jenisList = array_unique(array_column($buckets, 'jenis'));
         $tahuns = array_unique(array_column($buckets, 'tahun'));
 
         $rows = CutiSaldoLedger::whereIn('pegawai_nip', $nips)
+            ->whereIn('jenis_cuti_kode', $jenisList)
             ->whereIn('tahun_hak', $tahuns)
             ->groupBy('pegawai_nip', 'jenis_cuti_kode', 'tahun_hak')
             ->selectRaw('pegawai_nip, jenis_cuti_kode, tahun_hak, COALESCE(SUM(jumlah_hari), 0) as saldo')
@@ -55,13 +58,24 @@ class SaldoLedgerService
     /**
      * Mengembalikan bucket alokasi tahunan yang masih memiliki saldo positif, terurut ASC.
      */
-    public function bucketsAktif(string $nip, string $jenisKode): Collection
+    public function bucketsAktif(string $nip, string $jenisKode, ?int $maxTahun = null): Collection
     {
-        return CutiAlokasiTahunan::where('pegawai_nip', $nip)
+        $alokasiList = CutiAlokasiTahunan::where('pegawai_nip', $nip)
             ->where('jenis_cuti_kode', $jenisKode)
+            ->when($maxTahun !== null, fn ($q) => $q->where('tahun_hak', '<=', $maxTahun))
             ->orderBy('tahun_hak', 'asc')
-            ->get()
-            ->filter(fn ($a) => $this->saldoBucket($nip, $jenisKode, $a->tahun_hak) > 0)
+            ->get();
+
+        $bucketsInput = $alokasiList->map(fn (CutiAlokasiTahunan $a): array => [
+            'nip' => $nip,
+            'jenis' => $jenisKode,
+            'tahun' => $a->tahun_hak,
+        ])->all();
+
+        $saldos = $this->saldoBuckets($bucketsInput);
+
+        return $alokasiList
+            ->filter(fn (CutiAlokasiTahunan $a): bool => ($saldos["{$nip}|{$jenisKode}|{$a->tahun_hak}"] ?? 0) > 0)
             ->values();
     }
 
@@ -74,7 +88,28 @@ class SaldoLedgerService
      */
     public function debitPendingFifo(CutiPengajuan $p): array
     {
-        $buckets = $this->bucketsAktif($p->pegawai_nip, $p->jenis_cuti_kode);
+        $tahunMax = $p->tahunHak();
+
+        $alokasiList = CutiAlokasiTahunan::where('pegawai_nip', $p->pegawai_nip)
+            ->where('jenis_cuti_kode', $p->jenis_cuti_kode)
+            ->where('tahun_hak', '<=', $tahunMax)
+            ->when($p->jenis_cuti_kode === 'CT', fn ($q) => $q->where('tahun_hak', '>=', $tahunMax - 1))
+            ->orderBy('tahun_hak', 'asc')
+            ->lockForUpdate()
+            ->get();
+
+        $saldos = $this->saldoBuckets(
+            $alokasiList->map(fn (CutiAlokasiTahunan $a): array => [
+                'nip' => $p->pegawai_nip,
+                'jenis' => $p->jenis_cuti_kode,
+                'tahun' => $a->tahun_hak,
+            ])->all()
+        );
+
+        $buckets = $alokasiList
+            ->filter(fn (CutiAlokasiTahunan $a): bool => ($saldos["{$p->pegawai_nip}|{$p->jenis_cuti_kode}|{$a->tahun_hak}"] ?? 0) > 0)
+            ->values();
+
         $sisa = $p->jumlah_hari_kerja;
         $rows = [];
 
@@ -83,7 +118,7 @@ class SaldoLedgerService
                 break;
             }
 
-            $available = $this->saldoBucket($p->pegawai_nip, $p->jenis_cuti_kode, $bucket->tahun_hak);
+            $available = $saldos["{$p->pegawai_nip}|{$p->jenis_cuti_kode}|{$bucket->tahun_hak}"] ?? 0;
             if ($available <= 0) {
                 continue;
             }
@@ -146,12 +181,15 @@ class SaldoLedgerService
 
     /**
      * Membatalkan debit_pending (void tanpa confirmed) untuk penolakan sebelum approval.
+     * Menjaga aturan carry-over lintas tahun: bucket <= N-2 tidak bangkit kembali dan N-1 tetap maksimal 6 hari.
      */
     public function voidPending(CutiPengajuan $p): void
     {
         $pendingRows = CutiSaldoLedger::where('pengajuan_id', $p->id)
             ->where('jenis_transaksi', 'debit_pending')
             ->get();
+
+        $touchedYears = [];
 
         foreach ($pendingRows as $pending) {
             CutiSaldoLedger::create([
@@ -163,6 +201,92 @@ class SaldoLedgerService
                 'jumlah_hari' => -$pending->jumlah_hari,
                 'aktor_pegawai_nip' => $p->pegawai_nip,
             ]);
+
+            $touchedYears[(int) $pending->tahun_hak] = true;
+        }
+
+        if ($p->jenis_cuti_kode !== 'CT' || $touchedYears === []) {
+            return;
+        }
+
+        $currentYear = (int) now()->year;
+        $carryOverSudahBerjalan = CutiSaldoLedger::where('pegawai_nip', $p->pegawai_nip)
+            ->where('jenis_cuti_kode', 'CT')
+            ->where(function ($query) use ($currentYear): void {
+                $query->where(function ($sub) use ($currentYear): void {
+                    $sub->where('tahun_hak', $currentYear)
+                        ->where('jenis_transaksi', 'kredit')
+                        ->where('keterangan', 'Alokasi carry-over otomatis');
+                })->orWhere(function ($sub) use ($currentYear): void {
+                    $sub->where('tahun_hak', $currentYear - 1)
+                        ->where('jenis_transaksi', 'expire')
+                        ->where('keterangan', 'like', 'Cap carry-over%');
+                })->orWhere(function ($sub) use ($currentYear): void {
+                    $sub->where('tahun_hak', $currentYear - 2)
+                        ->where('jenis_transaksi', 'expire')
+                        ->where('keterangan', 'like', 'Hangus carry-over%');
+                });
+            })
+            ->exists();
+
+        foreach (array_keys($touchedYears) as $bucketTahun) {
+            if ($bucketTahun <= $currentYear - 2) {
+                CutiAlokasiTahunan::where('pegawai_nip', $p->pegawai_nip)
+                    ->where('jenis_cuti_kode', 'CT')
+                    ->where('tahun_hak', $bucketTahun)
+                    ->lockForUpdate()
+                    ->first();
+
+                $saldoBucket = $this->saldoBucket($p->pegawai_nip, 'CT', $bucketTahun);
+                if ($saldoBucket > 0) {
+                    CutiSaldoLedger::create([
+                        'pengajuan_id' => $p->id,
+                        'pegawai_nip' => $p->pegawai_nip,
+                        'jenis_cuti_kode' => 'CT',
+                        'tahun_hak' => $bucketTahun,
+                        'jenis_transaksi' => 'expire',
+                        'jumlah_hari' => -$saldoBucket,
+                        'aktor_pegawai_nip' => $p->pegawai_nip,
+                        'keterangan' => "Hangus otomatis pasca-void tahun {$bucketTahun}",
+                    ]);
+                }
+            } elseif ($bucketTahun === $currentYear - 1 && ($p->tahunHak() < $currentYear || $carryOverSudahBerjalan)) {
+                CutiAlokasiTahunan::where('pegawai_nip', $p->pegawai_nip)
+                    ->where('jenis_cuti_kode', 'CT')
+                    ->where('tahun_hak', $bucketTahun)
+                    ->lockForUpdate()
+                    ->first();
+
+                $saldoBucket = $this->saldoBucket($p->pegawai_nip, 'CT', $bucketTahun);
+                $awalTahunBerjalan = sprintf('%04d-01-01', $currentYear);
+
+                // Hitung mutasi pemakaian oleh pengajuan tahun >= N agar tidak membypass batas maksimal carry-over 6 hari.
+                $mutasiTahunBerjalan = (int) CutiSaldoLedger::query()
+                    ->where('pegawai_nip', $p->pegawai_nip)
+                    ->where('jenis_cuti_kode', 'CT')
+                    ->where('tahun_hak', $bucketTahun)
+                    ->whereIn('jenis_transaksi', ['debit_pending', 'debit_void', 'debit_confirmed', 'kredit_refund'])
+                    ->whereHas('pengajuan', fn ($q) => $q->whereDate('tanggal_mulai', '>=', $awalTahunBerjalan))
+                    ->sum('jumlah_hari');
+
+                $saldoPraTahunBerjalan = $saldoBucket - $mutasiTahunBerjalan;
+
+                if ($saldoPraTahunBerjalan > 6) {
+                    $kelebihan = min($saldoBucket, $saldoPraTahunBerjalan - 6);
+                    if ($kelebihan > 0) {
+                        CutiSaldoLedger::create([
+                            'pengajuan_id' => $p->id,
+                            'pegawai_nip' => $p->pegawai_nip,
+                            'jenis_cuti_kode' => 'CT',
+                            'tahun_hak' => $bucketTahun,
+                            'jenis_transaksi' => 'expire',
+                            'jumlah_hari' => -$kelebihan,
+                            'aktor_pegawai_nip' => $p->pegawai_nip,
+                            'keterangan' => "Cap otomatis pasca-void tahun {$bucketTahun} max 6",
+                        ]);
+                    }
+                }
+            }
         }
     }
 
@@ -254,12 +378,31 @@ class SaldoLedgerService
      */
     public function penyesuaian(string $nip, string $jenisKode, int $tahun, int $jumlahHari, string $keterangan, string $aktorNip): void
     {
-        DB::transaction(function () use ($nip, $jenisKode, $tahun, $jumlahHari, $keterangan, $aktorNip) {
+        if ($jumlahHari === 0) {
+            throw new \InvalidArgumentException('Jumlah hari penyesuaian tidak boleh bernilai 0.');
+        }
+
+        $jenisCuti = CutiJenisMaster::where('kode', $jenisKode)
+            ->where('aktif', true)
+            ->first();
+
+        if (! $jenisCuti || ! $jenisCuti->saldo_driven) {
+            throw new \DomainException('Penyesuaian saldo hanya diperbolehkan untuk jenis cuti berbasis saldo yang aktif.');
+        }
+
+        DB::transaction(function () use ($nip, $jenisKode, $tahun, $jumlahHari, $keterangan, $aktorNip): void {
             CutiAlokasiTahunan::where('pegawai_nip', $nip)
                 ->where('jenis_cuti_kode', $jenisKode)
                 ->where('tahun_hak', $tahun)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            $saldoSaatIni = $this->saldoBucket($nip, $jenisKode, $tahun);
+            if ($saldoSaatIni + $jumlahHari < 0) {
+                throw new SaldoTidakCukupException(
+                    "Saldo tidak boleh menjadi negatif (tersedia: {$saldoSaatIni}, penyesuaian: {$jumlahHari})."
+                );
+            }
 
             CutiSaldoLedger::create([
                 'pegawai_nip' => $nip,

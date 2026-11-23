@@ -84,3 +84,22 @@ test('command cuti:carry-over memproses pegawai aktif', function () {
 
     expect(app(SaldoLedgerService::class)->saldoBucket($p->nip, 'CT', 2026))->toBe(12);
 });
+
+test('carryOver menghanguskan sisa bucket saat menjadi N-2 meski sebelumnya sudah di-cap di N-1', function () {
+    $p = Pegawai::factory()->create();
+    CutiAlokasiTahunan::create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2024, 'hak_awal' => 12]);
+    CutiSaldoLedger::create(['pegawai_nip' => $p->nip, 'jenis_cuti_kode' => 'CT', 'tahun_hak' => 2024, 'jenis_transaksi' => 'kredit', 'jumlah_hari' => 10, 'aktor_pegawai_nip' => $p->nip]);
+
+    $svc = app(CarryOverProcessorService::class);
+    $saldoSvc = app(SaldoLedgerService::class);
+
+    // Tahun 2025: 2024 sebagai N-1 di-cap dari 10 ke 6
+    $this->travelTo('2025-01-01');
+    $svc->process($p);
+    expect($saldoSvc->saldoBucket($p->nip, 'CT', 2024))->toBe(6);
+
+    // Tahun 2026: 2024 menjadi N-2 dan sisa 6 harus hangus menjadi 0
+    $this->travelTo('2026-01-01');
+    $svc->process($p);
+    expect($saldoSvc->saldoBucket($p->nip, 'CT', 2024))->toBe(0);
+});

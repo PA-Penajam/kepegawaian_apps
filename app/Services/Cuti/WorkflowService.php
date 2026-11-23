@@ -22,6 +22,7 @@ use App\States\Cuti\DitolakKepegawaianState;
 use App\States\Cuti\DitolakPejabatState;
 use App\States\Cuti\DiverifikasiState;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
 class WorkflowService
@@ -45,6 +46,11 @@ class WorkflowService
             }
 
             $this->guardAuthorization($aktor, 'cuti.pengajuan.verify');
+            $this->guardSelfApproval($aktor, $pengajuan);
+
+            if ($pengajuan->petugas_kepegawaian_current_nip !== $aktor->nip) {
+                throw new AuthorizationException('Anda bukan petugas kepegawaian yang ditunjuk untuk pengajuan ini.');
+            }
 
             $fromState = $pengajuan->state->name();
             $pengajuan->state->transitionTo(DiverifikasiState::class);
@@ -54,6 +60,7 @@ class WorkflowService
             $this->eventDispatcher->dispatch('cuti.diverifikasi', $pengajuan);
 
             // Kirim notifikasi ke atasan langsung
+            $pengajuan->loadMissing(['atasanLangsungCurrent']);
             $atasan = $pengajuan->atasanLangsungCurrent;
             $atasan?->notify(new PengajuanMenungguApproval($pengajuan, 'atasan_langsung'));
         });
@@ -73,6 +80,7 @@ class WorkflowService
             }
 
             $this->guardAuthorization($aktor, 'cuti.pengajuan.approve-langsung');
+            $this->guardSelfApproval($aktor, $pengajuan);
 
             // Validasi aktor adalah atasan langsung yang ditunjuk
             if ($pengajuan->atasan_langsung_current_nip !== $aktor->nip) {
@@ -87,6 +95,7 @@ class WorkflowService
             $this->eventDispatcher->dispatch('cuti.disetujui_atasan', $pengajuan);
 
             // Kirim notifikasi ke pejabat berwenang
+            $pengajuan->loadMissing(['pejabatBerwenangCurrent']);
             $pejabat = $pengajuan->pejabatBerwenangCurrent;
             $pejabat?->notify(new PengajuanMenungguApproval($pengajuan, 'pejabat_berwenang'));
         });
@@ -107,14 +116,19 @@ class WorkflowService
             }
 
             $this->guardAuthorization($aktor, 'cuti.pengajuan.approve-pejabat');
+            $this->guardSelfApproval($aktor, $pengajuan);
+
+            if ($pengajuan->pejabat_berwenang_current_nip !== $aktor->nip) {
+                throw new AuthorizationException('Anda bukan pejabat berwenang yang ditunjuk untuk pengajuan ini.');
+            }
 
             // Lock alokasi untuk CT dan commit saldo
             if ($pengajuan->jenis_cuti_kode === 'CT') {
                 CutiAlokasiTahunan::where('pegawai_nip', $pengajuan->pegawai_nip)
                     ->where('jenis_cuti_kode', 'CT')
-                    ->where('tahun_hak', $pengajuan->tahunHak())
+                    ->where('tahun_hak', '<=', $pengajuan->tahunHak())
                     ->lockForUpdate()
-                    ->first();
+                    ->get();
 
                 $this->saldoService->commitConfirmed($pengajuan);
             }
@@ -129,6 +143,7 @@ class WorkflowService
             $this->eventDispatcher->dispatch('cuti.disetujui', $pengajuan);
 
             // Kirim notifikasi ke pegawai pemohon
+            $pengajuan->loadMissing(['pegawai']);
             $pengajuan->pegawai?->notify(new PengajuanDisetujui($pengajuan));
         });
     }
@@ -159,6 +174,12 @@ class WorkflowService
                 'pejabat_berwenang' => 'cuti.pengajuan.approve-pejabat',
             ];
             $this->guardAuthorization($aktor, $permMap[$role]);
+            $this->guardSelfApproval($aktor, $pengajuan);
+
+            $currentNipCol = "{$role}_current_nip";
+            if ($aktor->nip !== $pengajuan->$currentNipCol) {
+                throw new AuthorizationException('Anda bukan approver yang ditunjuk untuk pengajuan ini.');
+            }
 
             // Void pending ledger untuk CT
             if ($pengajuan->jenis_cuti_kode === 'CT') {
@@ -176,6 +197,7 @@ class WorkflowService
             $this->eventDispatcher->dispatch('cuti.ditolak', $pengajuan);
 
             // Kirim notifikasi ke pegawai pemohon
+            $pengajuan->loadMissing(['pegawai']);
             $pengajuan->pegawai?->notify(new PengajuanDitolak($pengajuan));
         });
     }
@@ -238,10 +260,18 @@ class WorkflowService
             }
 
             // Cek apakah jenis cuti boleh dicabut setelah disetujui
+            $pengajuan->loadMissing(['jenisCuti']);
             $jenisCuti = $pengajuan->jenisCuti;
             if (! $jenisCuti->boleh_dicabut_setelah_disetujui) {
                 throw new CancelTidakDiizinkanException(
                     "Jenis cuti {$jenisCuti->nama} tidak boleh dicabut setelah disetujui."
+                );
+            }
+
+            // Blokir pencabutan jika periode cuti sudah berlalu
+            if ($pengajuan->tanggal_selesai !== null && Date::today()->gt($pengajuan->tanggal_selesai->startOfDay())) {
+                throw new CancelTidakDiizinkanException(
+                    'Cuti yang sudah melewati tanggal selesai tidak dapat dicabut.'
                 );
             }
 
@@ -266,7 +296,7 @@ class WorkflowService
      */
     public function reassignApprover(string $id, string $role, string $newNip, Pegawai $aktor, string $alasan): void
     {
-        $allowedRoles = ['atasan_langsung', 'pejabat_berwenang'];
+        $allowedRoles = ['petugas_kepegawaian', 'atasan_langsung', 'pejabat_berwenang'];
 
         if (! in_array($role, $allowedRoles, true)) {
             throw new \InvalidArgumentException("Role tidak valid untuk reassignment: {$role}");
@@ -290,6 +320,18 @@ class WorkflowService
                 'aktor_pegawai_nip' => $aktor->nip,
             ]);
         });
+    }
+
+    /**
+     * Mencegah approver menyetujui/memverifikasi/menolak pengajuan miliknya sendiri.
+     *
+     * @throws AuthorizationException
+     */
+    private function guardSelfApproval(Pegawai $aktor, CutiPengajuan $pengajuan): void
+    {
+        if ($aktor->nip === $pengajuan->pegawai_nip) {
+            throw new AuthorizationException('Anda tidak dapat memproses persetujuan pengajuan cuti milik sendiri.');
+        }
     }
 
     /**

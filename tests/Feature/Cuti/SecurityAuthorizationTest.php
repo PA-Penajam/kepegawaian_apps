@@ -10,6 +10,7 @@ use App\Models\IamUserRole;
 use App\Models\Pegawai;
 use App\Services\Cuti\SaldoLedgerService;
 use App\Services\Cuti\WorkflowService;
+use Carbon\Carbon;
 use Database\Seeders\CutiJenisMasterSeeder;
 use Database\Seeders\CutiPermissionSeeder;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -19,6 +20,10 @@ beforeEach(function () {
     $this->seed(CutiJenisMasterSeeder::class);
     $this->seed(CutiPermissionSeeder::class);
     $this->withoutVite();
+});
+
+afterEach(function () {
+    Carbon::setTestNow();
 });
 
 /**
@@ -171,14 +176,15 @@ test('cancelDraft: admin cancel-any bisa membatalkan pengajuan orang lain', func
 // =============================================================================
 
 test('cancelAfterApproved: pemilik dengan cancel-own bisa mencabut cuti yang sudah disetujui', function () {
+    $this->travelTo('2026-06-01');
     $pemilik = buatPegawaiDenganPermission(['cuti.pengajuan.cancel-own']);
 
     app(SaldoLedgerService::class)->kreditAlokasi($pemilik->nip, 'CT', 2026, 12, 'init');
 
     $pengajuan = buatPengajuanUntukTest('DISETUJUI', $pemilik, [
         'approved_at' => now(),
-        'tanggal_mulai' => '2026-09-01',
-        'tanggal_selesai' => '2026-09-05',
+        'tanggal_mulai' => now()->addWeek()->toDateString(),
+        'tanggal_selesai' => now()->addWeek()->addDays(4)->toDateString(),
         'jumlah_hari_kerja' => 5,
     ]);
 
@@ -218,3 +224,31 @@ test('cancelAfterApproved: user tanpa permission cancel-own dan cancel-any ditol
 
     app(WorkflowService::class)->cancelAfterApproved($pengajuan->id, $pemilik, 'coba cabut');
 })->throws(AuthorizationException::class);
+
+// =============================================================================
+// FIX 4: Route web permission guards (F-17)
+// =============================================================================
+
+test('rute web cuti menegakkan permission IAM yang spesifik', function () {
+    $tanpaIzin = Pegawai::factory()->create();
+    $viewSaldoOnly = buatPegawaiDenganPermission(['cuti.saldo.view-all']);
+    $adjustSaldo = buatPegawaiDenganPermission(['cuti.saldo.adjust']);
+    $auditViewer = buatPegawaiDenganPermission(['cuti.audit.view']);
+
+    // /cuti/saya & /cuti/pengajuan/baru menolak user tanpa permission
+    $this->actingAs($tanpaIzin)->get(route('cuti.saya'))->assertForbidden();
+    $this->actingAs($tanpaIzin)->get(route('cuti.pengajuan.create'))->assertForbidden();
+    $this->actingAs($tanpaIzin)->post(route('cuti.pengajuan.store'), [])->assertForbidden();
+
+    // Pemegang cuti.saldo.view-all tidak boleh mengakses /admin/cuti/saldo/init atau /admin/cuti/audit
+    $this->actingAs($viewSaldoOnly)->get(route('admin.cuti.saldo.index'))->assertSuccessful();
+    $this->actingAs($viewSaldoOnly)->get(route('admin.cuti.saldo.init'))->assertForbidden();
+    $this->actingAs($viewSaldoOnly)->post(route('admin.cuti.saldo.init.store'), [])->assertForbidden();
+    $this->actingAs($viewSaldoOnly)->get(route('admin.cuti.audit.index'))->assertForbidden();
+
+    // Pemegang cuti.saldo.adjust bisa akses /admin/cuti/saldo/init
+    $this->actingAs($adjustSaldo)->get(route('admin.cuti.saldo.init'))->assertSuccessful();
+
+    // Pemegang cuti.audit.view bisa akses /admin/cuti/audit
+    $this->actingAs($auditViewer)->get(route('admin.cuti.audit.index'))->assertSuccessful();
+});

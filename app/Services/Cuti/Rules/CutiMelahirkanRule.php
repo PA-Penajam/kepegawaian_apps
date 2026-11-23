@@ -38,7 +38,9 @@ class CutiMelahirkanRule implements CutiRule
      */
     private function validateJenisKelamin(CutiPengajuan $pengajuan): void
     {
-        if ($pengajuan->pegawai->jenis_kelamin !== JenisKelamin::Perempuan) {
+        $pengajuan->loadMissing('pegawai');
+
+        if ($pengajuan->pegawai?->jenis_kelamin !== JenisKelamin::Perempuan) {
             throw new \DomainException(
                 'Cuti melahirkan hanya dapat diajukan oleh pegawai berjenis kelamin perempuan.'
             );
