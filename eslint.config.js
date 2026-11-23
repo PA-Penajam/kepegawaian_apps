@@ -107,6 +107,7 @@ export default [
     {
         ignores: [
             '.remember',
+            '.worktrees/**',
             'vendor',
             'node_modules',
             'public',

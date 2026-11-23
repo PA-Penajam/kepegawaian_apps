@@ -29,16 +29,24 @@ use App\Services\Sikep\NullSikepAdapter;
 use App\Services\Sikep\SikepAdapter;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Google\Client as GoogleClient;
+use Google\Service\Drive as GoogleDriveService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use League\Flysystem\Filesystem;
+use Masbug\Flysystem\GoogleDriveAdapter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -74,6 +82,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(UsulanKenaikanPangkat::class, UsulanKenaikanPangkatPolicy::class);
 
         $this->configureDefaults();
+        $this->registerStorageDrivers();
         $this->registerEventListeners();
         $this->registerSlowQueryLogger();
         $this->registerRateLimiters();
@@ -100,6 +109,8 @@ class AppServiceProvider extends ServiceProvider
         DB::prohibitDestructiveCommands(
             app()->isProduction(),
         );
+
+        Model::preventLazyLoading(! app()->isProduction());
 
         Password::defaults(fn (): ?Password => app()->isProduction()
             ? Password::min(12)
@@ -154,6 +165,35 @@ class AppServiceProvider extends ServiceProvider
                         'Anda telah melampaui batas regenerasi kunci (5 per jam). Silakan coba lagi nanti.',
                     );
                 });
+        });
+    }
+
+    /**
+     * Mendaftarkan driver filesystem kustom termasuk Google Drive OAuth 2.0.
+     */
+    private function registerStorageDrivers(): void
+    {
+        Storage::extend('google', function (Application $app, array $config): FilesystemAdapter {
+            $options = [];
+
+            if (filled($config['teamDriveId'] ?? null)) {
+                $options['teamDriveId'] = $config['teamDriveId'];
+            }
+
+            $client = $app->make(GoogleClient::class);
+            $client->setClientId((string) ($config['clientId'] ?? ''));
+            $client->setClientSecret((string) ($config['clientSecret'] ?? ''));
+
+            if (filled($config['refreshToken'] ?? null)) {
+                $client->refreshToken((string) $config['refreshToken']);
+            }
+
+            $service = new GoogleDriveService($client);
+            $folder = filled($config['folder'] ?? null) ? (string) $config['folder'] : '/';
+            $adapter = new GoogleDriveAdapter($service, $folder, $options);
+            $driver = new Filesystem($adapter, $config);
+
+            return new FilesystemAdapter($driver, $adapter, $config);
         });
     }
 }

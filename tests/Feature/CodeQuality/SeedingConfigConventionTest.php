@@ -37,9 +37,14 @@ it('tidak ada pemanggilan env() langsung di luar direktori config', function () 
 });
 
 it('config seeding memberi default aman saat env kosong maupun tidak diset', function () {
-    $cadanganAdmin = $_ENV['SEEDER_ADMIN_PASSWORD'] ?? null;
-    $cadanganOperator = $_ENV['SEEDER_OPERATOR_PASSWORD'] ?? null;
-    $cadanganAttendance = $_ENV['ATTENDANCE_APP_URL'] ?? null;
+    $keys = ['SEEDER_ADMIN_PASSWORD', 'SEEDER_OPERATOR_PASSWORD', 'ATTENDANCE_APP_URL'];
+    $cadanganEnv = [];
+    $cadanganServer = [];
+
+    foreach ($keys as $key) {
+        $cadanganEnv[$key] = array_key_exists($key, $_ENV) ? $_ENV[$key] : null;
+        $cadanganServer[$key] = array_key_exists($key, $_SERVER) ? $_SERVER[$key] : null;
+    }
 
     try {
         // Kasus bug lama: variable ada tapi string kosong → wajib fallback default
@@ -47,6 +52,8 @@ it('config seeding memberi default aman saat env kosong maupun tidak diset', fun
         putenv('SEEDER_OPERATOR_PASSWORD=');
         $_ENV['SEEDER_ADMIN_PASSWORD'] = '';
         $_ENV['SEEDER_OPERATOR_PASSWORD'] = '';
+        $_SERVER['SEEDER_ADMIN_PASSWORD'] = '';
+        $_SERVER['SEEDER_OPERATOR_PASSWORD'] = '';
 
         $cfg = require config_path('seeding.php');
 
@@ -56,7 +63,12 @@ it('config seeding memberi default aman saat env kosong maupun tidak diset', fun
         // Kasus variable tidak diset sama sekali → default juga dipakai
         putenv('SEEDER_ADMIN_PASSWORD');
         putenv('SEEDER_OPERATOR_PASSWORD');
-        unset($_ENV['SEEDER_ADMIN_PASSWORD'], $_ENV['SEEDER_OPERATOR_PASSWORD']);
+        unset(
+            $_ENV['SEEDER_ADMIN_PASSWORD'],
+            $_ENV['SEEDER_OPERATOR_PASSWORD'],
+            $_SERVER['SEEDER_ADMIN_PASSWORD'],
+            $_SERVER['SEEDER_OPERATOR_PASSWORD'],
+        );
 
         $cfg = require config_path('seeding.php');
 
@@ -68,19 +80,30 @@ it('config seeding memberi default aman saat env kosong maupun tidak diset', fun
         putenv('SEEDER_OPERATOR_PASSWORD=rahasia-operator-1');
         $_ENV['SEEDER_ADMIN_PASSWORD'] = 'rahasia-admin-1';
         $_ENV['SEEDER_OPERATOR_PASSWORD'] = 'rahasia-operator-1';
+        $_SERVER['SEEDER_ADMIN_PASSWORD'] = 'rahasia-admin-1';
+        $_SERVER['SEEDER_OPERATOR_PASSWORD'] = 'rahasia-operator-1';
 
         $cfg = require config_path('seeding.php');
 
         expect($cfg['admin_password'])->toBe('rahasia-admin-1')
             ->and($cfg['operator_password'])->toBe('rahasia-operator-1');
     } finally {
-        foreach (['SEEDER_ADMIN_PASSWORD' => $cadanganAdmin, 'SEEDER_OPERATOR_PASSWORD' => $cadanganOperator, 'ATTENDANCE_APP_URL' => $cadanganAttendance] as $nama => $nilai) {
-            if ($nilai === null) {
+        foreach ($keys as $nama) {
+            $nilaiEnv = $cadanganEnv[$nama];
+            $nilaiServer = $cadanganServer[$nama];
+
+            if ($nilaiEnv === null) {
                 putenv($nama);
                 unset($_ENV[$nama]);
             } else {
-                putenv("{$nama}={$nilai}");
-                $_ENV[$nama] = $nilai;
+                putenv("{$nama}={$nilaiEnv}");
+                $_ENV[$nama] = $nilaiEnv;
+            }
+
+            if ($nilaiServer === null) {
+                unset($_SERVER[$nama]);
+            } else {
+                $_SERVER[$nama] = $nilaiServer;
             }
         }
     }

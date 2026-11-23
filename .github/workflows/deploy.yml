@@ -19,10 +19,51 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test-pr:
+    name: Build & Test Pull Request (Ubuntu)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Prepare Laravel environment
+        run: cp .env.example .env
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Generate application key
+        run: php artisan key:generate --force
+
+      - name: Install JavaScript dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Run test suite
+        run: |
+          php artisan config:clear
+          ./vendor/bin/pest --fail-on-risky
+
   test:
     name: Build & Test on Windows Server 2019
     runs-on: [self-hosted, windows, x64]
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name != 'pull_request'
     timeout-minutes: 30
 
     steps:
@@ -85,7 +126,7 @@ jobs:
         shell: powershell
         run: |
           php artisan config:clear
-          php artisan test --compact
+          php artisan test --compact --fail-on-risky
 
   deploy:
     name: Deploy to Production
@@ -107,12 +148,20 @@ jobs:
         shell: powershell
         run: |
           $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-          $backupRoot = Join-Path $env:DEPLOY_PATH 'storage\backups\releases'
+          $deployPath = $env:DEPLOY_PATH.TrimEnd('\')
+          $backupRoot = Join-Path $deployPath 'storage\backups\releases'
           New-Item -ItemType Directory -Force -Path $backupRoot | Out-Null
           $backupPath = Join-Path $backupRoot $timestamp
           Write-Host "Backup produksi ke: $backupPath"
-          # Salin seluruh app (termasuk database SQLite & vendor) agar rollback mandiri.
-          robocopy $env:DEPLOY_PATH $backupPath /E /XD 'storage' 'node_modules' '.git' /XF '.env' /R:2 /W:2 /NP /NFL /NDL
+          # Salin seluruh app (termasuk database SQLite & vendor) dengan /XJ agar junction tidak disalin rekursif.
+          # Gunakan full path pada /XD agar hanya folder spesifik yang dikecualikan (bukan resources\js\routes\storage).
+          $backupExcludes = @(
+              (Join-Path $deployPath 'storage'),
+              (Join-Path $deployPath 'public\storage'),
+              'node_modules',
+              '.git'
+          )
+          robocopy $deployPath $backupPath /E /XJ /XD $backupExcludes /XF '.env' /R:2 /W:2 /NP /NFL /NDL
           if ($LASTEXITCODE -ge 8) { throw "Backup gagal (robocopy exit code $LASTEXITCODE)." }
           # Robocopy exit 1-7 = sukses (file tersalin); nol-kan agar runner tidak fail.
           $LASTEXITCODE = 0
@@ -120,14 +169,45 @@ jobs:
           # Simpan path backup agar langkah rollback dapat memulihkannya bila deploy gagal.
           "BACKUP_PATH=$backupPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+      - name: Validate production env and enter maintenance mode
+        shell: powershell
+        run: |
+          if (-not (Test-Path "$env:DEPLOY_PATH\.env")) {
+              throw "File .env tidak ditemukan di $env:DEPLOY_PATH. Deploy dibatalkan agar konfigurasi produksi tidak tertimpa."
+          }
+
+          if (Test-Path "$env:DEPLOY_PATH\vendor") {
+              Push-Location $env:DEPLOY_PATH
+              try {
+                  php artisan down --retry=60
+              } finally {
+                  Pop-Location
+              }
+          }
+
       - name: Sync release to production
         shell: powershell
         run: |
-          $source = Join-Path $PWD 'release'
-          Write-Host "Sync $source ke $env:DEPLOY_PATH"
-          # /MIR menghapus file lama, namun .env dan database SQLite produksi
-          # dilindungi agar tidak tertimpa/terhapus oleh /XF.
-          robocopy $source $env:DEPLOY_PATH /MIR /XD '.git' 'node_modules' 'storage' 'vendor' 'public\build' 'bootstrap\cache' /XF '.env' 'kepegawaian_db' '*.sqlite' '*.sqlite3' /R:2 /W:2 /NP /NFL /NDL
+          $source = (Join-Path $PWD 'release').TrimEnd('\')
+          $deployPath = $env:DEPLOY_PATH.TrimEnd('\')
+          Write-Host "Sync $source ke $deployPath"
+          # /MIR + /XJ dengan full path kedua sisi menjaga junction public\storage, storage, vendor, build, dan cache
+          # di destination sekaligus tetap menyalin resources\js\routes\storage dari release.
+          $syncExcludes = @(
+              '.git',
+              'node_modules',
+              (Join-Path $source 'storage'),
+              (Join-Path $deployPath 'storage'),
+              (Join-Path $source 'vendor'),
+              (Join-Path $deployPath 'vendor'),
+              (Join-Path $source 'public\build'),
+              (Join-Path $deployPath 'public\build'),
+              (Join-Path $source 'bootstrap\cache'),
+              (Join-Path $deployPath 'bootstrap\cache'),
+              (Join-Path $source 'public\storage'),
+              (Join-Path $deployPath 'public\storage')
+          )
+          robocopy $source $deployPath /MIR /XJ /XD $syncExcludes /XF '.env' 'kepegawaian_db' '*.sqlite' '*.sqlite3' /R:2 /W:2 /NP /NFL /NDL
           if ($LASTEXITCODE -ge 8) { throw "Sync gagal (robocopy exit code $LASTEXITCODE)." }
           # Robocopy exit 1-7 = sukses (file tersalin); nol-kan agar runner tidak fail.
           $LASTEXITCODE = 0
@@ -136,6 +216,8 @@ jobs:
         shell: powershell
         run: |
           Set-Location $env:DEPLOY_PATH
+          # Hapus cache PHP lama sebelum composer install memicu @php artisan package:discover.
+          Get-ChildItem -Path 'bootstrap\cache' -Filter '*.php' -ErrorAction SilentlyContinue | Remove-Item -Force
           composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-progress
           # Install lengkap dulu (termasuk vite dkk) agar build bisa jalan,
           # lalu prune devDependencies setelah build selesai.
@@ -148,12 +230,15 @@ jobs:
         run: |
           Set-Location $env:DEPLOY_PATH
           if (-not (Test-Path '.env')) { throw "File .env tidak ditemukan di $env:DEPLOY_PATH. Deploy dibatalkan agar konfigurasi produksi tidak tertimpa." }
+          php artisan optimize:clear
           php artisan migrate --force
-          # Symlink/junction untuk file upload (foto pegawai) bila belum ada.
+          # Symlink/junction untuk file upload bila belum ada.
           if (-not (Test-Path 'public\storage')) { php artisan storage:link }
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
+          php artisan queue:restart
+          php artisan up
 
       - name: Verify deployment
         shell: powershell
@@ -163,10 +248,11 @@ jobs:
           php artisan config:show app.url
 
           # Smoke test health endpoint untuk memastikan aplikasi benar-benar melayani request.
-          $baseUrl = (php artisan tinker --execute "echo config('app.url');" | Select-Object -Last 1).Trim()
+          $baseUrl = (php artisan tinker --execute "echo config('app.url');" | Select-Object -Last 1).Trim().TrimEnd('/')
           if (-not $baseUrl) { throw "Tidak dapat membaca config app.url untuk smoke test." }
 
           $healthUrl = "$baseUrl/up"
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           try {
               $response = Invoke-WebRequest -Uri $healthUrl -UseBasicParsing -TimeoutSec 30
           } catch {
@@ -193,17 +279,29 @@ jobs:
           }
 
           Write-Host "Rollback produksi dari: $env:BACKUP_PATH"
-          # Kembalikan isi release tanpa menyentuh .env, storage, database SQLite,
-          # dan artefak runtime agar konfigurasi/data produksi tetap utuh.
-          robocopy $env:BACKUP_PATH $env:DEPLOY_PATH /MIR /XD 'storage' 'node_modules' '.git' 'vendor' 'public\build' 'bootstrap\cache' /XF '.env' 'kepegawaian_db' '*.sqlite' '*.sqlite3' /R:2 /W:2 /NP /NFL /NDL
+          # Pulihkan artefak penuh (termasuk vendor, public\build, bootstrap\cache) dari backup tanpa menyentuh .env, storage, atau public\storage.
+          $backupPath = $env:BACKUP_PATH.TrimEnd('\')
+          $deployPath = $env:DEPLOY_PATH.TrimEnd('\')
+          $rollbackExcludes = @(
+              (Join-Path $backupPath 'storage'),
+              (Join-Path $deployPath 'storage'),
+              (Join-Path $backupPath 'public\storage'),
+              (Join-Path $deployPath 'public\storage'),
+              'node_modules',
+              '.git'
+          )
+          robocopy $backupPath $deployPath /MIR /XJ /XD $rollbackExcludes /XF '.env' 'kepegawaian_db' '*.sqlite' '*.sqlite3' /R:2 /W:2 /NP /NFL /NDL
           if ($LASTEXITCODE -ge 8) { throw "Rollback gagal (robocopy exit code $LASTEXITCODE)." }
           $LASTEXITCODE = 0
 
           Set-Location $env:DEPLOY_PATH
           if (Test-Path 'vendor') {
+              php artisan optimize:clear
               php artisan config:cache
               php artisan route:cache
               php artisan view:cache
+              php artisan queue:restart
+              php artisan up
           }
 
           Write-Host "Rollback selesai. Produksi kembali ke rilis sebelumnya."

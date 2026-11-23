@@ -40,11 +40,14 @@ return [
     | Scopes
     |--------------------------------------------------------------------------
     |
-    | Daftar scope yang diminta saat proses otorisasi. Jika kosong (default untuk
-    | server OAuth2 Passport tanpa custom scopes), parameter scope tidak dikirim.
+    | Daftar scope yang diminta saat proses otorisasi. Mendukung pemisah spasi
+    | maupun koma, dengan default "profile email" sesuai kontrak IdP SSO.
     |
     */
-    'scopes' => array_values(array_filter(array_map('trim', explode(',', env('SSO_SCOPES', ''))))),
+    'scopes' => array_values(array_filter(
+        preg_split('/[\s,]+/', trim((string) (env('SSO_SCOPES') ?: 'profile email'))) ?: [],
+        static fn (string $scope): bool => $scope !== '',
+    )),
 
     /*
     |--------------------------------------------------------------------------
