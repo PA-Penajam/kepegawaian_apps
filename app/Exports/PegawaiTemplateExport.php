@@ -55,7 +55,7 @@ class PegawaiDataSheet implements FromCollection, ShouldAutoSize, WithHeadings, 
     {
         return collect([
             [
-                'nip' => "'199107132020121003",
+                'nip' => "'199001012020121001",
                 'nama' => 'Ahmad Fauzi, S.Kom.',
                 'jabatan' => 'Pranata Komputer Ahli Pertama',
                 'unit_kerja' => 'Subbagian Perencanaan, TI, dan Pelaporan',
@@ -64,7 +64,7 @@ class PegawaiDataSheet implements FromCollection, ShouldAutoSize, WithHeadings, 
                 'no_wa' => '081234567890',
             ],
             [
-                'nip' => "'198411192011011012",
+                'nip' => "'198505152010012002",
                 'nama' => 'Siti Aminah, S.H.',
                 'jabatan' => 'Kasubbag Kepegawaian, Organisasi, dan Tatalaksana',
                 'unit_kerja' => 'Subbagian Kepegawaian, Organisasi, dan Tatalaksana',

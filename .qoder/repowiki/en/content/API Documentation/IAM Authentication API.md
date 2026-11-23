@@ -531,7 +531,7 @@ X-Signature: {hmac_sha256}
     "id": "01JRXXXXXXXXXXXXXXXXXXXXXXXX",
     "name": "Budi Santoso",
     "email": "budi@pa-penajam.go.id",
-    "nip": "199107132020121003"
+    "nip": "199001012020121001"
   },
   "roles": ["operator"],
   "permissions": ["absensi:create", "rekap:read"],

@@ -69,7 +69,7 @@ components:
           example: "budi@pa-penajam.go.id"
         nip:
           type: string
-          example: "199107132020121003"
+          example: "199001012020121001"
           description: NIP 18 digit
 
     ValidateResponse:
@@ -347,7 +347,7 @@ paths:
                       id: "01JRXXXXXXXXXXXXXXXXXXXXXXXX"
                       name: "Budi Santoso"
                       email: "budi@pa-penajam.go.id"
-                      nip: "199107132020121003"
+                      nip: "199001012020121001"
                     roles: ["operator"]
                     permissions: ["absensi:create", "rekap:read"]
                     token_expires_at: 1745152256
@@ -358,7 +358,7 @@ paths:
                       id: "01JRXXXXXXXXXXXXXXXXXXXXXXXX"
                       name: "Budi Santoso"
                       email: "budi@pa-penajam.go.id"
-                      nip: "199107132020121003"
+                      nip: "199001012020121001"
                     roles: []
                     permissions: []
                     token_expires_at: 1745152256

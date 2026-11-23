@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             RefJenisDokumenSeeder::class,
             RefStatusKepegawaianSeeder::class,
             RefStatusPegawaiSeeder::class,
-            // Seed data pegawai dari JSON terlebih dahulu sebagai sumber data utama
+            // Seed data pegawai sintetis terlebih dahulu sebagai sumber data utama
             PegawaiSeeder::class,
             IamSeeder::class,
             PermissionSikepP1Seeder::class,
@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
             ChecklistKenaikanPangkatSeeder::class,
         ]);
 
-        // --- Assign password & IAM role ke pegawai berdasarkan data JSON ---
+        // --- Assign password & IAM role ke pegawai berdasarkan data sintetis ---
 
         $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
 
@@ -52,11 +52,11 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
-        // NIP admin: Pranata Komputer (IT) dari data JSON
-        $nipAdmin = '199107132020121003';
+        // NIP admin: Pranata Komputer (IT) sintetis
+        $nipAdmin = '199001012020121001';
 
-        // NIP operator: Kasubbag Kepegawaian dari data JSON
-        $nipOperator = '198411192011011012';
+        // NIP operator: Kasubbag Kepegawaian sintetis
+        $nipOperator = '198505152010012002';
 
         // Gunakan DB::table() langsung untuk bypass cast 'hashed' pada model
         // agar password di-hash sekali saja dengan benar
@@ -94,7 +94,7 @@ class DatabaseSeeder extends Seeder
         $pegawai = Pegawai::withoutGlobalScopes()->where('nip', $nip)->first();
 
         if (! $pegawai) {
-            $this->command->warn("NIP {$nip} tidak ditemukan di data JSON.");
+            $this->command->warn("NIP {$nip} tidak ditemukan di data seeder.");
 
             return;
         }

@@ -260,4 +260,4 @@
 ## [2026-03-15] F3 Manual QA (correction)
 
 - Seed account aktual untuk QA adalah `admin@example.com` dan `viewer@example.com`; brief task memakai domain `.test`, jadi validasi perlu dikonfirmasi ke database sebelum menyimpulkan login gagal.
-- Viewer seed yang ter-link ternyata mengarah ke pegawai `Ade Ramadan`, bukan `Fattahurridlo Al Ghany`, sehingga assertion self-service harus mengikuti data seed nyata.
+- Viewer seed yang ter-link ternyata mengarah ke pegawai `Ade Ramadan`, bukan `Hendra Wijaya`, sehingga assertion self-service harus mengikuti data seed nyata.

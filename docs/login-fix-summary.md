@@ -134,7 +134,7 @@ Untuk test fix ini:
 ```bash
 curl -X POST http://kepegawaian-apps.test/login \
   -H "Content-Type: application/json" \
-  -d '{"nip":"197503141996031002","password":"password","remember":false}'
+  -d '{"nip":"198003152005011001","password":"password","remember":false}'
 ```
 
 **Expected**: Authentication proceeds (or wrong password error)

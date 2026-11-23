@@ -258,7 +258,7 @@ Validasi token + ambil info user & permissions untuk aplikasi pemanggil.
     "id": "01J...",
     "name": "Budi Santoso",
     "email": "budi@pa-penajam.go.id",
-    "nip": "199107132020121003"
+    "nip": "199001012020121001"
   },
   "roles": ["operator"],
   "permissions": ["absensi:create", "rekap:read"],

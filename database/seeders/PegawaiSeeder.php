@@ -22,12 +22,15 @@ class PegawaiSeeder extends Seeder
      */
     public function run(): void
     {
-        $rawData = json_decode((string) file_get_contents(base_path('docs/data_pegawai.json')), true, 512, JSON_THROW_ON_ERROR);
+        $rawData = $this->getSyntheticPegawaiData();
 
         foreach ($rawData as $item) {
             $tanggalMasuk = $this->parseTanggalIndonesia($item['tmt']);
             $tanggalLahir = $this->extractTanggalLahirDariNip($item['nip']);
             $statusKepegawaian = $this->resolveStatusKepegawaian($item['gol']);
+            $jenisKelamin = substr($item['nip'], 14, 1) === '2'
+                ? JenisKelamin::Perempuan->value
+                : JenisKelamin::LakiLaki->value;
 
             Pegawai::query()->updateOrCreate(
                 ['nip' => $item['nip']],
@@ -37,7 +40,7 @@ class PegawaiSeeder extends Seeder
                     'nama_lengkap' => Str::title(strtolower($item['nama'])),
                     'tempat_lahir' => fake('id_ID')->city(),
                     'tanggal_lahir' => $tanggalLahir,
-                    'jenis_kelamin' => fake()->randomElement(JenisKelamin::cases())->value,
+                    'jenis_kelamin' => $jenisKelamin,
                     'agama' => Agama::Islam->value,
                     'status_perkawinan' => fake()->randomElement(StatusPerkawinan::cases())->value,
                     'golongan_darah' => null,
@@ -66,8 +69,163 @@ class PegawaiSeeder extends Seeder
             );
         }
 
-        // Hanya seed dari JSON, tidak menambah data test
-        $this->command->info('Seeded '.Pegawai::query()->count().' pegawai dari JSON.');
+        // Seed menggunakan dataset sintetis internal tanpa data PII asli
+        $this->command?->info('Seeded '.Pegawai::query()->count().' pegawai sintetis.');
+    }
+
+    /**
+     * Mengembalikan dataset pegawai sintetis untuk keperluan seeding pengembangan dan pengujian.
+     *
+     * @return array<int, array{no: int, nip: string, nama: string, jabatan: string, unit_kerja: string, gol: string, tmt: string}>
+     */
+    private function getSyntheticPegawaiData(): array
+    {
+        return [
+            [
+                'no' => 1,
+                'nip' => '197804122002121001',
+                'nama' => 'Dr. Hendra Wijaya, S.H., M.H.',
+                'jabatan' => 'Ketua',
+                'unit_kerja' => 'Pengadilan Agama Penajam',
+                'gol' => 'IV/b',
+                'tmt' => '1 Maret 2024',
+            ],
+            [
+                'no' => 2,
+                'nip' => '198006202005012001',
+                'nama' => 'Dra. Ratna Dewi, S.H., M.Hum.',
+                'jabatan' => 'Wakil Ketua',
+                'unit_kerja' => 'Pengadilan Agama Penajam',
+                'gol' => 'IV/a',
+                'tmt' => '1 April 2024',
+            ],
+            [
+                'no' => 3,
+                'nip' => '198208152008051001',
+                'nama' => 'Bambang Suryanto, S.H.I., M.H.',
+                'jabatan' => 'Hakim',
+                'unit_kerja' => 'Pengadilan Agama Penajam',
+                'gol' => 'III/d',
+                'tmt' => '1 Oktober 2022',
+            ],
+            [
+                'no' => 4,
+                'nip' => '197911032004041002',
+                'nama' => 'Agus Setiawan, S.H.',
+                'jabatan' => 'Panitera',
+                'unit_kerja' => 'Kepaniteraan',
+                'gol' => 'IV/a',
+                'tmt' => '1 April 2023',
+            ],
+            [
+                'no' => 5,
+                'nip' => '198103222006041001',
+                'nama' => 'Dedy Kurniawan, S.E., M.Si.',
+                'jabatan' => 'Sekretaris',
+                'unit_kerja' => 'Kesekretariatan',
+                'gol' => 'IV/a',
+                'tmt' => '1 Oktober 2023',
+            ],
+            [
+                'no' => 6,
+                'nip' => '198407102009042001',
+                'nama' => 'Rina Kartika, S.H.I.',
+                'jabatan' => 'Panitera Muda Permohonan',
+                'unit_kerja' => 'Kepaniteraan | Panitera Muda Permohonan',
+                'gol' => 'III/d',
+                'tmt' => '1 April 2022',
+            ],
+            [
+                'no' => 7,
+                'nip' => '198609182011011003',
+                'nama' => 'Fajar Pratama, S.H.',
+                'jabatan' => 'Panitera Muda Gugatan',
+                'unit_kerja' => 'Kepaniteraan | Panitera Muda Gugatan',
+                'gol' => 'III/c',
+                'tmt' => '1 Oktober 2021',
+            ],
+            [
+                'no' => 8,
+                'nip' => '198702142012122001',
+                'nama' => 'Lestari Wulandari, S.H.',
+                'jabatan' => 'Panitera Muda Hukum',
+                'unit_kerja' => 'Kepaniteraan | Panitera Muda Hukum',
+                'gol' => 'III/c',
+                'tmt' => '1 April 2022',
+            ],
+            [
+                'no' => 9,
+                'nip' => '198505152010012002',
+                'nama' => 'Siti Aminah, S.H.',
+                'jabatan' => 'Kepala Subbagian Kepegawaian, Organisasi, dan Tatalaksana',
+                'unit_kerja' => 'Subbagian Kepegawaian, Organisasi, dan Tatalaksana',
+                'gol' => 'III/d',
+                'tmt' => '1 April 2022',
+            ],
+            [
+                'no' => 10,
+                'nip' => '199001012020121001',
+                'nama' => 'Ahmad Fauzi, S.Kom.',
+                'jabatan' => 'Pranata Komputer Ahli Pertama',
+                'unit_kerja' => 'Subbagian Perencanaan, Teknologi Informasi, dan Pelaporan',
+                'gol' => 'III/a',
+                'tmt' => '1 Desember 2020',
+            ],
+            [
+                'no' => 11,
+                'nip' => '198904252014031002',
+                'nama' => 'Eko Prasetyo, S.E.',
+                'jabatan' => 'Kepala Subbagian Umum dan Keuangan',
+                'unit_kerja' => 'Subbagian Umum dan Keuangan',
+                'gol' => 'III/c',
+                'tmt' => '1 Oktober 2022',
+            ],
+            [
+                'no' => 12,
+                'nip' => '199108172019032004',
+                'nama' => 'Maya Sari, S.H.',
+                'jabatan' => 'Panitera Pengganti',
+                'unit_kerja' => 'Kepaniteraan',
+                'gol' => 'III/b',
+                'tmt' => '1 Maret 2019',
+            ],
+            [
+                'no' => 13,
+                'nip' => '199305212020121005',
+                'nama' => 'Dimas Saputra, A.Md.Kom.',
+                'jabatan' => 'Jurusita Pengganti',
+                'unit_kerja' => 'Kepaniteraan',
+                'gol' => 'II/c',
+                'tmt' => '1 Desember 2020',
+            ],
+            [
+                'no' => 14,
+                'nip' => '199506102024211008',
+                'nama' => 'Rizki Ramadhan, A.Md.',
+                'jabatan' => 'Operator - Layanan Operasional',
+                'unit_kerja' => 'Subbagian Umum dan Keuangan',
+                'gol' => 'IX',
+                'tmt' => '1 Maret 2024',
+            ],
+            [
+                'no' => 15,
+                'nip' => '199612052024212009',
+                'nama' => 'Putri Handayani',
+                'jabatan' => 'Pengadministrasi Perkantoran',
+                'unit_kerja' => 'Panitera Muda Gugatan',
+                'gol' => 'V',
+                'tmt' => '1 Maret 2024',
+            ],
+            [
+                'no' => 16,
+                'nip' => '199801142023011001',
+                'nama' => 'Wahyu Nugroho',
+                'jabatan' => 'Tenaga Pramubakti',
+                'unit_kerja' => 'Subbagian Umum dan Keuangan',
+                'gol' => 'I',
+                'tmt' => '1 Januari 2023',
+            ],
+        ];
     }
 
     private function parseTanggalIndonesia(string $tanggal): string
@@ -252,7 +410,7 @@ class PegawaiSeeder extends Seeder
     {
         $normalizedNama = strtolower($nama);
 
-        if (str_contains($normalizedNama, 'm.s.i') || str_contains($normalizedNama, 'm.h.') || str_contains($normalizedNama, 'm.hum.') || str_contains($normalizedNama, 'm.kn.')) {
+        if (str_contains($normalizedNama, 'm.s.i') || str_contains($normalizedNama, 'm.si') || str_contains($normalizedNama, 'm.h.') || str_contains($normalizedNama, 'm.hum.') || str_contains($normalizedNama, 'm.kn.')) {
             return 'S2';
         }
 

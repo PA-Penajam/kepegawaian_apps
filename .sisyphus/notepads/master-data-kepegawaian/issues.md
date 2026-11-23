@@ -45,7 +45,7 @@
 
 - Database aktif memang memiliki akun QA, tetapi berbeda dari brief: `admin@example.com` (admin) dan `viewer@example.com` (viewer), bukan domain `.test`.
 - Satu blocker fungsional yang tervalidasi browser: route `/kepegawaian/pegawai/create` mengembalikan `500 Internal Server Error` karena query mengurutkan kolom `ref_jabatan.urutan` yang tidak ada.
-- Data self-service viewer tampil normal, tetapi brief menyebut viewer ter-link ke Fattah; data seed nyata ter-link ke `Ade Ramadan`.
+- Data self-service viewer tampil normal, tetapi brief menyebut viewer ter-link ke Hendra; data seed nyata ter-link ke `Ade Ramadan`.
 
 ## [2026-03-15] F3 QA Re-run (post-fix)
 
