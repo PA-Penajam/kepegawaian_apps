@@ -10,6 +10,7 @@ use Database\Seeders\RefJabatanSeeder;
 use Database\Seeders\RefPangkatSeeder;
 use Database\Seeders\RefUnitKerjaSeeder;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -55,7 +56,10 @@ test('dapat mengimpor data pegawai dari template excel', function () {
         ->and($pegawai->tanggal_lahir->toDateString())->toBe('1991-07-13')
         ->and($pegawai->jenis_kelamin)->toBe(JenisKelamin::LakiLaki)
         ->and($pegawai->status_kepegawaian)->toBe(StatusKepegawaian::PNS)
-        ->and($pegawai->status_pegawai)->toBe(StatusPegawai::Aktif);
+        ->and($pegawai->status_pegawai)->toBe(StatusPegawai::Aktif)
+        ->and($pegawai->password)->not->toBeNull()
+        ->and(Hash::isHashed((string) $pegawai->password))->toBeTrue()
+        ->and(Hash::check('Password123!', (string) $pegawai->password))->toBeFalse();
 
     if (file_exists($tempFile)) {
         unlink($tempFile);

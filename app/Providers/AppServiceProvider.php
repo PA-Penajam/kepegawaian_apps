@@ -86,6 +86,10 @@ class AppServiceProvider extends ServiceProvider
     {
         if (app()->environment('production') || str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
+
+            if (in_array(config('session.secure'), [null, ''], true)) {
+                config(['session.secure' => true]);
+            }
         }
 
         Date::use(CarbonImmutable::class);

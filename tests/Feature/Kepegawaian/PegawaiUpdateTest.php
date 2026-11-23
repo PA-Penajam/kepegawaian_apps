@@ -12,6 +12,7 @@ use App\Models\RefJabatan;
 use App\Models\RefPangkat;
 use App\Models\RefUnitKerja;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
 
@@ -134,4 +135,32 @@ it('operator update biodata menjadi pending request alih-alih update langsung', 
         'domain' => 'profil_pribadi',
         'status' => 'pending',
     ]);
+});
+
+it('dapat memperbarui password pegawai secara eksplisit dan menyimpannya dalam bentuk hash', function () {
+    $data = $this->pegawai->toArray();
+    $data['nama_lengkap'] = 'Nama Dengan Sandi Baru';
+    $data['password'] = 'SandiBaru123!';
+    $data['password_confirmation'] = 'SandiBaru123!';
+
+    $this->actingAs($this->user)
+        ->put(route('kepegawaian.pegawai.update', $this->pegawai), $data)
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('kepegawaian.pegawai.show', $this->pegawai));
+
+    $updated = $this->pegawai->refresh();
+
+    expect($updated->nama_lengkap)->toBe('Nama Dengan Sandi Baru')
+        ->and(Hash::check('SandiBaru123!', (string) $updated->password))->toBeTrue();
+});
+
+it('mengabaikan percobaan mass assignment pada atribut password', function () {
+    $originalPassword = $this->pegawai->password;
+
+    $this->pegawai->fill([
+        'password' => 'SandiInjeksi123!',
+    ]);
+
+    expect($this->pegawai->password)->toBe($originalPassword)
+        ->and(Hash::check('SandiInjeksi123!', (string) $this->pegawai->password))->toBeFalse();
 });

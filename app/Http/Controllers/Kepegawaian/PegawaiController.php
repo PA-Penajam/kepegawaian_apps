@@ -21,6 +21,7 @@ use App\Services\PengajuanPerubahanData\SubmitPengajuanPerubahanDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -225,11 +226,16 @@ class PegawaiController extends Controller
                     ->with('success', 'Perubahan disimpan sebagai pengajuan (Pending) untuk divalidasi.');
             }
 
-            $pegawai->update($request->safe()->except(['password', 'password_confirmation']));
+            DB::transaction(function () use ($request, $pegawai): void {
+                $pegawai->fill($request->safe()->except(['password', 'password_confirmation']));
 
-            if ($request->filled('password')) {
-                $pegawai->update(['password' => bcrypt($request->validated('password'))]);
-            }
+                if ($request->filled('password')) {
+                    // password bukan fillable; set eksplisit dalam transaksi yang sama
+                    $pegawai->password = $request->validated('password');
+                }
+
+                $pegawai->save();
+            });
 
             return to_route('kepegawaian.pegawai.show', $pegawai)
                 ->with('success', 'Data pegawai berhasil diperbarui.');

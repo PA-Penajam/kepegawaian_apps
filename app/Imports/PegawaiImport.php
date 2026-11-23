@@ -16,7 +16,7 @@ use App\Models\RiwayatPangkat;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -136,8 +136,10 @@ class PegawaiDataImportSheet implements SkipsEmptyRows, ToCollection, WithHeadin
                     }
 
                     if (! $existing) {
-                        $data['password'] = Hash::make('Password123!');
-                        $pegawai = Pegawai::create($data);
+                        $pegawai = new Pegawai($data);
+                        // password bukan fillable; set eksplisit sandi acak yang di-hash oleh cast model
+                        $pegawai->password = Str::random(32);
+                        $pegawai->save();
                         $this->parent->importedCount++;
                     } else {
                         $existing->update($data);

@@ -14,6 +14,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
  * Controller untuk autentikasi SSO PA Penajam via OAuth2 Authorization Code Grant + PKCE.
@@ -32,7 +34,7 @@ class SsoAuthController extends Controller
     /**
      * Mengalihkan pengguna ke endpoint otorisasi SSO PA Penajam.
      */
-    public function login(Request $request): RedirectResponse
+    public function login(Request $request): SymfonyResponse
     {
         $redirectUri = config('sso.redirect_uri') ?: route('auth.sso.callback');
         $authRequest = $this->ssoClient->buildAuthorizationUrl($redirectUri);
@@ -45,7 +47,7 @@ class SsoAuthController extends Controller
             'expires_at' => now()->addMinutes($stateExpiryMinutes)->toIso8601String(),
         ]);
 
-        return redirect()->away($authRequest->url);
+        return Inertia::location($authRequest->url);
     }
 
     /**

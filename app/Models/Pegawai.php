@@ -43,8 +43,10 @@ class Pegawai extends Authenticatable
         'tanggal_pensiun_bup', 'ref_pangkat_id', 'ref_jabatan_id', 'ref_unit_kerja_id',
         'no_karpeg', 'no_karis_karsu', 'npwp', 'no_bpjs_kesehatan',
         'no_bpjs_ketenagakerjaan', 'no_taspen', 'foto', 'keterangan',
-        'password',
     ];
+
+    // Field sensitif (password) sengaja TIDAK mass-assignable.
+    // Set via assignment eksplisit: $pegawai->password = ...; $pegawai->save();
 
     protected $hidden = [
         'password', 'remember_token',

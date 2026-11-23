@@ -4,6 +4,7 @@ use App\Exceptions\Handler;
 use App\Http\Middleware\EnforceSsoOnly;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SecurityHeadersMiddleware;
 use App\Http\Middleware\SsoTokenRefresh;
 use App\Http\Middleware\VerifyHmacSignature;
 use App\Http\Middleware\VerifyIamPermission;
@@ -16,6 +17,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -46,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             SsoTokenRefresh::class,
+            SecurityHeadersMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -55,7 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'Unauthenticated.'], 401);
             }
 
-            return redirect()->route('auth.sso.login');
+            return Inertia::location(redirect()->route('auth.sso.login'));
         });
 
         // Handler untuk Exception SSO PA Penajam

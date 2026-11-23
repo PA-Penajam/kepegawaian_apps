@@ -77,7 +77,6 @@ class PegawaiFactory extends Factory
             'no_taspen' => $fakerId->optional()->numerify('##########'),
             'foto' => $fakerId->optional()->randomElement(['pegawai/default-1.jpg', 'pegawai/default-2.jpg']),
             'keterangan' => $fakerId->optional()->sentence(),
-            'password' => static::$password ??= Hash::make('password'),
         ];
     }
 
@@ -87,17 +86,35 @@ class PegawaiFactory extends Factory
      */
     public function configure(): static
     {
-        return $this->afterCreating(function (Pegawai $pegawai) {
-            $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
-            $role = $kepegawaian
-                ? IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'viewer')->first()
-                : null;
-            if ($role) {
-                IamUserRole::firstOrCreate(
-                    ['user_id' => $pegawai->id, 'iam_role_id' => $role->id],
-                    ['assigned_at' => now()]
-                );
-            }
+        return $this
+            // password bukan fillable; set eksplisit sebelum model disimpan
+            ->afterMaking(function (Pegawai $pegawai) {
+                if ($pegawai->password === null) {
+                    $pegawai->password = static::$password ??= Hash::make('password');
+                }
+            })
+            ->afterCreating(function (Pegawai $pegawai) {
+                $kepegawaian = IamApplication::where('slug', 'kepegawaian')->first();
+                $role = $kepegawaian
+                    ? IamRole::where('iam_application_id', $kepegawaian->id)->where('slug', 'viewer')->first()
+                    : null;
+                if ($role) {
+                    IamUserRole::firstOrCreate(
+                        ['user_id' => $pegawai->id, 'iam_role_id' => $role->id],
+                        ['assigned_at' => now()]
+                    );
+                }
+            });
+    }
+
+    /**
+     * Set password eksplisit (password bukan fillable, jadi tidak bisa via state attribute).
+     * Nilai plain akan di-hash otomatis oleh cast 'hashed' pada model.
+     */
+    public function withPassword(string $password): static
+    {
+        return $this->afterMaking(function (Pegawai $pegawai) use ($password) {
+            $pegawai->password = $password;
         });
     }
 
