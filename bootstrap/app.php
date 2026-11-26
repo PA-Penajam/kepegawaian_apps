@@ -8,6 +8,7 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeadersMiddleware;
 use App\Http\Middleware\SsoTokenRefresh;
+use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\VerifyHmacSignature;
 use App\Http\Middleware\VerifyIamPermission;
 use App\Http\Middleware\VerifyIamSignature;
@@ -17,6 +18,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Middleware\TrustProxies as BaseTrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -44,6 +46,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+
+        // Percayai reverse proxy internal Coolify/Traefik serta normalisasi CF-Visitor HTTPS
+        $middleware->replace(BaseTrustProxies::class, TrustProxies::class);
 
         $middleware->web(append: [
             EnforceSsoOnly::class,
