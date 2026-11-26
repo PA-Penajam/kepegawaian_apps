@@ -61,8 +61,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('self-service')
         ->name('self-service.')
         ->group(function () {
-            Route::get('/', [SelfServiceController::class, 'index'])->name('index');
-            Route::get('/detail', [SelfServiceController::class, 'detail'])->name('detail');
+            Route::get('/', [SelfServiceController::class, 'index'])
+                ->middleware('module.available:self_service')
+                ->name('index');
+            Route::get('/detail', [SelfServiceController::class, 'detail'])
+                ->middleware('module.available:self_service')
+                ->name('detail');
             Route::get('/foto', [SelfServiceController::class, 'showFoto'])->name('foto');
         });
 
@@ -128,19 +132,19 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
         ->name('kepegawaian.pegawai.foto.update');
 
     Route::get('kepegawaian/monitoring/kgb', [MonitoringKgbController::class, 'index'])
-        ->middleware('iam.permission:monitoring.view')
+        ->middleware(['module.available:monitoring', 'iam.permission:monitoring.view'])
         ->name('monitoring.kgb.index');
 
     Route::get('kepegawaian/monitoring/kgb/export', [MonitoringKgbController::class, 'export'])
-        ->middleware('iam.permission:monitoring.view')
+        ->middleware(['module.available:monitoring', 'iam.permission:monitoring.view'])
         ->name('monitoring.kgb.export');
 
     Route::get('kepegawaian/monitoring/kenaikan-pangkat', [MonitoringKenaikanPangkatController::class, 'index'])
-        ->middleware('iam.permission:any:monitoring.view,kenaikan-pangkat.monitoring.view')
+        ->middleware(['module.available:monitoring', 'iam.permission:any:monitoring.view,kenaikan-pangkat.monitoring.view'])
         ->name('monitoring.kenaikan-pangkat.index');
 
     Route::get('kepegawaian/monitoring/kenaikan-pangkat/export', [MonitoringKenaikanPangkatController::class, 'export'])
-        ->middleware('iam.permission:any:monitoring.view,kenaikan-pangkat.monitoring.view')
+        ->middleware(['module.available:monitoring', 'iam.permission:any:monitoring.view,kenaikan-pangkat.monitoring.view'])
         ->name('monitoring.kenaikan-pangkat.export');
 
     Route::resource('referensi/jenis-dokumen', RefJenisDokumenController::class)
@@ -164,6 +168,7 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
     Route::resource('admin/checklist-template', ChecklistTemplateController::class)
         ->parameters(['checklist-template' => 'template'])
         ->names('admin.checklist-template')
+        ->middleware('module.available:kenaikan_pangkat')
         ->except(['show']);
 
     // Nested kepegawaian routes
@@ -212,7 +217,7 @@ Route::middleware(['auth', 'verified', 'iam.permission'])->group(function () {
             // Pengajuan perubahan data - validator inbox
             Route::prefix('pengajuan')
                 ->name('pengajuan.')
-                ->middleware('iam.permission:pengajuan-perubahan.validate')
+                ->middleware(['module.available:validasi_pengajuan', 'iam.permission:pengajuan-perubahan.validate'])
                 ->group(function () {
                     Route::get('/', [ApprovalPengajuanPerubahanDataController::class, 'index'])->name('index');
                     Route::get('/{pengajuan}', [ApprovalPengajuanPerubahanDataController::class, 'show'])->name('show');
@@ -243,7 +248,7 @@ Route::middleware(['auth', 'verified'])->prefix('cuti')->name('cuti.')->group(fu
     Route::post('/pengajuan/{id}/reassign-approver', [ApprovalController::class, 'reassign'])->middleware('iam.permission:cuti.pengajuan.reassign')->name('pengajuan.reassign');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('kenaikan-pangkat')->name('kenaikan-pangkat.')->group(function () {
+Route::middleware(['auth', 'verified', 'module.available:kenaikan_pangkat'])->prefix('kenaikan-pangkat')->name('kenaikan-pangkat.')->group(function () {
     Route::get('eligible', [UsulanKenaikanPangkatController::class, 'eligible'])->name('eligible');
     Route::get('usulan/{usulan}/activity', [UsulanKenaikanPangkatController::class, 'activity'])->name('usulan.activity');
     Route::resource('usulan', UsulanKenaikanPangkatController::class);

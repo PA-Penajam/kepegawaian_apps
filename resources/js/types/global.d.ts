@@ -8,6 +8,9 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             flash?: SharedFlash;
+            modules?: {
+                under_development: string[];
+            };
             [key: string]: unknown;
         };
     }

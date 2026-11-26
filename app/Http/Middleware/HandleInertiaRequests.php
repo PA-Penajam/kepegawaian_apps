@@ -74,6 +74,15 @@ class HandleInertiaRequests extends Middleware
                 'max_segments' => config('iam.slug.max_segments'),
                 'docs_url' => config('iam.docs_url'),
             ],
+            'modules' => fn () => [
+                'under_development' => (bool) config('modules.under_development_enabled', true)
+                    ? collect(config('modules.items', []))
+                        ->filter(fn (array $item): bool => (bool) ($item['under_development'] ?? false))
+                        ->keys()
+                        ->values()
+                        ->all()
+                    : [],
+            ],
         ];
     }
 }

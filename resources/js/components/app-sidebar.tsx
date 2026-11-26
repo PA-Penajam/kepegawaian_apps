@@ -43,12 +43,18 @@ import { index as selfServiceIndex } from '@/routes/self-service';
 import type { Auth, NavItem } from '@/types';
 
 export function AppSidebar() {
-    const { auth } = usePage<{ auth: Auth }>().props;
+    const { auth, modules } = usePage<{
+        auth: Auth;
+        modules?: { under_development?: string[] };
+    }>().props;
     const permissions = auth.user.permissions ?? [];
+    const underDevelopmentModules = modules?.under_development ?? [];
 
     const hasPermission = (perm: string) => permissions.includes(perm);
     const hasAnyPermission = (...perms: string[]) =>
         perms.some((p) => permissions.includes(p));
+    const isUnderDevelopment = (key: string) =>
+        underDevelopmentModules.includes(key);
 
     const mainNavItems: NavItem[] = [
         {
@@ -60,6 +66,7 @@ export function AppSidebar() {
             title: 'Self Service',
             href: selfServiceIndex(),
             icon: User,
+            underDevelopment: isUnderDevelopment('self_service'),
         },
         {
             title: 'Settings',
@@ -86,7 +93,10 @@ export function AppSidebar() {
                   title: 'Validasi Pengajuan',
                   href: '/kepegawaian/pengajuan',
                   icon: ShieldCheck,
-                  badge: auth.user.pending_pengajuan_count ?? null,
+                  underDevelopment: isUnderDevelopment('validasi_pengajuan'),
+                  badge: isUnderDevelopment('validasi_pengajuan')
+                      ? null
+                      : (auth.user.pending_pengajuan_count ?? null),
               },
           ]
         : [];
@@ -98,6 +108,7 @@ export function AppSidebar() {
                       title: 'KGB',
                       href: '/kepegawaian/monitoring/kgb',
                       icon: Calendar,
+                      underDevelopment: isUnderDevelopment('monitoring'),
                   },
               ]
             : []),
@@ -110,6 +121,7 @@ export function AppSidebar() {
                       title: 'Kenaikan Pangkat',
                       href: '/kepegawaian/monitoring/kenaikan-pangkat',
                       icon: TrendingUp,
+                      underDevelopment: isUnderDevelopment('monitoring'),
                   },
               ]
             : []),
@@ -122,11 +134,13 @@ export function AppSidebar() {
                       title: 'Usulan KP',
                       href: usulan.index.url(),
                       icon: TrendingUp,
+                      underDevelopment: isUnderDevelopment('kenaikan_pangkat'),
                   },
                   {
                       title: 'Pegawai Eligible KP',
                       href: eligible.url(),
                       icon: UserCheck,
+                      underDevelopment: isUnderDevelopment('kenaikan_pangkat'),
                   },
               ]
             : []),
@@ -141,6 +155,7 @@ export function AppSidebar() {
                       title: 'Inbox Approval KP',
                       href: approval.inbox.url(),
                       icon: Inbox,
+                      underDevelopment: isUnderDevelopment('kenaikan_pangkat'),
                   },
               ]
             : []),
@@ -154,6 +169,7 @@ export function AppSidebar() {
                       title: 'Admin SK KP',
                       href: adminSk.index.url(),
                       icon: FileCheck,
+                      underDevelopment: isUnderDevelopment('kenaikan_pangkat'),
                   },
               ]
             : []),
@@ -163,6 +179,7 @@ export function AppSidebar() {
                       title: 'Checklist Template',
                       href: checklistTemplate.index.url(),
                       icon: ClipboardCheck,
+                      underDevelopment: isUnderDevelopment('kenaikan_pangkat'),
                   },
               ]
             : []),

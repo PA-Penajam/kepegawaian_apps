@@ -2,6 +2,7 @@
 
 use App\Exceptions\Handler;
 use App\Http\Middleware\EnforceSsoOnly;
+use App\Http\Middleware\EnsureModuleAvailable;
 use App\Http\Middleware\EnsurePegawaiIsActive;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'abilities' => CheckAbilities::class,
+            'module.available' => EnsureModuleAvailable::class,
             'verify.hmac' => VerifyHmacSignature::class,
             'iam.signature' => VerifyIamSignature::class,
             'iam.permission' => VerifyIamPermission::class,

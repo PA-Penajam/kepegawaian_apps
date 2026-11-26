@@ -48,12 +48,22 @@ export function NavMain({
                                 isActive={isActive}
                                 tooltip={{ children: item.title }}
                             >
-                                <Link href={item.href} prefetch>
+                                <Link
+                                    href={item.href}
+                                    prefetch={!item.underDevelopment}
+                                >
                                     {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
+                                    <span className="truncate">
+                                        {item.title}
+                                    </span>
+                                    {item.underDevelopment ? (
+                                        <span className="ml-auto shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 group-data-[collapsible=icon]:hidden dark:text-amber-400">
+                                            Pengembangan
+                                        </span>
+                                    ) : null}
                                 </Link>
                             </SidebarMenuButton>
-                            {item.badge != null && (
+                            {!item.underDevelopment && item.badge != null && (
                                 <SidebarMenuBadge>
                                     {item.badge}
                                 </SidebarMenuBadge>

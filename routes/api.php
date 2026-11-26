@@ -63,7 +63,7 @@ Route::middleware(['auth:sanctum', 'abilities:cuti:read', 'verify.hmac', 'thrott
 
 Route::prefix('kenaikan-pangkat')
     ->name('api.kenaikan-pangkat.')
-    ->middleware(['auth:sanctum', 'abilities:app:kepegawaian', 'verify.hmac', 'throttle:60,1'])
+    ->middleware(['auth:sanctum', 'abilities:app:kepegawaian', 'verify.hmac', 'throttle:60,1', 'module.available:kenaikan_pangkat'])
     ->group(function () {
         Route::get('usulan', [UsulanKenaikanPangkatApiController::class, 'index'])->name('usulan.index');
         Route::get('usulan/{usulan}', [UsulanKenaikanPangkatApiController::class, 'show'])->name('usulan.show');
