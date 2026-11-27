@@ -97,8 +97,8 @@ export default function KewenanganAdmin({
                             Tambah Aturan Kewenangan Instansi Atasan
                         </CardTitle>
                         <CardDescription>
-                            Kosong secara bawaan (semua cuti diputus internal PA).
-                            Tambahkan aturan bila kombinasi jenis cuti dan
+                            Kosong secara bawaan (semua cuti diputus internal
+                            PA). Tambahkan aturan bila kombinasi jenis cuti dan
                             jabatan harus meminta izin PTA atau Mahkamah Agung.
                         </CardDescription>
                     </CardHeader>

@@ -80,10 +80,10 @@ it('routes/web.php tidak punya duplicate middleware groups', function () {
     preg_match_all('/Route::middleware\(\[.*?\]\)/', $content, $matches);
     $unique = array_unique($matches[0]);
 
-    // 6 total group (kenaikan-pangkat module menambah 1 group baru)
-    // 4 unique group — duplikasi ['auth', 'verified'] disengaja untuk organisasi route
+    // 6 total group (kenaikan-pangkat module memiliki middleware module.available tersendiri)
+    // 5 unique group — duplikasi ['auth', 'verified'] disengaja untuk organisasi route
     expect(count($matches[0]))->toBe(6);
-    expect(count($unique))->toBe(4);
+    expect(count($unique))->toBe(5);
 });
 
 // ========================================================================

@@ -29,11 +29,7 @@ import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { formatTanggal, formatTanggalDateTime } from '@/lib/cuti-utils';
 import type { BreadcrumbItem } from '@/types';
-import type {
-    CutiPengajuan,
-    CutiState,
-    StatusSuratDinas,
-} from '@/types/cuti';
+import type { CutiPengajuan, CutiState, StatusSuratDinas } from '@/types/cuti';
 import { CutiStateBadgeVariant, CutiStateLabels } from '@/types/cuti';
 
 type KewenanganEksternalInfo = {
@@ -129,8 +125,7 @@ export default function PengajuanShow({
     const [searchingMail, setSearchingMail] = useState(false);
     const [keputusanForm, setKeputusanForm] = useState(() => ({
         keputusan: (perizinanEksternal?.keputusan ?? 'disetujui') as
-            | 'disetujui'
-            | 'ditolak',
+            'disetujui' | 'ditolak',
         sisukma_incoming_mail_public_id:
             perizinanEksternal?.sisukma_incoming_mail_public_id ?? '',
         nomor_sk: perizinanEksternal?.nomor_sk ?? '',
@@ -154,11 +149,13 @@ export default function PengajuanShow({
 
     const handleSearchIncomingMails = async () => {
         setSearchingMail(true);
+
         try {
             const res = await fetch(
                 `/cuti/sisukma/incoming-mails?q=${encodeURIComponent(mailQuery)}`,
                 { headers: { Accept: 'application/json' } },
             );
+
             if (res.ok) {
                 const json = (await res.json()) as {
                     data?: IncomingMailOption[];
@@ -799,7 +796,8 @@ export default function PengajuanShow({
                                             variant={
                                                 suratIzin.status ===
                                                     'PERLU_PERBAIKAN' ||
-                                                suratIzin.status === 'DIBATALKAN'
+                                                suratIzin.status ===
+                                                    'DIBATALKAN'
                                                     ? 'destructive'
                                                     : suratIzin.status ===
                                                             'FINAL_TERSEDIA' ||
@@ -872,7 +870,8 @@ export default function PengajuanShow({
                                         {(suratIzin.status === 'NOMOR_TERBIT' ||
                                             suratIzin.status ===
                                                 'FINAL_TERSEDIA' ||
-                                            suratIzin.status === 'TERKIRIM') && (
+                                            suratIzin.status ===
+                                                'TERKIRIM') && (
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -890,7 +889,8 @@ export default function PengajuanShow({
                                         )}
                                         {(suratIzin.status ===
                                             'FINAL_TERSEDIA' ||
-                                            suratIzin.status === 'TERKIRIM') && (
+                                            suratIzin.status ===
+                                                'TERKIRIM') && (
                                             <Button size="sm" asChild>
                                                 <a
                                                     href={`/cuti/pengajuan/${pengajuan.id}/surat-izin/final`}

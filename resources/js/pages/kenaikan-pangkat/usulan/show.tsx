@@ -459,16 +459,23 @@ export default function UsulanKenaikanPangkatShow({
                                 <Badge variant="outline">
                                     {usulan.surat_pengantar_request.status}
                                 </Badge>
-                                {usulan.surat_pengantar_request.nomor_agenda && (
+                                {usulan.surat_pengantar_request
+                                    .nomor_agenda && (
                                     <span className="text-muted-foreground">
                                         Agenda:{' '}
-                                        {usulan.surat_pengantar_request.nomor_agenda}
+                                        {
+                                            usulan.surat_pengantar_request
+                                                .nomor_agenda
+                                        }
                                     </span>
                                 )}
                                 {usulan.surat_pengantar_request.nomor_surat && (
                                     <span className="font-mono font-medium">
                                         No:{' '}
-                                        {usulan.surat_pengantar_request.nomor_surat}
+                                        {
+                                            usulan.surat_pengantar_request
+                                                .nomor_surat
+                                        }
                                     </span>
                                 )}
                             </div>
