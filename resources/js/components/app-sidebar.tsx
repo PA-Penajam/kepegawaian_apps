@@ -221,6 +221,8 @@ export function AppSidebar() {
         'cuti.pengajuan.approve-pejabat',
         'cuti.saldo.view-all',
         'cuti.audit.view',
+        'cuti.jenis.manage',
+        'cuti.kewenangan.manage',
     )
         ? [
               ...(hasAnyPermission(
@@ -262,6 +264,24 @@ export function AppSidebar() {
                         {
                             title: 'Audit Cuti',
                             href: '/admin/cuti/audit',
+                            icon: ScrollText,
+                        },
+                    ]
+                  : []),
+              ...(hasPermission('cuti.jenis.manage')
+                  ? [
+                        {
+                            title: 'Penandatangan Cuti',
+                            href: '/admin/cuti/jenis',
+                            icon: ScrollText,
+                        },
+                    ]
+                  : []),
+              ...(hasPermission('cuti.kewenangan.manage')
+                  ? [
+                        {
+                            title: 'Kewenangan PTA/MA',
+                            href: '/admin/cuti/kewenangan',
                             icon: ScrollText,
                         },
                     ]

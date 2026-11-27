@@ -7,6 +7,7 @@ use App\Http\Requests\UsulanKenaikanPangkat\UploadSkFinalRequest;
 use App\Models\Pegawai;
 use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
 use App\Models\UsulanKenaikanPangkat\UsulanKpPdf;
+use App\Services\SuratDinas\Contracts\PenomoranSuratGateway;
 use App\Services\UsulanKenaikanPangkat\UsulanKenaikanPangkatService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\ModelStates\Exceptions\TransitionNotFound;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SkAdminController extends Controller
 {
@@ -111,15 +113,20 @@ class SkAdminController extends Controller
         return $base;
     }
 
-    public function downloadSuratPengantar(UsulanKpPdf $pdf): BinaryFileResponse
+    public function downloadSuratPengantar(UsulanKpPdf $pdf, PenomoranSuratGateway $gateway): BinaryFileResponse|StreamedResponse
     {
-        $pdf->loadMissing('usulan');
+        $pdf->loadMissing('usulan.suratPengantarRequest');
 
         if ($pdf->usulan === null) {
             abort(404, 'Usulan kenaikan pangkat tidak ditemukan.');
         }
 
         $this->authorize('view', $pdf->usulan);
+
+        $suratRequest = $pdf->usulan->suratPengantarRequest;
+        if ($suratRequest !== null && $suratRequest->status->hasFinalFile()) {
+            return $gateway->streamFinal($suratRequest, "surat-pengantar-{$pdf->usulan_kenaikan_pangkat_id}.pdf");
+        }
 
         if (blank($pdf->file_path) || ! Storage::disk('local')->exists($pdf->file_path)) {
             abort(404, 'File surat pengantar tidak ditemukan.');

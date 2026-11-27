@@ -12,6 +12,7 @@ use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\VerifyHmacSignature;
 use App\Http\Middleware\VerifyIamPermission;
 use App\Http\Middleware\VerifyIamSignature;
+use App\Http\Middleware\VerifySisukmaWebhook;
 use App\Services\Sso\Exceptions\SsoException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -40,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'abilities' => CheckAbilities::class,
             'module.available' => EnsureModuleAvailable::class,
             'verify.hmac' => VerifyHmacSignature::class,
+            'verify.sisukma.webhook' => VerifySisukmaWebhook::class,
             'iam.signature' => VerifyIamSignature::class,
             'iam.permission' => VerifyIamPermission::class,
             'sso.refresh' => SsoTokenRefresh::class,

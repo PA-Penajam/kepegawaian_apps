@@ -9,6 +9,7 @@ use App\Events\UsulanKenaikanPangkat\UsulanKpSkTerbit;
 use App\Exceptions\UsulanKenaikanPangkat\BerkasBelumLengkapException;
 use App\Exceptions\UsulanKenaikanPangkat\DuplicateUsulanException;
 use App\Exceptions\UsulanKenaikanPangkat\PegawaiTidakEligibleException;
+use App\Jobs\SuratDinas\RegisterSuratDinasJob;
 use App\Models\BerkasChecklist\BerkasChecklistSubmission;
 use App\Models\BerkasChecklist\BerkasChecklistTemplate;
 use App\Models\Pegawai;
@@ -17,6 +18,7 @@ use App\Models\UsulanKenaikanPangkat\UsulanKpPdf;
 use App\Services\BerkasChecklist\ChecklistBerkasService;
 use App\Services\Sikep\SikepAdapter;
 use App\Services\Sikep\UsulanKenaikanPangkatDto;
+use App\Services\SuratDinas\SuratDinasRequestService;
 use App\States\UsulanKenaikanPangkat\DiajukanState;
 use App\States\UsulanKenaikanPangkat\DibatalkanState;
 use App\States\UsulanKenaikanPangkat\DikirimBiroState;
@@ -25,6 +27,7 @@ use App\States\UsulanKenaikanPangkat\DitolakState;
 use App\States\UsulanKenaikanPangkat\DiverifikasiKasubbagState;
 use App\States\UsulanKenaikanPangkat\DiverifikasiSekretarisState;
 use App\States\UsulanKenaikanPangkat\DraftState;
+use App\States\UsulanKenaikanPangkat\MenungguNomorSuratState;
 use App\States\UsulanKenaikanPangkat\MenungguSkState;
 use App\States\UsulanKenaikanPangkat\PerluPerbaikanState;
 use App\States\UsulanKenaikanPangkat\SelesaiSkTerbitState;
@@ -38,12 +41,13 @@ use Throwable;
 
 class UsulanKenaikanPangkatService
 {
-    private const ACTIVE_STATES = ['DRAFT', 'DIAJUKAN', 'DIVERIFIKASI_KASUBBAG', 'DIVERIFIKASI_SEKRETARIS', 'DITANDATANGANI_KETUA', 'DIKIRIM_BIRO', 'MENUNGGU_SK', 'PERLU_PERBAIKAN'];
+    private const ACTIVE_STATES = ['DRAFT', 'DIAJUKAN', 'DIVERIFIKASI_KASUBBAG', 'DIVERIFIKASI_SEKRETARIS', 'MENUNGGU_NOMOR_SURAT', 'DITANDATANGANI_KETUA', 'DIKIRIM_BIRO', 'MENUNGGU_SK', 'PERLU_PERBAIKAN'];
 
     public function __construct(
         private readonly ChecklistBerkasService $checklistBerkasService,
         private readonly GenerateSuratPengantarPdf $generateSuratPengantarPdf,
         private readonly SikepAdapter $sikepAdapter,
+        private ?SuratDinasRequestService $suratDinasService = null,
     ) {}
 
     public function createDraft(array $data, Pegawai $actor): UsulanKenaikanPangkat
@@ -263,8 +267,12 @@ class UsulanKenaikanPangkatService
         $usulan->refresh();
     }
 
-    public function tandaTanganKetua(UsulanKenaikanPangkat $usulan, Pegawai $ketua): UsulanKpPdf
+    public function tandaTanganKetua(UsulanKenaikanPangkat $usulan, Pegawai $ketua): ?UsulanKpPdf
     {
+        if (config('sisukma.enabled')) {
+            return $this->requestPengantarNumberFromSisukma($usulan, $ketua);
+        }
+
         return Cache::lock("usulan-kp:tanda-tangan:{$usulan->id}", 120)->block(30, function () use ($usulan, $ketua): UsulanKpPdf {
             // Validasi transisi pada baris terkunci di transaksi singkat sebelum merender PDF di luar transaksi (F-19).
             $lockedBeforePdf = DB::transaction(function () use ($usulan): UsulanKenaikanPangkat {
@@ -345,6 +353,79 @@ class UsulanKenaikanPangkatService
                 throw $e;
             }
         });
+    }
+
+    /**
+     * Memulai pengajuan nomor surat pengantar KP asinkron ke SiSukma dan menandai `MENUNGGU_NOMOR_SURAT`.
+     */
+    private function requestPengantarNumberFromSisukma(UsulanKenaikanPangkat $usulan, Pegawai $ketua): ?UsulanKpPdf
+    {
+        Cache::lock("usulan-kp:tanda-tangan:{$usulan->id}", 120)->block(30, function () use ($usulan, $ketua): void {
+            DB::transaction(function () use ($usulan, $ketua): void {
+                $locked = UsulanKenaikanPangkat::query()
+                    ->with('pegawai')
+                    ->whereKey($usulan->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (! $locked->state->canTransitionTo(MenungguNomorSuratState::class)) {
+                    throw TransitionNotFound::make((string) $locked->state, MenungguNomorSuratState::class, $locked::class);
+                }
+
+                $this->updateApprovalStep($locked, 3, $ketua, true, null);
+                $this->transition($locked, MenungguNomorSuratState::class, $ketua, 'tanda_tangan_ketua', 3);
+
+                $suratDinas = ($this->suratDinasService ??= app(SuratDinasRequestService::class))->createForSuratable(
+                    suratable: $locked,
+                    jenis: 'pengantar_kp',
+                    klasifikasi: 'KP2.1.1',
+                    penandatangan: 'ketua',
+                    documentType: 'surat_dinas',
+                    perihal: sprintf(
+                        'Usulan Kenaikan Pangkat a.n. %s (%s)',
+                        $locked->pegawai?->nama_lengkap ?? $locked->pegawai_id,
+                        $locked->nomor_usulan ?? $locked->id,
+                    ),
+                    tujuanNama: (string) config('sikep.kp.pejabat_penetap', 'Biro Kepegawaian Mahkamah Agung RI'),
+                    tujuanInstansi: (string) config('sikep.kp.pejabat_penetap', 'Biro Kepegawaian Mahkamah Agung RI'),
+                    requestedByNip: $ketua->nip,
+                    externalPath: "/kenaikan-pangkat/usulan/{$locked->id}",
+                );
+
+                DB::afterCommit(static fn () => RegisterSuratDinasJob::dispatch($suratDinas->id));
+            });
+        });
+
+        $usulan->refresh();
+
+        return null;
+    }
+
+    /**
+     * Menyelesaikan tahapan tanda tangan Ketua setelah surat pengantar final diunggah di SiSukma.
+     */
+    public function completeSigningFromSisukma(UsulanKenaikanPangkat $usulan, Pegawai $actor): void
+    {
+        Cache::lock("usulan-kp:tanda-tangan:{$usulan->id}", 120)->block(30, function () use ($usulan, $actor): void {
+            DB::transaction(function () use ($usulan, $actor): void {
+                $locked = UsulanKenaikanPangkat::query()
+                    ->whereKey($usulan->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ((string) $locked->state !== MenungguNomorSuratState::$name) {
+                    return;
+                }
+
+                if (! $locked->state->canTransitionTo(DitandatanganiKetuaState::class)) {
+                    throw TransitionNotFound::make((string) $locked->state, DitandatanganiKetuaState::class, $locked::class);
+                }
+
+                $this->transition($locked, DitandatanganiKetuaState::class, $actor, 'surat_pengantar_final_tersedia', 3);
+            });
+        });
+
+        $usulan->refresh();
     }
 
     public function kirimBiro(UsulanKenaikanPangkat $usulan, Pegawai $actor, ?string $catatan = null): void

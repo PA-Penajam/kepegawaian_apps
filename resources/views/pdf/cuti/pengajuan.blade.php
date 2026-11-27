@@ -136,7 +136,7 @@
 
 {{-- Kop Surat --}}
 <div class="header">
-    <div class="header-instansi">Pemerintah Kabupaten Penajam Paser Utara</div>
+    <div class="header-instansi">{{ config('sikep.nama_satker', 'Pengadilan Agama Penajam') }}</div>
     <div style="font-size: 11pt;">
         {{ $p->pegawai?->unitKerja?->nama ?? '-' }}
     </div>

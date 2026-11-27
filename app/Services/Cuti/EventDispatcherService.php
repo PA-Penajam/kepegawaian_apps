@@ -15,6 +15,38 @@ class EventDispatcherService
      */
     public function dispatch(string $eventType, CutiPengajuan $aggregate): CutiEvent
     {
+        $event = $this->createOutboxEvent($eventType, $aggregate);
+
+        foreach ($this->consumerRegistry->allIds() as $consumerId) {
+            CutiEventDelivery::firstOrCreate(
+                ['event_id' => $event->id, 'consumer_id' => $consumerId],
+                ['status' => 'pending']
+            );
+        }
+
+        return $event;
+    }
+
+    /**
+     * Mencatat event outbox dan membuat delivery khusus untuk satu consumer target.
+     */
+    public function dispatchForConsumer(string $eventType, CutiPengajuan $aggregate, string $consumerId): CutiEvent
+    {
+        $event = $this->createOutboxEvent($eventType, $aggregate);
+
+        CutiEventDelivery::firstOrCreate(
+            ['event_id' => $event->id, 'consumer_id' => $consumerId],
+            ['status' => 'pending']
+        );
+
+        return $event;
+    }
+
+    /**
+     * Membuat baris outbox beserta payload ber-event_id tanpa membuat delivery.
+     */
+    private function createOutboxEvent(string $eventType, CutiPengajuan $aggregate): CutiEvent
+    {
         $event = CutiEvent::create([
             'aggregate_type' => 'PengajuanCuti',
             'aggregate_id' => $aggregate->id,
@@ -28,13 +60,6 @@ class EventDispatcherService
         $payload['event_id'] = $event->id;
         $event->update(['payload' => $payload]);
 
-        foreach ($this->consumerRegistry->allIds() as $consumerId) {
-            CutiEventDelivery::firstOrCreate(
-                ['event_id' => $event->id, 'consumer_id' => $consumerId],
-                ['status' => 'pending']
-            );
-        }
-
         return $event;
     }
 
@@ -45,13 +70,18 @@ class EventDispatcherService
      */
     private function buildPayload(string $type, CutiPengajuan $pengajuan): array
     {
+        $pengajuan->loadMissing('pegawai');
+
         return [
             'event_type' => $type,
             'occurred_at' => now()->toIso8601String(),
             'data' => [
                 'pengajuan_id' => $pengajuan->id,
+                'nomor_pengajuan' => $pengajuan->nomor_pengajuan,
                 'pegawai_nip' => $pengajuan->pegawai_nip,
+                'pegawai_nama' => $pengajuan->pegawai?->nama_lengkap,
                 'jenis_cuti' => $pengajuan->jenis_cuti_kode,
+                'state' => $pengajuan->state->getValue(),
                 'tanggal_mulai' => $pengajuan->tanggal_mulai->toDateString(),
                 'tanggal_selesai' => $pengajuan->tanggal_selesai->toDateString(),
                 'jumlah_hari_kerja' => $pengajuan->jumlah_hari_kerja,

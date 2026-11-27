@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Cuti\SubmitPengajuanRequest;
 use App\Models\Cuti\CutiJenisMaster;
 use App\Models\Cuti\CutiPengajuan;
+use App\Services\Cuti\KewenanganResolverService;
 use App\Services\Cuti\PengajuanCutiService;
 use App\Services\Cuti\SaldoLedgerService;
 use Illuminate\Http\RedirectResponse;
@@ -114,6 +115,8 @@ class PengajuanController extends Controller
             'atasanLangsungCurrent:id,nip,nama_lengkap',
             'pejabatBerwenangCurrent:id,nip,nama_lengkap',
             'petugasKepegawaianCurrent:id,nip,nama_lengkap',
+            'suratIzinRequest',
+            'perizinanEksternal',
         ])->findOrFail($id);
 
         // Cek otorisasi: pemilik, tim (atasan/pejabat), atau admin
@@ -124,8 +127,18 @@ class PengajuanController extends Controller
             abort(403);
         }
 
+        $kewenanganAturan = $pengajuan->perizinanEksternal !== null && $pengajuan->pegawai !== null
+            ? app(KewenanganResolverService::class)->resolve($pengajuan->pegawai, $pengajuan->jenis_cuti_kode)
+            : null;
+
         return Inertia::render('cuti/pengajuan/show', [
             'pengajuan' => $pengajuan,
+            'canManageSuratIzin' => $request->user()?->hasPermission('cuti.pengajuan.verify') ?? false,
+            'kewenanganEksternal' => $kewenanganAturan ? [
+                'nama_aplikasi' => $kewenanganAturan->nama_aplikasi,
+                'url_aplikasi' => $kewenanganAturan->url_aplikasi,
+                'instansi_nama' => $kewenanganAturan->instansi_nama,
+            ] : null,
         ]);
     }
 }

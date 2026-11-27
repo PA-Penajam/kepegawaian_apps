@@ -12,6 +12,7 @@ use App\Http\Requests\UsulanKenaikanPangkat\VerifikasiSekretarisRequest;
 use App\Models\Pegawai;
 use App\Models\UsulanKenaikanPangkat\UsulanKenaikanPangkat;
 use App\Services\UsulanKenaikanPangkat\UsulanKenaikanPangkatService;
+use App\States\UsulanKenaikanPangkat\MenungguNomorSuratState;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -111,7 +112,11 @@ class ApprovalController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Surat pengantar berhasil ditandatangani ketua.');
+        $message = (string) $usulan->fresh()->state === MenungguNomorSuratState::$name
+            ? 'Usulan disetujui Ketua dan diajukan penomoran ke SiSukma.'
+            : 'Surat pengantar berhasil ditandatangani ketua.';
+
+        return back()->with('success', $message);
     }
 
     public function kirimBiro(KirimBiroRequest $request, UsulanKenaikanPangkat $usulan): RedirectResponse

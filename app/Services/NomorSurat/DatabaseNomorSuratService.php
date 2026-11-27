@@ -11,6 +11,9 @@ use Illuminate\Support\Str;
 /**
  * DatabaseNomorSuratService
  *
+ * @deprecated Penomoran surat dinas resmi kini terpusat di SiSukma melalui `PenomoranSuratGateway`.
+ *             Kelas ini dipertahankan sementara hanya untuk kompatibilitas mundur saat `sisukma.enabled=false`.
+ *
  * Implementasi produksi NomorSuratService berbasis tabel sequence database.
  * Sequence dinaikkan atomik di dalam transaksi dengan lockForUpdate,
  * sehingga aman terhadap request concurrent.

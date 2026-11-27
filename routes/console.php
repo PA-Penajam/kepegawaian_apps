@@ -41,3 +41,9 @@ Schedule::command('kgb:notify')
     ->dailyAt('08:00')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Rekonsiliasi permintaan nomor & arsip surat dinas yang tertinggal di SiSukma
+Schedule::command('surat-dinas:reconcile')
+    ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->onOneServer();

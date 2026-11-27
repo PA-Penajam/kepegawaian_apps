@@ -4,9 +4,13 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\BerkasChecklist\ChecklistTemplateController;
 use App\Http\Controllers\Cuti\ApprovalController;
 use App\Http\Controllers\Cuti\AuditController;
+use App\Http\Controllers\Cuti\JenisCutiAdminController;
+use App\Http\Controllers\Cuti\KewenanganAdminController;
 use App\Http\Controllers\Cuti\PdfController as CutiPdfController;
 use App\Http\Controllers\Cuti\PengajuanController;
+use App\Http\Controllers\Cuti\PerizinanEksternalController;
 use App\Http\Controllers\Cuti\SaldoController;
+use App\Http\Controllers\Cuti\SuratIzinController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Iam\AplikasiController;
 use App\Http\Controllers\Iam\IamSecretRecoveryController;
@@ -239,6 +243,13 @@ Route::middleware(['auth', 'verified'])->prefix('cuti')->name('cuti.')->group(fu
         ->middleware('iam.permission:cuti.pengajuan.create')
         ->name('pengajuan.store');
     Route::get('/pengajuan/{id}', [PengajuanController::class, 'show'])->name('pengajuan.show');
+    Route::get('/pengajuan/{id}/surat-izin/draft', [SuratIzinController::class, 'downloadDraft'])->name('pengajuan.surat-izin.draft');
+    Route::get('/pengajuan/{id}/surat-izin/final', [SuratIzinController::class, 'streamFinal'])->name('pengajuan.surat-izin.final');
+    Route::post('/pengajuan/{id}/surat-izin/resubmit', [SuratIzinController::class, 'resubmit'])->middleware('iam.permission:cuti.pengajuan.verify')->name('pengajuan.surat-izin.resubmit');
+    Route::get('/sisukma/incoming-mails', [PerizinanEksternalController::class, 'searchIncomingMails'])->name('sisukma.incoming-mails');
+    Route::post('/pengajuan/{id}/perizinan-eksternal/registrasi', [PerizinanEksternalController::class, 'catatRegistrasi'])->middleware('iam.permission:cuti.pengajuan.verify')->name('pengajuan.perizinan-eksternal.registrasi');
+    Route::post('/pengajuan/{id}/perizinan-eksternal/keputusan', [PerizinanEksternalController::class, 'catatKeputusan'])->middleware('iam.permission:cuti.pengajuan.verify')->name('pengajuan.perizinan-eksternal.keputusan');
+    Route::get('/pengajuan/{id}/sk-eksternal', [PerizinanEksternalController::class, 'streamSk'])->name('pengajuan.sk-eksternal');
     Route::get('/inbox', [ApprovalController::class, 'inbox'])->name('inbox');
     Route::post('/pengajuan/{id}/verify', [ApprovalController::class, 'verify'])->name('pengajuan.verify');
     Route::post('/pengajuan/{id}/approve-atasan', [ApprovalController::class, 'approveAtasan'])->name('pengajuan.approve-atasan');
@@ -288,6 +299,24 @@ Route::prefix('admin/cuti')->name('admin.cuti.')->middleware(['auth', 'verified'
     Route::get('/audit', [AuditController::class, 'index'])
         ->middleware('iam.permission:cuti.audit.view')
         ->name('audit.index');
+    Route::get('/jenis', [JenisCutiAdminController::class, 'index'])
+        ->middleware('iam.permission:cuti.jenis.manage')
+        ->name('jenis.index');
+    Route::patch('/jenis/{kode}', [JenisCutiAdminController::class, 'update'])
+        ->middleware('iam.permission:cuti.jenis.manage')
+        ->name('jenis.update');
+    Route::get('/kewenangan', [KewenanganAdminController::class, 'index'])
+        ->middleware('iam.permission:cuti.kewenangan.manage')
+        ->name('kewenangan.index');
+    Route::post('/kewenangan', [KewenanganAdminController::class, 'store'])
+        ->middleware('iam.permission:cuti.kewenangan.manage')
+        ->name('kewenangan.store');
+    Route::patch('/kewenangan/{id}', [KewenanganAdminController::class, 'update'])
+        ->middleware('iam.permission:cuti.kewenangan.manage')
+        ->name('kewenangan.update');
+    Route::delete('/kewenangan/{id}', [KewenanganAdminController::class, 'destroy'])
+        ->middleware('iam.permission:cuti.kewenangan.manage')
+        ->name('kewenangan.destroy');
 });
 
 require __DIR__.'/settings.php';

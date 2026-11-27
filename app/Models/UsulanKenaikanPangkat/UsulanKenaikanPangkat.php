@@ -6,6 +6,7 @@ use App\Models\BerkasChecklist\BerkasChecklistSubmission;
 use App\Models\Model;
 use App\Models\Pegawai;
 use App\Models\RefPangkat;
+use App\Models\SuratDinas\SuratDinasRequest;
 use App\States\UsulanKenaikanPangkat\UsulanKenaikanPangkatState;
 use Database\Factories\UsulanKenaikanPangkat\UsulanKenaikanPangkatFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -127,5 +128,14 @@ class UsulanKenaikanPangkat extends Model
     public function checklistSubmission(): MorphOne
     {
         return $this->morphOne(BerkasChecklistSubmission::class, 'subject');
+    }
+
+    /**
+     * Permintaan penomoran dan pengarsipan surat pengantar KP di SiSukma.
+     */
+    public function suratPengantarRequest(): MorphOne
+    {
+        return $this->morphOne(SuratDinasRequest::class, 'suratable')
+            ->where('jenis', 'pengantar_kp');
     }
 }
