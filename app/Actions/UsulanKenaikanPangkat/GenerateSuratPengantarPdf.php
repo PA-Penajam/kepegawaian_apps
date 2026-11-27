@@ -22,6 +22,58 @@ class GenerateSuratPengantarPdf
     }
 
     /**
+     * Merender draf PDF surat pengantar KP memakai nomor resmi yang sudah terbit dari SiSukma.
+     */
+    public function renderForExistingNumber(object $usulan, object $pejabatPenandatangan, string $nomorSurat): UsulanKpPdf
+    {
+        $tanggalSurat = CarbonImmutable::now();
+        $path = "usulan-kp/surat-pengantar/{$usulan->id}.pdf";
+        $absolutePath = Storage::disk('local')->path($path);
+
+        File::ensureDirectoryExists(dirname($absolutePath));
+
+        $usulan->loadMissing([
+            'pegawai.pangkat',
+            'pegawai.jabatan',
+            'pegawai.unitKerja',
+            'pangkatAsal',
+            'pangkatTujuan',
+            'checklistSubmission.items.item',
+        ]);
+
+        if (method_exists($pejabatPenandatangan, 'loadMissing')) {
+            $pejabatPenandatangan->loadMissing('jabatan');
+        }
+
+        Pdf::view('pdf.kenaikan-pangkat.surat-pengantar', [
+            'usulan' => $usulan,
+            'pegawai' => $usulan->pegawai,
+            'nomorSurat' => $nomorSurat,
+            'tanggalSurat' => $tanggalSurat,
+            'pejabatPenandatangan' => $pejabatPenandatangan,
+            'namaSatker' => config('sikep.nama_satker', config('app.name', 'Sistem Kepegawaian')),
+            'alamatSatker' => config('sikep.alamat_satker', 'Alamat satuan kerja'),
+        ])
+            ->withBrowsershot(function (Browsershot $browsershot): void {
+                $browsershot->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']);
+            })
+            ->save($absolutePath);
+
+        return UsulanKpPdf::query()->updateOrCreate(
+            [
+                'usulan_kenaikan_pangkat_id' => $usulan->id,
+                'jenis_pdf' => 'surat_pengantar',
+            ],
+            [
+                'nomor_surat' => $nomorSurat,
+                'file_path' => $path,
+                'generated_by' => $pejabatPenandatangan->id,
+                'generated_at' => $tanggalSurat,
+            ],
+        );
+    }
+
+    /**
      * Merender PDF di luar transaksi DB, lalu mengonfirmasi reservasi nomor surat di transaksi akhir.
      *
      * @param  (callable(): void)|null  $beforeConfirm

@@ -5,12 +5,15 @@ namespace App\Models\Cuti;
 use App\Models\Concerns\HasCutiActivityLogOptions;
 use App\Models\Model;
 use App\Models\Pegawai;
+use App\Models\SuratDinas\SuratDinasRequest;
 use App\States\Cuti\PengajuanState;
 use Database\Factories\Cuti\CutiPengajuanFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\ModelStates\HasStates;
 
@@ -131,5 +134,24 @@ class CutiPengajuan extends Model
     public function pdf(): HasMany
     {
         return $this->hasMany(CutiPengajuanPdf::class, 'pengajuan_id');
+    }
+
+    /**
+     * Permintaan penomoran dan pengarsipan Surat Izin Cuti di SiSukma.
+     */
+    public function suratIzinRequest(): MorphOne
+    {
+        return $this->morphOne(SuratDinasRequest::class, 'suratable')
+            ->where('jenis', 'surat_izin_cuti');
+    }
+
+    /**
+     * Data perizinan cuti eksternal pada instansi atasan (PTA/MA) beserta tautan SK.
+     *
+     * @return HasOne<CutiPerizinanEksternal, $this>
+     */
+    public function perizinanEksternal(): HasOne
+    {
+        return $this->hasOne(CutiPerizinanEksternal::class, 'pengajuan_id');
     }
 }

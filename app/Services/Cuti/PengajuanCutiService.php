@@ -10,6 +10,7 @@ use App\Models\Cuti\CutiJenisMaster;
 use App\Models\Cuti\CutiPengajuan;
 use App\Models\Cuti\CutiPengajuanLampiran;
 use App\Models\Pegawai;
+use App\Notifications\Cuti\PengajuanMenungguVerifikasi;
 use App\Services\Cuti\Rules\CutiRuleEngine;
 use App\States\Cuti\DiajukanState;
 use Carbon\Carbon;
@@ -151,6 +152,12 @@ class PengajuanCutiService
                     $this->saldoService->debitPendingFifo($pengajuan);
                 }
 
+                // Kirim notifikasi ke petugas kepegawaian yang ditunjuk
+                $pengajuan->loadMissing(['petugasKepegawaianCurrent', 'pegawai', 'jenisCuti']);
+                $pengajuan->petugasKepegawaianCurrent?->notify(
+                    new PengajuanMenungguVerifikasi($pengajuan),
+                );
+
                 return $pengajuan->fresh();
             });
         } catch (\Throwable $e) {
@@ -190,7 +197,7 @@ class PengajuanCutiService
     private function guardOverlap(string $nip, string $mulai, string $selesai): void
     {
         $overlap = CutiPengajuan::where('pegawai_nip', $nip)
-            ->whereIn('state', ['DIAJUKAN', 'DIVERIFIKASI', 'DISETUJUI_ATASAN', 'DISETUJUI'])
+            ->whereIn('state', ['DIAJUKAN', 'DIVERIFIKASI', 'DISETUJUI_ATASAN', 'DITERUSKAN_INSTANSI_ATASAN', 'DISETUJUI'])
             ->where(function ($q) use ($mulai, $selesai) {
                 $q->whereBetween('tanggal_mulai', [$mulai, $selesai])
                     ->orWhereBetween('tanggal_selesai', [$mulai, $selesai])

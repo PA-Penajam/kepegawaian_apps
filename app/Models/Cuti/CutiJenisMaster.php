@@ -30,6 +30,7 @@ class CutiJenisMaster extends Model
         'durasi_max_kalender',
         'butuh_lampiran',
         'boleh_dicabut_setelah_disetujui',
+        'penandatangan_surat',
         'aktif',
     ];
 

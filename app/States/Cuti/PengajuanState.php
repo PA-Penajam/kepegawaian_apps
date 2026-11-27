@@ -36,7 +36,11 @@ abstract class PengajuanState extends State
             ->allowTransition(DiverifikasiState::class, DisetujuiAtasanState::class)
             ->allowTransition(DiverifikasiState::class, DitolakAtasanState::class)
             ->allowTransition(DisetujuiAtasanState::class, DisetujuiState::class)
+            ->allowTransition(DisetujuiAtasanState::class, DiteruskanInstansiAtasanState::class)
             ->allowTransition(DisetujuiAtasanState::class, DitolakPejabatState::class)
+            ->allowTransition(DiteruskanInstansiAtasanState::class, DisetujuiState::class)
+            ->allowTransition(DiteruskanInstansiAtasanState::class, DitolakInstansiAtasanState::class)
+            ->allowTransition(DiteruskanInstansiAtasanState::class, DibatalkanState::class)
             ->allowTransition(DisetujuiState::class, DicabutSetelahDisetujuiState::class);
     }
 }

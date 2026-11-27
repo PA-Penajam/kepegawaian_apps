@@ -11,10 +11,12 @@ export type CutiState =
     | 'DIAJUKAN'
     | 'DIVERIFIKASI'
     | 'DISETUJUI_ATASAN'
+    | 'DITERUSKAN_INSTANSI_ATASAN'
     | 'DISETUJUI'
     | 'DITOLAK_KEPEGAWAIAN'
     | 'DITOLAK_ATASAN'
     | 'DITOLAK_PEJABAT'
+    | 'DITOLAK_INSTANSI_ATASAN'
     | 'DIBATALKAN'
     | 'DICABUT_SETELAH_DISETUJUI';
 
@@ -23,10 +25,12 @@ export const CutiStateLabels: Record<CutiState, string> = {
     DIAJUKAN: 'Diajukan',
     DIVERIFIKASI: 'Diverifikasi',
     DISETUJUI_ATASAN: 'Disetujui Atasan',
+    DITERUSKAN_INSTANSI_ATASAN: 'Diteruskan ke Instansi Atasan',
     DISETUJUI: 'Disetujui',
     DITOLAK_KEPEGAWAIAN: 'Ditolak Kepegawaian',
     DITOLAK_ATASAN: 'Ditolak Atasan',
     DITOLAK_PEJABAT: 'Ditolak Pejabat',
+    DITOLAK_INSTANSI_ATASAN: 'Ditolak Instansi Atasan',
     DIBATALKAN: 'Dibatalkan',
     DICABUT_SETELAH_DISETUJUI: 'Dicabut Setelah Disetujui',
 };
@@ -53,6 +57,65 @@ export type CutiJenisMaster = {
     saldo_driven: boolean;
     butuh_lampiran: boolean;
     boleh_dicabut_setelah_disetujui?: boolean;
+    penandatangan_surat?: 'ketua' | 'wakil_ketua' | 'panitera' | 'sekretaris';
+    aktif?: boolean;
+};
+
+export type StatusSuratDinas =
+    | 'BELUM_TERKIRIM'
+    | 'MENUNGGU_NOMOR'
+    | 'PERLU_PERBAIKAN'
+    | 'NOMOR_TERBIT'
+    | 'FINAL_TERSEDIA'
+    | 'TERKIRIM'
+    | 'DIBATALKAN';
+
+export type SuratDinasRequestSummary = {
+    id: string;
+    jenis: string;
+    klasifikasi: string;
+    penandatangan: 'ketua' | 'wakil_ketua' | 'panitera' | 'sekretaris';
+    perihal: string;
+    tujuan_nama: string;
+    tujuan_instansi: string | null;
+    status: StatusSuratDinas;
+    sisukma_public_id: string | null;
+    nomor_agenda: string | null;
+    nomor_surat: string | null;
+    catatan_revisi: string | null;
+    alasan_void: string | null;
+    final_uploaded_at: string | null;
+    last_error: string | null;
+};
+
+export type CutiKewenangan = {
+    id: string;
+    jenis_cuti_kode: string;
+    jenis_jabatan: string;
+    pemberi_izin: 'pta' | 'ma';
+    instansi_nama: string;
+    nama_aplikasi: string | null;
+    url_aplikasi: string | null;
+    aktif: boolean;
+    jenis_cuti?: CutiJenisCuti;
+};
+
+export type CutiPerizinanEksternal = {
+    id: string;
+    pengajuan_id: string;
+    pemberi_izin: 'pta' | 'ma';
+    instansi_nama: string;
+    nomor_registrasi_eksternal: string | null;
+    tanggal_pengajuan_eksternal: string | null;
+    catatan_pengajuan: string | null;
+    sisukma_incoming_mail_public_id: string | null;
+    sisukma_agenda_number: string | null;
+    nomor_sk: string | null;
+    tanggal_sk: string | null;
+    keputusan: 'disetujui' | 'ditolak' | null;
+    catatan_keputusan: string | null;
+    recorded_by_nip: string | null;
+    decided_at: string | null;
 };
 
 export type CutiLampiran = {
@@ -109,6 +172,8 @@ export type CutiPengajuan = {
     atasan_langsung_current?: CutiPengajuanPegawai | null;
     pejabat_berwenang_current?: CutiPengajuanPegawai | null;
     petugas_kepegawaian_current?: CutiPengajuanPegawai | null;
+    surat_izin_request?: SuratDinasRequestSummary | null;
+    perizinan_eksternal?: CutiPerizinanEksternal | null;
 };
 
 export type CutiStateHistory = {
@@ -183,10 +248,12 @@ export const CutiStateBadgeVariant: Record<
     DIAJUKAN: 'secondary',
     DIVERIFIKASI: 'secondary',
     DISETUJUI_ATASAN: 'secondary',
+    DITERUSKAN_INSTANSI_ATASAN: 'secondary',
     DISETUJUI: 'default',
     DITOLAK_KEPEGAWAIAN: 'destructive',
     DITOLAK_ATASAN: 'destructive',
     DITOLAK_PEJABAT: 'destructive',
+    DITOLAK_INSTANSI_ATASAN: 'destructive',
     DIBATALKAN: 'outline',
     DICABUT_SETELAH_DISETUJUI: 'destructive',
 };

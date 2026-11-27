@@ -210,13 +210,19 @@ class DispatchPendingEventsCommand extends Command
      */
     protected function resolveAndValidateWebhookUrl(string $url): array
     {
+        $allowPrivate = (bool) config('cuti.webhook.allow_private_hosts', false);
+
         $parts = parse_url($url);
         if ($parts === false) {
             return ['error' => 'URL webhook tidak valid.', 'host' => null, 'port' => 443, 'ips' => []];
         }
 
         $scheme = strtolower($parts['scheme'] ?? '');
-        if ($scheme !== 'https') {
+        if ($allowPrivate) {
+            if (! in_array($scheme, ['http', 'https'], true)) {
+                return ['error' => 'URL webhook wajib menggunakan protokol HTTP atau HTTPS.', 'host' => null, 'port' => 443, 'ips' => []];
+            }
+        } elseif ($scheme !== 'https') {
             return ['error' => 'URL webhook wajib menggunakan protokol HTTPS.', 'host' => null, 'port' => 443, 'ips' => []];
         }
 
@@ -229,22 +235,30 @@ class DispatchPendingEventsCommand extends Command
             return ['error' => 'Host URL webhook tidak valid.', 'host' => null, 'port' => 443, 'ips' => []];
         }
 
-        $port = isset($parts['port']) ? (int) $parts['port'] : 443;
+        $port = isset($parts['port']) ? (int) $parts['port'] : ($scheme === 'http' ? 80 : 443);
 
-        if (
+        if (! $allowPrivate && (
             $host === 'localhost'
             || str_ends_with($host, '.localhost')
             || str_ends_with($host, '.local')
             || str_ends_with($host, '.internal')
-        ) {
+        )) {
             return ['error' => "Host URL webhook tidak diizinkan (lokal/internal): {$host}.", 'host' => $host, 'port' => $port, 'ips' => []];
         }
 
         if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
-            if (! $this->isPublicIp($host)) {
+            if ($this->isLinkLocalOrMetadataIp($host)) {
+                return ['error' => "Alamat IP metadata/link-local tidak diizinkan: {$host}.", 'host' => $host, 'port' => $port, 'ips' => []];
+            }
+
+            if (! $allowPrivate && ! $this->isPublicIp($host)) {
                 return ['error' => "Alamat IP webhook tidak diizinkan (privat/reserved): {$host}.", 'host' => $host, 'port' => $port, 'ips' => []];
             }
 
+            return ['error' => null, 'host' => $host, 'port' => $port, 'ips' => []];
+        }
+
+        if ($allowPrivate) {
             return ['error' => null, 'host' => $host, 'port' => $port, 'ips' => []];
         }
 
@@ -258,12 +272,36 @@ class DispatchPendingEventsCommand extends Command
         }
 
         foreach ($resolvedIps as $ip) {
-            if (! $this->isPublicIp($ip)) {
+            if ($this->isLinkLocalOrMetadataIp($ip) || ! $this->isPublicIp($ip)) {
                 return ['error' => "Host webhook mengarah ke alamat IP privat/reserved: {$ip}.", 'host' => $host, 'port' => $port, 'ips' => []];
             }
         }
 
         return ['error' => null, 'host' => $host, 'port' => $port, 'ips' => $resolvedIps];
+    }
+
+    /**
+     * Memeriksa apakah IP berada di rentang link-local/cloud metadata (selalu diblokir).
+     */
+    private function isLinkLocalOrMetadataIp(string $ip): bool
+    {
+        $normalized = strtolower($ip);
+        if (str_starts_with($normalized, '::ffff:')) {
+            $mappedV4 = substr($normalized, 7);
+            if (filter_var($mappedV4, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
+                return $this->isLinkLocalOrMetadataIp($mappedV4);
+            }
+        }
+
+        $long = ip2long($ip);
+        if ($long !== false) {
+            $start = ip2long('169.254.0.0');
+            $end = ip2long('169.254.255.255');
+
+            return $start !== false && $end !== false && $long >= $start && $long <= $end;
+        }
+
+        return str_starts_with($normalized, 'fe80:');
     }
 
     /**

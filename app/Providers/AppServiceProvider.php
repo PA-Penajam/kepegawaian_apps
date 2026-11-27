@@ -27,6 +27,9 @@ use App\Services\NomorSurat\DatabaseNomorSuratService;
 use App\Services\NomorSurat\NomorSuratService;
 use App\Services\Sikep\NullSikepAdapter;
 use App\Services\Sikep\SikepAdapter;
+use App\Services\SuratDinas\Contracts\PenomoranSuratGateway;
+use App\Services\SuratDinas\FakePenomoranGateway;
+use App\Services\SuratDinas\SisukmaPenomoranGateway;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Google\Client as GoogleClient;
@@ -58,6 +61,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SikepAdapter::class, NullSikepAdapter::class);
 
         $this->app->bind(NomorSuratService::class, DatabaseNomorSuratService::class);
+
+        $this->app->bind(PenomoranSuratGateway::class, function ($app) {
+            return config('sisukma.enabled')
+                ? $app->make(SisukmaPenomoranGateway::class)
+                : new FakePenomoranGateway;
+        });
 
         $this->app->bind(CutiRuleEngine::class, fn () => new CutiRuleEngine([
             app(CutiTahunanRule::class),

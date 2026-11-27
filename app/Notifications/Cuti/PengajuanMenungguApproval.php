@@ -3,9 +3,11 @@
 namespace App\Notifications\Cuti;
 
 use App\Models\Cuti\CutiPengajuan;
+use App\Notifications\Channels\SisukmaChannel;
+use App\Notifications\Contracts\HasSisukmaNotification;
 use Illuminate\Notifications\Notification;
 
-class PengajuanMenungguApproval extends Notification
+class PengajuanMenungguApproval extends Notification implements HasSisukmaNotification
 {
     /**
      * Notifikasi untuk atasan langsung atau pejabat berwenang bahwa pengajuan menunggu persetujuan.
@@ -17,7 +19,9 @@ class PengajuanMenungguApproval extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return config('sisukma.notifications_enabled')
+            ? ['database', SisukmaChannel::class]
+            : ['database'];
     }
 
     /**
@@ -46,6 +50,25 @@ class PengajuanMenungguApproval extends Notification
             'link' => "/cuti/pengajuan/{$pengajuan->id}",
             'pengajuan_id' => $pengajuan->id,
             'target_role' => $this->targetRole,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSisukma(object $notifiable): array
+    {
+        $data = $this->toDatabase($notifiable);
+
+        return [
+            'idempotency_key' => "cuti:menunggu-approval:{$this->pengajuan->id}:{$this->targetRole}",
+            'title' => $data['title'],
+            'message' => $data['body'],
+            'action_path' => $data['link'],
+            'type' => 'cuti_menunggu_approval',
+            'metadata' => [
+                'No. Pengajuan' => $this->pengajuan->nomor_pengajuan,
+            ],
         ];
     }
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Cuti\SaldoController as CutiSaldoController;
 use App\Http\Controllers\Api\IamController;
 use App\Http\Controllers\Api\PegawaiApiController;
 use App\Http\Controllers\Api\PegawaiSyncController;
+use App\Http\Controllers\Api\SisukmaWebhookController;
 use App\Http\Controllers\Api\UsulanKenaikanPangkat\UsulanKenaikanPangkatApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -76,3 +77,8 @@ Route::middleware(['iam.signature', 'throttle:10,1'])
     ->group(function () {
         Route::post('exchange-code', [IamController::class, 'exchangeCode']);
     });
+
+// Webhook masuk dari SiSukma — diverifikasi signature outbox HMAC-SHA256
+Route::middleware(['verify.sisukma.webhook', 'throttle:60,1'])
+    ->post('integrations/sisukma/events', SisukmaWebhookController::class)
+    ->name('api.integrations.sisukma.events');

@@ -234,6 +234,7 @@ class UsulanKenaikanPangkatController extends Controller
             'approverHistory' => fn ($q) => $q->latest('created_at')->with('user:id,nip,nama_lengkap'),
             'lampiran' => fn ($q) => $q->latest('created_at'),
             'pdfs',
+            'suratPengantarRequest',
             'checklistSubmission.template.items',
             'checklistSubmission.items.item',
         ]);
@@ -572,6 +573,7 @@ class UsulanKenaikanPangkatController extends Controller
             'DIAJUKAN' => 'Diajukan',
             'DIVERIFIKASI_KASUBBAG' => 'Diverifikasi Kasubbag',
             'DIVERIFIKASI_SEKRETARIS' => 'Diverifikasi Sekretaris',
+            'MENUNGGU_NOMOR_SURAT' => 'Menunggu Nomor Surat (SiSukma)',
             'DITANDATANGANI_KETUA' => 'Ditandatangani Ketua',
             'DIKIRIM_BIRO' => 'Dikirim Biro',
             'MENUNGGU_SK' => 'Menunggu SK',
@@ -594,6 +596,7 @@ class UsulanKenaikanPangkatController extends Controller
             'DIAJUKAN' => 'outline',
             'DIVERIFIKASI_KASUBBAG' => 'outline',
             'DIVERIFIKASI_SEKRETARIS' => 'outline',
+            'MENUNGGU_NOMOR_SURAT' => 'secondary',
             'DITANDATANGANI_KETUA' => 'default',
             'DIKIRIM_BIRO' => 'outline',
             'MENUNGGU_SK' => 'secondary',

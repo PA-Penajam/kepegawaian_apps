@@ -163,6 +163,13 @@ type UsulanKenaikanPangkat = {
     approver_history?: TimelineEntry[];
     lampiran?: Lampiran[];
     pdfs?: PdfFile[];
+    surat_pengantar_request?: {
+        id: string;
+        status: string;
+        nomor_agenda: string | null;
+        nomor_surat: string | null;
+        catatan_revisi: string | null;
+    } | null;
     checklist_submission?: ChecklistSubmission | null;
 };
 
@@ -444,6 +451,28 @@ export default function UsulanKenaikanPangkatShow({
                     </div>
 
                     <div className="flex flex-wrap gap-2">
+                        {usulan.surat_pengantar_request && (
+                            <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-1.5 text-xs">
+                                <span className="font-medium">
+                                    Surat Pengantar (SiSukma):
+                                </span>
+                                <Badge variant="outline">
+                                    {usulan.surat_pengantar_request.status}
+                                </Badge>
+                                {usulan.surat_pengantar_request.nomor_agenda && (
+                                    <span className="text-muted-foreground">
+                                        Agenda:{' '}
+                                        {usulan.surat_pengantar_request.nomor_agenda}
+                                    </span>
+                                )}
+                                {usulan.surat_pengantar_request.nomor_surat && (
+                                    <span className="font-mono font-medium">
+                                        No:{' '}
+                                        {usulan.surat_pengantar_request.nomor_surat}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                         {suratPengantar &&
                             usulan.state === 'DITANDATANGANI_KETUA' && (
                                 <Button variant="outline" size="sm" asChild>

@@ -34,6 +34,8 @@ class CutiPermissionSeeder extends Seeder
             ['slug' => 'cuti.saldo.view-all', 'nama' => 'Lihat Semua Saldo Cuti', 'group' => 'cuti', 'keterangan' => 'Melihat saldo cuti semua pegawai'],
             ['slug' => 'cuti.saldo.adjust', 'nama' => 'Penyesuaian Saldo Cuti', 'group' => 'cuti', 'keterangan' => 'Melakukan penyesuaian saldo cuti manual'],
             ['slug' => 'cuti.audit.view', 'nama' => 'Lihat Audit Log Cuti', 'group' => 'cuti', 'keterangan' => 'Melihat log audit modul cuti'],
+            ['slug' => 'cuti.jenis.manage', 'nama' => 'Kelola Penandatangan Jenis Cuti', 'group' => 'cuti', 'keterangan' => 'Mengatur pejabat penandatangan Surat Izin Cuti per jenis cuti'],
+            ['slug' => 'cuti.kewenangan.manage', 'nama' => 'Kelola Matriks Kewenangan Cuti', 'group' => 'cuti', 'keterangan' => 'Mengatur matriks kewenangan eksternal PTA/MA per jenis cuti dan jabatan'],
         ];
 
         $permissionIds = [];

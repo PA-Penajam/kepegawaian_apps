@@ -396,3 +396,68 @@ test('worker mem-pin IP publik hasil resolusi DNS ke CURLOPT_RESOLVE untuk mence
         ->and($result['validation']['ips'])->toBe(['93.184.216.34'])
         ->and($result['entries'])->toBe(['webhook.example.test:8443:93.184.216.34']);
 });
+
+test('payload event menyertakan nomor_pengajuan, state, dan pegawai_nama secara aditif', function () {
+    config(['cuti.consumers' => [
+        'sisukma' => [
+            'webhook_url' => 'https://sisukma.example.test/api/integrations/v1/events/kepegawaian',
+            'shared_secret_encrypted' => Crypt::encryptString('secret-sisukma'),
+        ],
+    ]]);
+
+    $pegawai = Pegawai::factory()->create([
+        'nama_lengkap' => 'Budi Santoso, S.H.',
+    ]);
+    $pengajuan = CutiPengajuan::factory()->create([
+        'pegawai_nip' => $pegawai->nip,
+        'nomor_pengajuan' => 'CUTI/2026/00001234/0009',
+        'jenis_cuti_kode' => 'CT',
+        'state' => 'DISETUJUI',
+    ]);
+
+    $event = app(EventDispatcherService::class)->dispatch('cuti.disetujui', $pengajuan);
+
+    expect($event->payload['data']['pengajuan_id'])->toBe($pengajuan->id)
+        ->and($event->payload['data']['pegawai_nip'])->toBe($pegawai->nip)
+        ->and($event->payload['data']['nomor_pengajuan'])->toBe('CUTI/2026/00001234/0009')
+        ->and($event->payload['data']['state'])->toBe('DISETUJUI')
+        ->and($event->payload['data']['pegawai_nama'])->toBe('Budi Santoso, S.H.');
+});
+
+test('worker mengizinkan host lokal saat allow_private_hosts aktif tetapi tetap memblokir IP metadata', function () {
+    config([
+        'cuti.webhook.allow_private_hosts' => true,
+        'cuti.consumers' => [
+            'sisukma' => [
+                'webhook_url' => 'https://sisukma.test/api/integrations/v1/events/kepegawaian',
+                'shared_secret_encrypted' => Crypt::encryptString('secret-sisukma'),
+            ],
+            'lokal-http' => [
+                'webhook_url' => 'http://127.0.0.1:8000/hook',
+                'shared_secret_encrypted' => Crypt::encryptString('secret-lokal'),
+            ],
+            'metadata-bad' => [
+                'webhook_url' => 'https://169.254.169.254/latest/meta-data',
+                'shared_secret_encrypted' => Crypt::encryptString('secret-meta'),
+            ],
+        ],
+    ]);
+
+    $pengajuan = buatPengajuanUntukOutbox();
+    $event = app(EventDispatcherService::class)->dispatch('cuti.disetujui', $pengajuan);
+
+    Http::fake([
+        'https://sisukma.test/*' => Http::response(['accepted' => true], 202),
+        'http://127.0.0.1:8000/*' => Http::response('OK', 200),
+    ]);
+
+    $this->artisan('cuti:dispatch-events')->assertSuccessful();
+
+    $sisukmaDelivery = CutiEventDelivery::where('event_id', $event->id)->where('consumer_id', 'sisukma')->firstOrFail();
+    $lokalDelivery = CutiEventDelivery::where('event_id', $event->id)->where('consumer_id', 'lokal-http')->firstOrFail();
+    $metaDelivery = CutiEventDelivery::where('event_id', $event->id)->where('consumer_id', 'metadata-bad')->firstOrFail();
+
+    expect($sisukmaDelivery->status)->toBe('delivered')
+        ->and($lokalDelivery->status)->toBe('delivered')
+        ->and($metaDelivery->status)->toBe('dead_letter');
+});
